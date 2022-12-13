@@ -7,7 +7,7 @@
           <span class="text-slate-200">Prefect</span>
         </template>
         <template #bottom-links>
-          <PIcon icon="MenuIcon" class="app__menu-icon" @click="toggle" />
+          <p-icon icon="MenuIcon" class="app__menu-icon" @click="toggle" />
         </template>
       </p-global-sidebar>
     </template>

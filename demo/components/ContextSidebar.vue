@@ -4,7 +4,7 @@
       <template v-if="!mobileMenuOpen">
         <div class="context-sidebar__header">
           <p-icon class="context-sidebar__icon" icon="PrefectGradient" />
-          <span class="context-sidebar__heading">Prefect Design</span>
+          <span class="context-sidebar__heading">Prefect Graphs</span>
         </div>
       </template>
 
@@ -58,7 +58,7 @@
     return {
       title,
       children: record.children.map(({ name, path }) => ({
-        title: `p-${path}`,
+        title: path,
         to: { name },
       })),
     }

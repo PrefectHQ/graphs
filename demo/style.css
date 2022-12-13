@@ -1,0 +1,6 @@
+@import "@fontsource/inconsolata/variable.css";
+@import "@fontsource/inter/variable.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

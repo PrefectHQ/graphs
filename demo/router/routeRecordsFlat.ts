@@ -1,4 +1,4 @@
-import { kebabCase } from '@/utilities'
+import { kebabCase } from '@prefecthq/prefect-design'
 import { RouteLocationNormalizedLoaded, RouteLocationRaw, RouteRecordName, RouteRecordRaw } from 'vue-router'
 import { routeRecords } from '.'
 

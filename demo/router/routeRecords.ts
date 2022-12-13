@@ -1,4 +1,4 @@
-import { kebabCase } from '@/utilities'
+import { kebabCase } from '@prefecthq/prefect-design'
 import { RouteComponent, RouteRecordRaw } from 'vue-router'
 
 export type ImportComponent = RouteComponent | (() => Promise<RouteComponent>)
