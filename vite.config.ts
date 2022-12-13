@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
       lib: {
         entry: resolve(__dirname, "src/index.ts"),
-        name: "orion-design",
+        name: "prefect-graphs",
       },
       rollupOptions: {
         // ensures vue isn't added to the bundle

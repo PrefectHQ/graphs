@@ -2,11 +2,29 @@
   "name": "graphs",
   "version": "0.0.1",
   "description": "Large scale graphs designed for Prefect",
-  "main": "index.js",
   "scripts": {
-    "serve": "vite",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "serve": "vite --host --mode=demo",
+    "dev": "vue-tsc -w & tsc-alias -w & vite build -w",
+    "build": "vue-tsc && tsc-alias && vite build",
+    "build:demo": "vite build --mode=demo",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "changelog": "auto-changelog --package --commit-limit 0",
+    "version": "npm run changelog && git add CHANGELOG.md"
   },
+  "main": "./dist/prefect-graphs.umd.js",
+  "module": "./dist/prefect-graphs.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/prefect-graphs.mjs",
+      "require": "./dist/prefect-graphs.umd.js"
+    },
+    "./dist/style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/types/src/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PrefectHQ/graphs.git"
