@@ -36,12 +36,13 @@
   import { mobileMenuOpen } from '@/demo/router/menu'
   import { routeRecordsFlat } from '@/demo/router/routeRecordsFlat'
 
-  function getComponentForRecord(record: RouteRecordRaw): typeof PContextAccordionItem | typeof PContextNavItem {
-    if (record.children) {
-      return PContextAccordionItem
-    }
 
-    return PContextNavItem
+  function getComponentForRecord(record: RouteRecordRaw): typeof PContextAccordionItem | typeof PContextNavItem | void {
+    // if (record.children) {
+    //   return PContextAccordionItem
+    // }
+
+    // return PContextNavItem
   }
 
   function getContextProps(record: RouteRecordRaw): { title: string, children: {}[] } | { title: string, to: RouteLocationRaw } {
