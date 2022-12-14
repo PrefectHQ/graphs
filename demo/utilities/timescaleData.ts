@@ -50,7 +50,7 @@ const assignStartAndEndDates = (start: Date, end: Date, size: number) => {
 
 const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   const nodes: TimescaleItem[] = []
-  const { size = 3, shape = 'linear', fanMultiplier = 1, start = randomDate()  } = options ?? {}
+  const { size = 5, shape = 'linear', fanMultiplier = 1, start = randomDate()  } = options ?? {}
   let end = options?.end ?? new Date() 
 
   if (!options?.end) {
