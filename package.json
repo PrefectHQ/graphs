@@ -2,11 +2,29 @@
   "name": "graphs",
   "version": "0.0.1",
   "description": "Large scale graphs designed for Prefect",
-  "main": "index.js",
   "scripts": {
-    "serve": "vite",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "serve": "vite --host --mode=demo",
+    "dev": "vue-tsc -w & tsc-alias -w & vite build -w",
+    "build": "vue-tsc && tsc-alias && vite build",
+    "build:demo": "vite build --mode=demo",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "changelog": "auto-changelog --package --commit-limit 0",
+    "version": "npm run changelog && git add CHANGELOG.md"
   },
+  "main": "./dist/prefect-graphs.umd.js",
+  "module": "./dist/prefect-graphs.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/prefect-graphs.mjs",
+      "require": "./dist/prefect-graphs.umd.js"
+    },
+    "./dist/style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/types/src/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PrefectHQ/graphs.git"
@@ -18,27 +36,33 @@
   },
   "homepage": "https://github.com/PrefectHQ/graphs#readme",
   "devDependencies": {
+    "@fontsource/inconsolata": "^4.5.9",
+    "@fontsource/inter": "4.5.14",
     "@prefecthq/eslint-config": "1.0.17",
     "@types/fontfaceobserver": "^2.1.0",
     "@types/node": "^18.11.11",
-    "@vitejs/plugin-vue": "3.2.0",
+    "@vitejs/plugin-vue": "4.0.0",
     "auto-changelog": "^2.4.0",
     "autoprefixer": "10.4.13",
     "eslint": "8.29.0",
+    "postcss": "8.4.19",
+    "tailwindcss": "3.2.4",
     "tsc-alias": "1.8.2",
     "typescript": "^4.9.3",
-    "vite": "3.2.5",
+    "vite": "4.0.1",
     "vue-tsc": "1.0.9"
   },
   "peerDependencies": {
-    "@prefecthq/prefect-design": "^1.1.34",
-    "vue": "^3.2.45"
+    "@prefecthq/prefect-design": "^1.1.35",
+    "vue": "^3.2.45",
+    "vue-router": "^4.0.12"
   },
   "dependencies": {
     "@prefecthq/vue-compositions": "1.0.0",
     "date-fns": "2.29.3",
     "fontfaceobserver": "^2.3.0",
     "pixi-viewport": "^4.38.0",
-    "pixi.js": "^6.5.8"
+    "pixi.js": "^6.5.8",
+    "vite-svg-loader": "^3.6.0"
   }
 }

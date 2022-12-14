@@ -1,6 +1,7 @@
 import { resolve } from "path";
 import vue from "@vitejs/plugin-vue";
 import { defineConfig } from "vite";
+import svgLoader from 'vite-svg-loader'
 
 // https://vitejs.dev/config/
 // eslint-disable-next-line import/no-default-export
@@ -18,7 +19,7 @@ export default defineConfig(({ mode }) => {
         },
       ],
     },
-    plugins: [vue()],
+    plugins: [vue(), svgLoader()],
   };
 
   if (mode == "demo") {
@@ -35,11 +36,11 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
       lib: {
         entry: resolve(__dirname, "src/index.ts"),
-        name: "orion-design",
+        name: "prefect-graphs",
       },
       rollupOptions: {
         // ensures vue isn't added to the bundle
-        external: ["vue", "vue-router", "vee-validate"],
+        external: ["vue", "vue-router"],
         output: {
           exports: "named",
           // Provide vue as a global variable to use in the UMD build
