@@ -8,7 +8,10 @@ export const routeRecords: RouteRecordRaw[] = [
   {
     name: 'home',
     path: '/',
-    component: () => import('../sections/Home.vue'),
+    // component: () => import('../sections/Home.vue'),
+    redirect: {
+      name: 'data',
+    }
   },
   {
     name: 'data',

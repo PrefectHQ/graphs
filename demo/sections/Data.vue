@@ -8,5 +8,5 @@
 import { generateTimescaleData } from '../utilities/timescaleData';
 import TimescaleTable from './components/TimescaleTable.vue';
 
-const data = generateTimescaleData()
+const data = generateTimescaleData({ size: 50 })
 </script>

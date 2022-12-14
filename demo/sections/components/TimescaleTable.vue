@@ -24,6 +24,10 @@
       {{ getDuration(row)?.toLocaleString() }}
     </template>
 
+    <template #upstream="{ row }">
+      {{ row?.upstream_dependencies?.length?.toLocaleString() }}
+    </template>
+
     <template #empty-state>
       <p-empty-results>
         No data
@@ -55,6 +59,9 @@ const columns = [
   },
   {
     label: 'Duration',
+  },
+  {
+    label: 'Upstream',
   }
 ]
 

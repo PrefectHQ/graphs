@@ -5,7 +5,7 @@ import { randomStarName } from './randomStarName'
 
 export type Shape = 'linear' | 'fanOut' | 'fanOutIn'
 export type DataOptions = {
-  start: Date,
+  start?: Date,
   end?: Date,
   shape?: Shape,
   size?: number,
