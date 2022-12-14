@@ -13,3 +13,10 @@ npm run serve
 ```
 npm i @prefecthq/prefect-graphs --save
 ```
+
+## Getting Started
+
+Some helpful documentation on working with PixiJS
+- [Getting started docs]([url](https://pixijs.io/guides/index.html))
+- [PixiJS API docs]([url](https://pixijs.download/release/docs/index.html))
+- [pixi-viewport docs]([url](https://davidfig.github.io/pixi-viewport/jsdoc/index.html)) (pixi-viewport is essentially used for camera management)
