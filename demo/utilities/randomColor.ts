@@ -1,4 +1,4 @@
-import { floor, random } from "@/math"
+import { floor, random } from "@/utilities/math"
 
 /**
  * Generates a psuedo-random hex color

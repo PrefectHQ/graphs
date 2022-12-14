@@ -1,4 +1,4 @@
-import { random } from "@/math"
+import { random } from "@/utilities/math"
 
 /**
  * A method that generates a random date (optional: between two dates)

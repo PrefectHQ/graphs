@@ -1,6 +1,7 @@
-import { random, floor } from '../../src/math'
+import { random, floor } from '@/utilities/math'
 import { randomColor } from './randomColor'
 import { randomDate } from './randomDate'
+import { randomStarName } from './randomStarName'
 
 export type Shape = 'linear' | 'fanOut' | 'fanOutIn'
 export type DataOptions = {
@@ -13,6 +14,7 @@ export type DataOptions = {
 
 type TimescaleItem = {
   id: string,
+  label: string,
   start?: Date,
   end?: Date,
   upstream_dependencies: TimescaleItem[],
@@ -57,13 +59,13 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
     end = randomDate(start)
   }
 
-
   // Create initial nodes
   while (nodes.length < size) {
     const target: TimescaleItem = {
       id: crypto.randomUUID(),
       upstream_dependencies: [],
-      color: randomColor()
+      color: randomColor(),
+      label: randomStarName(),
     }
     const proxy = new Proxy(target, {})
     nodes.push(proxy)

@@ -31,3 +31,21 @@ export const asin = (x: number): number => {
 export const pow2 = (n: number): number => {
   return n ** 2
 }
+
+export const choice = <T>(list: T[] | Readonly<T[]>): T => list[floor(random() * list.length)]
+
+export const range = (min: number, max: number): number[] => Array.from({ length: max - min }, (x, i) => min + i)
+
+export const uniform = (min: number, max: number): number => floor(random() * (max - min + 1) + min)
+
+export const coinflip = (weight: number): boolean => uniform(0, 1) < weight
+
+export const weightedNumber = (): number => {
+  const seed = uniform(1, 3)
+
+  if (seed == 1) {
+    return choice(range(10, 100))
+  }
+
+  return choice(range(101, 1000))
+}
