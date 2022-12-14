@@ -6,9 +6,9 @@
     </template>
 
     <template #label="{ row, value }">
-      <div class="timescale-table--label-column">
-        <div class="timescale-table--status"  :style="{ backgroundColor: row.color }" />
-        <div class="timescale-table--label">{{ value }}</div>
+      <div class="timescale-table__label-column">
+        <div class="timescale-table__status"  :style="{ backgroundColor: row.color }" />
+        <div class="timescale-table__label">{{ value }}</div>
       </div>
     </template>
 
@@ -82,22 +82,22 @@ const getDuration = (row: TimescaleItem): string => {
 </script>
 
 <style>
-.timescale-table--label-column { @apply
+.timescale-table__label-column { @apply
   flex
   items-center
   gap-2
 }
 
-.timescale-table--status {
+.timescale-table__status {
   height: 16px;
   width: 16px;
 }
 
-.timescale-table--status { @apply
+.timescale-table__status { @apply
   rounded-full
 }
 
-.timescale-table--label { @apply
+.timescale-table__label { @apply
   text-slate-900
   font-medium
   text-base
