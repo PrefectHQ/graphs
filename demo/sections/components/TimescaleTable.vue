@@ -52,14 +52,17 @@
     {
       label: 'Label',
       property: 'label',
+      width: '250px',
     },
     {
       label: 'Start',
       property: 'start',
+      width: '175px',
     },
     {
       label: 'End',
       property: 'end',
+      width: '175px',
     },
     {
       label: 'Duration',
@@ -87,7 +90,7 @@
 
 <style>
 .timescale-table__label-column {
-  width: 200px;
+  width: 250px;
 }
 
 .timescale-table__label-column { @apply
