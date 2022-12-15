@@ -134,8 +134,23 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
 
       rows[row].push(nodes[i])
 
+      const addUpstreamDependency = (): void => {
+        const upstreamNode = prevRow[floor(random() * prevLen)]
+        nodes[i].upstreamDependencies.push(upstreamNode)
+      }
+
+      /* eslint-disable curly */
+      if (random() > 0.75) addUpstreamDependency()
+      if (random() > 0.8) addUpstreamDependency()
+      if (random() > 0.9) addUpstreamDependency()
+      if (random() > 0.95) addUpstreamDependency()
+      if (random() > 0.95) addUpstreamDependency()
+      if (random() > 0.95) addUpstreamDependency()
+      if (random() > 0.95) addUpstreamDependency()
+      /* eslint-enable curly */
     }
   }
+  console.log(Math.max(...nodes.map(n => n.upstreamDependencies.length)))
 
   // Assign start and end dates based on dependency tree
   nodes.forEach(assignStartAndEndDates(start, end, size))

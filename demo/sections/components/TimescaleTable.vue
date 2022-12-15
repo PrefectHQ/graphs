@@ -14,11 +14,11 @@
     </template>
 
     <template #start="{ value }">
-      {{ value.toLocaleString() }}
+      {{ value?.toLocaleString() }}
     </template>
 
     <template #end="{ value }">
-      {{ value.toLocaleString() }}
+      {{ value?.toLocaleString() }}
     </template>
 
     <template #duration="{ row }">

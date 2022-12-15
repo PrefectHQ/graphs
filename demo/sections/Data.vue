@@ -13,7 +13,7 @@
         </p-label>
 
         <p-label>
-          Fan
+          Fan Multiplier
           <p-number-input v-model="fanMultiplier" step="0.1" min="1" max="2" />
         </p-label>
       </div>
@@ -32,12 +32,12 @@
 
 <script lang="ts" setup>
   import { ref, watchEffect, computed } from 'vue'
-  import { generateTimescaleData, Shape } from '../utilities/timescaleData'
+  import { generateTimescaleData, Shape, TimescaleItem } from '../utilities/timescaleData'
   import TimescaleTable from './components/TimescaleTable.vue'
 
   const size = ref(50)
-  const fanMultiplier = ref(1.1)
-  const shape = ref<Shape>('linear')
+  const fanMultiplier = ref(1.5)
+  const shape = ref<Shape>('fanOut')
   const start = ref<Date>()
   const end = ref<Date>()
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
@@ -52,7 +52,7 @@
     }
   })
 
-  const data = ref(generateTimescaleData(dataOptions.value))
+  const data = ref<TimescaleItem[]>([])
 
   watchEffect(() => {
     data.value = generateTimescaleData(dataOptions.value)

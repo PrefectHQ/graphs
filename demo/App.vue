@@ -12,7 +12,12 @@
       </p-global-sidebar>
     </template>
     <ContextSidebar v-if="showMenu" class="app__sidebar" />
-    <router-view class="w-full mx-auto py-10 px-6 lg:px-8" />
+
+    <router-view v-slot="{ Component }" class="app__router-view w-full mx-auto py-10 px-6 lg:px-8">
+      <transition name="app__router-view-fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
   </div>
 </template>
 
@@ -32,6 +37,10 @@
   overflow-hidden
 }
 
+html, body {
+  overscroll-behavior-y: none;
+}
+
 .app { @apply
   text-slate-900;
 }
@@ -48,14 +57,9 @@
   cursor-pointer
 }
 
-.app__router-view { @apply
-  relative
-  z-0
-}
-
 .app__router-view-fade-enter-active,
 .app__router-view-fade-leave-active {
-  transition: opacity 0.25s ease;
+  transition: opacity 0.15s ease;
 }
 
 .app__router-view-fade-enter-from,
