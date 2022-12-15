@@ -26,7 +26,7 @@
     </template>
 
     <template #upstream="{ row }">
-      {{ row?.upstream_dependencies?.length?.toLocaleString() }}
+      {{ row?.upstreamDependencies?.length?.toLocaleString() }}
     </template>
 
     <template #empty-state>

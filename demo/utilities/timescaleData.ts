@@ -1,7 +1,8 @@
-import { random, floor } from '@/utilities/math'
+/* eslint-disable camelcase */
 import { randomColor } from './randomColor'
 import { randomDate } from './randomDate'
 import { randomStarName } from './randomStarName'
+import { random, floor } from '@/utilities/math'
 
 export type Shape = 'linear' | 'fanOut' | 'fanOutIn'
 export type DataOptions = {
@@ -9,7 +10,7 @@ export type DataOptions = {
   end?: Date,
   shape?: Shape,
   size?: number,
-  fanMultiplier?: number
+  fanMultiplier?: number,
 }
 
 type TimescaleItem = {
@@ -17,34 +18,37 @@ type TimescaleItem = {
   label: string,
   start?: Date,
   end?: Date,
-  upstream_dependencies: TimescaleItem[],
+  upstreamDependencies: TimescaleItem[],
   color?: string,
 }
 
 // This method assumes that at least 1 upstream dependency has been assigned an end date
-const maxDate = (nodes: TimescaleItem[], property: keyof TimescaleItem, start: Date) => {
+const maxDate = (nodes: TimescaleItem[], property: keyof TimescaleItem, start: Date): Date => {
   return nodes.reduce((acc: Date, curr) => {
     const date = curr[property]
 
-    if (!date) return acc
-    else if (!(date instanceof Date)) {
+    if (!date) {
+      return acc
+    } else if (!(date instanceof Date)) {
       throw new Error(`Property ${property} is not a Date`)
+    } else if (date > acc) {
+      return date
+    } else {
+      return acc
     }
-    else if (date > acc) return date
-    else return acc
   }, start)
 }
 
-const assignStartAndEndDates = (start: Date, end: Date, size: number) => {
+const assignStartAndEndDates = (start: Date, end: Date, size: number): (node: TimescaleItem) => void => {
   const minIncrement = (end.getTime() - start.getTime()) / size
 
-  return (node: TimescaleItem, index: number) => {
-    const minStart = maxDate(node.upstream_dependencies, 'end', start)
+  return (node: TimescaleItem) => {
+    const minStart = maxDate(node.upstreamDependencies, 'end', start)
 
     const jiggeredEndMs = minStart.getTime() + minIncrement
     const _start = randomDate(minStart, new Date(jiggeredEndMs))
     const _end = randomDate(_start, new Date(jiggeredEndMs + minIncrement))
-    
+
     node.start = _start
     node.end = _end
   }
@@ -52,8 +56,8 @@ const assignStartAndEndDates = (start: Date, end: Date, size: number) => {
 
 const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   const nodes: TimescaleItem[] = []
-  const { size = 5, shape = 'linear', fanMultiplier = 1, start = randomDate()  } = options ?? {}
-  let end = options?.end ?? new Date() 
+  const { size = 5, shape = 'linear', fanMultiplier = 1, start = randomDate() } = options ?? {}
+  let end = options?.end ?? new Date()
 
   if (!options?.end) {
     end = randomDate(start)
@@ -63,7 +67,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   while (nodes.length < size) {
     const target: TimescaleItem = {
       id: crypto.randomUUID(),
-      upstream_dependencies: [],
+      upstreamDependencies: [],
       color: randomColor(),
       label: randomStarName(),
     }
@@ -74,7 +78,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   // Create dependency tree
   if (shape == 'linear') {
     for (let i = 1; i < nodes.length; ++i) {
-      nodes[i].upstream_dependencies = [nodes[i - 1]]
+      nodes[i].upstreamDependencies = [nodes[i - 1]]
     }
   }
 
@@ -82,7 +86,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
     let row = 0
     const rows = []
 
-    const incRow = () => {
+    const incRow = (): void => {
       row++
       rows[row] = []
     }
@@ -101,7 +105,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
 
       const upstreamNode = prevRow[floor(random() * prevLen)]
 
-      nodes[i].upstream_dependencies = [upstreamNode]
+      nodes[i].upstreamDependencies = [upstreamNode]
 
       if (shape == 'fanOut') {
         if (currLen + 1 >= prevLen * fanMultiplier) {
@@ -139,4 +143,5 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   return nodes
 }
 
-export { generateTimescaleData, TimescaleItem }
+export type { TimescaleItem }
+export { generateTimescaleData }
