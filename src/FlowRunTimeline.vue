@@ -14,7 +14,7 @@
     IBitmapTextStyle,
     Ticker
   } from 'pixi.js'
-  import { onMounted, ref } from 'vue'
+  import { onMounted, onBeforeUnmount, ref } from 'vue'
   import {
     GraphNode,
     TextStyles
@@ -35,7 +35,8 @@
 
   const styles = {
     defaultViewportPadding: 40,
-    timelineGuidesXPadding: 1000,
+    // how far left and right of the timeline to render guides
+    timelineGuidesXPadding: 4000,
   }
 
   let pixiApp: Application
@@ -74,6 +75,10 @@
         initTimelineGuides()
         initContent()
       })
+  })
+
+  onBeforeUnmount(() => {
+    pixiApp.destroy(true)
   })
 
   function initPixiApp(): void {
@@ -123,7 +128,7 @@
       })
       .clampZoom({
         minWidth: stageWidth / 2,
-        maxWidth: stageWidth * 8,
+        maxWidth: stageWidth * 20,
       })
       .decelerate({
         friction: 0.9,
@@ -481,11 +486,11 @@
     const width = node.endTime && node.startTime ? xScale(node.endTime) - xScale(node.startTime) : 4
     let isLabelInBox = true
 
-    let label = new BitmapText('Task', textStyles.nodeTextInverse)
+    let label = new BitmapText(node.label, textStyles.nodeTextInverse)
     if (label.width >= width) {
       isLabelInBox = false
       label.destroy()
-      label = new BitmapText('Task', textStyles.nodeTextDefault)
+      label = new BitmapText(node.label, textStyles.nodeTextDefault)
     }
 
     label.position.set(
