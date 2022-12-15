@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const forms = require('@tailwindcss/forms')
 const defaultTheme = require('tailwindcss/defaultTheme')
 

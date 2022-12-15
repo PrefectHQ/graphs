@@ -1,22 +1,22 @@
 
 import { RouteRecordRaw, createRouter, createWebHistory } from 'vue-router'
-import { sections } from '../sections'
-import { close } from './menu'
-import { convertSectionToRouteRecords } from './routeRecords'
+import { close } from '@/demo/router/menu'
+import { convertSectionToRouteRecords } from '@/demo/router/routeRecords'
+import { sections } from '@/demo/sections'
 
 export const routeRecords: RouteRecordRaw[] = [
   {
     name: 'home',
     path: '/',
-    component: () => import('../sections/Home.vue'),
+    component: () => import('@/demo/sections/Home.vue'),
   },
   {
-    name: 'home1',
-    path: '/home1',
-    component: () => import('../sections/Home.vue'),
+    name: 'data',
+    path: '/data',
+    component: () => import('@/demo/sections/Data.vue'),
   },
   ...convertSectionToRouteRecords(sections),
-]
+] as RouteRecordRaw[]
 
 export const router = createRouter({
   history: createWebHistory(),
