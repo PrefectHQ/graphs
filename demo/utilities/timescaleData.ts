@@ -150,7 +150,6 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
       /* eslint-enable curly */
     }
   }
-  console.log(Math.max(...nodes.map(n => n.upstreamDependencies.length)))
 
   // Assign start and end dates based on dependency tree
   nodes.forEach(assignStartAndEndDates(start, end, size))
