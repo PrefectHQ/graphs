@@ -3,6 +3,7 @@ import { randomColor } from './randomColor'
 import { randomDate } from './randomDate'
 import { randomStarName } from './randomStarName'
 import { random, floor } from '@/utilities/math'
+import { secondsToApproximateString } from '@/utilities/time'
 
 export type Shape = 'linear' | 'fanOut' | 'fanOutIn'
 export type DataOptions = {
@@ -42,12 +43,15 @@ const maxDate = (nodes: TimescaleItem[], property: keyof TimescaleItem, start: D
 const assignStartAndEndDates = (start: Date, end: Date, size: number): (node: TimescaleItem) => void => {
   const minIncrement = (end.getTime() - start.getTime()) / size
 
+
   return (node: TimescaleItem) => {
     const minStart = maxDate(node.upstreamDependencies, 'end', start)
+    const maxStart = new Date(minStart.getTime() + minIncrement * 2)
+    const _start = randomDate(minStart, maxStart)
 
-    const jiggeredEndMs = minStart.getTime() + minIncrement
-    const _start = randomDate(minStart, new Date(jiggeredEndMs))
-    const _end = randomDate(_start, new Date(jiggeredEndMs + minIncrement))
+    const minEnd = new Date(_start.getTime() + minIncrement)
+    const maxEnd = new Date(minEnd.getTime() + minIncrement * 2)
+    const _end = randomDate(minEnd, maxEnd)
 
     node.start = _start
     node.end = _end
