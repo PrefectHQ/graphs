@@ -1,6 +1,6 @@
-import { resolve } from "path";
-import vue from "@vitejs/plugin-vue";
-import { defineConfig } from "vite";
+import { resolve } from 'path'
+import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite'
 import svgLoader from 'vite-svg-loader'
 
 // https://vitejs.dev/config/
@@ -10,23 +10,23 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: [
         {
-          find: "@/demo",
-          replacement: resolve(__dirname, "./demo"),
+          find: '@/demo',
+          replacement: resolve(__dirname, './demo'),
         },
         {
-          find: "@",
-          replacement: resolve(__dirname, "src"),
+          find: '@',
+          replacement: resolve(__dirname, 'src'),
         },
       ],
     },
     plugins: [vue(), svgLoader()],
-  };
+  }
 
-  if (mode == "demo") {
+  if (mode == 'demo') {
     return {
-      root: "./demo",
+      root: './demo',
       ...baseConfig,
-    };
+    }
   }
 
   return {
@@ -35,20 +35,20 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: false,
       sourcemap: true,
       lib: {
-        entry: resolve(__dirname, "src/index.ts"),
-        name: "prefect-graphs",
+        entry: resolve(__dirname, 'src/index.ts'),
+        name: 'prefect-graphs',
       },
       rollupOptions: {
         // ensures vue isn't added to the bundle
-        external: ["vue", "vue-router"],
+        external: ['vue', 'vue-router'],
         output: {
-          exports: "named",
+          exports: 'named',
           // Provide vue as a global variable to use in the UMD build
           globals: {
-            vue: "Vue",
+            vue: 'Vue',
           },
         },
       },
     },
-  };
-});
+  }
+})

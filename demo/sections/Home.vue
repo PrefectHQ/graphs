@@ -5,5 +5,5 @@
 </template>
 
 <script lang="ts" setup>
-console.log("home")
+  console.log('home')
 </script>

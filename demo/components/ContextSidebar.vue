@@ -29,23 +29,25 @@
 </template>
 
 <script lang="ts" setup>
-  import { PContextAccordionItem, PContextNavItem } from '@prefecthq/prefect-design'
+  import { PContextNavItem } from '@prefecthq/prefect-design'
   import { ref } from 'vue'
   import { RouteLocationRaw, RouteRecordRaw, useRouter } from 'vue-router'
+  import { ContextAccordionChildItem } from './contextAccordionChildItem'
+  import PContextAccordionItem from './PContextAccordionItem.vue'
   import { routeRecords } from '@/demo/router'
   import { mobileMenuOpen } from '@/demo/router/menu'
   import { routeRecordsFlat } from '@/demo/router/routeRecordsFlat'
 
 
   function getComponentForRecord(record: RouteRecordRaw): typeof PContextAccordionItem | typeof PContextNavItem | void {
-    // if (record.children) {
-    //   return PContextAccordionItem
-    // }
+    if (record.children) {
+      return PContextAccordionItem
+    }
 
-    // return PContextNavItem
+    return PContextNavItem
   }
 
-  function getContextProps(record: RouteRecordRaw): { title: string, children: {}[] } | { title: string, to: RouteLocationRaw } {
+  function getContextProps(record: RouteRecordRaw): { title: string, children: ContextAccordionChildItem[] } | { title: string, to: RouteLocationRaw } {
     const title = record.name?.toString() ?? ''
 
     if (!record.children) {

@@ -1,14 +1,15 @@
 <template>
   <p-table :data="data" :columns="columns">
-
-    <template #label-heading >
+    <template #label-heading>
       <span />
     </template>
 
     <template #label="{ row, value }">
       <div class="timescale-table__label-column">
-        <div class="timescale-table__status"  :style="{ backgroundColor: row.color }" />
-        <div class="timescale-table__label">{{ value }}</div>
+        <div class="timescale-table__status" :style="{ backgroundColor: row.color }" />
+        <div class="timescale-table__label">
+          {{ value }}
+        </div>
       </div>
     </template>
 
@@ -37,48 +38,50 @@
 </template>
 
 <script lang="ts" setup>
-import { TimescaleItem } from '@/demo/utilities/timescaleData'
-import { secondsToApproximateString } from '@/utilities/time'
+  import { TimescaleItem } from '@/demo/utilities/timescaleData'
+  import { secondsToApproximateString } from '@/utilities/time'
 
-const props = defineProps<{
-  data: TimescaleItem[]
-}>()
+  const props = withDefaults(defineProps<{
+    data?: TimescaleItem[],
+  }>(),  {
+    data: () => [],
+  })
 
-const columns = [
-  {
-    label: 'Label',
-    property: 'label',
-  },
-  {
-    label: 'Start',
-    property: 'start',
-  },
-  {
-    label: 'End',
-    property: 'end',
-  },
-  {
-    label: 'Duration',
-  },
-  {
-    label: 'Upstream',
+  const columns = [
+    {
+      label: 'Label',
+      property: 'label',
+    },
+    {
+      label: 'Start',
+      property: 'start',
+    },
+    {
+      label: 'End',
+      property: 'end',
+    },
+    {
+      label: 'Duration',
+    },
+    {
+      label: 'Upstream',
+    },
+  ]
+
+  const getDuration = (row: TimescaleItem): string => {
+    const start = row.start?.getTime()
+    const end = row.end?.getTime()
+
+    if (start && end) {
+      return secondsToApproximateString((end - start) / 1000)
+    }
+
+    if (start) {
+      return secondsToApproximateString((Date.now() - start) / 1000)
+    }
+
+    return '--'
   }
-]
-
-const getDuration = (row: TimescaleItem): string => {
-  const start = row.start?.getTime()
-  const end = row.end?.getTime()
-
-  if (start && end) {
-    return secondsToApproximateString((end - start) / 1000)
-  }
-
-  if (start) {
-    return secondsToApproximateString((Date.now() - start) / 1000)
-  }
-
-  return '--'
-}
 </script>
 
 <style>

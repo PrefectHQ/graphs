@@ -1,6 +1,5 @@
 <template>
   <main>
-
     <div class="data__table-header">
       <div class="data__table-header-row">
         <p-label>
@@ -9,7 +8,7 @@
         </p-label>
 
         <p-label>
-          Shape 
+          Shape
           <p-select v-model="shape" :options="shapeOptions" />
         </p-label>
 
@@ -22,43 +21,42 @@
       <div class="data__table-header-row">
         <p-label>
           Date Range
-          <p-date-range-input v-model:start-date="start" v-model:end-date="end"  />
+          <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
       </div>
     </div>
-
 
     <TimescaleTable class="data__table" :data="data" />
   </main>
 </template>
 
 <script lang="ts" setup>
-import { ref, watchEffect, computed } from 'vue';
-import { generateTimescaleData, Shape } from '../utilities/timescaleData';
-import TimescaleTable from './components/TimescaleTable.vue';
+  import { ref, watchEffect, computed } from 'vue'
+  import { generateTimescaleData, Shape } from '../utilities/timescaleData'
+  import TimescaleTable from './components/TimescaleTable.vue'
 
-const size = ref(50)
-const fanMultiplier = ref(1.1)
-const shape = ref<Shape>('linear')
-const start = ref<Date>()
-const end = ref<Date>()
-const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
+  const size = ref(50)
+  const fanMultiplier = ref(1.1)
+  const shape = ref<Shape>('linear')
+  const start = ref<Date>()
+  const end = ref<Date>()
+  const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
 
-const dataOptions = computed(() => {
-  return {
-    size: size.value,
-    shape: shape.value,
-    fanMultiplier: fanMultiplier.value,
-    start: start.value,
-    end: end.value,
-  }
-})
+  const dataOptions = computed(() => {
+    return {
+      size: size.value,
+      shape: shape.value,
+      fanMultiplier: fanMultiplier.value,
+      start: start.value,
+      end: end.value,
+    }
+  })
 
-const data = ref(generateTimescaleData(dataOptions.value))
+  const data = ref(generateTimescaleData(dataOptions.value))
 
-watchEffect(() => {
-  data.value = generateTimescaleData(dataOptions.value)
-})
+  watchEffect(() => {
+    data.value = generateTimescaleData(dataOptions.value)
+  })
 </script>
 
 <style>

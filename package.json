@@ -50,6 +50,7 @@
     "tsc-alias": "1.8.2",
     "typescript": "^4.9.3",
     "vite": "4.0.1",
+    "vite-svg-loader": "^3.6.0",
     "vue-tsc": "1.0.9"
   },
   "peerDependencies": {
@@ -62,7 +63,6 @@
     "date-fns": "2.29.3",
     "fontfaceobserver": "^2.3.0",
     "pixi-viewport": "^4.38.0",
-    "pixi.js": "^6.5.8",
-    "vite-svg-loader": "^3.6.0"
+    "pixi.js": "^6.5.8"
   }
 }

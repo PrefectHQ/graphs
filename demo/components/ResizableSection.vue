@@ -23,7 +23,7 @@
 <script lang="ts" setup>
   import { toPixels } from '@prefecthq/prefect-design'
   import { computed, ref } from 'vue'
-  import ResizeIcon from '@/demo/components/ResizeIcon.vue'
+  import ResizeIcon from '@/demo/components/ResizeIcon.svg'
 
   const container = ref<HTMLDivElement>()
   const dragging = ref(false)
