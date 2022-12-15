@@ -7,7 +7,7 @@
     <template #label="{ row, value }">
       <div class="timescale-table__label-column">
         <div class="timescale-table__status" :style="{ backgroundColor: row.color }" />
-        <div class="timescale-table__label">
+        <div class="timescale-table__label" :title="value">
           {{ value }}
         </div>
       </div>
@@ -38,10 +38,11 @@
 </template>
 
 <script lang="ts" setup>
+  import { withDefaults } from 'vue'
   import { TimescaleItem } from '@/demo/utilities/timescaleData'
   import { secondsToApproximateString } from '@/utilities/time'
 
-  const props = withDefaults(defineProps<{
+  withDefaults(defineProps<{
     data?: TimescaleItem[],
   }>(),  {
     data: () => [],
@@ -85,6 +86,10 @@
 </script>
 
 <style>
+.timescale-table__label-column {
+  width: 200px;
+}
+
 .timescale-table__label-column { @apply
   flex
   items-center
@@ -104,5 +109,6 @@
   text-slate-900
   font-medium
   text-base
+  truncate
 }
 </style>
