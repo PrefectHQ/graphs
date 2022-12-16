@@ -3,22 +3,26 @@
 </template>
 
 <script lang="ts" setup>
-  import FontFaceObserver from 'fontfaceobserver'
   import { Viewport } from 'pixi-viewport'
   import {
     Application,
-    BitmapFont,
     BitmapText,
     Container,
-    Graphics,
-    IBitmapTextStyle,
-    Ticker
+    Graphics
   } from 'pixi.js'
-  import { onMounted, onBeforeUnmount, ref } from 'vue'
+  import { onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
     GraphNode,
-    TextStyles
+    TextStyles,
+    State
   } from './models'
+  import {
+    initBitmapFonts,
+    initPixiApp,
+    initViewport,
+    initTimelineGuides
+  } from './pixiFunctions'
+  import { getDateBounds } from './utilities'
 
   const props = defineProps<{
     graphData: GraphNode[],
@@ -26,19 +30,12 @@
 
   const stage = ref<HTMLDivElement>()
   const devicePixelRatio = window.devicePixelRatio || 2
-  const fontSpriteKeys = [
-    '0123456789',
-    'abcdefghijklmnopqrstuvwxyz',
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    '.,:;!?()[]{}<>|/\\@\'"',
-  ].join('')
 
   const styles = {
     defaultViewportPadding: 40,
-    // how far left and right of the timeline to render guides
-    timelineGuidesXPadding: 4000,
   }
 
+  let loading = ref(true)
   let pixiApp: Application
   let viewport: Viewport
   let textStyles: TextStyles
@@ -49,93 +46,48 @@
   let overallGraphWidth: number
 
   const timelineGuidesContainer = new Container()
-  let timelineGuidesIdealCount = 10
-  const timelineGuidesMinGap = 80
-  const timelineGuidesMaxGap = 260
-  let timelineGuidesCurrentTimeGap = 1000 * 30
 
-  let nodes: Record<string, Container> = {}
+  let nodesContainer: Container
+  type NodeRecord = {
+    node: Container,
+    endTime: Date | null,
+    stateName: string | undefined,
+  }
+  let nodes: Record<string, NodeRecord> = {}
 
   onMounted(() => {
+    if (!stage.value) {
+      console.error('Stage reference not found in initPixiApp')
+      return
+    }
     initTimeScale()
-    initPixiApp()
+    pixiApp = initPixiApp(stage.value)
     // init guides before viewport for proper z-indexing
     initTimelineGuidesContainer()
-    initViewport()
+    viewport = initViewport(stage.value, pixiApp)
 
-    timelineGuidesIdealCount = stage.value
-      ? Math.ceil(
-        stage.value.clientWidth / (timelineGuidesMaxGap - timelineGuidesMinGap / 2),
-      ) : 0
-    setTimelineGuidesCurrentTimeGap()
-
-    initBitmapFonts({ devicePixelRatio })
+    initBitmapFonts(devicePixelRatio)
       .then(newTextStyles => {
         textStyles = newTextStyles
-        initTimelineGuides()
+        initTimelineGuides({
+          app: pixiApp,
+          viewport: viewport,
+          stage: stage.value,
+          timelineGuidesContainer,
+          minimumStartDate,
+          overallGraphWidth,
+          dateScale,
+          xScale,
+          textStyles,
+        })
         initContent()
+        loading.value = false
       })
   })
 
   onBeforeUnmount(() => {
     pixiApp.destroy(true)
   })
-
-  function initPixiApp(): void {
-    if (!stage.value) {
-      console.error('Stage reference not found in initPixiApp')
-      return
-    }
-
-    pixiApp = new Application({
-      backgroundAlpha: 0,
-      width: stage.value.clientWidth,
-      height: stage.value.clientWidth,
-      resolution: devicePixelRatio,
-      autoDensity: true,
-      antialias: true,
-    })
-
-    stage.value.appendChild(pixiApp.view)
-  }
-
-  function initViewport(): void {
-    if (!stage.value) {
-      console.error('Stage reference not found in initViewport')
-      return
-    }
-
-    const stageWidth = stage.value.clientWidth
-    const stageHeight = stage.value.clientHeight
-
-    viewport = new Viewport({
-      screenWidth: stageWidth,
-      screenHeight: stageHeight,
-      passiveWheel: false,
-      interaction: pixiApp.renderer.plugins.interaction,
-      divWheel: stage.value,
-      ticker: Ticker.shared,
-    })
-
-    viewport
-      .drag({
-        wheel: false,
-        pressDrag: true,
-      })
-      .wheel({
-        trackpadPinch: true,
-        wheelZoom: false,
-      })
-      .clampZoom({
-        minWidth: stageWidth / 2,
-        maxWidth: stageWidth * 20,
-      })
-      .decelerate({
-        friction: 0.9,
-      })
-
-    pixiApp.stage.addChild(viewport)
-  }
 
   function initTimeScale(): void {
     const minimumTimeSpan = 1000 * 60
@@ -165,261 +117,12 @@
     overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
   }
 
-  function getDateBounds(
-    datesArray: { startTime: Date | null, endTime: Date | null }[],
-  ): { min: Date, max: Date } {
-    let min: Date | undefined
-    let max: Date | undefined
-
-    datesArray.forEach((dates) => {
-      if (
-        dates.startTime !== null
-        && (
-          min === undefined
-          || min > dates.startTime
-          || isNaN(dates.startTime.getDate())
-        )
-      ) {
-        min = dates.startTime
-      }
-
-      if (
-        dates.endTime !== null
-        && (
-          max === undefined
-          || max < dates.endTime
-          || isNaN(dates.endTime.getDate())
-        )
-      ) {
-        max = dates.endTime
-      }
-    })
-
-    return {
-      min: min ?? new Date(NaN),
-      max: max ?? new Date(NaN),
-    }
-  }
-
   function initTimelineGuidesContainer(): void {
     pixiApp.stage.addChild(timelineGuidesContainer)
   }
 
-  function initTimelineGuides(): void {
-    pixiApp.ticker.add(() => {
-      updateTimelineGuides()
-    })
-  }
-
-  let timelineGuides: Record<string, Container> = {}
-  let previousTimelineGuidesTimeGap: number = 0
-  function updateTimelineGuides(): void {
-    setTimelineGuidesCurrentTimeGap()
-
-    if (previousTimelineGuidesTimeGap !== timelineGuidesCurrentTimeGap) {
-      // rebuild
-      if (Object.keys(timelineGuides).length > 0) {
-        Object.keys(timelineGuides).forEach((key) => {
-          timelineGuides[key].destroy()
-        })
-        timelineGuides = {}
-      }
-      createTimelineGuides()
-      previousTimelineGuidesTimeGap = timelineGuidesCurrentTimeGap
-    } else {
-      updateTimelineGuidesPositions()
-    }
-  }
-
-  function createTimelineGuides(): void {
-    let lastGuidePoint
-    const maxGuidePlacement = dateScale(overallGraphWidth + styles.timelineGuidesXPadding)
-    const firstGuide = new Date(Math.ceil(dateScale(-styles.timelineGuidesXPadding) / timelineGuidesCurrentTimeGap) * timelineGuidesCurrentTimeGap)
-
-    lastGuidePoint = firstGuide
-
-    while (lastGuidePoint.getTime() < maxGuidePlacement) {
-      const guide = createTimelineGuide(lastGuidePoint)
-
-      timelineGuides[lastGuidePoint.getTime()] = guide
-
-      timelineGuidesContainer.addChild(guide)
-
-      lastGuidePoint = new Date(lastGuidePoint.getTime() + timelineGuidesCurrentTimeGap)
-    }
-  }
-
-  function createTimelineGuide(date: Date): Container {
-    const guide = new Container()
-    guide.position.set(getGuidePosition(date), 0)
-
-    const guideLine = new Graphics()
-    guideLine.beginFill(0xc9d5e2)
-    guideLine.drawRect(
-      0,
-      0,
-      1,
-      pixiApp.renderer.height,
-    )
-    guideLine.endFill()
-
-    const guideLabel = new BitmapText(date.toLocaleTimeString(), textStyles.timeMarkerLabel)
-    guideLabel.position.set(4, 4)
-
-    guide.addChild(guideLine)
-    guide.addChild(guideLabel)
-
-    return guide
-  }
-
-  function updateTimelineGuidesPositions(): void {
-    Object.keys(timelineGuides).forEach((key) => {
-      const guide = timelineGuides[key]
-      guide.position.set(getGuidePosition(new Date(Number(key))), 0)
-    })
-  }
-
-  function getGuidePosition(date: Date): number {
-    return xScale(date) * viewport.scale._x + viewport.worldTransform.tx
-  }
-
-  function setTimelineGuidesCurrentTimeGap(): void {
-    const pxSpan = Math.ceil((viewport.right - viewport.left) / timelineGuidesIdealCount)
-    const timeSpan = dateScale(pxSpan) - minimumStartDate.getTime()
-
-    const time = {
-      second: 1000,
-      minute: 1000 * 60,
-      hour: 1000 * 60 * 60,
-      day: 1000 * 60 * 60 * 24,
-      week: 1000 * 60 * 60 * 24 * 7,
-    }
-    const timeSpanSlots = [
-      {
-        ceiling: time.second * 4,
-        span: time.second,
-      }, {
-        ceiling: time.second * 8,
-        span: time.second * 5,
-      }, {
-        ceiling: time.second * 13,
-        span: time.second * 10,
-      }, {
-        ceiling: time.second * 20,
-        span: time.second * 15,
-      }, {
-        ceiling: time.second * 45,
-        span: time.second * 30,
-      }, {
-        ceiling: time.minute * 4,
-        span: time.minute,
-      }, {
-        ceiling: time.minute * 8,
-        span: time.minute * 5,
-      }, {
-        ceiling: time.minute * 13,
-        span: time.minute * 10,
-      }, {
-        ceiling: time.minute * 28,
-        span: time.minute * 15,
-      }, {
-        ceiling: time.hour * 1.24,
-        span: time.minute * 30,
-      }, {
-        ceiling: time.hour * 3,
-        span: time.hour,
-      }, {
-        ceiling: time.hour * 8,
-        span: time.hour * 5,
-      }, {
-        ceiling: time.hour * 13,
-        span: time.hour * 10,
-      }, {
-        ceiling: time.hour * 22,
-        span: time.hour * 12,
-      }, {
-        ceiling: time.day * 4,
-        span: time.day,
-      }, {
-        ceiling: time.week * 2,
-        span: time.week,
-      }, {
-        ceiling: Infinity,
-        span: time.week * 4,
-      },
-    ]
-
-    timelineGuidesCurrentTimeGap = timeSpanSlots.find(timeSlot => timeSlot.ceiling > timeSpan)?.span ?? timeSpanSlots[0].span
-  }
-
-  type InitBitmapFonts = {
-    devicePixelRatio: number,
-  }
-  function initBitmapFonts({
-    devicePixelRatio,
-  }: InitBitmapFonts): Promise<TextStyles> {
-    return new Promise((resolve) => {
-      const font = new FontFaceObserver('InterVariable')
-
-      font.load().then(() => {
-        const options = {
-          resolution: devicePixelRatio,
-          chars: fontSpriteKeys,
-        }
-        BitmapFont.from(
-          'NodeTextDefault',
-          {
-            fontFamily: 'InterVariable',
-            fontSize: 24,
-            lineHeight: 32,
-            fill: 0x111827,
-          }, options,
-        )
-        BitmapFont.from(
-          'NodeTextInverse',
-          {
-            fontFamily: 'InterVariable',
-            fontSize: 24,
-            lineHeight: 32,
-            fill: 0xffffff,
-          }, options,
-        )
-        BitmapFont.from(
-          'TimeMarkerLabel',
-          {
-            fontFamily: 'InterVariable',
-            fontSize: 16,
-            lineHeight: 24,
-            fill: 0x94A3B8,
-          }, options,
-        )
-
-        const nodeTextDefault: Partial<IBitmapTextStyle> = {
-          fontName: 'NodeTextDefault',
-          fontSize: 24,
-        }
-
-        const nodeTextInverse: Partial<IBitmapTextStyle> = {
-          fontName: 'NodeTextInverse',
-          fontSize: 24,
-        }
-
-        const timeMarkerLabel: Partial<IBitmapTextStyle> = {
-          fontName: 'TimeMarkerLabel',
-          fontSize: 12,
-        }
-
-        resolve({
-          nodeTextDefault,
-          nodeTextInverse,
-          timeMarkerLabel,
-        })
-      })
-    })
-  }
-
   function initContent(): void {
-    const nodesContainer = renderNodes()
+    nodesContainer = createNodes()
 
     viewport.ensureVisible(
       nodesContainer.x - styles.defaultViewportPadding,
@@ -434,21 +137,12 @@
     )
   }
 
-  function renderNodes(): Container {
+  function createNodes(): Container {
     const nodesContainer = new Container()
 
     props.graphData.forEach((node, nodeIndex) => {
-      const { nodeContainer } = createNode({
-        node,
-        textStyles,
-      })
+      const { nodeContainer } = createNode(node, nodeIndex)
 
-      nodeContainer.position.set(
-        node.startTime ? xScale(node.startTime) : 0,
-        nodeIndex * 120,
-      )
-
-      nodes[node.id] = nodeContainer
       nodesContainer.addChild(nodeContainer)
     })
 
@@ -457,7 +151,31 @@
     return nodesContainer
   }
 
-  const stateColors = {
+  watchEffect(() => {
+    // @TODO: This accommodates updated nodeData or newly added nodes, but not totally new data or nodes being removed.
+    //        Do we even need to handle these scenarios?
+    if (!loading.value) {
+      props.graphData.forEach((nodeData) => {
+        if (nodeData.id in nodes) {
+          if (
+            nodes[nodeData.id].endTime !== nodeData.endTime
+            || nodes[nodeData.id].stateName !== nodeData.state?.name
+          ) {
+            updateNode(nodeData)
+          }
+        } else {
+          // add new node
+          const { nodeContainer } = createNode(
+            nodeData,
+            Object.keys(nodes).length - 1,
+          )
+          nodesContainer.addChild(nodeContainer)
+        }
+      })
+    }
+  })
+
+  const stateColors: Record<string, number> = {
     'Completed': 0x00a63d,
     'Running': 0x00a8ef,
     'Scheduled': 0x60758d,
@@ -467,30 +185,53 @@
     'Crashed': 0xf00011,
     'Paused': 0xf4b000,
   }
-  type CreateNodeProps = {
-    node: GraphNode,
-    textStyles: TextStyles,
+  const nodeStyles = {
+    padding: 16,
+    gap: 4,
   }
-  function createNode({
-    node,
-    textStyles,
-  }: CreateNodeProps): Record<string, Container> {
+  function createNode(nodeData: GraphNode, layerPlacement: number): Record<string, Container> {
     const nodeContainer = new Container()
-    const stateFill = node.state?.name ? stateColors[node.state.name] : 0x9aa3b0
+    const label = createNodeLabel(nodeData)
+    const box = new Graphics()
+    drawNodeBox({
+      box,
+      state: nodeData.state,
+      startTime: nodeData.startTime,
+      endTime: nodeData.endTime,
+      height: label.height,
+    })
 
-    const nodeStyles = {
-      padding: 16,
-      gap: 4,
+    nodeContainer.addChild(box)
+    nodeContainer.addChild(label)
+    nodeContainer.position.set(
+      nodeData.startTime ? xScale(nodeData.startTime) : 0,
+      layerPlacement * 120,
+    )
+
+    nodes[nodeData.id] = {
+      node: nodeContainer,
+      endTime: nodeData.endTime,
+      stateName: nodeData.state?.name,
     }
 
-    const width = node.endTime && node.startTime ? xScale(node.endTime) - xScale(node.startTime) : 4
+    return {
+      nodeContainer,
+    }
+  }
+
+  function getNodeWidth(startTime?: Date | null, endTime?: Date | null): number {
+    return startTime && endTime ? xScale(endTime) - xScale(startTime) : 4
+  }
+
+  function createNodeLabel(nodeData: GraphNode): BitmapText {
+    const width = getNodeWidth(nodeData.startTime, nodeData.endTime)
     let isLabelInBox = true
 
-    let label = new BitmapText(node.label, textStyles.nodeTextInverse)
+    let label = new BitmapText(nodeData.label, textStyles.nodeTextInverse)
     if (label.width >= width) {
       isLabelInBox = false
       label.destroy()
-      label = new BitmapText(node.label, textStyles.nodeTextDefault)
+      label = new BitmapText(nodeData.label, textStyles.nodeTextDefault)
     }
 
     label.position.set(
@@ -498,23 +239,48 @@
       nodeStyles.padding,
     )
 
-    const box = new Graphics()
+    return label
+  }
+
+  type DrawNodeBoxProps = {
+    box: Graphics,
+    state: State | null,
+    startTime: Date | null,
+    endTime: Date | null,
+    height: number,
+  }
+  function drawNodeBox({
+    box,
+    state,
+    startTime,
+    endTime,
+    height,
+  }: DrawNodeBoxProps): void {
+    const stateFill = state?.name ? stateColors[state.name] : 0x9aa3b0
+
     box.beginFill(stateFill)
     box.drawRoundedRect(
       0,
       0,
-      width,
-      label.height + nodeStyles.padding * 2,
+      getNodeWidth(startTime, endTime),
+      height + nodeStyles.padding * 2,
       12,
     )
     box.endFill()
+  }
 
-    nodeContainer.addChild(box)
-    nodeContainer.addChild(label)
-
-    return {
-      nodeContainer,
-    }
+  function updateNode(nodeData: GraphNode): void {
+    const node = nodes[nodeData.id]
+    const box = node.node.children[0] as Graphics
+    let label = node.node.children[1] as BitmapText
+    box.clear()
+    drawNodeBox({
+      box,
+      state: nodeData.state,
+      startTime: nodeData.startTime,
+      endTime: nodeData.endTime,
+      height: label.height,
+    })
   }
 
   // Convert a date to an X position

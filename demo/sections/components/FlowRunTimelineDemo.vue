@@ -40,7 +40,7 @@
   const today = new Date()
   const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000)
 
-  const size = ref(10)
+  const size = ref(15)
   const fanMultiplier = ref(1.5)
   const shape = ref<Shape>('fanOut')
   const start = ref<Date>(twoDaysAgo)
@@ -61,6 +61,7 @@
 
   watchEffect(() => {
     // set data and sort by startTime
+    console.log('Data', data)
     data.value = generateTimescaleData(dataOptions.value).map((item) => {
       return {
         ...item,
