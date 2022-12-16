@@ -27,7 +27,7 @@
     </div>
 
     <div class="timeline__graph-container">
-      <FlowRunTimeline v-if="data" :graph-data="data" />
+      <FlowRunTimeline v-if="data" :key="componentKey" :graph-data="data" />
     </div>
   </main>
 </template>
@@ -37,6 +37,7 @@
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
 
+  const componentKey = ref(0)
   const today = new Date()
   const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000)
 
@@ -69,6 +70,11 @@
         endTime: item.end || item.start,
       }
     }).sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+
+    // The graph isn't designed to be fully reactive, in the sense that it expects data to evolve,
+    // but not completely change. This allows it to animate changes in nodes as the data updates.
+    // So for demo purposes, when we get new data, we rerender the graph from scratch.
+    componentKey.value += 1
   })
 </script>
 

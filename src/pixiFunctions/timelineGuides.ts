@@ -10,7 +10,6 @@ const timelineGuidesMinGap = 80
 const timelineGuidesMaxGap = 260
 let timelineGuidesIdealCount = 10
 let timelineGuidesCurrentTimeGap = 1000 * 30
-let previousTimelineGuidesTimeGap: number = 0
 // how far left and right of the timeline to render guides
 const timelineGuidesXPadding = 4000
 
@@ -99,11 +98,13 @@ export function initTimelineGuides(props: TimelineGuidesProps): void {
     props.stage.clientWidth / (timelineGuidesMaxGap - timelineGuidesMinGap / 2))
 
   props.app.ticker.add(() => {
+    // @TODO: Only run update if the viewport has changed to avoid unnecessary work
     updateTimelineGuides(props)
   })
 }
 
 function updateTimelineGuides(props: TimelineGuidesProps): void {
+  const previousTimelineGuidesTimeGap = timelineGuidesCurrentTimeGap
   setTimelineGuidesCurrentTimeGap(props)
 
   if (previousTimelineGuidesTimeGap !== timelineGuidesCurrentTimeGap) {
@@ -114,7 +115,6 @@ function updateTimelineGuides(props: TimelineGuidesProps): void {
       timelineGuides = {}
     }
     createTimelineGuides(props)
-    previousTimelineGuidesTimeGap = timelineGuidesCurrentTimeGap
   } else {
     updateTimelineGuidesPositions(props)
   }
