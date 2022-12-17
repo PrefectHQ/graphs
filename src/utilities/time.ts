@@ -74,32 +74,29 @@ export function secondsToApproximateString(input: number, showOnes = true): stri
 }
 
 export function getDateBounds(
-  datesArray: { startTime: Date | null, endTime: Date | null }[],
+  datesArray: { start: Date, end: Date | null }[],
 ): { min: Date, max: Date } {
   let min: Date | undefined
   let max: Date | undefined
 
   datesArray.forEach((dates) => {
     if (
-      dates.startTime !== null
-      && (
-        min === undefined
-        || min > dates.startTime
-        || isNaN(dates.startTime.getDate())
-      )
+      min === undefined
+        || min > dates.start
+        || isNaN(dates.start.getDate())
     ) {
-      min = dates.startTime
+      min = dates.start
     }
 
     if (
-      dates.endTime !== null
+      dates.end !== null
       && (
         max === undefined
-        || max < dates.endTime
-        || isNaN(dates.endTime.getDate())
+        || max < dates.end
+        || isNaN(dates.end.getDate())
       )
     ) {
-      max = dates.endTime
+      max = dates.end
     }
   })
 

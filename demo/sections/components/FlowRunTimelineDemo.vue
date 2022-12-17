@@ -23,6 +23,9 @@
           Date Range
           <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
+        <div class="timeline__header-row__checkbox-wrapper">
+          <p-checkbox v-model="isRunning" label="Show Running" />
+        </div>
       </div>
     </div>
 
@@ -37,6 +40,7 @@
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
 
+  const isRunning = ref(true)
   const componentKey = ref(0)
   const today = new Date()
   const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000)
@@ -63,13 +67,13 @@
   watchEffect(() => {
     // set data and sort by startTime
     console.log('Data', data)
-    data.value = generateTimescaleData(dataOptions.value).map((item) => {
-      return {
-        ...item,
-        startTime: item.start,
-        endTime: item.end || item.start,
-      }
-    }).sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+    data.value = generateTimescaleData(dataOptions.value)
+
+    if (isRunning.value) {
+      const lastItem = data.value[data.value.length - 1]
+      // lastItem.end = null
+      lastItem.state = 'running'
+    }
 
     // The graph isn't designed to be fully reactive, in the sense that it expects data to evolve,
     // but not completely change. This allows it to animate changes in nodes as the data updates.
@@ -106,6 +110,11 @@
 
 .timeline__header-row:last-of-type { @apply
   mb-0
+}
+
+.timeline__header-row__checkbox-wrapper { @apply
+  min-w-fit
+  pt-5
 }
 
 .timeline__graph-container { @apply
