@@ -82,6 +82,7 @@ type TimelineGuidesProps = {
   timelineGuidesContainer: Container,
   minimumStartDate: Date,
   overallGraphWidth: number,
+  isRunning: boolean | undefined,
   dateScale: (x: number) => number,
   xScale: (date: Date) => number,
   textStyles: TextStyles,
@@ -104,10 +105,19 @@ export function initTimelineGuides(props: TimelineGuidesProps): void {
 }
 
 function updateTimelineGuides(props: TimelineGuidesProps): void {
+  const { isRunning, xScale } = props
+
   const previousTimelineGuidesTimeGap = timelineGuidesCurrentTimeGap
   setTimelineGuidesCurrentTimeGap(props)
 
-  if (previousTimelineGuidesTimeGap !== timelineGuidesCurrentTimeGap) {
+  const lastGuideKey = Object.keys(timelineGuides)[Object.keys(timelineGuides).length - 1]
+
+  if (
+    // timeline gaps have changed
+    previousTimelineGuidesTimeGap !== timelineGuidesCurrentTimeGap
+    // the timeline has grown since it's running, so we need to add more guides
+    || isRunning && timelineGuides[lastGuideKey].x + timelineGuidesCurrentTimeGap < xScale(new Date()) + timelineGuidesXPadding
+  ) {
     if (Object.keys(timelineGuides).length > 0) {
       Object.keys(timelineGuides).forEach((key) => {
         timelineGuides[key].destroy()
