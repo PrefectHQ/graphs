@@ -1,6 +1,7 @@
 {
-  "name": "graphs",
-  "version": "0.0.1",
+  "name": "@prefecthq/graphs",
+  "private": false,
+  "version": "0.1.0",
   "description": "Large scale graphs designed for Prefect",
   "scripts": {
     "serve": "vite --host --mode=demo",
@@ -59,6 +60,7 @@
     "vue-router": "^4.0.12"
   },
   "dependencies": {
+    "@pixi-essentials/cull": "^1.1.0",
     "@prefecthq/vue-compositions": "1.0.0",
     "date-fns": "2.29.3",
     "fontfaceobserver": "^2.3.0",
