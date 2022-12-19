@@ -16,7 +16,7 @@ export type TimelineNodeData = {
   start: Date,
   end: Date | null,
   upstreamDependencies?: TimelineNodeData[],
-  state: TimelineNodeState,
+  state: TimelineNodeState | string,
 }
 
 export type TextStyles = {

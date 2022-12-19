@@ -64,7 +64,7 @@
   type NodeRecord = {
     node: Container,
     end: Date | null,
-    state: TimelineNodeState,
+    state: TimelineNodeState | string,
   }
   let nodes: Record<string, NodeRecord> = {}
 
@@ -340,7 +340,7 @@
 
   type DrawNodeBoxProps = {
     box: Graphics,
-    state: TimelineNodeState | null,
+    state: TimelineNodeState | string,
     start: Date | null,
     end: Date | null,
     height: number,
