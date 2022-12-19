@@ -13,12 +13,12 @@
     "changelog": "auto-changelog --package --commit-limit 0",
     "version": "npm run changelog && git add CHANGELOG.md"
   },
-  "main": "./dist/prefect-graphs.umd.js",
-  "module": "./dist/prefect-graphs.mjs",
+  "main": "./dist/graphs.umd.js",
+  "module": "./dist/graphs.mjs",
   "exports": {
     ".": {
-      "import": "./dist/prefect-graphs.mjs",
-      "require": "./dist/prefect-graphs.umd.js"
+      "import": "./dist/graphs.mjs",
+      "require": "./dist/graphs.umd.js"
     },
     "./dist/style.css": "./dist/style.css"
   },

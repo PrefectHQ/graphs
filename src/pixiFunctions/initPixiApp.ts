@@ -8,6 +8,7 @@ export function initPixiApp(stage: HTMLElement): Application {
     resolution: devicePixelRatio,
     autoDensity: true,
     antialias: true,
+    resizeTo: stage,
   })
 
   stage.appendChild(pixiApp.view)
