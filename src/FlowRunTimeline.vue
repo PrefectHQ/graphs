@@ -3,6 +3,7 @@
 </template>
 
 <script lang="ts" setup>
+  import { Cull } from '@pixi-essentials/cull'
   import { Viewport } from 'pixi-viewport'
   import {
     Application,
@@ -43,6 +44,9 @@
   let pixiApp: Application
   let viewport: Viewport
   let textStyles: TextStyles
+  let cull = new Cull()
+  // flag cullDirty when new nodes are added to the viewport after init
+  let cullDirty = false
 
   let minimumStartDate: Date
   let maximumEndDate = ref<Date | undefined>()
@@ -86,6 +90,7 @@
         })
         initContent()
         initPlayhead()
+        initCulling()
         loading.value = false
       })
   })
@@ -170,6 +175,19 @@
     pixiApp.stage.addChild(timelineGuidesContainer)
   }
 
+  function initCulling(): void {
+    cull.addAll(viewport.children)
+
+    viewport.on('frame-end', () => {
+      if (viewport.dirty || cullDirty) {
+        cull.cull(pixiApp.renderer.screen)
+
+        viewport.dirty = false
+        cullDirty = false
+      }
+    })
+  }
+
   function initContent(): void {
     nodesContainer = createNodes()
 
@@ -221,6 +239,8 @@
           nodesContainer.addChild(nodeContainer)
 
           checkDeletedNodes()
+
+          cullDirty = true
         }
       })
     }
