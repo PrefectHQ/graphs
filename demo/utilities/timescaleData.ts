@@ -1,9 +1,18 @@
 /* eslint-disable camelcase */
-import { randomColor } from './randomColor'
 import { randomDate } from './randomDate'
 import { randomStarName } from './randomStarName'
 import { random, floor } from '@/utilities/math'
 import { secondsToApproximateString } from '@/utilities/time'
+
+export type State =
+  'completed'
+  |'running'
+  |'scheduled'
+  |'pending'
+  |'failed'
+  |'cancelled'
+  |'crashed'
+  |'paused'
 
 export type Shape = 'linear' | 'fanOut' | 'fanOutIn'
 export type DataOptions = {
@@ -17,10 +26,10 @@ export type DataOptions = {
 type TimescaleItem = {
   id: string,
   label: string,
-  start?: Date,
-  end?: Date,
+  start: Date,
+  end: Date | null,
   upstreamDependencies: TimescaleItem[],
-  color?: string,
+  state: State,
 }
 
 // This method assumes that at least 1 upstream dependency has been assigned an end date
@@ -58,6 +67,21 @@ const assignStartAndEndDates = (start: Date, end: Date, size: number): (node: Ti
   }
 }
 
+const randomState = (): State => {
+  // all but "running", since it's a special state
+  const states: State[] = [
+    'completed',
+    'scheduled',
+    'pending',
+    'failed',
+    'cancelled',
+    'crashed',
+    'paused',
+  ]
+
+  return states[floor(random() * states.length)]
+}
+
 const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   const nodes: TimescaleItem[] = []
   const { size = 5, shape = 'linear', fanMultiplier = 1, start = randomDate() } = options ?? {}
@@ -72,8 +96,10 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
     const target: TimescaleItem = {
       id: crypto.randomUUID(),
       upstreamDependencies: [],
-      color: randomColor(),
+      state: randomState(),
       label: randomStarName(),
+      start: new Date(),
+      end: null,
     }
     const proxy = new Proxy(target, {})
     nodes.push(proxy)
@@ -157,6 +183,9 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
 
   // Assign start and end dates based on dependency tree
   nodes.forEach(assignStartAndEndDates(start, end, size))
+
+  // Sort by start date
+  nodes.sort((nodeA, nodeB) => nodeA.start.getTime() - nodeB.start.getTime())
 
   return nodes
 }

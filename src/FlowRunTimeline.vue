@@ -12,7 +12,7 @@
   } from 'pixi.js'
   import { onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
-    GraphNode,
+    TimelineNodeData,
     TextStyles,
     State
   } from './models'
@@ -25,7 +25,7 @@
   import { getDateBounds } from './utilities'
 
   const props = defineProps<{
-    graphData: GraphNode[],
+    graphData: TimelineNodeData[],
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -50,8 +50,8 @@
   let nodesContainer: Container
   type NodeRecord = {
     node: Container,
-    endTime: Date | null,
-    stateName: string | undefined,
+    end: Date | null,
+    state: State,
   }
   let nodes: Record<string, NodeRecord> = {}
 
@@ -92,15 +92,17 @@
   function initTimeScale(): void {
     const minimumTimeSpan = 1000 * 60
 
+    // @TODO Include Now if running
+
     const dates = Array
       .from(props.graphData)
-      .filter(node => node.startTime && node.endTime)
+      .filter(node => node.end)
       .flatMap(({
-        startTime,
-        endTime,
+        start,
+        end,
       }) => ({
-        startTime,
-        endTime,
+        start,
+        end,
       }))
 
     const { min, max } = getDateBounds(dates)
@@ -158,8 +160,8 @@
       props.graphData.forEach((nodeData) => {
         if (nodeData.id in nodes) {
           if (
-            nodes[nodeData.id].endTime !== nodeData.endTime
-            || nodes[nodeData.id].stateName !== nodeData.state?.name
+            nodes[nodeData.id].end !== nodeData.end
+            || nodes[nodeData.id].state !== nodeData.state
           ) {
             updateNode(nodeData)
           }
@@ -176,42 +178,42 @@
   })
 
   const stateColors: Record<string, number> = {
-    'Completed': 0x00a63d,
-    'Running': 0x00a8ef,
-    'Scheduled': 0x60758d,
-    'Pending': 0x60758d,
-    'Failed': 0xf00011,
-    'Cancelled': 0xf00011,
-    'Crashed': 0xf00011,
-    'Paused': 0xf4b000,
+    'completed': 0x00a63d,
+    'running': 0x00a8ef,
+    'scheduled': 0x60758d,
+    'pending': 0x60758d,
+    'failed': 0xf00011,
+    'cancelled': 0xf00011,
+    'crashed': 0xf00011,
+    'paused': 0xf4b000,
   }
   const nodeStyles = {
     padding: 16,
     gap: 4,
   }
-  function createNode(nodeData: GraphNode, layerPlacement: number): Record<string, Container> {
+  function createNode(nodeData: TimelineNodeData, layerPlacement: number): Record<string, Container> {
     const nodeContainer = new Container()
     const label = createNodeLabel(nodeData)
     const box = new Graphics()
     drawNodeBox({
       box,
       state: nodeData.state,
-      startTime: nodeData.startTime,
-      endTime: nodeData.endTime,
+      start: nodeData.start,
+      end: nodeData.end,
       height: label.height,
     })
 
     nodeContainer.addChild(box)
     nodeContainer.addChild(label)
     nodeContainer.position.set(
-      nodeData.startTime ? xScale(nodeData.startTime) : 0,
+      xScale(nodeData.start),
       layerPlacement * 120,
     )
 
     nodes[nodeData.id] = {
       node: nodeContainer,
-      endTime: nodeData.endTime,
-      stateName: nodeData.state?.name,
+      end: nodeData.end,
+      state: nodeData.state,
     }
 
     return {
@@ -219,12 +221,12 @@
     }
   }
 
-  function getNodeWidth(startTime?: Date | null, endTime?: Date | null): number {
-    return startTime && endTime ? xScale(endTime) - xScale(startTime) : 4
+  function getNodeWidth(start?: Date | null, end?: Date | null): number {
+    return start && end ? xScale(end) - xScale(start) : 4
   }
 
-  function createNodeLabel(nodeData: GraphNode): BitmapText {
-    const width = getNodeWidth(nodeData.startTime, nodeData.endTime)
+  function createNodeLabel(nodeData: TimelineNodeData): BitmapText {
+    const width = getNodeWidth(nodeData.start, nodeData.end)
     let isLabelInBox = true
 
     let label = new BitmapText(nodeData.label, textStyles.nodeTextInverse)
@@ -245,31 +247,31 @@
   type DrawNodeBoxProps = {
     box: Graphics,
     state: State | null,
-    startTime: Date | null,
-    endTime: Date | null,
+    start: Date | null,
+    end: Date | null,
     height: number,
   }
   function drawNodeBox({
     box,
     state,
-    startTime,
-    endTime,
+    start,
+    end,
     height,
   }: DrawNodeBoxProps): void {
-    const stateFill = state?.name ? stateColors[state.name] : 0x9aa3b0
+    const stateFill = state ? stateColors[state] : 0x9aa3b0
 
     box.beginFill(stateFill)
     box.drawRoundedRect(
       0,
       0,
-      getNodeWidth(startTime, endTime),
+      getNodeWidth(start, end),
       height + nodeStyles.padding * 2,
       12,
     )
     box.endFill()
   }
 
-  function updateNode(nodeData: GraphNode): void {
+  function updateNode(nodeData: TimelineNodeData): void {
     const node = nodes[nodeData.id]
     const box = node.node.children[0] as Graphics
     let label = node.node.children[1] as BitmapText
@@ -277,8 +279,8 @@
     drawNodeBox({
       box,
       state: nodeData.state,
-      startTime: nodeData.startTime,
-      endTime: nodeData.endTime,
+      start: nodeData.start,
+      end: nodeData.end,
       height: label.height,
     })
   }
