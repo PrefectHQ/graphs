@@ -143,6 +143,7 @@
       styles.playheadWidth + styles.playheadGlowPadding * 2,
       nodesContainer.height,
     )
+    playhead.endFill()
     playhead.beginFill(styles.playheadBg)
     playhead.drawRect(
       styles.playheadGlowPadding,
@@ -155,15 +156,14 @@
     pixiApp.stage.addChild(playhead)
 
     // @TODO: If isRunning is turned off, then back on again, this will not initialize
-    const playheadTicker = pixiApp.ticker.add(() => {
+    pixiApp.ticker.add(() => {
       if (props.isRunning) {
         playhead.x = xScale(new Date()) * viewport.scale._x + viewport.worldTransform.tx - styles.playheadGlowPadding - styles.playheadWidth / 2
         maximumEndDate.value = new Date()
-      } else {
-        playheadTicker.destroy()
-        playhead.clear() // @TODO The playhead isn't clearing here.
+      } else if (!playhead.destroyed) {
+        playhead.destroy()
       }
-    }, playhead)
+    })
   }
 
   function initTimelineGuidesContainer(): void {
@@ -219,10 +219,22 @@
             Object.keys(nodes).length - 1,
           )
           nodesContainer.addChild(nodeContainer)
+
+          checkDeletedNodes()
         }
       })
     }
   })
+
+  function checkDeletedNodes(): void {
+    const nodeIds = props.graphData.map(node => node.id)
+    Object.keys(nodes).forEach((nodeId) => {
+      if (!nodeIds.includes(nodeId)) {
+        nodes[nodeId].node.destroy()
+        delete nodes[nodeId]
+      }
+    })
+  }
 
   const stateColors: Record<string, number> = {
     'completed': 0x00a63d,
@@ -242,6 +254,7 @@
     const nodeContainer = new Container()
     const label = createNodeLabel(nodeData)
     const box = new Graphics()
+
     drawNodeBox({
       box,
       state: nodeData.state,
@@ -261,6 +274,14 @@
       node: nodeContainer,
       end: nodeData.end,
       state: nodeData.state,
+    }
+
+    if (props.isRunning) {
+      pixiApp.ticker.add(() => {
+        if (props.isRunning) {
+          updateNode(nodeData)
+        }
+      })
     }
 
     return {
@@ -330,6 +351,9 @@
       end: nodeData.end ?? new Date(),
       height: label.height,
     })
+    node.node.position.x = xScale(nodeData.start)
+    node.end = nodeData.end
+    node.state = nodeData.state
   }
 
   // Convert a date to an X position

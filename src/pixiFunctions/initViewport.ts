@@ -11,7 +11,6 @@ export function initViewport(stage: HTMLElement, app: Application): Viewport {
     passiveWheel: false,
     interaction: app.renderer.plugins.interaction,
     divWheel: stage,
-    ticker: Ticker.shared,
   })
 
   viewport

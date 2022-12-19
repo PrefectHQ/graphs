@@ -43,12 +43,12 @@
   const isRunning = ref(true)
   const componentKey = ref(0)
   const now = new Date()
-  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000)
+  const previous = new Date(now.getTime() - 1000 * 200)
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
   const shape = ref<Shape>('fanOut')
-  const start = ref<Date>(twoDaysAgo)
+  const start = ref<Date>(previous)
   const end = ref<Date>(now)
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
 
