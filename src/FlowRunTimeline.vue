@@ -1,5 +1,11 @@
 <template>
-  <div ref="stage" class="prefect-dag" />
+  <div class="flow-run-timeline">
+    <div class="flow-run-timeline__zoom-controls">
+      <p-button icon="MinusIcon" inset rounded aria-label="Zoom out" @click="zoomOut" />
+      <p-button icon="PlusIcon" inset rounded aria-label="Zoom in" @click="zoomIn" />
+    </div>
+    <div ref="stage" class="flow-run-timeline__canvas-container" />
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -15,7 +21,7 @@
   import {
     TimelineNodeData,
     TextStyles,
-    State
+    TimelineNodeState
   } from './models'
   import {
     initBitmapFonts,
@@ -58,7 +64,7 @@
   type NodeRecord = {
     node: Container,
     end: Date | null,
-    state: State,
+    state: TimelineNodeState,
   }
   let nodes: Record<string, NodeRecord> = {}
 
@@ -334,7 +340,7 @@
 
   type DrawNodeBoxProps = {
     box: Graphics,
-    state: State | null,
+    state: TimelineNodeState | null,
     start: Date | null,
     end: Date | null,
     height: number,
@@ -385,19 +391,41 @@
   function dateScale(xPosition: number): number {
     return Math.ceil(minimumStartDate.getTime() + xPosition * (overallTimeSpan.value / overallGraphWidth))
   }
+
+  function zoomOut(): void {
+    viewport.zoom(250, true)
+  }
+
+  function zoomIn(): void {
+    viewport.zoom(-250, true)
+  }
 </script>
 
 <style>
-.prefect-dag { @apply
+.flow-run-timeline { @apply
+  relative
+  w-full
+  h-full
+}
+
+.flow-run-timeline__zoom-controls { @apply
+  absolute
+  flex
+  gap-1
+  top-4
+  right-4
+  z-10
+}
+
+.flow-run-timeline__canvas-container { @apply
   bg-slate-100
   rounded-lg
-  shadow-md
   w-full
   h-full
   overflow-hidden
   relative
 }
-.prefect-dag canvas { @apply
+.flow-run-timeline__canvas-container canvas { @apply
   absolute
   top-0
   left-0

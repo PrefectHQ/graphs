@@ -13,7 +13,7 @@
     </template>
     <ContextSidebar v-if="showMenu" class="app__sidebar" />
 
-    <router-view v-slot="{ Component }" class="app__router-view w-full mx-auto py-10 px-6 lg:px-8">
+    <router-view v-slot="{ Component }" class="app__router-view">
       <transition name="app__router-view-fade" mode="out-in">
         <component :is="Component" />
       </transition>
@@ -42,7 +42,10 @@ html, body {
 }
 
 .app { @apply
-  text-slate-900;
+  text-slate-900
+  h-screen
+  flex
+  flex-col
 }
 
 .app__prefect-icon { @apply
@@ -55,6 +58,14 @@ html, body {
   w-6
   h-6
   cursor-pointer
+}
+
+.app__router-view { @apply
+  w-full
+  mx-auto
+  py-10
+  px-6
+  lg:px-8
 }
 
 .app__router-view-fade-enter-active,

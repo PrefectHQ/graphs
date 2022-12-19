@@ -3,7 +3,7 @@ import { randomDate } from './randomDate'
 import { randomStarName } from './randomStarName'
 import { random, floor } from '@/utilities/math'
 
-export type State =
+export type TimelineNodeState =
   'completed'
   |'running'
   |'scheduled'
@@ -28,7 +28,7 @@ type TimescaleItem = {
   start: Date,
   end: Date | null,
   upstreamDependencies: TimescaleItem[],
-  state: State,
+  state: TimelineNodeState,
 }
 
 // This method assumes that at least 1 upstream dependency has been assigned an end date
@@ -66,9 +66,9 @@ const assignStartAndEndDates = (start: Date, end: Date, size: number): (node: Ti
   }
 }
 
-const randomState = (): State => {
+const randomState = (): TimelineNodeState => {
   // all but "running", since it's a special state
-  const states: State[] = [
+  const states: TimelineNodeState[] = [
     'completed',
     'scheduled',
     'pending',

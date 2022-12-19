@@ -1,6 +1,6 @@
 import { IBitmapTextStyle } from 'pixi.js'
 
-export type State =
+export type TimelineNodeState =
   'completed'
   |'running'
   |'scheduled'
@@ -15,8 +15,8 @@ export type TimelineNodeData = {
   label: string,
   start: Date,
   end: Date | null,
-  upstreamDependencies: TimelineNodeData[],
-  state: State,
+  upstreamDependencies?: TimelineNodeData[],
+  state: TimelineNodeState,
 }
 
 export type TextStyles = {
