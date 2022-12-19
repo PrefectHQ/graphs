@@ -2,7 +2,6 @@
 import { randomDate } from './randomDate'
 import { randomStarName } from './randomStarName'
 import { random, floor } from '@/utilities/math'
-import { secondsToApproximateString } from '@/utilities/time'
 
 export type State =
   'completed'

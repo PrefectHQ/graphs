@@ -30,7 +30,7 @@
     </div>
 
     <div class="timeline__graph-container">
-      <FlowRunTimeline v-if="data" :key="componentKey" :graph-data="data" />
+      <FlowRunTimeline v-if="data" :key="componentKey" :graph-data="data" :is-running="isRunning" />
     </div>
   </main>
 </template>
@@ -42,14 +42,14 @@
 
   const isRunning = ref(true)
   const componentKey = ref(0)
-  const today = new Date()
-  const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000)
+  const now = new Date()
+  const previous = new Date(now.getTime() - 1000 * 200)
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
   const shape = ref<Shape>('fanOut')
-  const start = ref<Date>(twoDaysAgo)
-  const end = ref<Date>(today)
+  const start = ref<Date>(previous)
+  const end = ref<Date>(now)
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
 
   const dataOptions = computed(() => {
@@ -71,7 +71,7 @@
 
     if (isRunning.value) {
       const lastItem = data.value[data.value.length - 1]
-      // lastItem.end = null
+      lastItem.end = null
       lastItem.state = 'running'
     }
 

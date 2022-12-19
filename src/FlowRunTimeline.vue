@@ -10,7 +10,7 @@
     Container,
     Graphics
   } from 'pixi.js'
-  import { onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
+  import { onMounted, onBeforeUnmount, ref, watchEffect, computed } from 'vue'
   import {
     TimelineNodeData,
     TextStyles,
@@ -26,6 +26,7 @@
 
   const props = defineProps<{
     graphData: TimelineNodeData[],
+    isRunning?: boolean,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -33,6 +34,9 @@
 
   const styles = {
     defaultViewportPadding: 40,
+    playheadBg: 0x4E82FE,
+    playheadWidth: 2,
+    playheadGlowPadding: 8,
   }
 
   let loading = ref(true)
@@ -41,8 +45,7 @@
   let textStyles: TextStyles
 
   let minimumStartDate: Date
-  let maximumEndDate: Date
-  let overallTimeSpan: number
+  let maximumEndDate = ref<Date | undefined>()
   let overallGraphWidth: number
 
   const timelineGuidesContainer = new Container()
@@ -76,11 +79,13 @@
           timelineGuidesContainer,
           minimumStartDate,
           overallGraphWidth,
+          isRunning: props.isRunning,
           dateScale,
           xScale,
           textStyles,
         })
         initContent()
+        initPlayhead()
         loading.value = false
       })
   })
@@ -90,10 +95,6 @@
   })
 
   function initTimeScale(): void {
-    const minimumTimeSpan = 1000 * 60
-
-    // @TODO Include Now if running
-
     const dates = Array
       .from(props.graphData)
       .filter(node => node.end)
@@ -105,18 +106,64 @@
         end,
       }))
 
+    if (props.isRunning === true) {
+      dates.push({
+        start: new Date(),
+        end: new Date(),
+      })
+    }
+
     const { min, max } = getDateBounds(dates)
 
     minimumStartDate = min
-    maximumEndDate = max
+    maximumEndDate.value = max
 
-    const timeSpan = maximumEndDate.getTime() - minimumStartDate.getTime()
-    overallTimeSpan = timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
-
-    // @TODO: overallGraphWidth determine the overall width of the chart for layout purposes.
-    //        Since our total time scale is unknown, determine a method for choosing a
-    //        nice looking width of the graph.
     overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
+  }
+
+  const overallTimeSpan = computed(() => {
+    if (!maximumEndDate.value) {
+      return 0
+    }
+    const minimumTimeSpan = 1000 * 60
+    const timeSpan = maximumEndDate.value.getTime() - minimumStartDate.getTime()
+    return timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
+  })
+
+  function initPlayhead(): void {
+    if (!props.isRunning) {
+      return
+    }
+
+    const playhead = new Graphics()
+    playhead.beginFill(styles.playheadBg, 0.1)
+    playhead.drawRect(
+      0,
+      0,
+      styles.playheadWidth + styles.playheadGlowPadding * 2,
+      nodesContainer.height,
+    )
+    playhead.endFill()
+    playhead.beginFill(styles.playheadBg)
+    playhead.drawRect(
+      styles.playheadGlowPadding,
+      0,
+      styles.playheadWidth,
+      nodesContainer.height,
+    )
+    playhead.endFill()
+
+    pixiApp.stage.addChild(playhead)
+
+    // @TODO: If isRunning is turned off, then back on again, this will not initialize
+    pixiApp.ticker.add(() => {
+      if (props.isRunning) {
+        playhead.x = xScale(new Date()) * viewport.scale._x + viewport.worldTransform.tx - styles.playheadGlowPadding - styles.playheadWidth / 2
+        maximumEndDate.value = new Date()
+      } else if (!playhead.destroyed) {
+        playhead.destroy()
+      }
+    })
   }
 
   function initTimelineGuidesContainer(): void {
@@ -172,10 +219,22 @@
             Object.keys(nodes).length - 1,
           )
           nodesContainer.addChild(nodeContainer)
+
+          checkDeletedNodes()
         }
       })
     }
   })
+
+  function checkDeletedNodes(): void {
+    const nodeIds = props.graphData.map(node => node.id)
+    Object.keys(nodes).forEach((nodeId) => {
+      if (!nodeIds.includes(nodeId)) {
+        nodes[nodeId].node.destroy()
+        delete nodes[nodeId]
+      }
+    })
+  }
 
   const stateColors: Record<string, number> = {
     'completed': 0x00a63d,
@@ -195,11 +254,12 @@
     const nodeContainer = new Container()
     const label = createNodeLabel(nodeData)
     const box = new Graphics()
+
     drawNodeBox({
       box,
       state: nodeData.state,
       start: nodeData.start,
-      end: nodeData.end,
+      end: nodeData.end ?? new Date(),
       height: label.height,
     })
 
@@ -214,6 +274,14 @@
       node: nodeContainer,
       end: nodeData.end,
       state: nodeData.state,
+    }
+
+    if (props.isRunning) {
+      pixiApp.ticker.add(() => {
+        if (props.isRunning) {
+          updateNode(nodeData)
+        }
+      })
     }
 
     return {
@@ -280,19 +348,22 @@
       box,
       state: nodeData.state,
       start: nodeData.start,
-      end: nodeData.end,
+      end: nodeData.end ?? new Date(),
       height: label.height,
     })
+    node.node.position.x = xScale(nodeData.start)
+    node.end = nodeData.end
+    node.state = nodeData.state
   }
 
   // Convert a date to an X position
   function xScale(date: Date): number {
-    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / overallTimeSpan))
+    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / overallTimeSpan.value))
   }
 
   // Convert an X position to a timestamp
   function dateScale(xPosition: number): number {
-    return Math.ceil(minimumStartDate.getTime() + xPosition * (overallTimeSpan / overallGraphWidth))
+    return Math.ceil(minimumStartDate.getTime() + xPosition * (overallTimeSpan.value / overallGraphWidth))
   }
 </script>
 
