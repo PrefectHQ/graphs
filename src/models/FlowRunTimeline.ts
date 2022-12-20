@@ -1,4 +1,4 @@
-import { IBitmapTextStyle } from 'pixi.js'
+import { IBitmapTextStyle, TextStyle } from 'pixi.js'
 
 export type TimelineNodeState =
   'completed'
@@ -22,5 +22,6 @@ export type TimelineNodeData = {
 export type TextStyles = {
   nodeTextDefault: Partial<IBitmapTextStyle>,
   nodeTextInverse: Partial<IBitmapTextStyle>,
+  nodeTextMetrics: TextStyle,
   timeMarkerLabel: Partial<IBitmapTextStyle>,
 }

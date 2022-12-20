@@ -13,7 +13,6 @@
   import { Viewport } from 'pixi-viewport'
   import {
     Application,
-    BitmapText,
     Container,
     Graphics
   } from 'pixi.js'
@@ -24,10 +23,11 @@
     TimelineNodeState
   } from './models'
   import {
-    initBitmapFonts,
+    getBitmapFonts,
     initPixiApp,
     initViewport,
-    initTimelineGuides
+    initTimelineGuides,
+    TimelineNode
   } from './pixiFunctions'
   import { getDateBounds } from './utilities'
 
@@ -37,7 +37,6 @@
   }>()
 
   const stage = ref<HTMLDivElement>()
-  const devicePixelRatio = window.devicePixelRatio || 2
 
   const styles = {
     defaultViewportPadding: 40,
@@ -62,11 +61,11 @@
 
   let nodesContainer: Container
   type NodeRecord = {
-    node: Container,
+    node: TimelineNode,
     end: Date | null,
     state: TimelineNodeState | string,
   }
-  let nodes: Record<string, NodeRecord> = {}
+  let nodes: Map<string, NodeRecord> = new Map()
 
   onMounted(() => {
     if (!stage.value) {
@@ -79,7 +78,7 @@
     initTimelineGuidesContainer()
     viewport = initViewport(stage.value, pixiApp)
 
-    initBitmapFonts(devicePixelRatio)
+    getBitmapFonts()
       .then(newTextStyles => {
         textStyles = newTextStyles
         initTimelineGuides({
@@ -152,7 +151,7 @@
       0,
       0,
       styles.playheadWidth + styles.playheadGlowPadding * 2,
-      nodesContainer.height,
+      pixiApp.screen.height,
     )
     playhead.endFill()
     playhead.beginFill(styles.playheadBg)
@@ -160,7 +159,7 @@
       styles.playheadGlowPadding,
       0,
       styles.playheadWidth,
-      nodesContainer.height,
+      pixiApp.screen.height,
     )
     playhead.endFill()
 
@@ -208,16 +207,32 @@
       nodesContainer.x + nodesContainer.width / 2,
       nodesContainer.y + nodesContainer.height / 2,
     )
+
+    if (props.isRunning) {
+      pixiApp.ticker.add(() => {
+        if (props.isRunning) {
+          nodes.forEach(nodeItem => nodeItem.node.update())
+        }
+      })
+    }
   }
 
   function createNodes(): Container {
     const nodesContainer = new Container()
 
-    props.graphData.forEach((node, nodeIndex) => {
-      const { nodeContainer } = createNode(node, nodeIndex)
+    const newNodes = props.graphData.map((nodeData, nodeIndex) => {
+      const node = new TimelineNode(nodeData, xScale, nodeIndex)
 
-      nodesContainer.addChild(nodeContainer)
+      nodes.set(nodeData.id, {
+        node,
+        end: nodeData.end,
+        state: nodeData.state,
+      })
+
+      return node
     })
+
+    nodesContainer.addChild(...newNodes)
 
     viewport.addChild(nodesContainer)
 
@@ -225,162 +240,30 @@
   }
 
   watchEffect(() => {
-    // @TODO: This accommodates updated nodeData or newly added nodes, but not totally new data or nodes being removed.
-    //        Do we even need to handle these scenarios?
+    // @TODO: This accommodates updated nodeData or newly added nodes.
+    //        If totally new data is added, it all gets appended way down the viewport Y axis.
+    //        If nodes are deleted, they are not removed from the viewport (shouldn't happen).
     if (!loading.value) {
       props.graphData.forEach((nodeData) => {
-        if (nodeData.id in nodes) {
+        if (nodes.has(nodeData.id)) {
+          const node = nodes.get(nodeData.id)!
           if (
-            nodes[nodeData.id].end !== nodeData.end
-            || nodes[nodeData.id].state !== nodeData.state
+            node.end !== nodeData.end
+            || node.state !== nodeData.state
           ) {
-            updateNode(nodeData)
+            node.node.update()
           }
         } else {
           // add new node
-          const { nodeContainer } = createNode(
-            nodeData,
-            Object.keys(nodes).length - 1,
-          )
-          nodesContainer.addChild(nodeContainer)
+          const node = new TimelineNode(nodeData, xScale, nodes.size - 1)
 
-          checkDeletedNodes()
+          nodesContainer.addChild(node)
 
           cullDirty = true
         }
       })
     }
   })
-
-  function checkDeletedNodes(): void {
-    const nodeIds = props.graphData.map(node => node.id)
-    Object.keys(nodes).forEach((nodeId) => {
-      if (!nodeIds.includes(nodeId)) {
-        nodes[nodeId].node.destroy()
-        delete nodes[nodeId]
-      }
-    })
-  }
-
-  const stateColors: Record<string, number> = {
-    'completed': 0x00a63d,
-    'running': 0x00a8ef,
-    'scheduled': 0x60758d,
-    'pending': 0x60758d,
-    'failed': 0xf00011,
-    'cancelled': 0xf00011,
-    'crashed': 0xf00011,
-    'paused': 0xf4b000,
-  }
-  const nodeStyles = {
-    padding: 16,
-    gap: 4,
-  }
-  function createNode(nodeData: TimelineNodeData, layerPlacement: number): Record<string, Container> {
-    const nodeContainer = new Container()
-    const label = createNodeLabel(nodeData)
-    const box = new Graphics()
-
-    drawNodeBox({
-      box,
-      state: nodeData.state,
-      start: nodeData.start,
-      end: nodeData.end ?? new Date(),
-      height: label.height,
-    })
-
-    nodeContainer.addChild(box)
-    nodeContainer.addChild(label)
-    nodeContainer.position.set(
-      xScale(nodeData.start),
-      layerPlacement * 120,
-    )
-
-    nodes[nodeData.id] = {
-      node: nodeContainer,
-      end: nodeData.end,
-      state: nodeData.state,
-    }
-
-    if (props.isRunning) {
-      pixiApp.ticker.add(() => {
-        if (props.isRunning) {
-          updateNode(nodeData)
-        }
-      })
-    }
-
-    return {
-      nodeContainer,
-    }
-  }
-
-  function getNodeWidth(start?: Date | null, end?: Date | null): number {
-    return start && end ? xScale(end) - xScale(start) : 4
-  }
-
-  function createNodeLabel(nodeData: TimelineNodeData): BitmapText {
-    const width = getNodeWidth(nodeData.start, nodeData.end)
-    let isLabelInBox = true
-
-    let label = new BitmapText(nodeData.label, textStyles.nodeTextInverse)
-    if (label.width >= width) {
-      isLabelInBox = false
-      label.destroy()
-      label = new BitmapText(nodeData.label, textStyles.nodeTextDefault)
-    }
-
-    label.position.set(
-      isLabelInBox ? nodeStyles.padding : width + nodeStyles.gap,
-      nodeStyles.padding,
-    )
-
-    return label
-  }
-
-  type DrawNodeBoxProps = {
-    box: Graphics,
-    state: TimelineNodeState | string,
-    start: Date | null,
-    end: Date | null,
-    height: number,
-  }
-  function drawNodeBox({
-    box,
-    state,
-    start,
-    end,
-    height,
-  }: DrawNodeBoxProps): void {
-    const stateFill = state ? stateColors[state] : 0x9aa3b0
-
-    box.beginFill(stateFill)
-    box.drawRoundedRect(
-      0,
-      0,
-      getNodeWidth(start, end),
-      height + nodeStyles.padding * 2,
-      12,
-    )
-    box.endFill()
-  }
-
-  function updateNode(nodeData: TimelineNodeData): void {
-    const node = nodes[nodeData.id]
-    const box = node.node.children[0] as Graphics
-    let label = node.node.children[1] as BitmapText
-    box.clear()
-    drawNodeBox({
-      box,
-      state: nodeData.state,
-      start: nodeData.start,
-      end: nodeData.end ?? new Date(),
-      height: label.height,
-    })
-    node.node.position.x = xScale(nodeData.start)
-    node.end = nodeData.end
-    node.state = nodeData.state
-  }
 
   // Convert a date to an X position
   function xScale(date: Date): number {
@@ -393,11 +276,11 @@
   }
 
   function zoomOut(): void {
-    viewport.zoom(250, true)
+    viewport.zoom(400, true)
   }
 
   function zoomIn(): void {
-    viewport.zoom(-250, true)
+    viewport.zoom(-400, true)
   }
 </script>
 

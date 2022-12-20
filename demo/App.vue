@@ -27,6 +27,11 @@
   import ContextSidebar from '@/demo/components/ContextSidebar.vue'
   import { mobileMenuOpen, toggle } from '@/demo/router/menu'
 
+  // Add PIXI to the global scope so that the chrome plugin can access it, when in demo mode
+  if (import.meta.env.MODE === 'demo') {
+    import('pixi.js').then(PIXI => Object.defineProperty(window, 'PIXI', { value: PIXI }))
+  }
+
   const showMenu = computed(() => media.lg || mobileMenuOpen.value)
 
   watchEffect(() => document.body.classList.toggle('body-scrolling-disabled', showMenu.value && !media.lg))

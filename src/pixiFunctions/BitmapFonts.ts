@@ -1,5 +1,5 @@
 import FontFaceObserver from 'fontfaceobserver'
-import { BitmapFont, IBitmapTextStyle } from 'pixi.js'
+import { BitmapFont, IBitmapTextStyle, TextStyle } from 'pixi.js'
 import { TextStyles } from '@/models'
 
 const fontSpriteKeys = [
@@ -9,7 +9,15 @@ const fontSpriteKeys = [
   '.,:;!?()[]{}<>|/\\@\'"',
 ].join('')
 
-export function initBitmapFonts(devicePixelRatio: number): Promise<TextStyles> {
+const nodeTextStyles = new TextStyle({
+  fontFamily: 'InterVariable',
+  fontSize: 24,
+  lineHeight: 32,
+})
+
+function initBitmapFonts(): Promise<TextStyles> {
+  const devicePixelRatio = window.devicePixelRatio || 2
+
   return new Promise((resolve) => {
     const font = new FontFaceObserver('InterVariable')
 
@@ -21,18 +29,14 @@ export function initBitmapFonts(devicePixelRatio: number): Promise<TextStyles> {
       BitmapFont.from(
         'NodeTextDefault',
         {
-          fontFamily: 'InterVariable',
-          fontSize: 24,
-          lineHeight: 32,
+          ...nodeTextStyles,
           fill: 0x111827,
         }, options,
       )
       BitmapFont.from(
         'NodeTextInverse',
         {
-          fontFamily: 'InterVariable',
-          fontSize: 24,
-          lineHeight: 32,
+          ...nodeTextStyles,
           fill: 0xffffff,
         }, options,
       )
@@ -64,8 +68,15 @@ export function initBitmapFonts(devicePixelRatio: number): Promise<TextStyles> {
       resolve({
         nodeTextDefault,
         nodeTextInverse,
+        nodeTextMetrics: nodeTextStyles,
         timeMarkerLabel,
       })
     })
   })
+}
+
+const fontsCache = initBitmapFonts()
+
+export const getBitmapFonts = (): Promise<TextStyles> => {
+  return fontsCache
 }
