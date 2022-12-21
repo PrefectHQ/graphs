@@ -94,21 +94,15 @@ export function initTimelineGuides(props: TimelineGuidesProps): void {
     return
   }
 
-  const { stage, app, viewport, isRunning } = props
+  const { stage, app } = props
 
   setTimelineGuidesCurrentTimeGap(props)
   timelineGuidesIdealCount = Math.ceil(
     stage.clientWidth / (timelineGuidesMaxGap - timelineGuidesMinGap / 2))
 
-  if (isRunning) {
-    app.ticker.add(() => {
-      updateTimelineGuides(props)
-    })
-  } else {
-    viewport.on('moved', () => {
-      updateTimelineGuides(props)
-    })
-  }
+  app.ticker.add(() => {
+    updateTimelineGuides(props)
+  })
 }
 
 function updateTimelineGuides(props: TimelineGuidesProps): void {
@@ -172,7 +166,7 @@ function createTimelineGuide(date: Date, props: TimelineGuidesProps): Container 
     0,
     0,
     1,
-    app.renderer.height,
+    app.screen.height,
   )
   guideLine.endFill()
 

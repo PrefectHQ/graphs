@@ -1,4 +1,5 @@
-export * from './initBitmapFonts'
+export * from './bitmapFonts'
 export * from './initPixiApp'
 export * from './initViewport'
 export * from './timelineGuides'
+export * from './timelineNode'
