@@ -13,21 +13,19 @@
   import type { Viewport } from 'pixi-viewport'
   import {
     Application,
-    Container,
-    Graphics
+    Container
   } from 'pixi.js'
   import { onMounted, onBeforeUnmount, ref, watchEffect, computed } from 'vue'
   import {
     TimelineNodeData,
-    TextStyles,
     TimelineNodeState
   } from './models'
   import {
-    getBitmapFonts,
     initPixiApp,
     initViewport,
-    initTimelineGuides,
-    TimelineNode
+    TimelineGuides,
+    TimelineNode,
+    TimelinePlayhead
   } from './pixiFunctions'
   import { getDateBounds } from './utilities'
 
@@ -40,9 +38,6 @@
 
   const styles = {
     defaultViewportPadding: 40,
-    playheadBg: 0x4E82FE,
-    playheadWidth: 2,
-    playheadGlowPadding: 8,
   }
 
   const zIndex = {
@@ -54,7 +49,6 @@
   let loading = ref(true)
   let pixiApp: Application
   let viewport: Viewport
-  let textStyles: TextStyles
   let cull = new Cull()
   // flag cullDirty when new nodes are added to the viewport after init
   let cullDirty = false
@@ -63,9 +57,10 @@
   let maximumEndDate = ref<Date | undefined>()
   let overallGraphWidth: number
 
-  const timelineGuidesContainer = new Container()
+  let guides: TimelineGuides
+  let playhead: TimelinePlayhead
 
-  let nodesContainer: Container
+  let nodesContainer = new Container()
   type NodeRecord = {
     node: TimelineNode,
     end: Date | null,
@@ -86,42 +81,32 @@
     viewport = await initViewport(stage.value, pixiApp)
     viewport.zIndex = zIndex.viewport
 
-    // init guides before viewport for proper z-indexing
-    initTimelineGuidesContainer()
-    timelineGuidesContainer.zIndex = zIndex.timelineGuides
-
+    initGuides()
     initContent()
-
     initPlayhead()
 
-    getBitmapFonts()
-      .then(newTextStyles => {
-        textStyles = newTextStyles
-        initTimelineGuides({
-          app: pixiApp,
-          viewport: viewport,
-          stage: stage.value,
-          timelineGuidesContainer,
-          minimumStartDate,
-          overallGraphWidth,
-          isRunning: props.isRunning,
-          dateScale,
-          xScale,
-          textStyles,
-        })
+    initCulling()
 
-        initCulling()
-        loading.value = false
-      })
+    loading.value = false
   })
 
   onBeforeUnmount(() => {
+    cleanupApp()
+  })
+
+  function cleanupApp(): void {
+    guides.removeChildren()
+    guides.destroy()
+
+    playhead.destroy()
+
     nodes.forEach(({ node }) => {
       node.destroy()
     })
     nodesContainer.destroy()
+
     pixiApp.destroy(true)
-  })
+  }
 
   function initTimeScale(): void {
     const dates = Array
@@ -164,24 +149,11 @@
       return
     }
 
-    const playhead = new Graphics()
-    playhead.beginFill(styles.playheadBg, 0.1)
-    playhead.drawRect(
-      0,
-      0,
-      styles.playheadWidth + styles.playheadGlowPadding * 2,
-      pixiApp.screen.height,
-    )
-    playhead.endFill()
-    playhead.beginFill(styles.playheadBg)
-    playhead.drawRect(
-      styles.playheadGlowPadding,
-      0,
-      styles.playheadWidth,
-      pixiApp.screen.height,
-    )
-    playhead.endFill()
-
+    playhead = new TimelinePlayhead({
+      playheadHeight: pixiApp.screen.height,
+      viewportRef: viewport,
+      xScale,
+    })
     playhead.zIndex = zIndex.playhead
 
     pixiApp.stage.addChild(playhead)
@@ -189,16 +161,33 @@
     // @TODO: If isRunning is turned off, then back on again, this will not initialize
     pixiApp.ticker.add(() => {
       if (props.isRunning) {
-        playhead.x = xScale(new Date()) * viewport.scale._x + viewport.worldTransform.tx - styles.playheadGlowPadding - styles.playheadWidth / 2
         maximumEndDate.value = new Date()
+        playhead.updatePosition()
       } else if (!playhead.destroyed) {
         playhead.destroy()
       }
     })
   }
 
-  function initTimelineGuidesContainer(): void {
-    pixiApp.stage.addChild(timelineGuidesContainer)
+  function initGuides(): void {
+    guides = new TimelineGuides({
+      viewportRef: viewport,
+      stageWidth: stage.value?.clientWidth ?? 1000,
+      guideHeight: pixiApp.screen.height,
+      overallGraphWidth,
+      xScale,
+      dateScale,
+      minimumStartDate,
+      maximumEndDate: maximumEndDate.value ?? new Date(),
+    })
+
+    guides.zIndex = zIndex.timelineGuides
+
+    pixiApp.stage.addChild(guides)
+
+    pixiApp.ticker.add(() => {
+      guides.updateGuides()
+    })
   }
 
   function initCulling(): void {
@@ -215,7 +204,20 @@
   }
 
   function initContent(): void {
-    nodesContainer = createNodes()
+    const newNodes = props.graphData.map((nodeData, nodeIndex) => {
+      const node = new TimelineNode(nodeData, xScale, nodeIndex)
+
+      nodes.set(nodeData.id, {
+        node,
+        end: nodeData.end,
+        state: nodeData.state,
+      })
+
+      return node
+    })
+
+    nodesContainer.addChild(...newNodes)
+    viewport.addChild(nodesContainer)
 
     viewport.ensureVisible(
       nodesContainer.x - styles.defaultViewportPadding,
@@ -236,28 +238,6 @@
         }
       })
     }
-  }
-
-  function createNodes(): Container {
-    const nodesContainer = new Container()
-
-    const newNodes = props.graphData.map((nodeData, nodeIndex) => {
-      const node = new TimelineNode(nodeData, xScale, nodeIndex)
-
-      nodes.set(nodeData.id, {
-        node,
-        end: nodeData.end,
-        state: nodeData.state,
-      })
-
-      return node
-    })
-
-    nodesContainer.addChild(...newNodes)
-
-    viewport.addChild(nodesContainer)
-
-    return nodesContainer
   }
 
   watchEffect(() => {

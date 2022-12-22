@@ -19,10 +19,6 @@ const stateColors: Record<string, number> = {
   'paused': 0xf4b000,
 }
 
-export type TimelineNodeProps = {
-  nodeData: TimelineNodeData,
-}
-
 export class TimelineNode extends Container {
   public nodeData: TimelineNodeData
   private readonly xScale: (date: Date) => number

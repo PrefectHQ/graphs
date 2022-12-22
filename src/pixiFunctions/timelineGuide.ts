@@ -1,0 +1,48 @@
+import { BitmapText, Container, Graphics } from 'pixi.js'
+import { getBitmapFonts } from './bitmapFonts'
+
+const guideStyles = {
+  guideLineColor: 0xc9d5e2,
+}
+
+export class TimelineGuide extends Container {
+  private readonly labelText: string
+  private readonly guideHeight: number
+
+  private readonly guideLine: Graphics
+  private label: BitmapText | undefined
+
+  public constructor(labelText: string, guideHeight: number) {
+    super()
+
+    this.labelText = labelText
+    this.guideHeight = guideHeight
+
+    this.guideLine = new Graphics()
+    this.drawGuideLine()
+    this.addChild(this.guideLine)
+
+    this.drawLabel()
+  }
+
+  private drawGuideLine(): void {
+    this.guideLine.clear()
+    this.guideLine.beginFill(guideStyles.guideLineColor)
+    this.guideLine.drawRect(
+      0,
+      0,
+      1,
+      this.guideHeight,
+    )
+    this.guideLine.endFill()
+  }
+
+  private async drawLabel(): Promise<void> {
+    const textStyles = await getBitmapFonts()
+
+    this.label?.destroy()
+    this.label = new BitmapText(this.labelText, textStyles.timeMarkerLabel)
+    this.label.position.set(4, 4)
+    this.addChild(this.label)
+  }
+}
