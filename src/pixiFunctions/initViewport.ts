@@ -13,6 +13,7 @@ export async function initViewport(stage: HTMLElement, app: Application): Promis
     passiveWheel: false,
     interaction: app.renderer.plugins.interaction,
     divWheel: stage,
+    ticker: app.ticker,
   })
 
   viewport

@@ -137,11 +137,8 @@ export class TimelineGuides extends Container {
     // timeline has grown from running, add more guides
     || lastGuide && lastGuide.x + this.currentTimeGap < this.xScale(this.maximumEndDate) + timelineGuidesStyles.xPadding
     ) {
-
-      // @TODO This is causing a major slow down. I think it's trying to update at the same time it's redrawing
-
       if (this.guides.size > 0) {
-        this.guides.forEach(guide => guide.destroy())
+        this.removeChildren()
         this.guides.clear()
       }
       this.createGuides()
@@ -189,5 +186,11 @@ export class TimelineGuides extends Container {
     this.guides.forEach((guideContainer, guideDate) => {
       guideContainer.position.set(this.getGuidePosition(guideDate), 0)
     })
+  }
+
+  public destroy(): void {
+    this.removeChildren()
+    this.guides.clear()
+    super.destroy.call(this)
   }
 }

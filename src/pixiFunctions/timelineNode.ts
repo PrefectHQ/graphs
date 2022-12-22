@@ -74,10 +74,7 @@ export class TimelineNode extends Container {
       this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextInverse)
     }
 
-    this.label.position.set(
-      this.isLabelInBox ? nodeStyles.padding : this.nodeWidth + nodeStyles.labelGap,
-      nodeStyles.padding,
-    )
+    this.updateLabelPosition()
 
     this.addChild(this.label)
   }
@@ -105,6 +102,13 @@ export class TimelineNode extends Container {
     )
   }
 
+  private updateLabelPosition(): void {
+    this.label?.position.set(
+      this.isLabelInBox ? nodeStyles.padding : this.nodeWidth + nodeStyles.labelGap,
+      nodeStyles.padding,
+    )
+  }
+
   public update(): void {
     const nodeWidth = this.getNodeWidth()
 
@@ -114,8 +118,14 @@ export class TimelineNode extends Container {
       this.box.clear()
       this.drawBox()
 
-      if (!this.isLabelInBox || this.apxLabelWidth > this.nodeWidth) {
+      if (
+        // 2px tolerance avoids the label bouncing in/out of the box
+        this.isLabelInBox && this.apxLabelWidth > this.nodeWidth + 2
+        || !this.isLabelInBox && this.apxLabelWidth < this.nodeWidth - 2
+      ) {
         this.drawLabel()
+      } else if (!this.isLabelInBox) {
+        this.updateLabelPosition()
       }
     }
 

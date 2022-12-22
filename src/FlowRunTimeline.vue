@@ -95,14 +95,11 @@
   })
 
   function cleanupApp(): void {
-    guides.removeChildren()
     guides.destroy()
-
     playhead.destroy()
 
-    nodes.forEach(({ node }) => {
-      node.destroy()
-    })
+    nodesContainer.removeChildren()
+    nodes.clear()
     nodesContainer.destroy()
 
     pixiApp.destroy(true)
@@ -204,7 +201,7 @@
   }
 
   function initContent(): void {
-    const newNodes = props.graphData.map((nodeData, nodeIndex) => {
+    props.graphData.forEach((nodeData, nodeIndex) => {
       const node = new TimelineNode(nodeData, xScale, nodeIndex)
 
       nodes.set(nodeData.id, {
@@ -213,10 +210,9 @@
         state: nodeData.state,
       })
 
-      return node
+      nodesContainer.addChild(node)
     })
 
-    nodesContainer.addChild(...newNodes)
     viewport.addChild(nodesContainer)
 
     viewport.ensureVisible(
