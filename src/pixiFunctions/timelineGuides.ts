@@ -1,6 +1,6 @@
 // @TODO: Could use some refactoring here so that props aren't passed around so much
 
-import { Viewport } from 'pixi-viewport'
+import type { Viewport } from 'pixi-viewport'
 import { Application, BitmapText, Container, Graphics } from 'pixi.js'
 import { TextStyles } from '@/models'
 

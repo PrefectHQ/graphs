@@ -1,7 +1,9 @@
-import { Viewport } from 'pixi-viewport'
-import { Application, Ticker } from 'pixi.js'
+import type { Viewport as ViewportType } from 'pixi-viewport'
+import { Application } from 'pixi.js'
+import { getPixiViewport } from './viewport'
 
-export function initViewport(stage: HTMLElement, app: Application): Viewport {
+export async function initViewport(stage: HTMLElement, app: Application): Promise<ViewportType> {
+  const Viewport = await getPixiViewport()
   const stageWidth = stage.clientWidth
   const stageHeight = stage.clientHeight
 
