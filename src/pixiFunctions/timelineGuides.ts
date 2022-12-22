@@ -116,6 +116,7 @@ function updateTimelineGuides(props: TimelineGuidesProps): void {
   if (
     // timeline gaps have changed
     previousTimelineGuidesTimeGap !== timelineGuidesCurrentTimeGap
+    || Object.keys(timelineGuides).length === 0
     // the timeline has grown since it's running, so we need to add more guides
     || isRunning && timelineGuides[lastGuideKey].x + timelineGuidesCurrentTimeGap < xScale(new Date()) + timelineGuidesXPadding
   ) {

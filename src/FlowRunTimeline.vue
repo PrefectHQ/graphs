@@ -45,6 +45,12 @@
     playheadGlowPadding: 8,
   }
 
+  const zIndex = {
+    timelineGuides: 0,
+    viewport: 10,
+    playhead: 20,
+  }
+
   let loading = ref(true)
   let pixiApp: Application
   let viewport: Viewport
@@ -73,10 +79,20 @@
       return
     }
     initTimeScale()
+
     pixiApp = initPixiApp(stage.value)
+    pixiApp.stage.sortableChildren = true
+
+    viewport = await initViewport(stage.value, pixiApp)
+    viewport.zIndex = zIndex.viewport
+
     // init guides before viewport for proper z-indexing
     initTimelineGuidesContainer()
-    viewport = await initViewport(stage.value, pixiApp)
+    timelineGuidesContainer.zIndex = zIndex.timelineGuides
+
+    initContent()
+
+    initPlayhead()
 
     getBitmapFonts()
       .then(newTextStyles => {
@@ -93,14 +109,17 @@
           xScale,
           textStyles,
         })
-        initContent()
-        initPlayhead()
+
         initCulling()
         loading.value = false
       })
   })
 
   onBeforeUnmount(() => {
+    nodes.forEach(({ node }) => {
+      node.destroy()
+    })
+    nodesContainer.destroy()
     pixiApp.destroy(true)
   })
 
@@ -162,6 +181,8 @@
       pixiApp.screen.height,
     )
     playhead.endFill()
+
+    playhead.zIndex = zIndex.playhead
 
     pixiApp.stage.addChild(playhead)
 
