@@ -10,7 +10,7 @@
 
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
-  import { Viewport } from 'pixi-viewport'
+  import type { Viewport } from 'pixi-viewport'
   import {
     Application,
     Container,
@@ -67,7 +67,7 @@
   }
   let nodes: Map<string, NodeRecord> = new Map()
 
-  onMounted(() => {
+  onMounted(async () => {
     if (!stage.value) {
       console.error('Stage reference not found in initPixiApp')
       return
@@ -76,7 +76,7 @@
     pixiApp = initPixiApp(stage.value)
     // init guides before viewport for proper z-indexing
     initTimelineGuidesContainer()
-    viewport = initViewport(stage.value, pixiApp)
+    viewport = await initViewport(stage.value, pixiApp)
 
     getBitmapFonts()
       .then(newTextStyles => {
