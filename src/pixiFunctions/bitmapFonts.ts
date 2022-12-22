@@ -75,8 +75,6 @@ function initBitmapFonts(): Promise<TextStyles> {
   })
 }
 
-const fontsCache = initBitmapFonts()
-
 export const getBitmapFonts = (): Promise<TextStyles> => {
-  return fontsCache
+  return initBitmapFonts()
 }
