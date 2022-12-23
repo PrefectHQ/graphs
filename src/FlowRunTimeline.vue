@@ -58,7 +58,7 @@
   let overallGraphWidth: number
 
   let guides: TimelineGuides
-  let playhead: TimelinePlayhead
+  let playhead: TimelinePlayhead | undefined
 
   let nodesContainer = new Container()
   type NodeRecord = {
@@ -96,7 +96,7 @@
 
   function cleanupApp(): void {
     guides.destroy()
-    playhead.destroy()
+    playhead?.destroy()
 
     nodesContainer.removeChildren()
     nodes.clear()
@@ -159,9 +159,9 @@
     pixiApp.ticker.add(() => {
       if (props.isRunning) {
         maximumEndDate.value = new Date()
-        playhead.updatePosition()
-      } else if (!playhead.destroyed) {
-        playhead.destroy()
+        playhead?.updatePosition()
+      } else if (!playhead?.destroyed) {
+        playhead?.destroy()
       }
     })
   }
