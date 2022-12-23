@@ -1,17 +1,14 @@
-// @TODO: Could use some refactoring here so that props aren't passed around so much
-
 import type { Viewport } from 'pixi-viewport'
-import { Application, BitmapText, Container, Graphics } from 'pixi.js'
-import { TextStyles } from '@/models'
-
-let timelineGuides: Record<string, Container> = {}
+import { Container } from 'pixi.js'
+import { TimelineGuide } from './timelineGuide'
 
 const timelineGuidesMinGap = 80
 const timelineGuidesMaxGap = 260
-let timelineGuidesIdealCount = 10
-let timelineGuidesCurrentTimeGap = 1000 * 30
-// how far left and right of the timeline to render guides
-const timelineGuidesXPadding = 4000
+
+const timelineGuidesStyles = {
+  // how far left and right of the timeline to render guides
+  xPadding: 4000,
+}
 
 const time = {
   second: 1000,
@@ -76,127 +73,124 @@ const timeSpanSlots = [
 ]
 
 type TimelineGuidesProps = {
-  app: Application,
-  viewport: Viewport,
-  stage: HTMLElement | undefined,
-  timelineGuidesContainer: Container,
-  minimumStartDate: Date,
+  viewportRef: Viewport,
+  stageWidth: number,
+  guideHeight: number,
   overallGraphWidth: number,
-  isRunning: boolean | undefined,
+  xScale: (x: Date) => number,
   dateScale: (x: number) => number,
-  xScale: (date: Date) => number,
-  textStyles: TextStyles,
+  minimumStartDate: Date,
+  maximumEndDate: Date,
 }
 
-export function initTimelineGuides(props: TimelineGuidesProps): void {
-  if (!props.stage) {
-    console.error('TimelineGuides: stage is undefined')
-    return
-  }
+export class TimelineGuides extends Container {
+  private readonly viewportRef
+  private readonly stageWidth
+  private readonly guideHeight
+  private readonly overallGraphWidth
+  private readonly xScale
+  private readonly dateScale
+  private readonly minimumStartDate: Date
+  private readonly maximumEndDate: Date
 
-  const { stage, app } = props
+  private idealGuideCount = 10
+  private currentTimeGap = 120
+  private readonly guides: Map<Date, Container> = new Map()
 
-  setTimelineGuidesCurrentTimeGap(props)
-  timelineGuidesIdealCount = Math.ceil(
-    stage.clientWidth / (timelineGuidesMaxGap - timelineGuidesMinGap / 2))
-
-  app.ticker.add(() => {
-    updateTimelineGuides(props)
-  })
-}
-
-function updateTimelineGuides(props: TimelineGuidesProps): void {
-  const { isRunning, xScale } = props
-
-  const previousTimelineGuidesTimeGap = timelineGuidesCurrentTimeGap
-  setTimelineGuidesCurrentTimeGap(props)
-
-  const lastGuideKey = Object.keys(timelineGuides)[Object.keys(timelineGuides).length - 1]
-
-  if (
-    // timeline gaps have changed
-    previousTimelineGuidesTimeGap !== timelineGuidesCurrentTimeGap
-    // the timeline has grown since it's running, so we need to add more guides
-    || isRunning && timelineGuides[lastGuideKey].x + timelineGuidesCurrentTimeGap < xScale(new Date()) + timelineGuidesXPadding
-  ) {
-    if (Object.keys(timelineGuides).length > 0) {
-      Object.keys(timelineGuides).forEach((key) => {
-        timelineGuides[key].destroy()
-      })
-      timelineGuides = {}
-    }
-    createTimelineGuides(props)
-  } else {
-    updateTimelineGuidesPositions(props)
-  }
-}
-
-function createTimelineGuides(props: TimelineGuidesProps): void {
-  const {
-    timelineGuidesContainer,
-    dateScale,
+  public constructor({
+    viewportRef,
+    stageWidth,
+    guideHeight,
     overallGraphWidth,
-  } = props
+    xScale,
+    dateScale,
+    minimumStartDate,
+    maximumEndDate,
+  }: TimelineGuidesProps) {
+    super()
 
-  let lastGuidePoint
-  const maxGuidePlacement = dateScale(overallGraphWidth + timelineGuidesXPadding)
-  const firstGuide = new Date(Math.ceil(dateScale(-timelineGuidesXPadding) / timelineGuidesCurrentTimeGap) * timelineGuidesCurrentTimeGap)
+    this.viewportRef = viewportRef
+    this.stageWidth = stageWidth
+    this.guideHeight = guideHeight
+    this.overallGraphWidth = overallGraphWidth
+    this.xScale = xScale
+    this.dateScale = dateScale
+    this.minimumStartDate = minimumStartDate
+    this.maximumEndDate = maximumEndDate
 
-  lastGuidePoint = firstGuide
+    this.updateIdealGuideCount()
+    this.updateCurrentTimeGap()
 
-  while (lastGuidePoint.getTime() < maxGuidePlacement) {
-    const guide = createTimelineGuide(lastGuidePoint, props)
-
-    timelineGuides[lastGuidePoint.getTime()] = guide
-
-    timelineGuidesContainer.addChild(guide)
-
-    lastGuidePoint = new Date(lastGuidePoint.getTime() + timelineGuidesCurrentTimeGap)
+    this.createGuides()
   }
-}
 
-function createTimelineGuide(date: Date, props: TimelineGuidesProps): Container {
-  const { app, textStyles } = props
-  const guide = new Container()
-  guide.position.set(getGuidePosition(date, props), 0)
+  public updateGuides(): void {
+    const previousTimeGap = this.currentTimeGap
+    this.updateCurrentTimeGap()
 
-  const guideLine = new Graphics()
-  guideLine.beginFill(0xc9d5e2)
-  guideLine.drawRect(
-    0,
-    0,
-    1,
-    app.screen.height,
-  )
-  guideLine.endFill()
+    const lastGuide = Array.from(this.guides).pop()?.[1]
 
-  const guideLabel = new BitmapText(date.toLocaleTimeString(), textStyles.timeMarkerLabel)
-  guideLabel.position.set(4, 4)
+    if (
+      this.guides.size === 0
+    // timeline gaps have changed
+    || previousTimeGap !== this.currentTimeGap
+    // timeline has grown from running, add more guides
+    || lastGuide && lastGuide.x + this.currentTimeGap < this.xScale(this.maximumEndDate) + timelineGuidesStyles.xPadding
+    ) {
+      if (this.guides.size > 0) {
+        this.removeChildren()
+        this.guides.clear()
+      }
+      this.createGuides()
+    } else {
+      this.updateGuidePositions()
+    }
+  }
 
-  guide.addChild(guideLine)
-  guide.addChild(guideLabel)
+  private updateIdealGuideCount(): void {
+    this.idealGuideCount = Math.ceil(
+      this.stageWidth / (timelineGuidesMaxGap - timelineGuidesMinGap / 2))
+  }
 
-  return guide
-}
+  private updateCurrentTimeGap(): void {
 
-function updateTimelineGuidesPositions(props: TimelineGuidesProps): void {
-  Object.keys(timelineGuides).forEach((key) => {
-    const guide = timelineGuides[key]
-    guide.position.set(getGuidePosition(new Date(Number(key)), props), 0)
-  })
-}
+    const pxSpan = Math.ceil((this.viewportRef.right - this.viewportRef.left) / this.idealGuideCount)
+    const timeSpan = this.dateScale(pxSpan) - this.minimumStartDate.getTime()
 
-function getGuidePosition(date: Date, props: TimelineGuidesProps): number {
-  const { viewport, xScale } = props
+    this.currentTimeGap = timeSpanSlots.find(timeSlot => timeSlot.ceiling > timeSpan)?.span ?? timeSpanSlots[0].span
+  }
 
-  return xScale(date) * viewport.scale._x + viewport.worldTransform.tx
-}
+  private createGuides(): void {
+    let lastGuidePoint
+    const maxGuidePlacement = this.dateScale(this.overallGraphWidth + timelineGuidesStyles.xPadding)
+    const firstGuide = new Date(Math.ceil(this.dateScale(-timelineGuidesStyles.xPadding) / this.currentTimeGap) * this.currentTimeGap)
 
-function setTimelineGuidesCurrentTimeGap(props: TimelineGuidesProps): void {
-  const { viewport, dateScale, minimumStartDate } = props
+    lastGuidePoint = firstGuide
 
-  const pxSpan = Math.ceil((viewport.right - viewport.left) / timelineGuidesIdealCount)
-  const timeSpan = dateScale(pxSpan) - minimumStartDate.getTime()
+    while (lastGuidePoint.getTime() < maxGuidePlacement) {
+      const guide = new TimelineGuide(lastGuidePoint.toLocaleTimeString(), this.guideHeight)
+      guide.position.set(this.getGuidePosition(lastGuidePoint), 0)
 
-  timelineGuidesCurrentTimeGap = timeSpanSlots.find(timeSlot => timeSlot.ceiling > timeSpan)?.span ?? timeSpanSlots[0].span
+      this.guides.set(lastGuidePoint, guide)
+      this.addChild(guide)
+
+      lastGuidePoint = new Date(lastGuidePoint.getTime() + this.currentTimeGap)
+    }
+  }
+
+  private getGuidePosition(date: Date): number {
+    return this.xScale(date) * this.viewportRef.scale._x + this.viewportRef.worldTransform.tx
+  }
+
+  private updateGuidePositions(): void {
+    this.guides.forEach((guideContainer, guideDate) => {
+      guideContainer.position.set(this.getGuidePosition(guideDate), 0)
+    })
+  }
+
+  public destroy(): void {
+    this.removeChildren()
+    this.guides.clear()
+    super.destroy.call(this)
+  }
 }
