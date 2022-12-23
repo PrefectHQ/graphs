@@ -3,6 +3,7 @@ import { getBitmapFonts } from './bitmapFonts'
 
 const guideStyles = {
   guideLineColor: 0xc9d5e2,
+  labelPadding: 4,
 }
 
 export class TimelineGuide extends Container {
@@ -42,7 +43,7 @@ export class TimelineGuide extends Container {
 
     this.label?.destroy()
     this.label = new BitmapText(this.labelText, textStyles.timeMarkerLabel)
-    this.label.position.set(4, 4)
+    this.label.position.set(guideStyles.labelPadding, guideStyles.labelPadding)
     this.addChild(this.label)
   }
 }
