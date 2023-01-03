@@ -23,7 +23,6 @@ export async function initViewport(stage: HTMLElement, app: Application): Promis
     })
     .wheel({
       trackpadPinch: true,
-
       wheelZoom: true,
     })
     .pinch()
