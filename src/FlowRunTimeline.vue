@@ -15,7 +15,7 @@
     Application,
     Container
   } from 'pixi.js'
-  import { onMounted, onBeforeUnmount, ref, watchEffect, computed } from 'vue'
+  import { onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
     TimelineNodeData,
     TimelineNodeState
@@ -53,8 +53,10 @@
   // flag cullDirty when new nodes are added to the viewport after init
   let cullDirty = false
 
+  const minimumTimeSpan = 1000 * 60
   let minimumStartDate: Date
   let maximumEndDate = ref<Date | undefined>()
+  let overallTimeSpan: number
   let overallGraphWidth: number
 
   let guides: TimelineGuides
@@ -125,21 +127,13 @@
     }
 
     const { min, max } = getDateBounds(dates)
+    const timeSpan = max.getTime() - min.getTime()
 
     minimumStartDate = min
     maximumEndDate.value = max
-
+    overallTimeSpan =  timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
     overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
   }
-
-  const overallTimeSpan = computed(() => {
-    if (!maximumEndDate.value) {
-      return 0
-    }
-    const minimumTimeSpan = 1000 * 60
-    const timeSpan = maximumEndDate.value.getTime() - minimumStartDate.getTime()
-    return timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
-  })
 
   function initPlayhead(): void {
     if (!props.isRunning) {
@@ -274,12 +268,12 @@
 
   // Convert a date to an X position
   function xScale(date: Date): number {
-    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / overallTimeSpan.value))
+    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / overallTimeSpan))
   }
 
   // Convert an X position to a timestamp
   function dateScale(xPosition: number): number {
-    return Math.ceil(minimumStartDate.getTime() + xPosition * (overallTimeSpan.value / overallGraphWidth))
+    return Math.ceil(minimumStartDate.getTime() + xPosition * (overallTimeSpan / overallGraphWidth))
   }
 
   function zoomOut(): void {
