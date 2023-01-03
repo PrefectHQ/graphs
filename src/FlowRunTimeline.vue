@@ -56,7 +56,7 @@
   const minimumTimeSpan = 1000 * 60
   let minimumStartDate: Date
   let maximumEndDate = ref<Date | undefined>()
-  let overallTimeSpan: number
+  let initialOverallTimeSpan: number
   let overallGraphWidth: number
 
   let guides: TimelineGuides
@@ -131,7 +131,7 @@
 
     minimumStartDate = min
     maximumEndDate.value = max
-    overallTimeSpan =  timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
+    initialOverallTimeSpan = timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
     overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
   }
 
@@ -180,7 +180,8 @@
       xScale,
       dateScale,
       minimumStartDate,
-      maximumEndDate: maximumEndDate.value ?? new Date(),
+      maximumEndDate,
+      isRunning: props.isRunning ?? false,
     })
 
     guides.zIndex = zIndex.timelineGuides
@@ -268,12 +269,12 @@
 
   // Convert a date to an X position
   function xScale(date: Date): number {
-    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / overallTimeSpan))
+    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / initialOverallTimeSpan))
   }
 
   // Convert an X position to a timestamp
   function dateScale(xPosition: number): number {
-    return Math.ceil(minimumStartDate.getTime() + xPosition * (overallTimeSpan / overallGraphWidth))
+    return Math.ceil(minimumStartDate.getTime() + xPosition * (initialOverallTimeSpan / overallGraphWidth))
   }
 
   function zoomOut(): void {
