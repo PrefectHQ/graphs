@@ -155,7 +155,7 @@
 
     pixiApp.stage.addChild(playhead)
 
-    // @TODO: If isRunning is turned off, then back on again, this will not initialize
+    // If isRunning is turned off, then back on again, this will not reinitialize
     pixiApp.ticker.add(() => {
       if (props.isRunning) {
         maximumEndDate.value = new Date()
@@ -237,9 +237,9 @@
   }
 
   watchEffect(() => {
-    // @TODO: This accommodates updated nodeData or newly added nodes.
-    //        If totally new data is added, it all gets appended way down the viewport Y axis.
-    //        If nodes are deleted, they are not removed from the viewport (shouldn't happen).
+    // This accommodates updated nodeData or newly added nodes.
+    // If totally new data is added, it all gets appended way down the viewport Y axis.
+    // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
     if (!loading.value) {
       props.graphData.forEach((nodeData) => {
         if (nodes.has(nodeData.id)) {
@@ -251,7 +251,6 @@
             node.node.update()
           }
         } else {
-          // add new node
           const node = new TimelineNode(nodeData, xScale, nodes.size - 1)
 
           nodesContainer.addChild(node)
