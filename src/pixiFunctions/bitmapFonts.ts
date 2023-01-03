@@ -9,10 +9,16 @@ const fontSpriteKeys = [
   '.,:;!?()[]{}<>|/\\@\'"',
 ].join('')
 
-const nodeTextStyles = new TextStyle({
+export const nodeTextStyles = new TextStyle({
   fontFamily: 'InterVariable',
-  fontSize: 24,
-  lineHeight: 32,
+  fontSize: 14,
+  lineHeight: 20,
+})
+
+export const timelineMarkerStyles = new TextStyle({
+  fontFamily: 'InterVariable',
+  fontSize: 12,
+  lineHeight: 16,
 })
 
 function initBitmapFonts(): Promise<TextStyles> {
@@ -43,21 +49,19 @@ function initBitmapFonts(): Promise<TextStyles> {
       BitmapFont.from(
         'TimeMarkerLabel',
         {
-          fontFamily: 'InterVariable',
-          fontSize: 16,
-          lineHeight: 24,
+          ...timelineMarkerStyles,
           fill: 0x94A3B8,
         }, options,
       )
 
       const nodeTextDefault: Partial<IBitmapTextStyle> = {
         fontName: 'NodeTextDefault',
-        fontSize: 24,
+        fontSize: 14,
       }
 
       const nodeTextInverse: Partial<IBitmapTextStyle> = {
         fontName: 'NodeTextInverse',
-        fontSize: 24,
+        fontSize: 14,
       }
 
       const timeMarkerLabel: Partial<IBitmapTextStyle> = {
@@ -68,7 +72,6 @@ function initBitmapFonts(): Promise<TextStyles> {
       resolve({
         nodeTextDefault,
         nodeTextInverse,
-        nodeTextMetrics: nodeTextStyles,
         timeMarkerLabel,
       })
     })

@@ -1,9 +1,9 @@
 import { BitmapText, Container, Graphics, TextMetrics } from 'pixi.js'
-import { getBitmapFonts } from './bitmapFonts'
+import { getBitmapFonts, nodeTextStyles } from './bitmapFonts'
 import { TimelineNodeData } from '@/models'
 
 const nodeStyles = {
-  padding: 16,
+  padding: 12,
   borderRadius: 8,
   labelGap: 4,
 }
@@ -44,39 +44,17 @@ export class TimelineNode extends Container {
 
     this.nodeWidth = this.getNodeWidth()
 
-    this.drawLabel()
-
     this.box = new Graphics()
     this.drawBox()
     this.addChild(this.box)
+
+    this.drawLabel()
 
     this.updatePosition()
   }
 
   private getNodeWidth(): number {
     return this.xScale(this.nodeData.end ?? new Date()) - this.xScale(this.nodeData.start)
-  }
-
-  private async drawLabel(): Promise<void> {
-    const textStyles = await getBitmapFonts()
-
-    if (this.apxLabelWidth === 0) {
-      this.apxLabelWidth = TextMetrics.measureText(this.nodeData.label, textStyles.nodeTextMetrics).width
-    }
-
-    this.label?.destroy()
-
-    if (this.apxLabelWidth > this.nodeWidth) {
-      this.isLabelInBox = false
-      this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextDefault)
-    } else {
-      this.isLabelInBox = true
-      this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextInverse)
-    }
-
-    this.updateLabelPosition()
-
-    this.addChild(this.label)
   }
 
   private get boxColor(): number {
@@ -89,10 +67,32 @@ export class TimelineNode extends Container {
       0,
       0,
       this.nodeWidth,
-      (this.label?.height ? this.label.height : 32) + nodeStyles.padding * 2,
+      nodeTextStyles.lineHeight + nodeStyles.padding * 2,
       nodeStyles.borderRadius,
     )
     this.box.endFill()
+  }
+
+  private async drawLabel(): Promise<void> {
+    const textStyles = await getBitmapFonts()
+
+    if (this.apxLabelWidth === 0) {
+      this.apxLabelWidth = TextMetrics.measureText(this.nodeData.label, nodeTextStyles).width
+    }
+
+    this.label?.destroy()
+
+    if (this.apxLabelWidth + nodeStyles.padding * 2 > this.nodeWidth) {
+      this.isLabelInBox = false
+      this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextDefault)
+    } else {
+      this.isLabelInBox = true
+      this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextInverse)
+    }
+
+    this.updateLabelPosition()
+
+    this.addChild(this.label)
   }
 
   private updatePosition(): void {

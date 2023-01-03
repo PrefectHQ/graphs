@@ -66,7 +66,6 @@
 
   watchEffect(() => {
     // set data and sort by startTime
-    console.log('Data', data)
     data.value = generateTimescaleData(dataOptions.value)
 
     if (isRunning.value) {

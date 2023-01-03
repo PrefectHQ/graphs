@@ -15,7 +15,7 @@
     Application,
     Container
   } from 'pixi.js'
-  import { onMounted, onBeforeUnmount, ref, watchEffect, computed } from 'vue'
+  import { onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
     TimelineNodeData,
     TimelineNodeState
@@ -53,8 +53,10 @@
   // flag cullDirty when new nodes are added to the viewport after init
   let cullDirty = false
 
+  const minimumTimeSpan = 1000 * 60
   let minimumStartDate: Date
   let maximumEndDate = ref<Date | undefined>()
+  let initialOverallTimeSpan: number
   let overallGraphWidth: number
 
   let guides: TimelineGuides
@@ -125,21 +127,13 @@
     }
 
     const { min, max } = getDateBounds(dates)
+    const timeSpan = max.getTime() - min.getTime()
 
     minimumStartDate = min
     maximumEndDate.value = max
-
+    initialOverallTimeSpan = timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
     overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
   }
-
-  const overallTimeSpan = computed(() => {
-    if (!maximumEndDate.value) {
-      return 0
-    }
-    const minimumTimeSpan = 1000 * 60
-    const timeSpan = maximumEndDate.value.getTime() - minimumStartDate.getTime()
-    return timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
-  })
 
   function initPlayhead(): void {
     if (!props.isRunning) {
@@ -155,11 +149,22 @@
 
     pixiApp.stage.addChild(playhead)
 
-    // @TODO: If isRunning is turned off, then back on again, this will not initialize
+    // If isRunning is turned off, then back on again, this will not reinitialize
     pixiApp.ticker.add(() => {
-      if (props.isRunning) {
+      if (props.isRunning && playhead) {
+        const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
-        playhead?.updatePosition()
+        playhead.updatePosition()
+
+        if (
+          !viewport.moving
+          && playheadStartedVisible
+          && playhead.position.x > pixiApp.screen.width - styles.defaultViewportPadding
+        ) {
+          const originalLeft = dateScale(viewport.left)
+          viewport.zoomPercent(-0.1, true)
+          viewport.left = xScale(new Date(originalLeft))
+        }
       } else if (!playhead?.destroyed) {
         playhead?.destroy()
       }
@@ -175,7 +180,8 @@
       xScale,
       dateScale,
       minimumStartDate,
-      maximumEndDate: maximumEndDate.value ?? new Date(),
+      maximumEndDate,
+      isRunning: props.isRunning ?? false,
     })
 
     guides.zIndex = zIndex.timelineGuides
@@ -237,9 +243,9 @@
   }
 
   watchEffect(() => {
-    // @TODO: This accommodates updated nodeData or newly added nodes.
-    //        If totally new data is added, it all gets appended way down the viewport Y axis.
-    //        If nodes are deleted, they are not removed from the viewport (shouldn't happen).
+    // This accommodates updated nodeData or newly added nodes.
+    // If totally new data is added, it all gets appended way down the viewport Y axis.
+    // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
     if (!loading.value) {
       props.graphData.forEach((nodeData) => {
         if (nodes.has(nodeData.id)) {
@@ -251,7 +257,6 @@
             node.node.update()
           }
         } else {
-          // add new node
           const node = new TimelineNode(nodeData, xScale, nodes.size - 1)
 
           nodesContainer.addChild(node)
@@ -264,12 +269,12 @@
 
   // Convert a date to an X position
   function xScale(date: Date): number {
-    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / overallTimeSpan.value))
+    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / initialOverallTimeSpan))
   }
 
   // Convert an X position to a timestamp
   function dateScale(xPosition: number): number {
-    return Math.ceil(minimumStartDate.getTime() + xPosition * (overallTimeSpan.value / overallGraphWidth))
+    return Math.ceil(minimumStartDate.getTime() + xPosition * (initialOverallTimeSpan / overallGraphWidth))
   }
 
   function zoomOut(): void {
