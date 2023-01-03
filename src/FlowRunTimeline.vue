@@ -162,7 +162,7 @@
           && playhead.position.x > pixiApp.screen.width - styles.defaultViewportPadding
         ) {
           const originalLeft = dateScale(viewport.left)
-          viewport.zoomPercent(-0.1, false)
+          viewport.zoomPercent(-0.1, true)
           viewport.left = xScale(new Date(originalLeft))
         }
       } else if (!playhead?.destroyed) {
