@@ -1,11 +1,5 @@
 <template>
-  <div class="flow-run-timeline">
-    <div class="flow-run-timeline__zoom-controls">
-      <p-button icon="MinusIcon" inset rounded aria-label="Zoom out" @click="zoomOut" />
-      <p-button icon="PlusIcon" inset rounded aria-label="Zoom in" @click="zoomIn" />
-    </div>
-    <div ref="stage" class="flow-run-timeline__canvas-container" />
-  </div>
+  <div ref="stage" class="flow-run-timeline" />
 </template>
 
 <script lang="ts" setup>
@@ -271,41 +265,19 @@
   function dateScale(xPosition: number): number {
     return Math.ceil(minimumStartDate.getTime() + xPosition * (overallTimeSpan.value / overallGraphWidth))
   }
-
-  function zoomOut(): void {
-    viewport.zoom(400, true)
-  }
-
-  function zoomIn(): void {
-    viewport.zoom(-400, true)
-  }
 </script>
 
 <style>
 .flow-run-timeline { @apply
-  relative
   w-full
   h-full
-}
-
-.flow-run-timeline__zoom-controls { @apply
-  absolute
-  flex
-  gap-1
-  top-4
-  right-4
-  z-10
-}
-
-.flow-run-timeline__canvas-container { @apply
   bg-slate-100
   rounded-lg
-  w-full
-  h-full
   overflow-hidden
   relative
 }
-.flow-run-timeline__canvas-container canvas { @apply
+
+.flow-run-timeline canvas { @apply
   absolute
   top-0
   left-0
