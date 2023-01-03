@@ -23,8 +23,9 @@ export async function initViewport(stage: HTMLElement, app: Application): Promis
     })
     .wheel({
       trackpadPinch: true,
-      wheelZoom: false,
+      wheelZoom: true,
     })
+    .pinch()
     .clampZoom({
       minWidth: stageWidth / 2,
       maxWidth: stageWidth * 20,
