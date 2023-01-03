@@ -157,9 +157,20 @@
 
     // If isRunning is turned off, then back on again, this will not reinitialize
     pixiApp.ticker.add(() => {
-      if (props.isRunning) {
+      if (props.isRunning && playhead) {
+        const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
-        playhead?.updatePosition()
+        playhead.updatePosition()
+
+        if (
+          !viewport.moving
+          && playheadStartedVisible
+          && playhead.position.x > pixiApp.screen.width - styles.defaultViewportPadding
+        ) {
+          const originalLeft = dateScale(viewport.left)
+          viewport.zoomPercent(-0.1, false)
+          viewport.left = xScale(new Date(originalLeft))
+        }
       } else if (!playhead?.destroyed) {
         playhead?.destroy()
       }
