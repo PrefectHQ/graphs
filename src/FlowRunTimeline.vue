@@ -138,8 +138,8 @@
     }
 
     playhead = new TimelinePlayhead({
-      playheadHeight: pixiApp.screen.height,
       viewportRef: viewport,
+      appRef: pixiApp,
       xScale,
     })
     playhead.zIndex = zIndex.playhead
@@ -171,9 +171,7 @@
   function initGuides(): void {
     guides = new TimelineGuides({
       viewportRef: viewport,
-      stageWidth: stage.value?.clientWidth ?? 1000,
-      guideHeight: pixiApp.screen.height,
-      overallGraphWidth,
+      appRef: pixiApp,
       xScale,
       dateScale,
       minimumStartDate,

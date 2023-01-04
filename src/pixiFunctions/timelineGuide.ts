@@ -8,7 +8,7 @@ const guideStyles = {
 
 export class TimelineGuide extends Container {
   private readonly labelText: string | null
-  private readonly guideHeight: number
+  private guideHeight: number
 
   private readonly guideLine: Graphics
   private label: BitmapText | undefined
@@ -47,5 +47,10 @@ export class TimelineGuide extends Container {
       this.label.position.set(guideStyles.labelPadding, guideStyles.labelPadding)
       this.addChild(this.label)
     }
+  }
+
+  public updateHeight(guideHeight: number): void {
+    this.guideHeight = guideHeight
+    this.drawGuideLine()
   }
 }
