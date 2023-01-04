@@ -75,7 +75,6 @@ export class TimelineGuides extends Container {
     this.updateCurrentTimeGap()
 
     if (this.isRedrawRequired(previousTimeGap)) {
-      console.log('redraw')
       if (this.guides.size > 0) {
         this.removeChildren()
         this.guides.clear()
