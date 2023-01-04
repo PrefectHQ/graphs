@@ -2,11 +2,12 @@ import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, IBitmapTextStyle, TextStyle } from 'pixi.js'
 import { TextStyles } from '@/models'
 
+// don't remove the empty space in the font sprite keys
 const fontSpriteKeys = [
   '0123456789',
   'abcdefghijklmnopqrstuvwxyz',
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-  '.,:;!?()[]{}<>|/\\@\'"',
+  ' .,:;!?()[]{}<>|/\\@\'"',
 ].join('')
 
 export const nodeTextStyles = new TextStyle({

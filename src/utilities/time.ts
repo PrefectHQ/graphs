@@ -105,3 +105,98 @@ export function getDateBounds(
     max: max ?? new Date(NaN),
   }
 }
+
+export const timeLengths = {
+  second: 1000,
+  minute: 1000 * 60,
+  hour: 1000 * 60 * 60,
+  day: 1000 * 60 * 60 * 24,
+  week: 1000 * 60 * 60 * 24 * 7,
+}
+export const timeSpanSlots = [
+  {
+    ceiling: timeLengths.second * 4,
+    span: timeLengths.second,
+    labelFormat: (date: Date) => date.toLocaleTimeString(),
+  }, {
+    ceiling: timeLengths.second * 8,
+    span: timeLengths.second * 5,
+    labelFormat: (date: Date) => date.toLocaleTimeString(),
+  }, {
+    ceiling: timeLengths.second * 13,
+    span: timeLengths.second * 10,
+    labelFormat: (date: Date) => date.toLocaleTimeString(),
+  }, {
+    ceiling: timeLengths.second * 20,
+    span: timeLengths.second * 15,
+    labelFormat: (date: Date) => date.toLocaleTimeString(),
+  }, {
+    ceiling: timeLengths.second * 45,
+    span: timeLengths.second * 30,
+    labelFormat: (date: Date) => date.toLocaleTimeString(),
+  }, {
+    ceiling: timeLengths.minute * 4,
+    span: timeLengths.minute,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.minute * 8,
+    span: timeLengths.minute * 5,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.minute * 13,
+    span: timeLengths.minute * 10,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.minute * 28,
+    span: timeLengths.minute * 15,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.hour * 1.24,
+    span: timeLengths.minute * 30,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.hour * 3,
+    span: timeLengths.hour,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.hour * 8,
+    span: timeLengths.hour * 2,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.hour * 13,
+    span: timeLengths.hour * 6,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.hour * 22,
+    span: timeLengths.hour * 12,
+    labelFormat: (date: Date) => labelByMinutes(date),
+  }, {
+    ceiling: timeLengths.day * 4,
+    span: timeLengths.day,
+    labelFormat: (date: Date) => labelByDay(date),
+  }, {
+    ceiling: timeLengths.week * 2,
+    span: timeLengths.week,
+    labelFormat: (date: Date) => labelByDay(date),
+  }, {
+    ceiling: Infinity,
+    span: timeLengths.week * 4,
+    labelFormat: (date: Date) => labelByDay(date),
+  },
+]
+
+function labelByMinutes(date: Date): string {
+  const currentLocale = navigator.language
+  const time = new Intl.DateTimeFormat(currentLocale, { timeStyle: 'short' }).format(date)
+
+  if (date.getHours() === 0 && date.getMinutes() === 0) {
+    return `${new Intl.DateTimeFormat(currentLocale, { dateStyle: 'medium' }).format(date)}\n${time}`
+  }
+
+  return time
+}
+
+function labelByDay(date: Date): string {
+  const currentLocale = navigator.language
+  return new Intl.DateTimeFormat(currentLocale, { dateStyle: 'short' }).format(date)
+}

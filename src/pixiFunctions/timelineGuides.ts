@@ -2,76 +2,14 @@ import type { Viewport } from 'pixi-viewport'
 import { Container } from 'pixi.js'
 import type { Ref } from 'vue'
 import { TimelineGuide } from './timelineGuide'
+import { timeLengths, timeSpanSlots } from '@/utilities'
 
-const timelineGuidesMinGap = 80
-const timelineGuidesMaxGap = 260
+const timelineGuidesMinGap = 260
 
 const timelineGuidesStyles = {
   // how far left and right of the timeline to render guides
   xPadding: 4000,
 }
-
-const time = {
-  second: 1000,
-  minute: 1000 * 60,
-  hour: 1000 * 60 * 60,
-  day: 1000 * 60 * 60 * 24,
-  week: 1000 * 60 * 60 * 24 * 7,
-}
-const timeSpanSlots = [
-  {
-    ceiling: time.second * 4,
-    span: time.second,
-  }, {
-    ceiling: time.second * 8,
-    span: time.second * 5,
-  }, {
-    ceiling: time.second * 13,
-    span: time.second * 10,
-  }, {
-    ceiling: time.second * 20,
-    span: time.second * 15,
-  }, {
-    ceiling: time.second * 45,
-    span: time.second * 30,
-  }, {
-    ceiling: time.minute * 4,
-    span: time.minute,
-  }, {
-    ceiling: time.minute * 8,
-    span: time.minute * 5,
-  }, {
-    ceiling: time.minute * 13,
-    span: time.minute * 10,
-  }, {
-    ceiling: time.minute * 28,
-    span: time.minute * 15,
-  }, {
-    ceiling: time.hour * 1.24,
-    span: time.minute * 30,
-  }, {
-    ceiling: time.hour * 3,
-    span: time.hour,
-  }, {
-    ceiling: time.hour * 8,
-    span: time.hour * 5,
-  }, {
-    ceiling: time.hour * 13,
-    span: time.hour * 10,
-  }, {
-    ceiling: time.hour * 22,
-    span: time.hour * 12,
-  }, {
-    ceiling: time.day * 4,
-    span: time.day,
-  }, {
-    ceiling: time.week * 2,
-    span: time.week,
-  }, {
-    ceiling: Infinity,
-    span: time.week * 4,
-  },
-]
 
 type TimelineGuidesProps = {
   viewportRef: Viewport,
@@ -97,6 +35,7 @@ export class TimelineGuides extends Container {
 
   private idealGuideCount = 10
   private currentTimeGap = 120
+  private guideLabelFormatter = (date: Date): string | null => date.toLocaleTimeString()
   private readonly guides: Map<Date, Container> = new Map()
 
   public constructor({
@@ -131,7 +70,8 @@ export class TimelineGuides extends Container {
     this.updateCurrentTimeGap()
 
     if (
-      this.guides.size === 0
+      !this.viewportRef.moving
+      && this.guides.size === 0
       || previousTimeGap !== this.currentTimeGap
       || this.isRunning && this.isGuideLengthOutdated()
     ) {
@@ -147,7 +87,7 @@ export class TimelineGuides extends Container {
 
   private updateIdealGuideCount(): void {
     this.idealGuideCount = Math.ceil(
-      this.stageWidth / (timelineGuidesMaxGap - timelineGuidesMinGap / 2))
+      this.stageWidth / timelineGuidesMinGap)
   }
 
   private updateCurrentTimeGap(): void {
@@ -155,18 +95,38 @@ export class TimelineGuides extends Container {
     const pxSpan = Math.ceil((this.viewportRef.right - this.viewportRef.left) / this.idealGuideCount)
     const timeSpan = this.dateScale(pxSpan) - this.minimumStartDate.getTime()
 
-    this.currentTimeGap = timeSpanSlots.find(timeSlot => timeSlot.ceiling > timeSpan)?.span ?? timeSpanSlots[0].span
+    const timeSpanSlot = timeSpanSlots.find(timeSlot => timeSlot.ceiling > timeSpan) ?? timeSpanSlots[0]
+
+    this.currentTimeGap = timeSpanSlot.span
+    this.guideLabelFormatter = timeSpanSlot.labelFormat
   }
 
   private createGuides(): void {
     let lastGuidePoint
     const maxGuidePlacement = this.dateScale(this.xScale(this.maximumEndDate.value ?? new Date()) + timelineGuidesStyles.xPadding)
-    const firstGuide = new Date(Math.ceil(this.dateScale(-timelineGuidesStyles.xPadding) / this.currentTimeGap) * this.currentTimeGap)
+    let firstGuide = new Date(Math.ceil(this.dateScale(-timelineGuidesStyles.xPadding) / this.currentTimeGap) * this.currentTimeGap)
+
+    if (this.currentTimeGap > timeLengths.hour * 6) {
+      // round down firstGuide to the nearest day
+      firstGuide = new Date(
+        firstGuide.getFullYear(),
+        firstGuide.getMonth(),
+        firstGuide.getDate(),
+      )
+    } else if (this.currentTimeGap > timeLengths.hour) {
+      // round down firstGuide to the nearest even numbered hour
+      firstGuide = new Date(
+        firstGuide.getFullYear(),
+        firstGuide.getMonth(),
+        firstGuide.getDate(),
+        Math.floor(firstGuide.getHours() / 2) * 2,
+      )
+    }
 
     lastGuidePoint = firstGuide
 
     while (lastGuidePoint.getTime() < maxGuidePlacement) {
-      const guide = new TimelineGuide(lastGuidePoint.toLocaleTimeString(), this.guideHeight)
+      const guide = new TimelineGuide(this.guideLabelFormatter(lastGuidePoint), this.guideHeight)
       guide.position.set(this.getGuidePosition(lastGuidePoint), 0)
 
       this.guides.set(lastGuidePoint, guide)
