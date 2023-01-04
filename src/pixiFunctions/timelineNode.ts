@@ -98,7 +98,7 @@ export class TimelineNode extends Container {
   private updatePosition(): void {
     this.position.set(
       this.xScale(this.nodeData.start),
-      this.yPositionIndex * 120,
+      this.yPositionIndex * 60,
     )
   }
 
