@@ -30,7 +30,15 @@
     </div>
 
     <div class="timeline__graph-container">
-      <FlowRunTimeline v-if="data" :key="componentKey" :graph-data="data" :is-running="isRunning" />
+      <FlowRunTimeline
+        v-if="data"
+        :key="componentKey"
+        :graph-data="data"
+        :is-running="isRunning"
+        :format-time-by-seconds="formatDateBySeconds"
+        :format-time-by-minutes="formatDateByMinutes"
+        :format-date="formatDate"
+      />
     </div>
   </main>
 </template>
@@ -79,6 +87,21 @@
     // So for demo purposes, when we get new data, we rerender the graph from scratch.
     componentKey.value += 1
   })
+
+
+  function formatDateBySeconds(date: Date): string {
+    return date.toLocaleTimeString()
+  }
+
+  function formatDateByMinutes(date: Date): string {
+    const currentLocale = navigator.language
+    return new Intl.DateTimeFormat(currentLocale, { timeStyle: 'short' }).format(date)
+  }
+
+  function formatDate(date: Date): string {
+    const currentLocale = navigator.language
+    return new Intl.DateTimeFormat(currentLocale, { dateStyle: 'short' }).format(date)
+  }
 </script>
 
 <style>

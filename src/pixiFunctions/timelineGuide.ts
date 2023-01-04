@@ -7,13 +7,13 @@ const guideStyles = {
 }
 
 export class TimelineGuide extends Container {
-  private readonly labelText: string
+  private readonly labelText: string | null
   private readonly guideHeight: number
 
   private readonly guideLine: Graphics
   private label: BitmapText | undefined
 
-  public constructor(labelText: string, guideHeight: number) {
+  public constructor(labelText: string | null, guideHeight: number) {
     super()
 
     this.labelText = labelText
@@ -39,11 +39,13 @@ export class TimelineGuide extends Container {
   }
 
   private async drawLabel(): Promise<void> {
-    const textStyles = await getBitmapFonts()
+    if (this.labelText) {
+      const textStyles = await getBitmapFonts()
 
-    this.label?.destroy()
-    this.label = new BitmapText(this.labelText, textStyles.timeMarkerLabel)
-    this.label.position.set(guideStyles.labelPadding, guideStyles.labelPadding)
-    this.addChild(this.label)
+      this.label?.destroy()
+      this.label = new BitmapText(this.labelText, textStyles.timeMarkerLabel)
+      this.label.position.set(guideStyles.labelPadding, guideStyles.labelPadding)
+      this.addChild(this.label)
+    }
   }
 }

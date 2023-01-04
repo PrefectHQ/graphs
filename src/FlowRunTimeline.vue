@@ -26,6 +26,9 @@
   const props = defineProps<{
     graphData: TimelineNodeData[],
     isRunning?: boolean,
+    formatTimeBySeconds: (date: Date) => string,
+    formatTimeByMinutes: (date: Date) => string,
+    formatDate: (date: Date) => string,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -176,6 +179,9 @@
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
+      formatTimeBySeconds: props.formatTimeBySeconds,
+      formatTimeByMinutes: props.formatTimeByMinutes,
+      formatDate: props.formatDate,
     })
 
     guides.zIndex = zIndex.timelineGuides
