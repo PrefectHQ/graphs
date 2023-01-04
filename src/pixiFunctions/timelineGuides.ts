@@ -74,12 +74,7 @@ export class TimelineGuides extends Container {
     const previousTimeGap = this.currentTimeGap
     this.updateCurrentTimeGap()
 
-    if (
-      !this.viewportRef.moving
-      && this.guides.size === 0
-      || previousTimeGap !== this.currentTimeGap
-      || this.isRunning && this.isGuideLengthOutdated()
-    ) {
+    if (this.isRedrawRequired(previousTimeGap)) {
       if (this.guides.size > 0) {
         this.removeChildren()
         this.guides.clear()
@@ -143,7 +138,22 @@ export class TimelineGuides extends Container {
     })
   }
 
+  private isRedrawRequired(previousTimeGap: number): boolean {
+    return !this.viewportRef.moving &&
+      previousTimeGap !== this.currentTimeGap
+      || this.noGuidesExist()
+      || this.isGuideLengthOutdated()
+  }
+
+  private noGuidesExist(): boolean {
+    return this.guides.size === 0
+  }
+
   private isGuideLengthOutdated(): boolean {
+    if (!this.isRunning) {
+      return false
+    }
+
     const lastGuide = Array.from(this.guides).pop()?.[1]
 
     if (!lastGuide || !this.maximumEndDate.value) {
