@@ -106,6 +106,19 @@ export function getDateBounds(
   }
 }
 
+export function roundDownToNearestDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+export function roundDownToNearestEvenNumberedHour(date: Date): Date {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    Math.floor(date.getHours() / 2) * 2,
+  )
+}
+
 export const timeLengths = {
   second: 1000,
   minute: 1000 * 60,

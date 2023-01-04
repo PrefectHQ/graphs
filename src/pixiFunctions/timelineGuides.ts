@@ -2,7 +2,12 @@ import type { Viewport } from 'pixi-viewport'
 import { Container } from 'pixi.js'
 import type { Ref } from 'vue'
 import { TimelineGuide } from './timelineGuide'
-import { timeLengths, timeSpanSlots } from '@/utilities'
+import {
+  roundDownToNearestDay,
+  roundDownToNearestEvenNumberedHour,
+  timeLengths,
+  timeSpanSlots
+} from '@/utilities'
 
 const timelineGuidesMinGap = 260
 
@@ -107,20 +112,9 @@ export class TimelineGuides extends Container {
     let firstGuide = new Date(Math.ceil(this.dateScale(-timelineGuidesStyles.xPadding) / this.currentTimeGap) * this.currentTimeGap)
 
     if (this.currentTimeGap > timeLengths.hour * 6) {
-      // round down firstGuide to the nearest day
-      firstGuide = new Date(
-        firstGuide.getFullYear(),
-        firstGuide.getMonth(),
-        firstGuide.getDate(),
-      )
+      firstGuide = roundDownToNearestDay(firstGuide)
     } else if (this.currentTimeGap > timeLengths.hour) {
-      // round down firstGuide to the nearest even numbered hour
-      firstGuide = new Date(
-        firstGuide.getFullYear(),
-        firstGuide.getMonth(),
-        firstGuide.getDate(),
-        Math.floor(firstGuide.getHours() / 2) * 2,
-      )
+      firstGuide = roundDownToNearestEvenNumberedHour(firstGuide)
     }
 
     lastGuidePoint = firstGuide
