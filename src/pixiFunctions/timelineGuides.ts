@@ -3,6 +3,7 @@ import { Container } from 'pixi.js'
 import type { Ref } from 'vue'
 import { TimelineGuide } from './timelineGuide'
 import {
+  labelFormats,
   roundDownToNearestDay,
   roundDownToNearestEvenNumberedHour,
   timeLengths,
@@ -26,6 +27,9 @@ type TimelineGuidesProps = {
   minimumStartDate: Date,
   maximumEndDate: Ref<Date | undefined>,
   isRunning: boolean,
+  formatTimeBySeconds: (date: Date) => string,
+  formatTimeByMinutes: (date: Date) => string,
+  formatDate: (date: Date) => string,
 }
 
 export class TimelineGuides extends Container {
@@ -37,10 +41,13 @@ export class TimelineGuides extends Container {
   private readonly minimumStartDate: Date
   private readonly maximumEndDate: Ref<Date | undefined>
   private readonly isRunning: boolean
+  private readonly formatTimeBySeconds: (date: Date) => string
+  private readonly formatTimeByMinutes: (date: Date) => string
+  private readonly formatDate: (date: Date) => string
 
   private idealGuideCount = 10
   private currentTimeGap = 120
-  private guideLabelFormatter = (date: Date): string | null => date.toLocaleTimeString()
+  private labelFormatter = (date: Date): string | null => date.toLocaleTimeString()
   private readonly guides: Map<Date, Container> = new Map()
 
   public constructor({
@@ -52,6 +59,9 @@ export class TimelineGuides extends Container {
     minimumStartDate,
     maximumEndDate,
     isRunning,
+    formatTimeBySeconds,
+    formatTimeByMinutes,
+    formatDate,
   }: TimelineGuidesProps) {
     super()
 
@@ -63,6 +73,9 @@ export class TimelineGuides extends Container {
     this.minimumStartDate = minimumStartDate
     this.maximumEndDate = maximumEndDate
     this.isRunning = isRunning
+    this.formatTimeBySeconds = formatTimeBySeconds
+    this.formatTimeByMinutes = formatTimeByMinutes
+    this.formatDate = formatDate
 
     this.updateIdealGuideCount()
     this.updateCurrentTimeGap()
@@ -91,14 +104,13 @@ export class TimelineGuides extends Container {
   }
 
   private updateCurrentTimeGap(): void {
-
     const pxSpan = Math.ceil((this.viewportRef.right - this.viewportRef.left) / this.idealGuideCount)
     const timeSpan = this.dateScale(pxSpan) - this.minimumStartDate.getTime()
 
     const timeSpanSlot = timeSpanSlots.find(timeSlot => timeSlot.ceiling > timeSpan) ?? timeSpanSlots[0]
 
     this.currentTimeGap = timeSpanSlot.span
-    this.guideLabelFormatter = timeSpanSlot.labelFormat
+    this.setLabelFormatter(timeSpanSlot.labelFormat)
   }
 
   private createGuides(): void {
@@ -115,7 +127,7 @@ export class TimelineGuides extends Container {
     lastGuidePoint = firstGuide
 
     while (lastGuidePoint.getTime() < maxGuidePlacement) {
-      const guide = new TimelineGuide(this.guideLabelFormatter(lastGuidePoint), this.guideHeight)
+      const guide = new TimelineGuide(this.labelFormatter(lastGuidePoint), this.guideHeight)
       guide.position.set(this.getGuidePosition(lastGuidePoint), 0)
 
       this.guides.set(lastGuidePoint, guide)
@@ -136,6 +148,27 @@ export class TimelineGuides extends Container {
         guideContainer.position.set(this.getGuidePosition(guideDate), 0)
       }
     })
+  }
+
+  private setLabelFormatter(labelFormat: string): void {
+    switch (labelFormat) {
+      case labelFormats.minutes:
+        this.labelFormatter = this.formatByMinutesWithDates
+        break
+      case labelFormats.date:
+        this.labelFormatter = this.formatDate
+        break
+      default:
+        this.labelFormatter = this.formatTimeBySeconds
+    }
+  }
+
+  private formatByMinutesWithDates(date: Date): string {
+    if (date.getHours() === 0 && date.getMinutes() === 0) {
+      return `${this.formatDate(date)}\n${this.formatTimeByMinutes(date)}`
+    }
+
+    return this.formatTimeByMinutes(date)
   }
 
   private isRedrawRequired(previousTimeGap: number): boolean {
