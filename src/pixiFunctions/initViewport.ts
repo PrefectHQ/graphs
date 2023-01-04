@@ -1,19 +1,19 @@
 import type { Viewport as ViewportType } from 'pixi-viewport'
-import { Application } from 'pixi.js'
+import { UPDATE_PRIORITY } from 'pixi.js'
+import type { Application } from 'pixi.js'
 import { getPixiViewport } from './viewport'
 
-export async function initViewport(stage: HTMLElement, app: Application): Promise<ViewportType> {
+export async function initViewport(stage: HTMLElement, appRef: Application): Promise<ViewportType> {
   const Viewport = await getPixiViewport()
-  const stageWidth = stage.clientWidth
-  const stageHeight = stage.clientHeight
+  const { width, height } = appRef.screen
 
   const viewport = new Viewport({
-    screenWidth: stageWidth,
-    screenHeight: stageHeight,
+    screenWidth: width,
+    screenHeight: height,
     passiveWheel: false,
-    interaction: app.renderer.plugins.interaction,
+    interaction: appRef.renderer.plugins.interaction,
     divWheel: stage,
-    ticker: app.ticker,
+    ticker: appRef.ticker,
   })
 
   viewport
@@ -27,14 +27,21 @@ export async function initViewport(stage: HTMLElement, app: Application): Promis
     })
     .pinch()
     .clampZoom({
-      minWidth: stageWidth / 2,
-      maxWidth: stageWidth * 20,
+      minWidth: width / 2,
+      maxWidth: width * 40,
     })
     .decelerate({
       friction: 0.9,
     })
 
-  app.stage.addChild(viewport)
+  appRef.stage.addChild(viewport)
+
+  // Resize viewport when screen size changes
+  appRef.ticker.add(() => {
+    if (viewport.screenWidth !== appRef.screen.width || viewport.screenHeight !== appRef.screen.height) {
+      viewport.resize(appRef.screen.width, appRef.screen.height)
+    }
+  }, null, UPDATE_PRIORITY.LOW)
 
   return viewport
 }

@@ -1,5 +1,6 @@
 import type { Viewport } from 'pixi-viewport'
 import { Container } from 'pixi.js'
+import type { Application } from 'pixi.js'
 import type { Ref } from 'vue'
 import { TimelineGuide } from './timelineGuide'
 import {
@@ -19,9 +20,7 @@ const timelineGuidesStyles = {
 
 type TimelineGuidesProps = {
   viewportRef: Viewport,
-  stageWidth: number,
-  guideHeight: number,
-  overallGraphWidth: number,
+  appRef: Application,
   xScale: (x: Date) => number,
   dateScale: (x: number) => number,
   minimumStartDate: Date,
@@ -34,8 +33,7 @@ type TimelineGuidesProps = {
 
 export class TimelineGuides extends Container {
   private readonly viewportRef
-  private readonly stageWidth
-  private readonly guideHeight
+  private readonly appRef
   private readonly xScale
   private readonly dateScale
   private readonly minimumStartDate: Date
@@ -48,12 +46,11 @@ export class TimelineGuides extends Container {
   private idealGuideCount = 10
   private currentTimeGap = 120
   private labelFormatter = (date: Date): string | null => date.toLocaleTimeString()
-  private readonly guides: Map<Date, Container> = new Map()
+  private readonly guides: Map<Date, TimelineGuide> = new Map()
 
   public constructor({
     viewportRef,
-    stageWidth,
-    guideHeight,
+    appRef,
     xScale,
     dateScale,
     minimumStartDate,
@@ -66,8 +63,7 @@ export class TimelineGuides extends Container {
     super()
 
     this.viewportRef = viewportRef
-    this.stageWidth = stageWidth
-    this.guideHeight = guideHeight
+    this.appRef = appRef
     this.xScale = xScale
     this.dateScale = dateScale
     this.minimumStartDate = minimumStartDate
@@ -99,8 +95,7 @@ export class TimelineGuides extends Container {
   }
 
   private updateIdealGuideCount(): void {
-    this.idealGuideCount = Math.ceil(
-      this.stageWidth / timelineGuidesMinGap)
+    this.idealGuideCount = Math.ceil(this.appRef.screen.width / timelineGuidesMinGap)
   }
 
   private updateCurrentTimeGap(): void {
@@ -127,7 +122,7 @@ export class TimelineGuides extends Container {
     lastGuidePoint = firstGuide
 
     while (lastGuidePoint.getTime() < maxGuidePlacement) {
-      const guide = new TimelineGuide(this.labelFormatter(lastGuidePoint), this.guideHeight)
+      const guide = new TimelineGuide(this.labelFormatter(lastGuidePoint), this.appRef.screen.height)
       guide.position.set(this.getGuidePosition(lastGuidePoint), 0)
 
       this.guides.set(lastGuidePoint, guide)
@@ -146,6 +141,9 @@ export class TimelineGuides extends Container {
       const newXPosition = this.getGuidePosition(guideDate)
       if (newXPosition !== guideContainer.position.x) {
         guideContainer.position.set(this.getGuidePosition(guideDate), 0)
+      }
+      if (guideContainer.height !== this.appRef.screen.height) {
+        guideContainer.updateHeight(this.appRef.screen.height)
       }
     })
   }
