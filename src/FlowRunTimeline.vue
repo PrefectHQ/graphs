@@ -72,6 +72,8 @@
       console.error('Stage reference not found in initPixiApp')
       return
     }
+
+    initStyleVariables()
     initTimeScale()
 
     pixiApp = initPixiApp(stage.value)
@@ -130,6 +132,22 @@
     maximumEndDate.value = max
     initialOverallTimeSpan = timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
     overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
+  }
+
+  function initStyleVariables(): void {
+    const CSSVariablesRoot = document.querySelector('.flow-run-timeline')
+    if (!CSSVariablesRoot) {
+      console.error('FlowRunTimeline - CSS Variables root not found')
+      return
+    }
+
+    const CSSVariables = getComputedStyle(CSSVariablesRoot)
+
+    styles.defaultViewportPadding = convertRemToPixels(CSSVariables.getPropertyValue('--gt-default-viewport-padding'))
+  }
+
+  function convertRemToPixels(rem: string): number {
+    return parseFloat(rem) * parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
   function initPlayhead(): void {
@@ -277,6 +295,10 @@
 </script>
 
 <style>
+.flow-run-timeline {
+  --gt-default-viewport-padding: theme(spacing.10);
+}
+
 .flow-run-timeline { @apply
   w-full
   h-full
