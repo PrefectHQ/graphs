@@ -1,13 +1,21 @@
-import { BitmapText, Container, Graphics, TextMetrics } from 'pixi.js'
-import { getBitmapFonts, nodeTextStyles } from './bitmapFonts'
+import { BitmapText, Container, Graphics, TextMetrics, TextStyle } from 'pixi.js'
+import { getBitmapFonts } from './bitmapFonts'
 import { TimelineNodeData } from '@/models'
+
+const textLineHeight = 20
+const nodeTextStyles = new TextStyle({
+  fontFamily: 'InterVariable',
+  fontSize: 12,
+  lineHeight: 16,
+})
+
 
 const nodePadding = 12
 const nodeStyles = {
   padding: nodePadding,
   borderRadius: 8,
   labelGap: 4,
-  yPositionOffset: nodeTextStyles.lineHeight + nodePadding * 2 + 16,
+  yPositionOffset: textLineHeight + nodePadding * 2 + 16,
 }
 
 const stateColors: Record<string, number> = {
@@ -69,7 +77,7 @@ export class TimelineNode extends Container {
       0,
       0,
       this.nodeWidth,
-      nodeTextStyles.lineHeight + nodeStyles.padding * 2,
+      textLineHeight + nodeStyles.padding * 2,
       nodeStyles.borderRadius,
     )
     this.box.endFill()

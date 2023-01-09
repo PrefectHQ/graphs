@@ -12,11 +12,7 @@ import {
 } from '@/utilities'
 
 const timelineGuidesMinGap = 260
-
-const timelineGuidesStyles = {
-  // how far left and right of the timeline to render guides
-  xPadding: 4000,
-}
+const timelineGuidesOuterBuffer = 4000
 
 type TimelineGuidesProps = {
   viewportRef: Viewport,
@@ -110,8 +106,8 @@ export class TimelineGuides extends Container {
 
   private createGuides(): void {
     let lastGuidePoint
-    const maxGuidePlacement = this.dateScale(this.xScale(this.maximumEndDate.value ?? new Date()) + timelineGuidesStyles.xPadding)
-    let firstGuide = new Date(Math.ceil(this.dateScale(-timelineGuidesStyles.xPadding) / this.currentTimeGap) * this.currentTimeGap)
+    const maxGuidePlacement = this.dateScale(this.xScale(this.maximumEndDate.value ?? new Date()) + timelineGuidesOuterBuffer)
+    let firstGuide = new Date(Math.ceil(this.dateScale(-timelineGuidesOuterBuffer) / this.currentTimeGap) * this.currentTimeGap)
 
     if (this.currentTimeGap > timeLengths.hour * 6) {
       firstGuide = roundDownToNearestDay(firstGuide)
@@ -192,7 +188,7 @@ export class TimelineGuides extends Container {
 
     const lastGuidePositionFloor =
       this.getGuidePosition(this.maximumEndDate.value)
-      + timelineGuidesStyles.xPadding * this.viewportRef.scale._x
+      + timelineGuidesOuterBuffer * this.viewportRef.scale._x
       - this.xScale(new Date(this.minimumStartDate.getTime() + this.currentTimeGap)) * this.viewportRef.scale._x
 
     return lastGuide.x < lastGuidePositionFloor

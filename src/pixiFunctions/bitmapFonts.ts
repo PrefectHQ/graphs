@@ -1,24 +1,35 @@
 import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, IBitmapTextStyle, TextStyle } from 'pixi.js'
+import { getTimelineStyles } from './timelineStyles'
 import { TextStyles } from '@/models'
 
-export const nodeTextStyles = new TextStyle({
-  fontFamily: 'InterVariable',
-  fontSize: 14,
-  lineHeight: 20,
-})
-
-export const timelineMarkerStyles = new TextStyle({
-  fontFamily: 'InterVariable',
-  fontSize: 12,
-  lineHeight: 16,
-})
 
 function initBitmapFonts(): Promise<TextStyles> {
+  const timelineStyles = getTimelineStyles()
   const devicePixelRatio = window.devicePixelRatio || 2
 
+  const fontFamily = timelineStyles.get('--gt-text-font-default')?.toString().split(',')[0] ?? 'sans-serif',
+    fontSizeDefault = Number(timelineStyles.get('--gt-text-size-default') ?? 16),
+    lineHeightDefault = Number(timelineStyles.get('--gt-text-line-height-default') ?? 1.5) * fontSizeDefault,
+    fontSizeSmall = Number(timelineStyles.get('--gt-text-size-small') ?? 14),
+    lineHeightSmall = Number(timelineStyles.get('--gt-text-line-height-small') ?? 1.25) * fontSizeDefault,
+    colorDefault = timelineStyles.get('--gt-text-color-default') ?? 0x111827,
+    colorInverse = timelineStyles.get('--gt-color-text-inverse') ?? 0xffffff
+
+  const nodeTextStyles = new TextStyle({
+    fontFamily,
+    fontSize: fontSizeDefault,
+    lineHeight: lineHeightDefault,
+  })
+
+  const timelineMarkerStyles = new TextStyle({
+    fontFamily,
+    fontSize: fontSizeSmall,
+    lineHeight: lineHeightSmall,
+  })
+
   return new Promise((resolve) => {
-    const font = new FontFaceObserver('InterVariable')
+    const font = new FontFaceObserver(fontFamily)
 
     font.load().then(() => {
       const options = {
@@ -29,14 +40,14 @@ function initBitmapFonts(): Promise<TextStyles> {
         'NodeTextDefault',
         {
           ...nodeTextStyles,
-          fill: 0x111827,
+          fill: colorDefault,
         }, options,
       )
       BitmapFont.from(
         'NodeTextInverse',
         {
           ...nodeTextStyles,
-          fill: 0xffffff,
+          fill: colorInverse,
         }, options,
       )
       BitmapFont.from(
@@ -49,17 +60,17 @@ function initBitmapFonts(): Promise<TextStyles> {
 
       const nodeTextDefault: Partial<IBitmapTextStyle> = {
         fontName: 'NodeTextDefault',
-        fontSize: 14,
+        fontSize: fontSizeDefault,
       }
 
       const nodeTextInverse: Partial<IBitmapTextStyle> = {
         fontName: 'NodeTextInverse',
-        fontSize: 14,
+        fontSize: fontSizeDefault,
       }
 
       const timeMarkerLabel: Partial<IBitmapTextStyle> = {
         fontName: 'TimeMarkerLabel',
-        fontSize: 12,
+        fontSize: fontSizeSmall,
       }
 
       resolve({

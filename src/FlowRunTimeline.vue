@@ -16,6 +16,7 @@
   } from './models'
   import {
     initPixiApp,
+    getTimelineStyles,
     initViewport,
     TimelineGuides,
     TimelineNode,
@@ -33,10 +34,8 @@
 
   const stage = ref<HTMLDivElement>()
 
-  const styles = {
-    defaultViewportPadding: 40,
-  }
-
+  const timelineStyles = getTimelineStyles()
+  const paddingViewportDefault: number = Number(timelineStyles.get('--gt-padding-viewport-default') ?? 40)
   const zIndex = {
     timelineGuides: 0,
     viewport: 10,
@@ -72,8 +71,6 @@
       console.error('Stage reference not found in initPixiApp')
       return
     }
-
-    initStyleVariables()
     initTimeScale()
 
     pixiApp = initPixiApp(stage.value)
@@ -134,22 +131,6 @@
     overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
   }
 
-  function initStyleVariables(): void {
-    const CSSVariablesRoot = document.querySelector('.flow-run-timeline')
-    if (!CSSVariablesRoot) {
-      console.error('FlowRunTimeline - CSS Variables root not found')
-      return
-    }
-
-    const CSSVariables = getComputedStyle(CSSVariablesRoot)
-
-    styles.defaultViewportPadding = convertRemToPixels(CSSVariables.getPropertyValue('--gt-default-viewport-padding'))
-  }
-
-  function convertRemToPixels(rem: string): number {
-    return parseFloat(rem) * parseFloat(getComputedStyle(document.documentElement).fontSize)
-  }
-
   function initPlayhead(): void {
     if (!props.isRunning) {
       return
@@ -174,7 +155,7 @@
         if (
           !viewport.moving
           && playheadStartedVisible
-          && playhead.position.x > pixiApp.screen.width - styles.defaultViewportPadding
+          && playhead.position.x > pixiApp.screen.width - paddingViewportDefault
         ) {
           const originalLeft = dateScale(viewport.left)
           viewport.zoomPercent(-0.1, true)
@@ -238,10 +219,10 @@
     viewport.addChild(nodesContainer)
 
     viewport.ensureVisible(
-      nodesContainer.x - styles.defaultViewportPadding,
-      nodesContainer.y - styles.defaultViewportPadding,
-      nodesContainer.width + styles.defaultViewportPadding * 2,
-      nodesContainer.height + styles.defaultViewportPadding * 2,
+      nodesContainer.x - paddingViewportDefault,
+      nodesContainer.y - paddingViewportDefault,
+      nodesContainer.width + paddingViewportDefault * 2,
+      nodesContainer.height + paddingViewportDefault * 2,
       true,
     )
     viewport.moveCenter(
@@ -296,7 +277,17 @@
 
 <style>
 .flow-run-timeline {
-  --gt-default-viewport-padding: theme(spacing.10);
+  --gt-padding-viewport-default: theme(spacing.10);
+
+  --gt-color-text-default: theme(colors.gray.700);
+  --gt-color-text-inverse: theme(colors.white);
+  --gt-color-text-subdued: theme(colors.slate.400);
+
+  --gt-text-font-default: theme(fontFamily.sans);
+  --gt-text-size-default: theme(fontSize.sm);
+  --gt-text-line-height-default: theme(lineHeight.tight);
+  --gt-text-size-small: theme(fontSize.xs);
+  --gt-text-line-height-small: theme(lineHeight.none);
 }
 
 .flow-run-timeline { @apply
