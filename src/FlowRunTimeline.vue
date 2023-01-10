@@ -109,16 +109,7 @@
   function initTimeScale(): void {
     const minimumTimeSpan = 1000 * 60
 
-    const dates = Array
-      .from(props.graphData)
-      .filter(node => node.end)
-      .flatMap(({
-        start,
-        end,
-      }) => ({
-        start,
-        end,
-      }))
+    const dates = props.graphData.filter(node => node.end).map(({ start, end }) => ({ start, end }))
 
     if (props.isRunning === true) {
       dates.push({
