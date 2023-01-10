@@ -282,12 +282,30 @@
   --gt-color-text-default: theme(colors.gray.700);
   --gt-color-text-inverse: theme(colors.white);
   --gt-color-text-subdued: theme(colors.slate.400);
+  --gt-color-guide-line: theme(colors.slate.300);
+  --gt-color-playhead-bg: theme(colors.prefect.400);
+
+  --gt-color-state-completed: theme(colors.green.500);
+  --gt-color-state-running: theme(colors.sky.500);
+  --gt-color-state-scheduled: theme(colors.yellow.500);
+  --gt-color-state-pending: theme(colors.zinc.500);
+  --gt-color-state-failed: theme(colors.red.500);
+  --gt-color-state-cancelled: theme(colors.red.400);
+  --gt-color-state-crashed: theme(colors.red.500);
+  --gt-color-state-paused: theme(colors.yellow.500);
 
   --gt-text-font-default: theme(fontFamily.sans);
   --gt-text-size-default: theme(fontSize.sm);
-  --gt-text-line-height-default: theme(lineHeight.tight);
   --gt-text-size-small: theme(fontSize.xs);
+  --gt-text-line-height-default: theme(lineHeight.tight);
   --gt-text-line-height-small: theme(lineHeight.none);
+
+  --gt-spacing-node-padding: theme(spacing.3);
+  --gt-spacing-node-margin: theme(spacing.8);
+  --gt-spacing-guide-label-padding: theme(spacing.1);
+  --gt-spacing-playhead-glow-padding: theme(spacing.2);
+
+  --gt-border-radius-default: theme(borderRadius.2xl);
 }
 
 .flow-run-timeline { @apply

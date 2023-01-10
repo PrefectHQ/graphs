@@ -1,10 +1,6 @@
 import { BitmapText, Container, Graphics } from 'pixi.js'
 import { getBitmapFonts } from './bitmapFonts'
-
-const guideStyles = {
-  guideLineColor: 0xc9d5e2,
-  labelPadding: 4,
-}
+import { getTimelineStyles } from './timelineStyles'
 
 export class TimelineGuide extends Container {
   private readonly labelText: string | null
@@ -13,11 +9,18 @@ export class TimelineGuide extends Container {
   private readonly guideLine: Graphics
   private label: BitmapText | undefined
 
+  private readonly guideLineColor: number
+  private readonly labelPadding: number
+
   public constructor(labelText: string | null, guideHeight: number) {
     super()
 
     this.labelText = labelText
     this.guideHeight = guideHeight
+
+    const { guideLineColor, labelPadding } = this.getStyles()
+    this.guideLineColor = guideLineColor
+    this.labelPadding = labelPadding
 
     this.guideLine = new Graphics()
     this.drawGuideLine()
@@ -26,9 +29,17 @@ export class TimelineGuide extends Container {
     this.drawLabel()
   }
 
+  private getStyles(): { guideLineColor: number, labelPadding: number } {
+    const timelineStyles = getTimelineStyles()
+    const guideLineColor = Number(timelineStyles.get('--gt-color-guide-line') ?? 0xc9d5e2)
+    const labelPadding = Number(timelineStyles.get('--gt-spacing-guide-label-padding') ?? 4)
+
+    return { guideLineColor, labelPadding }
+  }
+
   private drawGuideLine(): void {
     this.guideLine.clear()
-    this.guideLine.beginFill(guideStyles.guideLineColor)
+    this.guideLine.beginFill(this.guideLineColor)
     this.guideLine.drawRect(
       0,
       0,
@@ -44,7 +55,7 @@ export class TimelineGuide extends Container {
 
       this.label?.destroy()
       this.label = new BitmapText(this.labelText, textStyles.timeMarkerLabel)
-      this.label.position.set(guideStyles.labelPadding, guideStyles.labelPadding)
+      this.label.position.set(this.labelPadding, this.labelPadding)
       this.addChild(this.label)
     }
   }

@@ -1,8 +1,13 @@
 import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, IBitmapTextStyle, TextStyle } from 'pixi.js'
 import { getTimelineStyles } from './timelineStyles'
-import { TextStyles } from '@/models'
 
+type TextStyles = {
+  nodeTextDefault: Partial<IBitmapTextStyle>,
+  nodeTextInverse: Partial<IBitmapTextStyle>,
+  nodeTextBaseStyle: TextStyle,
+  timeMarkerLabel: Partial<IBitmapTextStyle>,
+}
 
 function initBitmapFonts(): Promise<TextStyles> {
   const timelineStyles = getTimelineStyles()
@@ -14,9 +19,10 @@ function initBitmapFonts(): Promise<TextStyles> {
     fontSizeSmall = Number(timelineStyles.get('--gt-text-size-small') ?? 14),
     lineHeightSmall = Number(timelineStyles.get('--gt-text-line-height-small') ?? 1.25) * fontSizeDefault,
     colorDefault = timelineStyles.get('--gt-text-color-default') ?? 0x111827,
-    colorInverse = timelineStyles.get('--gt-color-text-inverse') ?? 0xffffff
+    colorInverse = timelineStyles.get('--gt-color-text-inverse') ?? 0xffffff,
+    colorSubdued = timelineStyles.get('--gt-color-text-subdued') ?? 0x94A3B8
 
-  const nodeTextStyles = new TextStyle({
+  const nodeTextBaseStyle = new TextStyle({
     fontFamily,
     fontSize: fontSizeDefault,
     lineHeight: lineHeightDefault,
@@ -39,14 +45,14 @@ function initBitmapFonts(): Promise<TextStyles> {
       BitmapFont.from(
         'NodeTextDefault',
         {
-          ...nodeTextStyles,
+          ...nodeTextBaseStyle,
           fill: colorDefault,
         }, options,
       )
       BitmapFont.from(
         'NodeTextInverse',
         {
-          ...nodeTextStyles,
+          ...nodeTextBaseStyle,
           fill: colorInverse,
         }, options,
       )
@@ -54,7 +60,7 @@ function initBitmapFonts(): Promise<TextStyles> {
         'TimeMarkerLabel',
         {
           ...timelineMarkerStyles,
-          fill: 0x94A3B8,
+          fill: colorSubdued,
         }, options,
       )
 
@@ -76,6 +82,7 @@ function initBitmapFonts(): Promise<TextStyles> {
       resolve({
         nodeTextDefault,
         nodeTextInverse,
+        nodeTextBaseStyle,
         timeMarkerLabel,
       })
     })

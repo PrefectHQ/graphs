@@ -1,37 +1,17 @@
-import { BitmapText, Container, Graphics, TextMetrics, TextStyle } from 'pixi.js'
+import { BitmapText, Container, Graphics, TextMetrics } from 'pixi.js'
 import { getBitmapFonts } from './bitmapFonts'
+import { getTimelineStyles } from './timelineStyles'
 import { TimelineNodeData } from '@/models'
-
-const textLineHeight = 20
-const nodeTextStyles = new TextStyle({
-  fontFamily: 'InterVariable',
-  fontSize: 12,
-  lineHeight: 16,
-})
-
-
-const nodePadding = 12
-const nodeStyles = {
-  padding: nodePadding,
-  borderRadius: 8,
-  labelGap: 4,
-  yPositionOffset: textLineHeight + nodePadding * 2 + 16,
-}
-
-const stateColors: Record<string, number> = {
-  'completed': 0x00a63d,
-  'running': 0x00a8ef,
-  'scheduled': 0x60758d,
-  'pending': 0x60758d,
-  'failed': 0xf00011,
-  'cancelled': 0xf00011,
-  'crashed': 0xf00011,
-  'paused': 0xf4b000,
-}
 
 export class TimelineNode extends Container {
   public nodeData: TimelineNodeData
   private readonly xScale: (date: Date) => number
+
+  private readonly stateColors: Record<string, number>
+  private readonly padding: number
+  private readonly borderRadius: number
+  private readonly labelGap: number
+  private readonly lineHeight: number
 
   private label: BitmapText | undefined
   private readonly box: Graphics
@@ -41,16 +21,29 @@ export class TimelineNode extends Container {
   private readonly yPositionIndex: number = 0
   private isLabelInBox = true
 
-
   public constructor(
     nodeData: TimelineNodeData,
     xScale: (date: Date) => number,
     yPositionIndex: number,
   ) {
     super()
+
     this.nodeData = nodeData
     this.xScale = xScale
     this.yPositionIndex = yPositionIndex
+
+    const {
+      stateColors,
+      padding,
+      borderRadius,
+      labelGap,
+      lineHeight,
+    } = this.getStyles()
+    this.stateColors = stateColors
+    this.padding = padding
+    this.borderRadius = borderRadius
+    this.labelGap = labelGap
+    this.lineHeight = lineHeight
 
     this.nodeWidth = this.getNodeWidth()
 
@@ -63,12 +56,42 @@ export class TimelineNode extends Container {
     this.updatePosition()
   }
 
+  private getStyles(): {
+    stateColors: Record<string, number>,
+    padding: number,
+    borderRadius: number,
+    labelGap: number,
+    lineHeight: number,
+  } {
+    const timelineStyles = getTimelineStyles()
+
+    const stateColors = {
+      'completed': Number(timelineStyles.get('--gt-color-state-completed') ?? 0x00a63d),
+      'running': Number(timelineStyles.get('--gt-color-state-running') ?? 0x00a8ef),
+      'scheduled': Number(timelineStyles.get('--gt-color-state-scheduled') ?? 0x60758d),
+      'pending': Number(timelineStyles.get('--gt-color-state-pending') ?? 0x60758d),
+      'failed': Number(timelineStyles.get('--gt-color-state-failed') ?? 0xf00011),
+      'cancelled': Number(timelineStyles.get('--gt-color-state-cancelled') ?? 0xf00011),
+      'crashed': Number(timelineStyles.get('--gt-color-state-crashed') ?? 0xf00011),
+      'paused': Number(timelineStyles.get('--gt-color-state-paused') ?? 0xf4b000),
+    }
+
+    const padding = Number(timelineStyles.get('--gt-spacing-node-padding') ?? 12)
+    const borderRadius = Number(timelineStyles.get('--gt-border-radius') ?? 8)
+    const labelGap = Number(timelineStyles.get('--gt-spacing-node-margin') ?? 8)
+
+    const fontSizeDefault = Number(timelineStyles.get('--gt-text-size-default') ?? 16)
+    const lineHeight = Number(timelineStyles.get('--gt-text-line-height-small') ?? 1.25) * fontSizeDefault
+
+    return { stateColors, padding, borderRadius, labelGap, lineHeight }
+  }
+
   private getNodeWidth(): number {
     return this.xScale(this.nodeData.end ?? new Date()) - this.xScale(this.nodeData.start)
   }
 
   private get boxColor(): number {
-    return this.nodeData.state ? stateColors[this.nodeData.state] : stateColors.pending
+    return this.nodeData.state ? this.stateColors[this.nodeData.state] : this.stateColors.pending
   }
 
   private drawBox(): void {
@@ -77,8 +100,8 @@ export class TimelineNode extends Container {
       0,
       0,
       this.nodeWidth,
-      textLineHeight + nodeStyles.padding * 2,
-      nodeStyles.borderRadius,
+      this.lineHeight + this.padding * 2,
+      this.borderRadius,
     )
     this.box.endFill()
   }
@@ -87,12 +110,12 @@ export class TimelineNode extends Container {
     const textStyles = await getBitmapFonts()
 
     if (this.apxLabelWidth === 0) {
-      this.apxLabelWidth = TextMetrics.measureText(this.nodeData.label, nodeTextStyles).width
+      this.apxLabelWidth = TextMetrics.measureText(this.nodeData.label, textStyles.nodeTextBaseStyle).width
     }
 
     this.label?.destroy()
 
-    if (this.apxLabelWidth + nodeStyles.padding * 2 > this.nodeWidth) {
+    if (this.apxLabelWidth + this.padding * 2 > this.nodeWidth) {
       this.isLabelInBox = false
       this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextDefault)
     } else {
@@ -108,14 +131,14 @@ export class TimelineNode extends Container {
   private updatePosition(): void {
     this.position.set(
       this.xScale(this.nodeData.start),
-      this.yPositionIndex * nodeStyles.yPositionOffset,
+      this.yPositionIndex * (this.lineHeight + this.padding * 2 + 16),
     )
   }
 
   private updateLabelPosition(): void {
     this.label?.position.set(
-      this.isLabelInBox ? nodeStyles.padding : this.nodeWidth + nodeStyles.labelGap,
-      nodeStyles.padding,
+      this.isLabelInBox ? this.padding : this.nodeWidth + this.labelGap,
+      this.padding,
     )
   }
 
