@@ -6,6 +6,8 @@ https://prefect-graphs.netlify.app/
 
 ## Development
 ```
+nvm use
+npm ci
 npm run serve
 ```
 
