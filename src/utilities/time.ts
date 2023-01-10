@@ -75,7 +75,7 @@ export function secondsToApproximateString(input: number, showOnes = true): stri
 
 export function getDateBounds(
   datesArray: { start: Date, end: Date | null }[],
-): { min: Date, max: Date } {
+): { min: Date, max: Date | null } {
   let min: Date | undefined
   let max: Date | undefined
 
@@ -101,8 +101,8 @@ export function getDateBounds(
   })
 
   return {
-    min: min ?? new Date(NaN),
-    max: max ?? new Date(NaN),
+    min: min ?? new Date(),
+    max: max ?? null,
   }
 }
 

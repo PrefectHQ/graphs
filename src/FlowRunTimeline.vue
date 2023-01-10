@@ -7,7 +7,8 @@
   import type { Viewport } from 'pixi-viewport'
   import {
     Application,
-    Container
+    Container,
+    Ticker
   } from 'pixi.js'
   import { onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
@@ -58,6 +59,7 @@
 
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
+  let playheadTicker: Ticker | null = null
 
   let nodesContainer = new Container()
   type NodeRecord = {
@@ -124,11 +126,13 @@
     }
 
     const { min, max } = getDateBounds(dates)
-    const timeSpan = max.getTime() - min.getTime()
 
     minimumStartDate = min
-    maximumEndDate.value = max
+    maximumEndDate.value = max ?? new Date(min.getTime() + minimumTimeSpan)
+
+    const timeSpan = maximumEndDate.value.getTime() - minimumStartDate.getTime()
     initialOverallTimeSpan = timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
+
     overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
   }
 
@@ -146,8 +150,15 @@
 
     pixiApp.stage.addChild(playhead)
 
-    // If isRunning is turned off, then back on again, this will not reinitialize
-    pixiApp.ticker.add(() => {
+    initPlayheadTicker()
+  }
+
+  function initPlayheadTicker(): void {
+    if (playheadTicker) {
+      return
+    }
+
+    playheadTicker = pixiApp.ticker.add(() => {
       if (props.isRunning && playhead) {
         const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
@@ -252,16 +263,26 @@
             node.end !== nodeData.end
             || node.state !== nodeData.state
           ) {
-            node.node.update()
+            node.node.update(nodeData)
           }
         } else {
-          const node = new TimelineNode(nodeData, xScale, nodes.size - 1)
+          const node = new TimelineNode(nodeData, xScale, nodes.size)
+
+          nodes.set(nodeData.id, {
+            node,
+            end: nodeData.end,
+            state: nodeData.state,
+          })
 
           nodesContainer.addChild(node)
 
           cullDirty = true
         }
       })
+
+      if (props.isRunning && (!playhead || playhead.destroyed)) {
+        initPlayhead()
+      }
     }
   })
 
