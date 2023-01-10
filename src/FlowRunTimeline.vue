@@ -33,6 +33,11 @@
 
   const stage = ref<HTMLDivElement>()
 
+  const routeParams = {
+    accountId: '9a67b081-4f14-4035-b000-1f715f46231b',
+    workspaceId:'a63a76bd-e6b4-42a5-8cb2-d2fcf233a57b',
+  }
+
   const styles = {
     defaultViewportPadding: 40,
   }
@@ -206,7 +211,7 @@
 
   function initContent(): void {
     props.graphData.forEach((nodeData, nodeIndex) => {
-      const node = new TimelineNode(nodeData, xScale, nodeIndex)
+      const node = new TimelineNode(nodeData, xScale, nodeIndex, routeParams)
 
       nodes.set(nodeData.id, {
         node,
@@ -218,7 +223,6 @@
     })
 
     viewport.addChild(nodesContainer)
-
     viewport.ensureVisible(
       nodesContainer.x - styles.defaultViewportPadding,
       nodesContainer.y - styles.defaultViewportPadding,
@@ -255,7 +259,7 @@
             node.node.update()
           }
         } else {
-          const node = new TimelineNode(nodeData, xScale, nodes.size - 1)
+          const node = new TimelineNode(nodeData, xScale, nodes.size - 1, routeParams)
 
           nodesContainer.addChild(node)
 

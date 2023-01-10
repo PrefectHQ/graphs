@@ -33,11 +33,17 @@ export class TimelineNode extends Container {
   private readonly yPositionIndex: number = 0
   private isLabelInBox = true
 
+  public openTab = (params: any): void => {
+    const url = `https://app.stg.prefect.dev/account/${params.accountId}/workspace/${params.workspaceId}/flow-runs/task-run/${this.nodeData.id}`
+    window.open(url, '_blank')
+  }
+
 
   public constructor(
     nodeData: TimelineNodeData,
     xScale: (date: Date) => number,
     yPositionIndex: number,
+    params: any,
   ) {
     super()
     this.nodeData = nodeData
@@ -53,6 +59,11 @@ export class TimelineNode extends Container {
     this.drawLabel()
 
     this.updatePosition()
+    this.interactive = true
+    this.buttonMode = true
+    this.on('pointerdown', () => {
+      this.openTab(params)
+    })
   }
 
   private getNodeWidth(): number {
