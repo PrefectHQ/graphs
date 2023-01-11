@@ -75,8 +75,8 @@ export function secondsToApproximateString(input: number, showOnes = true): stri
 
 export function getDateBounds(
   datesArray: { start: Date, end: Date | null }[],
+  minimumTimeSpan?: number,
 ): { min: Date, max: Date, span: number } {
-  const minimumTimeSpan = 1000 * 60
   let min: Date | undefined
   let max: Date | undefined
 
@@ -102,13 +102,13 @@ export function getDateBounds(
   })
 
   min = min ?? new Date()
-  max = max ?? new Date(min.getTime() + minimumTimeSpan)
+  max = max ?? new Date(min.getTime() + (minimumTimeSpan ?? 0))
   const timeSpan = max.getTime() - min.getTime()
 
   return {
     min,
     max,
-    span: timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan,
+    span: minimumTimeSpan && timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan,
   }
 }
 

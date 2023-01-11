@@ -106,6 +106,8 @@
   }
 
   function initTimeScale(): void {
+    const minimumTimeSpan = 1000 * 60
+
     const dates = Array
       .from(props.graphData)
       .filter(node => node.end)
@@ -124,7 +126,7 @@
       })
     }
 
-    const { min, max, span } = getDateBounds(dates)
+    const { min, max, span } = getDateBounds(dates, minimumTimeSpan)
 
     minimumStartDate = min
     maximumEndDate.value = max
