@@ -7,7 +7,8 @@
   import type { Viewport } from 'pixi-viewport'
   import {
     Application,
-    Container
+    Container,
+    Ticker
   } from 'pixi.js'
   import { onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
@@ -50,7 +51,6 @@
   // flag cullDirty when new nodes are added to the viewport after init
   let cullDirty = false
 
-  const minimumTimeSpan = 1000 * 60
   let minimumStartDate: Date
   let maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
@@ -58,6 +58,7 @@
 
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
+  let playheadTicker: Ticker | null = null
 
   let nodesContainer = new Container()
   type NodeRecord = {
@@ -105,6 +106,8 @@
   }
 
   function initTimeScale(): void {
+    const minimumTimeSpan = 1000 * 60
+
     const dates = Array
       .from(props.graphData)
       .filter(node => node.end)
@@ -123,13 +126,13 @@
       })
     }
 
-    const { min, max } = getDateBounds(dates)
-    const timeSpan = max.getTime() - min.getTime()
+    const { min, max, span } = getDateBounds(dates, minimumTimeSpan)
 
     minimumStartDate = min
     maximumEndDate.value = max
-    initialOverallTimeSpan = timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
-    overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
+    initialOverallTimeSpan = span
+
+    overallGraphWidth = stage.value!.clientWidth * 2
   }
 
   function initPlayhead(): void {
@@ -146,8 +149,15 @@
 
     pixiApp.stage.addChild(playhead)
 
-    // If isRunning is turned off, then back on again, this will not reinitialize
-    pixiApp.ticker.add(() => {
+    initPlayheadTicker()
+  }
+
+  function initPlayheadTicker(): void {
+    if (playheadTicker) {
+      return
+    }
+
+    playheadTicker = pixiApp.ticker.add(() => {
       if (props.isRunning && playhead) {
         const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
@@ -252,16 +262,26 @@
             node.end !== nodeData.end
             || node.state !== nodeData.state
           ) {
-            node.node.update()
+            node.node.update(nodeData)
           }
         } else {
-          const node = new TimelineNode(nodeData, xScale, nodes.size - 1)
+          const node = new TimelineNode(nodeData, xScale, nodes.size)
+
+          nodes.set(nodeData.id, {
+            node,
+            end: nodeData.end,
+            state: nodeData.state,
+          })
 
           nodesContainer.addChild(node)
 
           cullDirty = true
         }
       })
+
+      if (props.isRunning && (!playhead || playhead.destroyed)) {
+        initPlayhead()
+      }
     }
   })
 

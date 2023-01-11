@@ -111,7 +111,11 @@ export class TimelineNode extends Container {
     )
   }
 
-  public update(): void {
+  public update(newNodeData?: TimelineNodeData): void {
+    if (newNodeData) {
+      this.nodeData = newNodeData
+    }
+
     const nodeWidth = this.getNodeWidth()
 
     if (nodeWidth !== this.nodeWidth) {
