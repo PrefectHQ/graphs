@@ -51,7 +51,6 @@
   // flag cullDirty when new nodes are added to the viewport after init
   let cullDirty = false
 
-  const minimumTimeSpan = 1000 * 60
   let minimumStartDate: Date
   let maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
@@ -125,15 +124,13 @@
       })
     }
 
-    const { min, max } = getDateBounds(dates)
+    const { min, max, span } = getDateBounds(dates)
 
     minimumStartDate = min
-    maximumEndDate.value = max ?? new Date(min.getTime() + minimumTimeSpan)
+    maximumEndDate.value = max
+    initialOverallTimeSpan = span
 
-    const timeSpan = maximumEndDate.value.getTime() - minimumStartDate.getTime()
-    initialOverallTimeSpan = timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan
-
-    overallGraphWidth = stage.value?.clientWidth ? stage.value.clientWidth * 2 : 2000
+    overallGraphWidth = stage.value!.clientWidth * 2
   }
 
   function initPlayhead(): void {
