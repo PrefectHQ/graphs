@@ -64,12 +64,15 @@ export class TimelineNode extends Container {
   }
 
   private drawBox(): void {
+    const width = this.nodeWidth >= 1 ? this.nodeWidth : 1
+    const height = nodeTextStyles.lineHeight + nodeStyles.padding * 2
+
     this.box.beginFill(this.boxColor)
     this.box.drawRoundedRect(
       0,
       0,
-      this.nodeWidth >= 1 ? this.nodeWidth : 1,
-      nodeTextStyles.lineHeight + nodeStyles.padding * 2,
+      width,
+      height,
       nodeStyles.borderRadius,
     )
     this.box.endFill()
