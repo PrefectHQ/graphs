@@ -68,7 +68,7 @@ export class TimelineNode extends Container {
     this.box.drawRoundedRect(
       0,
       0,
-      this.nodeWidth,
+      this.nodeWidth >= 1 ? this.nodeWidth : 1,
       nodeTextStyles.lineHeight + nodeStyles.padding * 2,
       nodeStyles.borderRadius,
     )
