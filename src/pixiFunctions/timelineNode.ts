@@ -1,50 +1,54 @@
 import { BitmapText, Container, Graphics, TextMetrics } from 'pixi.js'
-import { getBitmapFonts, nodeTextStyles } from './bitmapFonts'
-import { TimelineNodeData } from '@/models'
+import { ComputedRef } from 'vue'
+import { getBitmapFonts } from './bitmapFonts'
+import {
+  ParsedThemeStyles,
+  TimelineNodeData,
+  NodeThemeFn
+} from '@/models'
+import { colorToHex } from '@/utilities/style'
 
-const nodePadding = 12
-const nodeStyles = {
-  padding: nodePadding,
-  borderRadius: 8,
-  labelGap: 4,
-  yPositionOffset: nodeTextStyles.lineHeight + nodePadding * 2 + 16,
-}
-
-const stateColors: Record<string, number> = {
-  'completed': 0x00a63d,
-  'running': 0x00a8ef,
-  'scheduled': 0x60758d,
-  'pending': 0x60758d,
-  'failed': 0xf00011,
-  'cancelled': 0xf00011,
-  'crashed': 0xf00011,
-  'paused': 0xf4b000,
+type TimelineNodeProps = {
+  nodeData: TimelineNodeData,
+  xScale: (date: Date) => number,
+  styles: ComputedRef<ParsedThemeStyles>,
+  styleNode: ComputedRef<NodeThemeFn>,
+  yPositionIndex: number,
 }
 
 export class TimelineNode extends Container {
   public nodeData: TimelineNodeData
   private readonly xScale: (date: Date) => number
+  private readonly styles: ComputedRef<ParsedThemeStyles>
+  private readonly styleNode: ComputedRef<NodeThemeFn>
 
   private label: BitmapText | undefined
   private readonly box: Graphics
 
   private apxLabelWidth: number = 0
   private nodeWidth
+  private readonly yPositionOffset
   private readonly yPositionIndex: number = 0
   private isLabelInBox = true
 
 
-  public constructor(
-    nodeData: TimelineNodeData,
-    xScale: (date: Date) => number,
-    yPositionIndex: number,
-  ) {
+  public constructor({
+    nodeData,
+    xScale,
+    styles,
+    styleNode,
+    yPositionIndex,
+  }: TimelineNodeProps) {
     super()
     this.nodeData = nodeData
     this.xScale = xScale
+    this.styles = styles
+    this.styleNode = styleNode
     this.yPositionIndex = yPositionIndex
 
     this.nodeWidth = this.getNodeWidth()
+
+    this.yPositionOffset = this.getYPositionOffset(styles.value)
 
     this.box = new Graphics()
     this.drawBox()
@@ -59,40 +63,45 @@ export class TimelineNode extends Container {
     return this.xScale(this.nodeData.end ?? new Date()) - this.xScale(this.nodeData.start)
   }
 
-  private get boxColor(): number {
-    return this.nodeData.state ? stateColors[this.nodeData.state] : stateColors.pending
+  private getYPositionOffset(styles: ParsedThemeStyles): number {
+    const nodeHeight = styles.textLineHeightDefault + styles.spacingNodeYPadding * 2
+    return nodeHeight + styles.spacingNodeMargin
   }
 
   private drawBox(): void {
+    const { fill } = this.styleNode.value(this.nodeData)
+    const hexadecimalFill = colorToHex(fill)
     const width = this.nodeWidth >= 1 ? this.nodeWidth : 1
-    const height = nodeTextStyles.lineHeight + nodeStyles.padding * 2
+    const height = this.styles.value.textLineHeightDefault + this.styles.value.spacingNodeYPadding * 2
 
-    this.box.beginFill(this.boxColor)
+    this.box.beginFill(hexadecimalFill)
     this.box.drawRoundedRect(
       0,
       0,
       width,
       height,
-      nodeStyles.borderRadius,
+      this.styles.value.borderRadiusNode,
     )
     this.box.endFill()
   }
 
   private async drawLabel(): Promise<void> {
-    const textStyles = await getBitmapFonts()
+    const textStyles = await getBitmapFonts(this.styles.value)
+    const { inverseTextOnFill } = this.styleNode.value(this.nodeData)
 
     if (this.apxLabelWidth === 0) {
-      this.apxLabelWidth = TextMetrics.measureText(this.nodeData.label, nodeTextStyles).width
+      this.apxLabelWidth = TextMetrics.measureText(this.nodeData.label, textStyles.nodeTextStyles).width
     }
 
     this.label?.destroy()
 
-    if (this.apxLabelWidth + nodeStyles.padding * 2 > this.nodeWidth) {
+    if (this.apxLabelWidth + this.styles.value.spacingNodeXPadding * 2 > this.nodeWidth) {
       this.isLabelInBox = false
       this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextDefault)
     } else {
+      const styleForLabelInBox = inverseTextOnFill ? textStyles.nodeTextInverse : textStyles.nodeTextDefault
       this.isLabelInBox = true
-      this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextInverse)
+      this.label = new BitmapText(this.nodeData.label, styleForLabelInBox)
     }
 
     this.updateLabelPosition()
@@ -103,14 +112,16 @@ export class TimelineNode extends Container {
   private updatePosition(): void {
     this.position.set(
       this.xScale(this.nodeData.start),
-      this.yPositionIndex * nodeStyles.yPositionOffset,
+      this.yPositionIndex * this.yPositionOffset,
     )
   }
 
   private updateLabelPosition(): void {
     this.label?.position.set(
-      this.isLabelInBox ? nodeStyles.padding : this.nodeWidth + nodeStyles.labelGap,
-      nodeStyles.padding,
+      this.isLabelInBox
+        ? this.styles.value.spacingNodeXPadding
+        : this.nodeWidth + this.styles.value.spacingNodeLabelMargin,
+      this.styles.value.spacingNodeYPadding,
     )
   }
 

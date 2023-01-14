@@ -1,23 +1,21 @@
 import type { Viewport } from 'pixi-viewport'
 import { Container, Graphics } from 'pixi.js'
 import type { Application } from 'pixi.js'
-
-const timelinePlayheadStyles = {
-  playheadBg: 0x4E82FE,
-  playheadWidth: 2,
-  playheadGlowPadding: 8,
-}
+import { ComputedRef } from 'vue'
+import { ParsedThemeStyles } from '@/models'
 
 type TimelinePlayheadProps = {
   viewportRef: Viewport,
   appRef: Application,
   xScale: (date: Date) => number,
+  styles: ComputedRef<ParsedThemeStyles>,
 }
 
 export class TimelinePlayhead extends Container {
   private readonly viewportRef
   private readonly appRef
   private readonly xScale
+  private readonly styles: ComputedRef<ParsedThemeStyles>
 
   private readonly playhead = new Graphics()
 
@@ -25,30 +23,32 @@ export class TimelinePlayhead extends Container {
     viewportRef,
     appRef,
     xScale,
+    styles,
   }: TimelinePlayheadProps) {
     super()
 
     this.viewportRef = viewportRef
     this.appRef = appRef
     this.xScale = xScale
+    this.styles = styles
 
     this.drawPlayhead()
   }
 
   private drawPlayhead(): void {
-    this.playhead.beginFill(timelinePlayheadStyles.playheadBg, 0.1)
+    this.playhead.beginFill(this.styles.value.colorPlayheadBg, 0.1)
     this.playhead.drawRect(
       0,
       0,
-      timelinePlayheadStyles.playheadWidth + timelinePlayheadStyles.playheadGlowPadding * 2,
+      this.styles.value.spacingPlayheadWidth + this.styles.value.spacingPlayheadGlowPadding * 2,
       this.appRef.screen.height,
     )
     this.playhead.endFill()
-    this.playhead.beginFill(timelinePlayheadStyles.playheadBg)
+    this.playhead.beginFill(this.styles.value.colorPlayheadBg)
     this.playhead.drawRect(
-      timelinePlayheadStyles.playheadGlowPadding,
+      this.styles.value.spacingPlayheadGlowPadding,
       0,
-      timelinePlayheadStyles.playheadWidth,
+      this.styles.value.spacingPlayheadWidth,
       this.appRef.screen.height,
     )
     this.playhead.endFill()
@@ -60,8 +60,8 @@ export class TimelinePlayhead extends Container {
     this.position.x =
       this.xScale(new Date()) * this.viewportRef.scale._x
       + this.viewportRef.worldTransform.tx
-      - timelinePlayheadStyles.playheadGlowPadding
-      - timelinePlayheadStyles.playheadWidth / 2
+      - this.styles.value.spacingPlayheadGlowPadding
+      - this.styles.value.spacingPlayheadWidth / 2
 
     if (this.playhead.height !== this.appRef.screen.height) {
       this.playhead.height = this.appRef.screen.height

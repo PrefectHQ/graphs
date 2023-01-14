@@ -73,6 +73,20 @@ export function secondsToApproximateString(input: number, showOnes = true): stri
   }
 }
 
+export function formatDateBySeconds(date: Date): string {
+  return date.toLocaleTimeString()
+}
+
+export function formatDateByMinutes(date: Date): string {
+  const currentLocale = navigator.language
+  return new Intl.DateTimeFormat(currentLocale, { timeStyle: 'short' }).format(date)
+}
+
+export function formatDate(date: Date): string {
+  const currentLocale = navigator.language
+  return new Intl.DateTimeFormat(currentLocale, { dateStyle: 'short' }).format(date)
+}
+
 export function getDateBounds(
   datesArray: { start: Date, end: Date | null }[],
   minimumTimeSpan?: number,
