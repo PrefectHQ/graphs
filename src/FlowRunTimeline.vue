@@ -222,20 +222,9 @@
       styles,
       styleNode,
     })
-
     viewport.addChild(nodes)
 
-    viewport.ensureVisible(
-      nodes.x - styles.value.spacingViewportPaddingDefault,
-      nodes.y - styles.value.spacingViewportPaddingDefault,
-      nodes.width + styles.value.spacingViewportPaddingDefault * 2,
-      nodes.height + styles.value.spacingViewportPaddingDefault * 2,
-      true,
-    )
-    viewport.moveCenter(
-      nodes.x + nodes.width / 2,
-      nodes.y + nodes.height / 2,
-    )
+    centerViewportOnNodes()
 
     if (props.isRunning) {
       pixiApp.ticker.add(() => {
@@ -244,6 +233,28 @@
         }
       })
     }
+  }
+
+  function centerViewportOnNodes(): void {
+    const { spacingViewportPaddingDefault } = styles.value
+    const {
+      x: nodesX,
+      y: nodesY,
+      width: nodesWidth,
+      height: nodesHeight,
+    } = nodes
+
+    viewport.ensureVisible(
+      nodesX - spacingViewportPaddingDefault,
+      nodesY - spacingViewportPaddingDefault,
+      nodesWidth + spacingViewportPaddingDefault * 2,
+      nodesHeight + spacingViewportPaddingDefault * 2,
+      true,
+    )
+    viewport.moveCenter(
+      nodesX + nodesWidth / 2,
+      nodesY + nodesHeight / 2,
+    )
   }
 
   watchEffect(() => {
