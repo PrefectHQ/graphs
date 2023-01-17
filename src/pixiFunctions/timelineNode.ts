@@ -4,31 +4,32 @@ import { getBitmapFonts } from './bitmapFonts'
 import {
   ParsedThemeStyles,
   TimelineNodeData,
-  NodeThemeFn
+  NodeThemeFn,
+  XScale
 } from '@/models'
 import { colorToHex } from '@/utilities/style'
 
 type TimelineNodeProps = {
   nodeData: TimelineNodeData,
-  xScale: (date: Date) => number,
+  xScale: XScale,
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   yPositionIndex: number,
 }
 
 export class TimelineNode extends Container {
-  public nodeData: TimelineNodeData
-  private readonly xScale: (date: Date) => number
-  private readonly styles: ComputedRef<ParsedThemeStyles>
-  private readonly styleNode: ComputedRef<NodeThemeFn>
+  public nodeData
+  private readonly xScale
+  private readonly styles
+  private readonly styleNode
 
   private label: BitmapText | undefined
   private readonly box: Graphics
 
-  private apxLabelWidth: number = 0
+  private apxLabelWidth = 0
   private nodeWidth
   private readonly yPositionOffset
-  private readonly yPositionIndex: number = 0
+  private readonly yPositionIndex
   private isLabelInBox = true
 
 
@@ -139,13 +140,16 @@ export class TimelineNode extends Container {
   }
 
   public update(newNodeData?: TimelineNodeData): void {
+    let hasNewState = false
+
     if (newNodeData) {
+      hasNewState = newNodeData.state !== this.nodeData.state
       this.nodeData = newNodeData
     }
 
     const nodeWidth = this.getNodeWidth()
 
-    if (nodeWidth !== this.nodeWidth) {
+    if (nodeWidth !== this.nodeWidth || hasNewState) {
       this.nodeWidth = nodeWidth
 
       this.box.clear()
