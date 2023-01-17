@@ -2,17 +2,18 @@ import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, IBitmapTextStyle, TextStyle } from 'pixi.js'
 import { TextStyles, ParsedThemeStyles } from '@/models'
 
-function loadBitmapFonts(styles: ParsedThemeStyles): Promise<TextStyles> {
-  return new Promise((resolve) => {
-    const font = new FontFaceObserver(styles.textFontFamilyDefault)
+async function loadBitmapFonts(styles: ParsedThemeStyles): Promise<TextStyles> {
+  const font = new FontFaceObserver(styles.textFontFamilyDefault)
 
-    font.load().then(() => {
-      resolve(createBitmapFonts(styles.textFontFamilyDefault, styles))
-    }).catch((err) => {
-      console.error(`initBitmapFonts: font ${styles.textFontFamilyDefault} failed to load, falling back to sans-serif`, err)
-      resolve(createBitmapFonts('sans-serif', styles))
-    })
-  })
+  try {
+    await font.load()
+  } catch (error) {
+    console.error(error)
+    console.warn(`loadBitmapFonts: font ${styles.textFontFamilyDefault} failed to load, falling back to sans-serif`)
+    return createBitmapFonts('sans-serif', styles)
+  }
+
+  return createBitmapFonts(styles.textFontFamilyDefault, styles)
 }
 
 function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextStyles {

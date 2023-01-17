@@ -36,8 +36,10 @@ export class TimelineGuide extends Container {
   }
 
   private drawGuideLine(): void {
+    const { colorGuideLine } = this.styles.value
+
     this.guideLine.clear()
-    this.guideLine.beginFill(this.styles.value.colorGuideLine)
+    this.guideLine.beginFill(colorGuideLine)
     this.guideLine.drawRect(
       0,
       0,
@@ -50,12 +52,13 @@ export class TimelineGuide extends Container {
   private async drawLabel(): Promise<void> {
     if (this.labelText) {
       const textStyles = await getBitmapFonts(this.styles.value)
+      const { spacingGuideLabelPadding } = this.styles.value
 
       this.label?.destroy()
       this.label = new BitmapText(this.labelText, textStyles.timeMarkerLabel)
       this.label.position.set(
-        this.styles.value.spacingGuideLabelPadding,
-        this.styles.value.spacingGuideLabelPadding,
+        spacingGuideLabelPadding,
+        spacingGuideLabelPadding,
       )
       this.addChild(this.label)
     }

@@ -36,19 +36,25 @@ export class TimelinePlayhead extends Container {
   }
 
   private drawPlayhead(): void {
-    this.playhead.beginFill(this.styles.value.colorPlayheadBg, 0.1)
+    const {
+      colorPlayheadBg,
+      spacingPlayheadWidth,
+      spacingPlayheadGlowPadding,
+    } = this.styles.value
+
+    this.playhead.beginFill(colorPlayheadBg, 0.1)
     this.playhead.drawRect(
       0,
       0,
-      this.styles.value.spacingPlayheadWidth + this.styles.value.spacingPlayheadGlowPadding * 2,
+      spacingPlayheadWidth + spacingPlayheadGlowPadding * 2,
       this.appRef.screen.height,
     )
     this.playhead.endFill()
-    this.playhead.beginFill(this.styles.value.colorPlayheadBg)
+    this.playhead.beginFill(colorPlayheadBg)
     this.playhead.drawRect(
-      this.styles.value.spacingPlayheadGlowPadding,
+      spacingPlayheadGlowPadding,
       0,
-      this.styles.value.spacingPlayheadWidth,
+      spacingPlayheadWidth,
       this.appRef.screen.height,
     )
     this.playhead.endFill()
@@ -57,11 +63,16 @@ export class TimelinePlayhead extends Container {
   }
 
   public updatePosition(): void {
+    const {
+      spacingPlayheadWidth,
+      spacingPlayheadGlowPadding,
+    } = this.styles.value
+
     this.position.x =
       this.xScale(new Date()) * this.viewportRef.scale._x
       + this.viewportRef.worldTransform.tx
-      - this.styles.value.spacingPlayheadGlowPadding
-      - this.styles.value.spacingPlayheadWidth / 2
+      - spacingPlayheadGlowPadding
+      - spacingPlayheadWidth / 2
 
     if (this.playhead.height !== this.appRef.screen.height) {
       this.playhead.height = this.appRef.screen.height

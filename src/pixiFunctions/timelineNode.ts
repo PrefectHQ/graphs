@@ -71,8 +71,14 @@ export class TimelineNode extends Container {
   private drawBox(): void {
     const { fill } = this.styleNode.value(this.nodeData)
     const hexadecimalFill = colorToHex(fill)
+    const {
+      textLineHeightDefault,
+      spacingNodeYPadding,
+      borderRadiusNode,
+    } = this.styles.value
+
     const width = this.nodeWidth >= 1 ? this.nodeWidth : 1
-    const height = this.styles.value.textLineHeightDefault + this.styles.value.spacingNodeYPadding * 2
+    const height = textLineHeightDefault + spacingNodeYPadding * 2
 
     this.box.beginFill(hexadecimalFill)
     this.box.drawRoundedRect(
@@ -80,7 +86,7 @@ export class TimelineNode extends Container {
       0,
       width,
       height,
-      this.styles.value.borderRadiusNode,
+      borderRadiusNode,
     )
     this.box.endFill()
   }
@@ -88,6 +94,7 @@ export class TimelineNode extends Container {
   private async drawLabel(): Promise<void> {
     const textStyles = await getBitmapFonts(this.styles.value)
     const { inverseTextOnFill } = this.styleNode.value(this.nodeData)
+    const { spacingNodeXPadding } = this.styles.value
 
     if (this.apxLabelWidth === 0) {
       this.apxLabelWidth = TextMetrics.measureText(this.nodeData.label, textStyles.nodeTextStyles).width
@@ -95,7 +102,7 @@ export class TimelineNode extends Container {
 
     this.label?.destroy()
 
-    if (this.apxLabelWidth + this.styles.value.spacingNodeXPadding * 2 > this.nodeWidth) {
+    if (this.apxLabelWidth + spacingNodeXPadding * 2 > this.nodeWidth) {
       this.isLabelInBox = false
       this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextDefault)
     } else {
@@ -117,11 +124,17 @@ export class TimelineNode extends Container {
   }
 
   private updateLabelPosition(): void {
+    const {
+      spacingNodeXPadding,
+      spacingNodeYPadding,
+      spacingNodeLabelMargin,
+    } = this.styles.value
+
     this.label?.position.set(
       this.isLabelInBox
-        ? this.styles.value.spacingNodeXPadding
-        : this.nodeWidth + this.styles.value.spacingNodeLabelMargin,
-      this.styles.value.spacingNodeYPadding,
+        ? spacingNodeXPadding
+        : this.nodeWidth + spacingNodeLabelMargin,
+      spacingNodeYPadding,
     )
   }
 
