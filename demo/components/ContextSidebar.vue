@@ -25,15 +25,20 @@
     <template v-for="record in routeRecords" :key="record.name">
       <component :is="getComponentForRecord(record)" v-bind="getContextProps(record)" />
     </template>
+
+    <template #footer>
+      <div class="context-sidebar__footer">
+        <p-theme-toggle />
+      </div>
+    </template>
   </p-context-sidebar>
 </template>
 
 <script lang="ts" setup>
-  import { PContextNavItem } from '@prefecthq/prefect-design'
+  import { PContextNavItem, PContextAccordionItem } from '@prefecthq/prefect-design'
   import { ref } from 'vue'
   import { RouteLocationRaw, RouteRecordRaw, useRouter } from 'vue-router'
   import { ContextAccordionChildItem } from './contextAccordionChildItem'
-  import PContextAccordionItem from './PContextAccordionItem.vue'
   import { routeRecords } from '@/demo/router'
   import { mobileMenuOpen } from '@/demo/router/menu'
   import { routeRecordsFlat } from '@/demo/router/routeRecordsFlat'
@@ -102,11 +107,18 @@
 }
 
 .context-sidebar__search-box { @apply
-  text-slate-900
+  text-foreground
 }
 
 .context-sidebar .p-context-accordion-item__title,
 .context-sidebar .p-context-nav-item { @apply
   capitalize
+}
+
+.context-sidebar__footer { @apply
+  min-h-[36px]
+  flex
+  justify-center
+  items-center
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
-  <main class="timeline">
-    <div class="timeline__header">
-      <div class="timeline__header-row">
+  <main class="flow-run-timeline-demo">
+    <div class="flow-run-timeline-demo__header">
+      <div class="flow-run-timeline-demo__header-row">
         <p-label>
           Nodes
           <p-number-input v-model="size" step="1" min="1" max="1000" />
@@ -18,34 +18,38 @@
         </p-label>
       </div>
 
-      <div class="timeline__header-row">
+      <div class="flow-run-timeline-demo__header-row">
         <p-label>
           Date Range
           <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
-        <div class="timeline__header-row__checkbox-wrapper">
+        <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
           <p-checkbox v-model="isRunning" label="Show Running" />
         </div>
       </div>
     </div>
 
-    <div class="timeline__graph-container">
+    <div class="flow-run-timeline-demo__graph-container">
       <FlowRunTimeline
         v-if="data"
         :key="componentKey"
         :graph-data="data"
         :is-running="isRunning"
         :theme="theme"
+        class="flow-run-timeline-demo-demo__graph"
       />
     </div>
   </main>
 </template>
 
 <script lang="ts" setup>
+  import { useColorTheme } from '@prefecthq/prefect-design'
   import { ref, watchEffect, computed } from 'vue'
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
-  import { TimelineThemeOptions } from '@/models'
+  import { TimelineThemeOptions, Color, HSL } from '@/models'
+
+  const { value: colorThemeValue } = useColorTheme()
 
   const isRunning = ref(false)
   const componentKey = ref(0)
@@ -97,53 +101,89 @@
     'crashed': '#f00011',
     'paused': '#f4b000',
   }
-  const theme: TimelineThemeOptions = {
-    node: (node) => {
-      return {
-        fill: stateColors[node.state],
-        inverseTextOnFill: true,
-      }
-    },
-    defaults: {},
-  }
+
+  const computedStyle = getComputedStyle(document.documentElement)
+
+  const colorDefaults = computed<{
+    colorTextDefault: HSL,
+    colorTextInverse: HSL,
+    colorTextSubdued: HSL,
+  }>(() => {
+    let colorTextDefault = '--foreground',
+        colorTextInverse = '--foreground',
+        colorTextSubdued = '--foreground-300'
+
+    if (colorThemeValue.value == 'dark') {
+      colorTextDefault = '--white'
+      colorTextInverse = '--foreground-600'
+      colorTextSubdued = '--foreground-200'
+    }
+
+    const [defaultH, defaultS, defaultL] = computedStyle.getPropertyValue(colorTextDefault).trim().split(' ')
+    const [inverseH, inverseS, inverseL] = computedStyle.getPropertyValue(colorTextInverse).trim().split(' ')
+    const [subduedH, subduedS, subduedL] = computedStyle.getPropertyValue(colorTextSubdued).trim().split(' ')
+
+    return {
+      colorTextDefault: `hsl(${defaultH}, ${defaultS}, ${defaultL})`,
+      colorTextInverse: `hsl(${inverseH}, ${inverseS}, ${inverseL})`,
+      colorTextSubdued: `hsl(${subduedH}, ${subduedS}, ${subduedL})`,
+    }
+  })
+
+  const theme = computed<TimelineThemeOptions>(() => {
+    return {
+      node: (node) => {
+        return {
+          fill: stateColors[node.state],
+          inverseTextOnFill: true,
+        }
+      },
+      defaults: colorDefaults.value,
+    }
+  })
 </script>
 
 <style>
-.timeline { @apply
+.flow-run-timeline-demo { @apply
   h-full
   flex
   flex-col
   gap-4
 }
 
-.timeline__header { @apply
+.flow-run-timeline-demo__header { @apply
   items-center
   text-sm
   rounded-lg
-  text-slate-900
+  text-foreground-600
 }
 
-.timeline__{ @apply
+.flow-run-timeline-demo__{ @apply
   !rounded-t-none
 }
 
-.timeline__header-row { @apply
+.flow-run-timeline-demo__header-row { @apply
   flex
   gap-4
   items-center
   mb-4
 }
 
-.timeline__header-row:last-of-type { @apply
+.flow-run-timeline-demo__header-row:last-of-type { @apply
   mb-0
 }
 
-.timeline__header-row__checkbox-wrapper { @apply
+.flow-run-timeline-demo__header-row__checkbox-wrapper { @apply
   min-w-fit
   pt-5
 }
 
-.timeline__graph-container { @apply
+.flow-run-timeline-demo__graph-container { @apply
   flex-1
+}
+
+.flow-run-timeline-demo-demo__graph { @apply
+  bg-background
+  rounded-3xl
 }
 </style>

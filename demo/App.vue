@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-full min-h-full app">
+  <div class="app">
     <template v-if="!media.lg">
       <p-global-sidebar class="app__mobile-menu">
         <template #upper-links>
@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { media } from '@prefecthq/prefect-design'
+  import { media, useColorTheme } from '@prefecthq/prefect-design'
   import { computed, watchEffect } from 'vue'
   import ContextSidebar from '@/demo/components/ContextSidebar.vue'
   import { mobileMenuOpen, toggle } from '@/demo/router/menu'
@@ -35,6 +35,8 @@
   const showMenu = computed(() => media.lg || mobileMenuOpen.value)
 
   watchEffect(() => document.body.classList.toggle('body-scrolling-disabled', showMenu.value && !media.lg))
+
+  useColorTheme()
 </script>
 
 <style>
@@ -47,10 +49,12 @@ html, body {
 }
 
 .app { @apply
-  text-slate-900
+  text-foreground
   h-screen
   flex
   flex-col
+  bg-background
+  dark:bg-background-400
 }
 
 .app__prefect-icon { @apply
@@ -71,6 +75,8 @@ html, body {
   py-10
   px-6
   lg:px-8
+  h-screen
+  overflow-auto
 }
 
 .app__router-view-fade-enter-active,

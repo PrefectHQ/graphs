@@ -48,10 +48,11 @@ export const nodeThemeFnDefault: NodeThemeFn = () => {
 
 type Sizing = `${string}px` | `${string}em` | `${string}rem`
 
-type RGB = `rgb(${number}, ${number}, ${number})`
-type RGBA = `rgba(${number}, ${number}, ${number}, ${number})`
-type HEX = `#${string}`
-type Color = RGB | RGBA | HEX
+export type RGB = `rgb(${number}, ${number}, ${number})`
+export type RGBA = `rgba(${number}, ${number}, ${number}, ${number})`
+export type HSL = `hsl(${string | number}, ${number | string}, ${number | string})`
+export type HEX = `#${string}`
+export type Color = RGB | RGBA | HSL | HEX
 
 export type ThemeStyleOverrides = {
   colorGraphBg?: Color,

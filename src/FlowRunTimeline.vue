@@ -2,7 +2,6 @@
   <div
     ref="stage"
     class="flow-run-timeline"
-    :style="{ backgroundColor: styles.colorGraphBg, borderRadius: styles.borderRadiusGraph }"
   />
 </template>
 
@@ -42,7 +41,9 @@
   const stage = ref<HTMLDivElement>()
 
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
+
   const styles = computed(() => parseThemeOptions(props.theme?.defaults))
+
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
     ...props.formatDateFns,
@@ -180,7 +181,7 @@
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
-      styles: styles,
+      styles,
       formatDateFns,
     })
 
