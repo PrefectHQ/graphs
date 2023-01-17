@@ -2,7 +2,6 @@
   <div
     ref="stage"
     class="flow-run-timeline"
-    :style="{ backgroundColor: styles.colorGraphBg, borderRadius: styles.borderRadiusGraph }"
   />
 </template>
 
