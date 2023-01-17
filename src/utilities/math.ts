@@ -13,6 +13,7 @@ export const {
   floor,
   ceil,
   random,
+  round,
 } = Math
 
 export const epsilon = 1e-12

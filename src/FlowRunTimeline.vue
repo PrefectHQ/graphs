@@ -40,7 +40,9 @@
   const stage = ref<HTMLDivElement>()
 
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
+
   const styles = computed(() => parseThemeOptions(props.theme?.defaults))
+
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
     ...props.formatDateFns,
@@ -196,7 +198,7 @@
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
-      styles: styles,
+      styles,
       formatDateFns,
     })
 

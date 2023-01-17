@@ -1,7 +1,7 @@
 import type { Viewport } from 'pixi-viewport'
 import { Container } from 'pixi.js'
 import type { Application } from 'pixi.js'
-import type { ComputedRef, Ref } from 'vue'
+import { ComputedRef, Ref, watch, WatchStopHandle } from 'vue'
 import { TimelineGuide } from './timelineGuide'
 import { FormatDateFns, ParsedThemeStyles } from '@/models'
 import {
@@ -41,6 +41,7 @@ export class TimelineGuides extends Container {
   private readonly isRunning: boolean
   private readonly styles: ComputedRef<ParsedThemeStyles>
   private readonly formatDateFns: ComputedRef<FormatDateFns>
+  private readonly unwatch: WatchStopHandle
 
   private idealGuideCount = 10
   private currentTimeGap = 120
@@ -74,6 +75,12 @@ export class TimelineGuides extends Container {
     this.updateCurrentTimeGap()
 
     this.createGuides()
+
+    this.unwatch = watch(styles, () => {
+      this.removeChildren()
+      this.guides.clear()
+      this.createGuides()
+    }, { deep: true })
   }
 
   public updateGuides(): void {
@@ -202,6 +209,7 @@ export class TimelineGuides extends Container {
   public destroy(): void {
     this.removeChildren()
     this.guides.clear()
+    this.unwatch()
     super.destroy.call(this)
   }
 }
