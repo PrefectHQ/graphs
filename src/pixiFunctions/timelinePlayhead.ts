@@ -2,12 +2,12 @@ import type { Viewport } from 'pixi-viewport'
 import { Container, Graphics } from 'pixi.js'
 import type { Application } from 'pixi.js'
 import { ComputedRef } from 'vue'
-import { ParsedThemeStyles } from '@/models'
+import { ParsedThemeStyles, XScale } from '@/models'
 
 type TimelinePlayheadProps = {
   viewportRef: Viewport,
   appRef: Application,
-  xScale: (date: Date) => number,
+  xScale: XScale,
   styles: ComputedRef<ParsedThemeStyles>,
 }
 
