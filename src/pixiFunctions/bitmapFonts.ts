@@ -1,81 +1,90 @@
 import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, IBitmapTextStyle, TextStyle } from 'pixi.js'
-import { TextStyles } from '@/models'
+import { TextStyles, ParsedThemeStyles } from '@/models'
 
-export const nodeTextStyles = new TextStyle({
-  fontFamily: 'InterVariable',
-  fontSize: 14,
-  lineHeight: 20,
-})
+async function loadBitmapFonts(styles: ParsedThemeStyles): Promise<TextStyles> {
+  const font = new FontFaceObserver(styles.textFontFamilyDefault)
 
-export const timelineMarkerStyles = new TextStyle({
-  fontFamily: 'InterVariable',
-  fontSize: 12,
-  lineHeight: 16,
-})
+  try {
+    await font.load()
+  } catch (error) {
+    console.error(error)
+    console.warn(`loadBitmapFonts: font ${styles.textFontFamilyDefault} failed to load, falling back to sans-serif`)
+    return createBitmapFonts('sans-serif', styles)
+  }
 
-function initBitmapFonts(): Promise<TextStyles> {
-  const devicePixelRatio = window.devicePixelRatio || 2
+  return createBitmapFonts(styles.textFontFamilyDefault, styles)
+}
 
-  return new Promise((resolve) => {
-    const font = new FontFaceObserver('InterVariable')
+function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextStyles {
+  const options = {
+    resolution: window.devicePixelRatio || 2,
+    chars: BitmapFont.ASCII,
+  }
 
-    font.load().then(() => {
-      const options = {
-        resolution: devicePixelRatio,
-        chars: BitmapFont.ASCII,
-      }
-      BitmapFont.from(
-        'NodeTextDefault',
-        {
-          ...nodeTextStyles,
-          fill: 0x111827,
-        }, options,
-      )
-      BitmapFont.from(
-        'NodeTextInverse',
-        {
-          ...nodeTextStyles,
-          fill: 0xffffff,
-        }, options,
-      )
-      BitmapFont.from(
-        'TimeMarkerLabel',
-        {
-          ...timelineMarkerStyles,
-          fill: 0x94A3B8,
-        }, options,
-      )
-
-      const nodeTextDefault: Partial<IBitmapTextStyle> = {
-        fontName: 'NodeTextDefault',
-        fontSize: 14,
-      }
-
-      const nodeTextInverse: Partial<IBitmapTextStyle> = {
-        fontName: 'NodeTextInverse',
-        fontSize: 14,
-      }
-
-      const timeMarkerLabel: Partial<IBitmapTextStyle> = {
-        fontName: 'TimeMarkerLabel',
-        fontSize: 12,
-      }
-
-      resolve({
-        nodeTextDefault,
-        nodeTextInverse,
-        timeMarkerLabel,
-      })
-    })
+  const nodeTextStyles = new TextStyle({
+    fontFamily: fontFamily,
+    fontSize: styles.textSizeDefault,
+    lineHeight: styles.textLineHeightDefault,
   })
+
+  const timelineMarkerStyles = new TextStyle({
+    fontFamily: fontFamily,
+    fontSize: styles.textSizeSmall,
+    lineHeight: styles.textLineHeightSmall,
+  })
+
+  BitmapFont.from(
+    'NodeTextDefault',
+    {
+      ...nodeTextStyles,
+      fill: styles.colorTextDefault,
+    }, options,
+  )
+  const nodeTextDefault: Partial<IBitmapTextStyle> = {
+    fontName: 'NodeTextDefault',
+    fontSize: styles.textSizeDefault,
+  }
+
+  BitmapFont.from(
+    'NodeTextInverse',
+    {
+      ...nodeTextStyles,
+      fill: styles.colorTextInverse,
+    }, options,
+  )
+  const nodeTextInverse: Partial<IBitmapTextStyle> = {
+    fontName: 'NodeTextInverse',
+    fontSize: styles.textSizeDefault,
+  }
+
+  BitmapFont.from(
+    'TimeMarkerLabel',
+    {
+      ...timelineMarkerStyles,
+      fill: styles.colorTextSubdued,
+    }, options,
+  )
+  const timeMarkerLabel: Partial<IBitmapTextStyle> = {
+    fontName: 'TimeMarkerLabel',
+    fontSize: styles.textSizeSmall,
+  }
+
+  return {
+    nodeTextDefault,
+    nodeTextInverse,
+    nodeTextStyles,
+    timeMarkerLabel,
+  }
 }
 
 let bitmapFontsCache: Promise<TextStyles> | null = null
 
-export const getBitmapFonts = (): Promise<TextStyles> => {
+export const getBitmapFonts = (styles: ParsedThemeStyles): Promise<TextStyles> => {
+  // NOTE: Once fonts are cached, they are not reactive.
+  // If you change the theme, you must refresh the timeline for updated fonts.
   if (!bitmapFontsCache) {
-    bitmapFontsCache = initBitmapFonts()
+    bitmapFontsCache = loadBitmapFonts(styles)
   }
   return bitmapFontsCache
 }

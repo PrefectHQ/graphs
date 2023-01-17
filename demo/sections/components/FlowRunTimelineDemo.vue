@@ -35,9 +35,7 @@
         :key="componentKey"
         :graph-data="data"
         :is-running="isRunning"
-        :format-time-by-seconds="formatDateBySeconds"
-        :format-time-by-minutes="formatDateByMinutes"
-        :format-date="formatDate"
+        :theme="theme"
       />
     </div>
   </main>
@@ -47,8 +45,9 @@
   import { ref, watchEffect, computed } from 'vue'
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
+  import { TimelineThemeOptions } from '@/models'
 
-  const isRunning = ref(true)
+  const isRunning = ref(false)
   const componentKey = ref(0)
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
@@ -88,19 +87,24 @@
     componentKey.value += 1
   })
 
-
-  function formatDateBySeconds(date: Date): string {
-    return date.toLocaleTimeString()
+  const stateColors: Record<string, string> = {
+    'completed': '#00a63d',
+    'running': '#00a8ef',
+    'scheduled': '#60758d',
+    'pending': '#60758d',
+    'failed': '#f00011',
+    'cancelled': '#f00011',
+    'crashed': '#f00011',
+    'paused': '#f4b000',
   }
-
-  function formatDateByMinutes(date: Date): string {
-    const currentLocale = navigator.language
-    return new Intl.DateTimeFormat(currentLocale, { timeStyle: 'short' }).format(date)
-  }
-
-  function formatDate(date: Date): string {
-    const currentLocale = navigator.language
-    return new Intl.DateTimeFormat(currentLocale, { dateStyle: 'short' }).format(date)
+  const theme: TimelineThemeOptions = {
+    node: (node) => {
+      return {
+        fill: stateColors[node.state],
+        inverseTextOnFill: true,
+      }
+    },
+    defaults: {},
   }
 </script>
 

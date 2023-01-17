@@ -1,5 +1,9 @@
 <template>
-  <div ref="stage" class="flow-run-timeline" />
+  <div
+    ref="stage"
+    class="flow-run-timeline"
+    :style="{ backgroundColor: styles.colorGraphBg, borderRadius: styles.borderRadiusGraph }"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -10,10 +14,13 @@
     Container,
     Ticker
   } from 'pixi.js'
-  import { onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
+  import { computed, onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
     TimelineNodeData,
-    TimelineNodeState
+    nodeThemeFnDefault,
+    TimelineThemeOptions,
+    FormatDateFns,
+    formatDateFnsDefault
   } from './models'
   import {
     initPixiApp,
@@ -22,21 +29,23 @@
     TimelineNode,
     TimelinePlayhead
   } from './pixiFunctions'
-  import { getDateBounds } from './utilities'
+  import { getDateBounds, parseThemeOptions } from './utilities'
 
   const props = defineProps<{
     graphData: TimelineNodeData[],
     isRunning?: boolean,
-    formatTimeBySeconds: (date: Date) => string,
-    formatTimeByMinutes: (date: Date) => string,
-    formatDate: (date: Date) => string,
+    theme?: TimelineThemeOptions,
+    formatDateFns?: Partial<FormatDateFns>,
   }>()
 
   const stage = ref<HTMLDivElement>()
 
-  const styles = {
-    defaultViewportPadding: 40,
-  }
+  const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
+  const styles = computed(() => parseThemeOptions(props.theme?.defaults))
+  const formatDateFns = computed(() => ({
+    ...formatDateFnsDefault,
+    ...props.formatDateFns,
+  }))
 
   const zIndex = {
     timelineGuides: 0,
@@ -64,7 +73,7 @@
   type NodeRecord = {
     node: TimelineNode,
     end: Date | null,
-    state: TimelineNodeState | string,
+    state: string,
   }
   let nodes: Map<string, NodeRecord> = new Map()
 
@@ -144,6 +153,7 @@
       viewportRef: viewport,
       appRef: pixiApp,
       xScale,
+      styles,
     })
     playhead.zIndex = zIndex.playhead
 
@@ -166,7 +176,7 @@
         if (
           !viewport.moving
           && playheadStartedVisible
-          && playhead.position.x > pixiApp.screen.width - styles.defaultViewportPadding
+          && playhead.position.x > pixiApp.screen.width - styles.value.spacingViewportPaddingDefault
         ) {
           const originalLeft = dateScale(viewport.left)
           viewport.zoomPercent(-0.1, true)
@@ -187,9 +197,8 @@
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
-      formatTimeBySeconds: props.formatTimeBySeconds,
-      formatTimeByMinutes: props.formatTimeByMinutes,
-      formatDate: props.formatDate,
+      styles: styles,
+      formatDateFns,
     })
 
     guides.zIndex = zIndex.timelineGuides
@@ -216,7 +225,13 @@
 
   function initContent(): void {
     props.graphData.forEach((nodeData, nodeIndex) => {
-      const node = new TimelineNode(nodeData, xScale, nodeIndex)
+      const node = new TimelineNode({
+        nodeData,
+        xScale,
+        styles,
+        styleNode,
+        yPositionIndex: nodeIndex,
+      })
 
       nodes.set(nodeData.id, {
         node,
@@ -230,10 +245,10 @@
     viewport.addChild(nodesContainer)
 
     viewport.ensureVisible(
-      nodesContainer.x - styles.defaultViewportPadding,
-      nodesContainer.y - styles.defaultViewportPadding,
-      nodesContainer.width + styles.defaultViewportPadding * 2,
-      nodesContainer.height + styles.defaultViewportPadding * 2,
+      nodesContainer.x - styles.value.spacingViewportPaddingDefault,
+      nodesContainer.y - styles.value.spacingViewportPaddingDefault,
+      nodesContainer.width + styles.value.spacingViewportPaddingDefault * 2,
+      nodesContainer.height + styles.value.spacingViewportPaddingDefault * 2,
       true,
     )
     viewport.moveCenter(
@@ -265,7 +280,13 @@
             node.node.update(nodeData)
           }
         } else {
-          const node = new TimelineNode(nodeData, xScale, nodes.size)
+          const node = new TimelineNode({
+            nodeData,
+            xScale,
+            styles,
+            styleNode,
+            yPositionIndex: nodes.size,
+          })
 
           nodes.set(nodeData.id, {
             node,
@@ -300,8 +321,6 @@
 .flow-run-timeline { @apply
   w-full
   h-full
-  bg-slate-100
-  rounded-lg
   overflow-hidden
   relative
 }
