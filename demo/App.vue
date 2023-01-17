@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-full min-h-full app">
+  <div class="app">
     <template v-if="!media.lg">
       <p-global-sidebar class="app__mobile-menu">
         <template #upper-links>
@@ -75,7 +75,8 @@ html, body {
   py-10
   px-6
   lg:px-8
-  h-full
+  h-screen
+  overflow-auto
 }
 
 .app__router-view-fade-enter-active,
