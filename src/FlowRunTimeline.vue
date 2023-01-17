@@ -11,7 +11,6 @@
   import type { Viewport } from 'pixi-viewport'
   import {
     Application,
-    Container,
     Ticker
   } from 'pixi.js'
   import { computed, onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
@@ -20,13 +19,15 @@
     nodeThemeFnDefault,
     TimelineThemeOptions,
     FormatDateFns,
-    formatDateFnsDefault
+    formatDateFnsDefault,
+    XScale,
+    DateScale
   } from './models'
   import {
     initPixiApp,
     initViewport,
     TimelineGuides,
-    TimelineNode,
+    TimelineNodes,
     TimelinePlayhead
   } from './pixiFunctions'
   import { getDateBounds, parseThemeOptions } from './utilities'
@@ -69,13 +70,7 @@
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: Ticker | null = null
 
-  let nodesContainer = new Container()
-  type NodeRecord = {
-    node: TimelineNode,
-    end: Date | null,
-    state: string,
-  }
-  let nodes: Map<string, NodeRecord> = new Map()
+  let nodes: TimelineNodes
 
   onMounted(async () => {
     if (!stage.value) {
@@ -106,10 +101,7 @@
   function cleanupApp(): void {
     guides.destroy()
     playhead?.destroy()
-
-    nodesContainer.removeChildren()
-    nodes.clear()
-    nodesContainer.destroy()
+    nodes.destroy()
 
     pixiApp.destroy(true)
   }
@@ -224,45 +216,45 @@
   }
 
   function initContent(): void {
-    props.graphData.forEach((nodeData, nodeIndex) => {
-      const node = new TimelineNode({
-        nodeData,
-        xScale,
-        styles,
-        styleNode,
-        yPositionIndex: nodeIndex,
-      })
-
-      nodes.set(nodeData.id, {
-        node,
-        end: nodeData.end,
-        state: nodeData.state,
-      })
-
-      nodesContainer.addChild(node)
+    nodes = new TimelineNodes({
+      graphData: props.graphData,
+      xScale,
+      styles,
+      styleNode,
     })
+    viewport.addChild(nodes)
 
-    viewport.addChild(nodesContainer)
-
-    viewport.ensureVisible(
-      nodesContainer.x - styles.value.spacingViewportPaddingDefault,
-      nodesContainer.y - styles.value.spacingViewportPaddingDefault,
-      nodesContainer.width + styles.value.spacingViewportPaddingDefault * 2,
-      nodesContainer.height + styles.value.spacingViewportPaddingDefault * 2,
-      true,
-    )
-    viewport.moveCenter(
-      nodesContainer.x + nodesContainer.width / 2,
-      nodesContainer.y + nodesContainer.height / 2,
-    )
+    centerViewportOnNodes()
 
     if (props.isRunning) {
       pixiApp.ticker.add(() => {
         if (props.isRunning) {
-          nodes.forEach(nodeItem => nodeItem.node.update())
+          nodes.update()
         }
       })
     }
+  }
+
+  function centerViewportOnNodes(): void {
+    const { spacingViewportPaddingDefault } = styles.value
+    const {
+      x: nodesX,
+      y: nodesY,
+      width: nodesWidth,
+      height: nodesHeight,
+    } = nodes
+
+    viewport.ensureVisible(
+      nodesX - spacingViewportPaddingDefault,
+      nodesY - spacingViewportPaddingDefault,
+      nodesWidth + spacingViewportPaddingDefault * 2,
+      nodesHeight + spacingViewportPaddingDefault * 2,
+      true,
+    )
+    viewport.moveCenter(
+      nodesX + nodesWidth / 2,
+      nodesY + nodesHeight / 2,
+    )
   }
 
   watchEffect(() => {
@@ -270,35 +262,8 @@
     // If totally new data is added, it all gets appended way down the viewport Y axis.
     // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
     if (!loading.value) {
-      props.graphData.forEach((nodeData) => {
-        if (nodes.has(nodeData.id)) {
-          const node = nodes.get(nodeData.id)!
-          if (
-            node.end !== nodeData.end
-            || node.state !== nodeData.state
-          ) {
-            node.node.update(nodeData)
-          }
-        } else {
-          const node = new TimelineNode({
-            nodeData,
-            xScale,
-            styles,
-            styleNode,
-            yPositionIndex: nodes.size,
-          })
-
-          nodes.set(nodeData.id, {
-            node,
-            end: nodeData.end,
-            state: nodeData.state,
-          })
-
-          nodesContainer.addChild(node)
-
-          cullDirty = true
-        }
-      })
+      nodes.update(props.graphData)
+      cullDirty = true
 
       if (props.isRunning && (!playhead || playhead.destroyed)) {
         initPlayhead()
@@ -307,12 +272,12 @@
   })
 
   // Convert a date to an X position
-  function xScale(date: Date): number {
+  const xScale: XScale = (date) => {
     return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / initialOverallTimeSpan))
   }
 
   // Convert an X position to a timestamp
-  function dateScale(xPosition: number): number {
+  const dateScale: DateScale = (xPosition) => {
     return Math.ceil(minimumStartDate.getTime() + xPosition * (initialOverallTimeSpan / overallGraphWidth))
   }
 </script>

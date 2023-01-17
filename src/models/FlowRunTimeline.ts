@@ -10,6 +10,9 @@ export type TimelineNodeData = {
   state: string,
 }
 
+export type XScale = (date: Date) => number
+export type DateScale = (xPosition: number) => number
+
 export type TextStyles = {
   nodeTextDefault: Partial<IBitmapTextStyle>,
   nodeTextInverse: Partial<IBitmapTextStyle>,

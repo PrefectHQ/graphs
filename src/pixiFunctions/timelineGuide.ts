@@ -10,9 +10,9 @@ type TimelineGuideProps = {
 }
 
 export class TimelineGuide extends Container {
-  private readonly labelText: string | null
-  private readonly styles: ComputedRef<ParsedThemeStyles>
-  private appHeight: number
+  private readonly labelText
+  private readonly styles
+  private appHeight
 
   private readonly guideLine: Graphics
   private label: BitmapText | undefined
