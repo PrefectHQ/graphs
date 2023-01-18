@@ -1,6 +1,11 @@
-import { BitmapText, Container, Graphics, IDestroyOptions, TextMetrics } from 'pixi.js'
+import {
+  BitmapText,
+  Container,
+  Graphics,
+  TextMetrics
+} from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
-import { getBitmapFonts, updateBitmapFonts } from './bitmapFonts'
+import { getBitmapFonts } from './bitmapFonts'
 import {
   ParsedThemeStyles,
   TimelineNodeData,
@@ -15,7 +20,6 @@ type TimelineNodeProps = {
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   yPositionIndex: number,
-  unwatch: WatchStopHandle,
 }
 
 export class TimelineNode extends Container {
@@ -23,7 +27,8 @@ export class TimelineNode extends Container {
   private readonly xScale
   private readonly styles
   private readonly styleNode
-  private readonly unwatch
+
+  private readonly unwatch: WatchStopHandle
 
   private label: BitmapText | undefined
   private readonly box: Graphics
@@ -61,16 +66,10 @@ export class TimelineNode extends Container {
 
     this.updatePosition()
 
-    this.unwatch = watch(styles, (value) => {
-      updateBitmapFonts(value.textFontFamilyDefault, value)
+    this.unwatch = watch([styles, styleNode], () => {
       this.box.clear()
       this.drawBox()
     }, { deep: true })
-  }
-
-  public destroy(options?: boolean | IDestroyOptions | undefined): void {
-    this.unwatch()
-    super.destroy(options)
   }
 
   private getNodeWidth(): number {
@@ -180,5 +179,10 @@ export class TimelineNode extends Container {
     }
 
     this.updatePosition()
+  }
+
+  public destroy(): void {
+    this.unwatch()
+    super.destroy.call(this)
   }
 }
