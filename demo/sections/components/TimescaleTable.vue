@@ -52,7 +52,6 @@
     {
       label: 'Label',
       property: 'label',
-      width: '250px',
     },
     {
       label: 'Start',
@@ -73,7 +72,7 @@
   ]
 
   const getDuration = (row: TimescaleItem): string => {
-    const start = row.start?.getTime()
+    const start = row.start.getTime()
     const end = row.end?.getTime()
 
     if (start && end) {
@@ -109,7 +108,7 @@
 }
 
 .timescale-table__label { @apply
-  text-slate-900
+  text-foreground-600
   font-medium
   text-base
   truncate

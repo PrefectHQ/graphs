@@ -78,13 +78,66 @@ function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextS
   }
 }
 
+export function updateBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): void {
+  const options = {
+    resolution: window.devicePixelRatio || 2,
+    chars: BitmapFont.ASCII,
+  }
+
+  const nodeTextStyles = new TextStyle({
+    fontFamily: fontFamily,
+    fontSize: styles.textSizeDefault,
+    lineHeight: styles.textLineHeightDefault,
+  })
+
+  const timelineMarkerStyles = new TextStyle({
+    fontFamily: fontFamily,
+    fontSize: styles.textSizeSmall,
+    lineHeight: styles.textLineHeightSmall,
+  })
+
+  setTimeout(() => {
+    BitmapFont.uninstall('NodeTextDefault')
+    BitmapFont.from(
+      'NodeTextDefault',
+      {
+        ...nodeTextStyles,
+        fill: styles.colorTextDefault,
+      }, options,
+    )
+
+    BitmapFont.uninstall('NodeTextInverse')
+    BitmapFont.from(
+      'NodeTextInverse',
+      {
+        ...nodeTextStyles,
+        fill: styles.colorTextInverse,
+      }, options,
+    )
+
+    BitmapFont.uninstall('TimeMarkerLabel')
+    BitmapFont.from(
+      'TimeMarkerLabel',
+      {
+        ...timelineMarkerStyles,
+        fill: styles.colorTextSubdued,
+      }, options,
+    )
+  }, 0)
+}
+
 let bitmapFontsCache: Promise<TextStyles> | null = null
 
-export const getBitmapFonts = (styles: ParsedThemeStyles): Promise<TextStyles> => {
+export const getBitmapFonts = (styles: ParsedThemeStyles, refresh: boolean = false): Promise<TextStyles> | TextStyles => {
   // NOTE: Once fonts are cached, they are not reactive.
   // If you change the theme, you must refresh the timeline for updated fonts.
   if (!bitmapFontsCache) {
     bitmapFontsCache = loadBitmapFonts(styles)
   }
+
+  if (refresh) {
+    updateBitmapFonts(styles.textFontFamilyDefault, styles)
+  }
+
   return bitmapFontsCache
 }

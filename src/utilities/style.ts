@@ -1,3 +1,4 @@
+import { max, min, round } from './math'
 import { ParsedThemeStyles, ThemeStyleOverrides } from '@/models'
 
 export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeStyles {
@@ -34,11 +35,30 @@ export function colorToHex(color: string): number {
     return rgb2hex([red, green, blue])
   }
 
+  if (trimmedColor.startsWith('hsl')) {
+    const [hue, saturation, lightness] = trimmedColor.replace(/[^\d,.%]/g, '').split(',').map((val) => parseInt(val, 10))
+    const val = string2hex(hslToHex(hue, saturation, lightness))
+    return val
+  }
+
   return string2hex(trimmedColor)
 }
 
 function rgb2hex(rgb: number[] | Float32Array): number {
   return parseInt((1 << 24 | rgb[0] << 16 | rgb[1] << 8 | rgb[2]).toString(16).slice(1), 16)
+}
+
+function hslToHex(hue: number, saturation: number, lightness: number): string {
+  lightness /= 100
+  const alpha = saturation * min(lightness, 1 - lightness) / 100
+
+  const hexValue = (num: number): string => {
+    const kar = (num + (hue as number) / 30) % 12
+    const color = lightness - alpha * max(min(kar - 3, 9 - kar, 1), -1)
+    return round(255 * color).toString(16).padStart(2, '0')
+  }
+
+  return `#${hexValue(0)}${hexValue(8)}${hexValue(4)}`
 }
 
 function string2hex(string: string): number {

@@ -1,6 +1,6 @@
-import { BitmapText, Container, Graphics, TextMetrics } from 'pixi.js'
-import { ComputedRef } from 'vue'
-import { getBitmapFonts } from './bitmapFonts'
+import { BitmapText, Container, Graphics, IDestroyOptions, TextMetrics } from 'pixi.js'
+import { ComputedRef, watch, WatchStopHandle } from 'vue'
+import { getBitmapFonts, updateBitmapFonts } from './bitmapFonts'
 import {
   ParsedThemeStyles,
   TimelineNodeData,
@@ -15,6 +15,7 @@ type TimelineNodeProps = {
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   yPositionIndex: number,
+  unwatch: WatchStopHandle,
 }
 
 export class TimelineNode extends Container {
@@ -22,6 +23,7 @@ export class TimelineNode extends Container {
   private readonly xScale
   private readonly styles
   private readonly styleNode
+  private readonly unwatch
 
   private label: BitmapText | undefined
   private readonly box: Graphics
@@ -59,8 +61,19 @@ export class TimelineNode extends Container {
 
     this.updatePosition()
 
+    this.unwatch = watch(styles, (value) => {
+      updateBitmapFonts(value.textFontFamilyDefault, value)
+      this.box.clear()
+      this.drawBox()
+    }, { deep: true })
+
     this.interactive = true
     this.buttonMode = true
+  }
+
+  public destroy(options?: boolean | IDestroyOptions | undefined): void {
+    this.unwatch()
+    super.destroy(options)
   }
 
   private getNodeWidth(): number {
