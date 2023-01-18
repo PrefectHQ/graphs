@@ -58,6 +58,9 @@ export class TimelineNode extends Container {
     this.drawLabel()
 
     this.updatePosition()
+
+    this.interactive = true
+    this.buttonMode = true
   }
 
   private getNodeWidth(): number {
