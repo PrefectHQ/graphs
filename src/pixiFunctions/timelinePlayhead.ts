@@ -1,7 +1,7 @@
 import type { Viewport } from 'pixi-viewport'
 import { Container, Graphics } from 'pixi.js'
 import type { Application } from 'pixi.js'
-import { ComputedRef } from 'vue'
+import { ComputedRef, watch, WatchStopHandle } from 'vue'
 import { ParsedThemeStyles, XScale } from '@/models'
 
 type TimelinePlayheadProps = {
@@ -16,6 +16,8 @@ export class TimelinePlayhead extends Container {
   private readonly appRef
   private readonly xScale
   private readonly styles: ComputedRef<ParsedThemeStyles>
+
+  private readonly unwatch: WatchStopHandle
 
   private readonly playhead = new Graphics()
 
@@ -33,6 +35,11 @@ export class TimelinePlayhead extends Container {
     this.styles = styles
 
     this.drawPlayhead()
+
+    this.unwatch = watch(styles, () => {
+      this.playhead.clear()
+      this.drawPlayhead()
+    }, { deep: true })
   }
 
   private drawPlayhead(): void {
@@ -77,5 +84,10 @@ export class TimelinePlayhead extends Container {
     if (this.playhead.height !== this.appRef.screen.height) {
       this.playhead.height = this.appRef.screen.height
     }
+  }
+
+  public destroy(): void {
+    this.unwatch()
+    super.destroy.call(this)
   }
 }

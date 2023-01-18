@@ -2,6 +2,15 @@ import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, IBitmapTextStyle, TextStyle } from 'pixi.js'
 import { TextStyles, ParsedThemeStyles } from '@/models'
 
+let bitmapFontsFontFamily = 'sans-serif'
+let bitmapFontsCache: Promise<TextStyles> | null = null
+const options = {
+  resolution: window.devicePixelRatio || 2,
+  chars: BitmapFont.ASCII,
+}
+const nodeTextStyles = new TextStyle()
+const timelineMarkerStyles = new TextStyle()
+
 async function loadBitmapFonts(styles: ParsedThemeStyles): Promise<TextStyles> {
   const font = new FontFaceObserver(styles.textFontFamilyDefault)
 
@@ -9,30 +18,26 @@ async function loadBitmapFonts(styles: ParsedThemeStyles): Promise<TextStyles> {
     await font.load()
   } catch (error) {
     console.error(error)
-    console.warn(`loadBitmapFonts: font ${styles.textFontFamilyDefault} failed to load, falling back to sans-serif`)
-    return createBitmapFonts('sans-serif', styles)
+    console.warn(`loadBitmapFonts: font ${styles.textFontFamilyDefault} failed to load, falling back to ${bitmapFontsFontFamily}`)
+    return createBitmapFonts(bitmapFontsFontFamily, styles)
   }
 
-  return createBitmapFonts(styles.textFontFamilyDefault, styles)
+  bitmapFontsFontFamily = styles.textFontFamilyDefault
+  return createBitmapFonts(bitmapFontsFontFamily, styles)
+}
+
+function assignTextStyles(styles: ParsedThemeStyles): void {
+  nodeTextStyles.fontFamily = bitmapFontsFontFamily
+  nodeTextStyles.fontSize = styles.textSizeDefault
+  nodeTextStyles.lineHeight = styles.textLineHeightDefault
+
+  timelineMarkerStyles.fontFamily = bitmapFontsFontFamily
+  timelineMarkerStyles.fontSize = styles.textSizeSmall
+  timelineMarkerStyles.lineHeight = styles.textLineHeightSmall
 }
 
 function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextStyles {
-  const options = {
-    resolution: window.devicePixelRatio || 2,
-    chars: BitmapFont.ASCII,
-  }
-
-  const nodeTextStyles = new TextStyle({
-    fontFamily: fontFamily,
-    fontSize: styles.textSizeDefault,
-    lineHeight: styles.textLineHeightDefault,
-  })
-
-  const timelineMarkerStyles = new TextStyle({
-    fontFamily: fontFamily,
-    fontSize: styles.textSizeSmall,
-    lineHeight: styles.textLineHeightSmall,
-  })
+  assignTextStyles(styles)
 
   BitmapFont.from(
     'NodeTextDefault',
@@ -78,23 +83,8 @@ function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextS
   }
 }
 
-export function updateBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): void {
-  const options = {
-    resolution: window.devicePixelRatio || 2,
-    chars: BitmapFont.ASCII,
-  }
-
-  const nodeTextStyles = new TextStyle({
-    fontFamily: fontFamily,
-    fontSize: styles.textSizeDefault,
-    lineHeight: styles.textLineHeightDefault,
-  })
-
-  const timelineMarkerStyles = new TextStyle({
-    fontFamily: fontFamily,
-    fontSize: styles.textSizeSmall,
-    lineHeight: styles.textLineHeightSmall,
-  })
+export function updateBitmapFonts(styles: ParsedThemeStyles): void {
+  assignTextStyles(styles)
 
   setTimeout(() => {
     BitmapFont.uninstall('NodeTextDefault')
@@ -126,18 +116,14 @@ export function updateBitmapFonts(fontFamily: string, styles: ParsedThemeStyles)
   }, 0)
 }
 
-let bitmapFontsCache: Promise<TextStyles> | null = null
-
-export const getBitmapFonts = (styles: ParsedThemeStyles, refresh: boolean = false): Promise<TextStyles> | TextStyles => {
-  // NOTE: Once fonts are cached, they are not reactive.
-  // If you change the theme, you must refresh the timeline for updated fonts.
+export const getBitmapFonts = (styles: ParsedThemeStyles): Promise<TextStyles> | TextStyles => {
   if (!bitmapFontsCache) {
     bitmapFontsCache = loadBitmapFonts(styles)
   }
 
-  if (refresh) {
-    updateBitmapFonts(styles.textFontFamilyDefault, styles)
-  }
-
   return bitmapFontsCache
+}
+
+export const initBitmapFonts = (styles: ParsedThemeStyles): void => {
+  bitmapFontsCache = loadBitmapFonts(styles)
 }

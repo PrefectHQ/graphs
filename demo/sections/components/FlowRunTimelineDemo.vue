@@ -110,7 +110,7 @@
     colorTextSubdued: HSL,
   }>(() => {
     let colorTextDefault = '--foreground',
-        colorTextInverse = '--foreground',
+        colorTextInverse = '--white',
         colorTextSubdued = '--foreground-300'
 
     if (colorThemeValue.value == 'dark') {
@@ -183,7 +183,8 @@
 }
 
 .flow-run-timeline-demo-demo__graph { @apply
-  bg-background
-  rounded-3xl
+  bg-background-600
+  dark:bg-background
+  rounded-xl
 }
 </style>

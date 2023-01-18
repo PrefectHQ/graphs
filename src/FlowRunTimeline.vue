@@ -23,6 +23,8 @@
     DateScale
   } from './models'
   import {
+    initBitmapFonts,
+    updateBitmapFonts,
     initPixiApp,
     initViewport,
     TimelineGuides,
@@ -70,7 +72,6 @@
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: Ticker | null = null
-
   let nodes: TimelineNodes
 
   onMounted(async () => {
@@ -85,6 +86,8 @@
 
     viewport = await initViewport(stage.value, pixiApp)
     viewport.zIndex = zIndex.viewport
+
+    initFonts()
 
     initGuides()
     initContent()
@@ -126,6 +129,14 @@
     initialOverallTimeSpan = span
 
     overallGraphWidth = stage.value!.clientWidth * 2
+  }
+
+  function initFonts(): void {
+    initBitmapFonts(styles.value)
+
+    watchEffect(() => {
+      updateBitmapFonts(styles.value)
+    })
   }
 
   function initPlayhead(): void {
