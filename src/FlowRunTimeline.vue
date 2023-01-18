@@ -10,7 +10,8 @@
   import type { Viewport } from 'pixi-viewport'
   import {
     Application,
-    Ticker
+    Ticker,
+    UPDATE_PRIORITY
   } from 'pixi.js'
   import { computed, onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
@@ -20,7 +21,8 @@
     FormatDateFns,
     formatDateFnsDefault,
     XScale,
-    DateScale
+    DateScale,
+    NodeRecord
   } from './models'
   import {
     initBitmapFonts,
@@ -29,7 +31,8 @@
     initViewport,
     TimelineGuides,
     TimelineNodes,
-    TimelinePlayhead
+    TimelinePlayhead,
+    DeselectLayer
   } from './pixiFunctions'
   import { getDateBounds, parseThemeOptions } from './utilities'
 
@@ -38,6 +41,7 @@
     isRunning?: boolean,
     theme?: TimelineThemeOptions,
     formatDateFns?: Partial<FormatDateFns>,
+    selectedNodeId?: string | null,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -53,6 +57,7 @@
 
   const zIndex = {
     timelineGuides: 0,
+    deselectLayer: 5,
     viewport: 10,
     playhead: 20,
   }
@@ -72,10 +77,11 @@
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: Ticker | null = null
-  let nodes: TimelineNodes
+  let deselectLayer: DeselectLayer
+  let nodesContainer: TimelineNodes
 
   const emit = defineEmits<{
-    (event: 'click', value: any): void,
+    (event: 'click', value: string | null): void,
   }>()
 
   onMounted(async () => {
@@ -94,6 +100,7 @@
     initFonts()
 
     initGuides()
+    initDeselectLayer()
     initContent()
     initPlayhead()
 
@@ -109,7 +116,8 @@
   function cleanupApp(): void {
     guides.destroy()
     playhead?.destroy()
-    nodes.destroy()
+    nodesContainer.destroy()
+    deselectLayer.destroy()
 
     pixiApp.destroy(true)
   }
@@ -222,28 +230,46 @@
     })
   }
 
+  function initDeselectLayer(): void {
+    deselectLayer = new DeselectLayer(pixiApp)
+    deselectLayer.zIndex = zIndex.deselectLayer
+
+    pixiApp.stage.addChild(deselectLayer)
+
+    deselectLayer.on('pointerdown', () => {
+      emit('click', null)
+    })
+
+    pixiApp.ticker.add(() => {
+      if (deselectLayer.width !== pixiApp.screen.width || deselectLayer.height !== pixiApp.screen.height) {
+        deselectLayer.update()
+      }
+    }, null, UPDATE_PRIORITY.LOW)
+  }
+
   function initContent(): void {
-    nodes = new TimelineNodes({
+    nodesContainer = new TimelineNodes({
+      viewportRef: viewport,
       graphData: props.graphData,
       xScale,
       styles,
       styleNode,
     })
-    viewport.addChild(nodes)
+    viewport.addChild(nodesContainer)
 
     centerViewportOnNodes()
 
     if (props.isRunning) {
       pixiApp.ticker.add(() => {
         if (props.isRunning) {
-          nodes.update()
+          nodesContainer.update()
         }
       })
     }
 
-    nodes.children.forEach((node: any) => {
-      node.on('pointerdown', () => {
-        emit('click', node.nodeData.id)
+    nodesContainer.nodes.forEach((nodeRecord: NodeRecord) => {
+      nodeRecord.node.on('pointerdown', () => {
+        emit('click', nodeRecord.id)
       })
     })
   }
@@ -255,7 +281,7 @@
       y: nodesY,
       width: nodesWidth,
       height: nodesHeight,
-    } = nodes
+    } = nodesContainer
 
     viewport.ensureVisible(
       nodesX - spacingViewportPaddingDefault,
@@ -268,6 +294,10 @@
       nodesX + nodesWidth / 2,
       nodesY + nodesHeight / 2,
     )
+
+    watchEffect(() => {
+      nodesContainer.updateSelection(props.selectedNodeId)
+    })
   }
 
   watchEffect(() => {
@@ -275,7 +305,7 @@
     // If totally new data is added, it all gets appended way down the viewport Y axis.
     // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
     if (!loading.value) {
-      nodes.update(props.graphData)
+      nodesContainer.update(props.graphData)
       cullDirty = true
 
       if (props.isRunning && (!playhead || playhead.destroyed)) {

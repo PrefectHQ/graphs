@@ -1,4 +1,5 @@
 import { IBitmapTextStyle, TextStyle } from 'pixi.js'
+import { TimelineNode } from '@/pixiFunctions/timelineNode'
 import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilities'
 
 export type TimelineNodeData = {
@@ -7,6 +8,13 @@ export type TimelineNodeData = {
   start: Date,
   end: Date | null,
   upstreamDependencies?: TimelineNodeData[],
+  state: string,
+}
+
+export type NodeRecord = {
+  node: TimelineNode,
+  id: string,
+  end: Date | null,
   state: string,
 }
 

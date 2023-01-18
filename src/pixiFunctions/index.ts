@@ -1,4 +1,5 @@
 export * from './bitmapFonts'
+export * from './deselectLayer'
 export * from './initPixiApp'
 export * from './initViewport'
 export * from './timelineGuides'

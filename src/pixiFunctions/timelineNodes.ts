@@ -1,30 +1,29 @@
+import type { Viewport } from 'pixi-viewport'
 import { Container } from 'pixi.js'
 import { ComputedRef } from 'vue'
 import { TimelineNode } from './timelineNode'
-import { NodeThemeFn, ParsedThemeStyles, TimelineNodeData, XScale } from '@/models'
+import { NodeRecord, NodeThemeFn, ParsedThemeStyles, TimelineNodeData, XScale } from '@/models'
 
 type TimelineNodesProps = {
+  viewportRef: Viewport,
   graphData: TimelineNodeData[],
   xScale: XScale,
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
 }
 
-type NodeRecord = {
-  node: TimelineNode,
-  end: Date | null,
-  state: string,
-}
-
 export class TimelineNodes extends Container {
+  private readonly viewportRef: Viewport
   private graphData
   private readonly xScale
   private readonly styles
   private readonly styleNode
 
-  private readonly nodes: Map<string, NodeRecord> = new Map()
+  public readonly nodes: Map<string, NodeRecord> = new Map()
+  public selectedNodeId: string | null | undefined = null
 
   public constructor({
+    viewportRef,
     graphData,
     xScale,
     styles,
@@ -32,6 +31,7 @@ export class TimelineNodes extends Container {
   }: TimelineNodesProps) {
     super()
 
+    this.viewportRef = viewportRef
     this.graphData = graphData
     this.xScale = xScale
     this.styles = styles
@@ -57,6 +57,7 @@ export class TimelineNodes extends Container {
 
     this.nodes.set(nodeData.id, {
       node,
+      id: nodeData.id,
       end: nodeData.end,
       state: nodeData.state,
     })
@@ -81,6 +82,29 @@ export class TimelineNodes extends Container {
     }
 
     this.nodes.forEach(nodeItem => nodeItem.node.update())
+  }
+
+  public updateSelection(selectedNodeId?: string | null): void {
+    if (!selectedNodeId && this.selectedNodeId) {
+      this.nodes.get(this.selectedNodeId)?.node.deselect()
+      this.selectedNodeId = null
+      return
+    }
+
+    const oldSelection = this.selectedNodeId
+    this.selectedNodeId = selectedNodeId
+
+    if (oldSelection) {
+      this.nodes.get(oldSelection)?.node.deselect()
+    }
+    if (selectedNodeId) {
+      const selectedNode = this.nodes.get(selectedNodeId)!
+      selectedNode.node.select()
+      this.viewportRef.moveCenter(
+        selectedNode.node.x + selectedNode.node.width / 2,
+        selectedNode.node.y + selectedNode.node.height / 2,
+      )
+    }
   }
 
   public destroy(): void {

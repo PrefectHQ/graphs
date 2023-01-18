@@ -33,6 +33,8 @@ export class TimelineNode extends Container {
   private label: BitmapText | undefined
   private readonly box: Graphics
 
+  private selected: boolean = false
+
   private apxLabelWidth = 0
   private nodeWidth
   private readonly yPositionOffset
@@ -182,6 +184,16 @@ export class TimelineNode extends Container {
     }
 
     this.updatePosition()
+  }
+
+  public select(): void {
+    this.selected = true
+    this.box.alpha = 0.5
+  }
+
+  public deselect(): void {
+    this.selected = false
+    this.box.alpha = 1
   }
 
   public destroy(): void {
