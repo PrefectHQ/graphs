@@ -74,6 +74,10 @@
   let playheadTicker: Ticker | null = null
   let nodes: TimelineNodes
 
+  const emit = defineEmits<{
+    (event: 'click', value: any): void,
+  }>()
+
   onMounted(async () => {
     if (!stage.value) {
       console.error('Stage reference not found in initPixiApp')
@@ -236,6 +240,12 @@
         }
       })
     }
+
+    nodes.children.forEach((node: any) => {
+      node.on('pointerdown', () => {
+        emit('click', node.nodeData.id)
+      })
+    })
   }
 
   function centerViewportOnNodes(): void {

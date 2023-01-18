@@ -70,6 +70,9 @@ export class TimelineNode extends Container {
       this.box.clear()
       this.drawBox()
     }, { deep: true })
+
+    this.interactive = true
+    this.buttonMode = true
   }
 
   private getNodeWidth(): number {
