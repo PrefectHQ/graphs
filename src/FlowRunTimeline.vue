@@ -10,8 +10,7 @@
   import type { Viewport } from 'pixi-viewport'
   import {
     Application,
-    Ticker,
-    UPDATE_PRIORITY
+    Ticker
   } from 'pixi.js'
   import { computed, onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
@@ -21,8 +20,7 @@
     FormatDateFns,
     formatDateFnsDefault,
     XScale,
-    DateScale,
-    NodeRecord
+    DateScale
   } from './models'
   import {
     initBitmapFonts,
@@ -59,7 +57,6 @@
 
   const zIndex = {
     timelineGuides: 0,
-    deselectLayer: 5,
     viewport: 10,
     playhead: 20,
   }
@@ -243,20 +240,13 @@
   }
 
   function initDeselectLayer(): void {
-    deselectLayer = new DeselectLayer(pixiApp)
-    deselectLayer.zIndex = zIndex.deselectLayer
+    deselectLayer = new DeselectLayer(pixiApp, viewport)
 
-    pixiApp.stage.addChild(deselectLayer)
+    viewport.addChild(deselectLayer)
 
     deselectLayer.on('click', () => {
       emit('click', null)
     })
-
-    pixiApp.ticker.add(() => {
-      if (deselectLayer.width !== pixiApp.screen.width || deselectLayer.height !== pixiApp.screen.height) {
-        deselectLayer.update()
-      }
-    }, null, UPDATE_PRIORITY.LOW)
   }
 
   function initContent(): void {
