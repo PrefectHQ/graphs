@@ -1,6 +1,11 @@
-import { BitmapText, Container, Graphics, IDestroyOptions, TextMetrics } from 'pixi.js'
+import {
+  BitmapText,
+  Container,
+  Graphics,
+  TextMetrics
+} from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
-import { getBitmapFonts, updateBitmapFonts } from './bitmapFonts'
+import { getBitmapFonts } from './bitmapFonts'
 import {
   ParsedThemeStyles,
   TimelineNodeData,
@@ -15,7 +20,6 @@ type TimelineNodeProps = {
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   yPositionIndex: number,
-  unwatch: WatchStopHandle,
 }
 
 export class TimelineNode extends Container {
@@ -23,10 +27,11 @@ export class TimelineNode extends Container {
   private readonly xScale
   private readonly styles
   private readonly styleNode
-  private readonly unwatch
+
+  private readonly unwatch: WatchStopHandle
 
   private label: BitmapText | undefined
-  private readonly box: Graphics
+  private readonly box = new Graphics()
 
   private apxLabelWidth = 0
   private nodeWidth
@@ -34,6 +39,7 @@ export class TimelineNode extends Container {
   private readonly yPositionIndex
   private isLabelInBox = true
 
+  private readonly selectedRing = new Graphics()
 
   public constructor({
     nodeData,
@@ -53,27 +59,22 @@ export class TimelineNode extends Container {
 
     this.yPositionOffset = this.getYPositionOffset(styles.value)
 
-    this.box = new Graphics()
     this.drawBox()
     this.addChild(this.box)
 
     this.drawLabel()
 
+    this.drawSelectedRing()
+
     this.updatePosition()
 
-    this.unwatch = watch(styles, (value) => {
-      updateBitmapFonts(value.textFontFamilyDefault, value)
+    this.unwatch = watch([styles, styleNode], () => {
       this.box.clear()
       this.drawBox()
     }, { deep: true })
 
     this.interactive = true
     this.buttonMode = true
-  }
-
-  public destroy(options?: boolean | IDestroyOptions | undefined): void {
-    this.unwatch()
-    super.destroy(options)
   }
 
   private getNodeWidth(): number {
@@ -133,6 +134,33 @@ export class TimelineNode extends Container {
     this.addChild(this.label)
   }
 
+  private drawSelectedRing(): void {
+    const {
+      colorNodeSelection,
+      spacingNodeSelectionMargin,
+      spacingNodeSelectionWidth,
+      borderRadiusNode,
+    } = this.styles.value
+
+    this.selectedRing.lineStyle(
+      spacingNodeSelectionWidth,
+      colorNodeSelection,
+      1,
+      1,
+    )
+    this.selectedRing.drawRoundedRect(
+      -spacingNodeSelectionMargin,
+      -spacingNodeSelectionMargin,
+      this.nodeWidth + spacingNodeSelectionMargin * 2,
+      this.box.height + spacingNodeSelectionMargin * 2,
+      borderRadiusNode,
+    )
+
+    this.selectedRing.alpha = 0
+
+    this.addChild(this.selectedRing)
+  }
+
   private updatePosition(): void {
     this.position.set(
       this.xScale(this.nodeData.start),
@@ -183,5 +211,18 @@ export class TimelineNode extends Container {
     }
 
     this.updatePosition()
+  }
+
+  public select(): void {
+    this.selectedRing.alpha = 1
+  }
+
+  public deselect(): void {
+    this.selectedRing.alpha = 0
+  }
+
+  public destroy(): void {
+    this.unwatch()
+    super.destroy.call(this)
   }
 }

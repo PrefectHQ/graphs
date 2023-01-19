@@ -1,4 +1,5 @@
 import { IBitmapTextStyle, TextStyle } from 'pixi.js'
+import { TimelineNode } from '@/pixiFunctions/timelineNode'
 import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilities'
 
 export type TimelineNodeData = {
@@ -7,6 +8,13 @@ export type TimelineNodeData = {
   start: Date,
   end: Date | null,
   upstreamDependencies?: TimelineNodeData[],
+  state: string,
+}
+
+export type NodeRecord = {
+  node: TimelineNode,
+  id: string,
+  end: Date | null,
   state: string,
 }
 
@@ -59,6 +67,7 @@ export type ThemeStyleOverrides = {
   colorTextDefault?: Color,
   colorTextInverse?: Color,
   colorTextSubdued?: Color,
+  colorNodeSelection?: Color,
   colorGuideLine?: Color,
   colorPlayheadBg?: Color,
   textFontFamilyDefault?: string,
@@ -71,6 +80,8 @@ export type ThemeStyleOverrides = {
   spacingNodeYPadding?: Sizing,
   spacingNodeMargin?: Sizing,
   spacingNodeLabelMargin?: Sizing,
+  spacingNodeSelectionMargin?: Sizing,
+  spacingNodeSelectionWidth?: Sizing,
   spacingGuideLabelPadding?: Sizing,
   spacingPlayheadWidth?: Sizing,
   spacingPlayheadGlowPadding?: Sizing,
@@ -83,6 +94,7 @@ export type ParsedThemeStyles = {
   colorTextDefault: number,
   colorTextInverse: number,
   colorTextSubdued: number,
+  colorNodeSelection: number,
   colorGuideLine: number,
   colorPlayheadBg: number,
   textFontFamilyDefault: string,
@@ -95,6 +107,8 @@ export type ParsedThemeStyles = {
   spacingNodeYPadding: number,
   spacingNodeMargin: number,
   spacingNodeLabelMargin: number,
+  spacingNodeSelectionMargin: number,
+  spacingNodeSelectionWidth: number,
   spacingGuideLabelPadding: number,
   spacingPlayheadWidth: number,
   spacingPlayheadGlowPadding: number,

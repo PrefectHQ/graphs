@@ -33,6 +33,8 @@ export class TimelineGuide extends Container {
     this.addChild(this.guideLine)
 
     this.drawLabel()
+
+    this.interactive = false
   }
 
   private drawGuideLine(): void {

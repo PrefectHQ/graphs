@@ -32,7 +32,6 @@ type TimelineGuidesProps = {
   isRunning: boolean,
   styles: ComputedRef<ParsedThemeStyles>,
   formatDateFns: ComputedRef<FormatDateFns>,
-  unwatch: WatchStopHandle,
 }
 
 export class TimelineGuides extends Container {
@@ -45,7 +44,8 @@ export class TimelineGuides extends Container {
   private readonly isRunning
   private readonly styles
   private readonly formatDateFns
-  private readonly unwatch
+
+  private readonly unwatch: WatchStopHandle
 
   private idealGuideCount = 10
   private currentTimeGap = 120
@@ -85,6 +85,8 @@ export class TimelineGuides extends Container {
       this.guides.clear()
       this.createGuides()
     }, { deep: true })
+
+    this.interactive = false
   }
 
   public updateGuides(): void {
