@@ -31,9 +31,7 @@ export class TimelineNode extends Container {
   private readonly unwatch: WatchStopHandle
 
   private label: BitmapText | undefined
-  private readonly box: Graphics
-
-  private selected: boolean = false
+  private readonly box = new Graphics()
 
   private apxLabelWidth = 0
   private nodeWidth
@@ -41,6 +39,7 @@ export class TimelineNode extends Container {
   private readonly yPositionIndex
   private isLabelInBox = true
 
+  private readonly selectedRing = new Graphics()
 
   public constructor({
     nodeData,
@@ -60,11 +59,12 @@ export class TimelineNode extends Container {
 
     this.yPositionOffset = this.getYPositionOffset(styles.value)
 
-    this.box = new Graphics()
     this.drawBox()
     this.addChild(this.box)
 
     this.drawLabel()
+
+    this.drawSelectedRing()
 
     this.updatePosition()
 
@@ -134,6 +134,33 @@ export class TimelineNode extends Container {
     this.addChild(this.label)
   }
 
+  private drawSelectedRing(): void {
+    const {
+      colorNodeSelection,
+      spacingNodeSelectionMargin,
+      spacingNodeSelectionWidth,
+      borderRadiusNode,
+    } = this.styles.value
+
+    this.selectedRing.lineStyle(
+      spacingNodeSelectionWidth,
+      colorNodeSelection,
+      1,
+      1,
+    )
+    this.selectedRing.drawRoundedRect(
+      -spacingNodeSelectionMargin,
+      -spacingNodeSelectionMargin,
+      this.nodeWidth + spacingNodeSelectionMargin * 2,
+      this.box.height + spacingNodeSelectionMargin * 2,
+      borderRadiusNode,
+    )
+
+    this.selectedRing.alpha = 0
+
+    this.addChild(this.selectedRing)
+  }
+
   private updatePosition(): void {
     this.position.set(
       this.xScale(this.nodeData.start),
@@ -187,13 +214,11 @@ export class TimelineNode extends Container {
   }
 
   public select(): void {
-    this.selected = true
-    this.box.alpha = 0.5
+    this.selectedRing.alpha = 1
   }
 
   public deselect(): void {
-    this.selected = false
-    this.box.alpha = 1
+    this.selectedRing.alpha = 0
   }
 
   public destroy(): void {
