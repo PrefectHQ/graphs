@@ -279,12 +279,10 @@
       })
     }
 
-    nodesContainer.nodes.forEach((nodeRecord: NodeRecord) => {
-      nodeRecord.node.on('click', () => {
-        if (!isViewportDragging.value) {
-          emit('click', nodeRecord.id)
-        }
-      })
+    nodesContainer.on('node-click', (clickedNodeId) => {
+      if (!isViewportDragging.value) {
+        emit('click', clickedNodeId)
+      }
     })
   }
 

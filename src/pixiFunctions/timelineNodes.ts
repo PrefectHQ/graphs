@@ -55,6 +55,10 @@ export class TimelineNodes extends Container {
       yPositionIndex: nodeIndex,
     })
 
+    node.on('click', () => {
+      this.emit('node-click', nodeData.id)
+    })
+
     this.nodes.set(nodeData.id, {
       node,
       id: nodeData.id,
