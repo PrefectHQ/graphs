@@ -29,8 +29,7 @@
     initViewport,
     TimelineGuides,
     TimelineNodes,
-    TimelinePlayhead,
-    DeselectLayer
+    TimelinePlayhead
   } from './pixiFunctions'
   import { getDateBounds, parseThemeOptions } from './utilities'
 
@@ -76,7 +75,6 @@
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: Ticker | null = null
-  let deselectLayer: DeselectLayer
   let nodesContainer: TimelineNodes
 
   const emit = defineEmits<{
@@ -100,7 +98,6 @@
     initFonts()
 
     initGuides()
-    initDeselectLayer()
     initContent()
     initPlayhead()
 
@@ -117,7 +114,6 @@
     guides.destroy()
     playhead?.destroy()
     nodesContainer.destroy()
-    deselectLayer.destroy()
     viewport.destroy()
     pixiApp.destroy(true)
   }
@@ -239,18 +235,9 @@
     })
   }
 
-  function initDeselectLayer(): void {
-    deselectLayer = new DeselectLayer(pixiApp, viewport)
-
-    viewport.addChild(deselectLayer)
-
-    deselectLayer.on('click', () => {
-      emit('click', null)
-    })
-  }
-
   function initContent(): void {
     nodesContainer = new TimelineNodes({
+      appRef: pixiApp,
       viewportRef: viewport,
       graphData: props.graphData,
       xScale,

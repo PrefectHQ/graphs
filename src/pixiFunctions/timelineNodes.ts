@@ -1,10 +1,12 @@
 import type { Viewport } from 'pixi-viewport'
-import { Container } from 'pixi.js'
+import { Application, Container } from 'pixi.js'
 import { ComputedRef } from 'vue'
+import { DeselectLayer } from './deselectLayer'
 import { TimelineNode } from './timelineNode'
 import { NodeRecord, NodeThemeFn, ParsedThemeStyles, TimelineNodeData, XScale } from '@/models'
 
 type TimelineNodesProps = {
+  appRef: Application,
   viewportRef: Viewport,
   graphData: TimelineNodeData[],
   xScale: XScale,
@@ -13,6 +15,7 @@ type TimelineNodesProps = {
 }
 
 export class TimelineNodes extends Container {
+  private readonly appRef: Application
   private readonly viewportRef: Viewport
   private graphData
   private readonly xScale
@@ -23,6 +26,7 @@ export class TimelineNodes extends Container {
   public selectedNodeId: string | null | undefined = null
 
   public constructor({
+    appRef,
     viewportRef,
     graphData,
     xScale,
@@ -31,13 +35,26 @@ export class TimelineNodes extends Container {
   }: TimelineNodesProps) {
     super()
 
+    this.appRef = appRef
     this.viewportRef = viewportRef
     this.graphData = graphData
     this.xScale = xScale
     this.styles = styles
     this.styleNode = styleNode
 
+    this.initDeselectLayer()
+
     this.initNodes()
+  }
+
+  private initDeselectLayer(): void {
+    const deselectLayer = new DeselectLayer(this.appRef, this.viewportRef)
+
+    this.addChild(deselectLayer)
+
+    deselectLayer.on('click', () => {
+      this.emit('node-click', null)
+    })
   }
 
   private initNodes(): void {
