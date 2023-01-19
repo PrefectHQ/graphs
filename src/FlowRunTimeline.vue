@@ -50,6 +50,8 @@
 
   const styles = computed(() => parseThemeOptions(props.theme?.defaults))
 
+  const isViewportDragging = ref(false)
+
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
     ...props.formatDateFns,
@@ -96,6 +98,7 @@
 
     viewport = await initViewport(stage.value, pixiApp)
     viewport.zIndex = zIndex.viewport
+    initViewportDragMonitor()
 
     initFonts()
 
@@ -118,8 +121,17 @@
     playhead?.destroy()
     nodesContainer.destroy()
     deselectLayer.destroy()
-
+    viewport.destroy()
     pixiApp.destroy(true)
+  }
+
+  function initViewportDragMonitor(): void {
+    viewport
+      .on('drag-start', () => {
+        isViewportDragging.value = true
+      }).on('drag-end', () => {
+        isViewportDragging.value = false
+      })
   }
 
   function initTimeScale(): void {
@@ -236,7 +248,7 @@
 
     pixiApp.stage.addChild(deselectLayer)
 
-    deselectLayer.on('pointerdown', () => {
+    deselectLayer.on('click', () => {
       emit('click', null)
     })
 
@@ -268,8 +280,10 @@
     }
 
     nodesContainer.nodes.forEach((nodeRecord: NodeRecord) => {
-      nodeRecord.node.on('pointerdown', () => {
-        emit('click', nodeRecord.id)
+      nodeRecord.node.on('click', () => {
+        if (!isViewportDragging.value) {
+          emit('click', nodeRecord.id)
+        }
       })
     })
   }

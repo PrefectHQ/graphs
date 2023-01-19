@@ -100,10 +100,15 @@ export class TimelineNodes extends Container {
     if (selectedNodeId) {
       const selectedNode = this.nodes.get(selectedNodeId)!
       selectedNode.node.select()
-      this.viewportRef.moveCenter(
-        selectedNode.node.x + selectedNode.node.width / 2,
-        selectedNode.node.y + selectedNode.node.height / 2,
-      )
+      this.viewportRef.animate({
+        position: {
+          x: selectedNode.node.x + selectedNode.node.width / 2,
+          y: selectedNode.node.y + selectedNode.node.height / 2,
+        },
+        time: 1000,
+        ease: 'easeInOutQuad',
+        removeOnInterrupt: true,
+      })
     }
   }
 
