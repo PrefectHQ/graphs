@@ -29,23 +29,26 @@
       </div>
     </div>
 
-    <div class="flow-run-timeline-demo__graph-container">
-      <FlowRunTimeline
-        v-if="data"
-        :key="componentKey"
-        :graph-data="data"
-        :is-running="isRunning"
-        :theme="theme"
-        class="flow-run-timeline-demo-demo__graph"
-        :selected-node-id="selectedNodeId"
-        @click="selectNode"
-      />
-    </div>
-    <div v-if="selectedNodeId" class="flow-run-timeline-demo__selection-panel">
-      <p-label>
-        Selected Node
-        <p-text-input v-model="selectedNodeId" />
-      </p-label>
+    <div class="flex">
+      <div class="flow-run-timeline-demo__graph-container">
+        <FlowRunTimeline
+          v-if="data"
+          :key="componentKey"
+          :graph-data="data"
+          :is-running="isRunning"
+          :theme="theme"
+          class="flow-run-timeline-demo-demo__graph"
+          :selected-node-id="selectedNodeId"
+          @click="selectNode"
+        />
+      </div>
+
+      <div v-if="selectedNodeId" class="flow-run-timeline-demo__selection-panel" :class="classes">
+        <p-label>
+          Selected Node
+          <p-text-input v-model="selectedNodeId" />
+        </p-label>
+      </div>
     </div>
   </main>
 </template>
@@ -107,6 +110,10 @@
       selectedNodeId.value = value
     }
   }
+
+  const classes = computed(() => ({
+    'flow-run-timeline-demo__selection-panel--open': selectedNodeId.value,
+  }))
 
   const stateColors: Record<string, string> = {
     'completed': '#00a63d',
@@ -198,6 +205,8 @@
 
 .flow-run-timeline-demo__graph-container { @apply
   flex-1
+  h-[350px]
+  /* w-full */
 }
 
 .flow-run-timeline-demo-demo__graph { @apply
@@ -207,9 +216,27 @@
 }
 
 .flow-run-timeline-demo__selection-panel { @apply
-  absolute
+  /* absolute
   bottom-1
   left-1
-  text-foreground
+  text-foreground */
+    h-[350px]
+  w-0
+  py-4
+  rounded-lg
+  overflow-hidden
+  transition-all
+  duration-500
+  opacity-0
+}
+
+.flow-run-timeline-demo__selection-panel--open { @apply
+  border
+  dark:border-background-600
+  w-96
+  ml-2
+  px-4
+  opacity-100
+  overflow-auto
 }
 </style>
