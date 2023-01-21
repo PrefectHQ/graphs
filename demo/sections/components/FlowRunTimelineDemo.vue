@@ -16,6 +16,8 @@
           Fan Multiplier
           <p-number-input v-model="fanMultiplier" step="0.1" min="1" max="2" />
         </p-label>
+
+        <p-checkbox v-model="zeroTimeGap" class="whitespace-nowrap" label="Zero Time Gap" />
       </div>
 
       <div class="flow-run-timeline-demo__header-row">
@@ -74,6 +76,7 @@
   const start = ref<Date>(previous)
   const end = ref<Date>(now)
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
+  const zeroTimeGap = ref(true)
 
   const dataOptions = computed(() => {
     return {
@@ -82,6 +85,7 @@
       fanMultiplier: fanMultiplier.value,
       start: start.value,
       end: end.value,
+      zeroTimeGap: zeroTimeGap.value,
     }
   })
 

@@ -20,6 +20,7 @@ export type DataOptions = {
   shape?: Shape,
   size?: number,
   fanMultiplier?: number,
+  zeroTimeGap?: boolean,
 }
 
 type TimescaleItem = {
@@ -27,8 +28,16 @@ type TimescaleItem = {
   label: string,
   start: Date,
   end: Date | null,
-  upstreamDependencies: TimescaleItem[],
+  upstreamDependencies: string[],
   state: TimelineNodeState,
+}
+
+type AssignStartAndEndDates = {
+  start: Date,
+  end: Date,
+  size: number,
+  nodes: TimescaleItem[],
+  zeroTimeGap?: boolean,
 }
 
 // This method assumes that at least 1 upstream dependency has been assigned an end date
@@ -48,14 +57,17 @@ const maxDate = (nodes: TimescaleItem[], property: keyof TimescaleItem, start: D
   }, start)
 }
 
-const assignStartAndEndDates = (start: Date, end: Date, size: number): (node: TimescaleItem) => void => {
+const assignStartAndEndDates = ({ start, end, size, nodes, zeroTimeGap }: AssignStartAndEndDates): (node: TimescaleItem) => void => {
   const minIncrement = (end.getTime() - start.getTime()) / size
 
 
   return (node: TimescaleItem) => {
-    const minStart = maxDate(node.upstreamDependencies, 'end', start)
+    const upstreamDependencies = node.upstreamDependencies
+      .map(id => nodes.find(nodeItem => nodeItem.id == id)) as TimescaleItem[]
+
+    const minStart = maxDate(upstreamDependencies, 'end', start)
     const maxStart = new Date(minStart.getTime() + minIncrement * 2)
-    const _start = randomDate(minStart, maxStart)
+    const _start = zeroTimeGap ? minStart : randomDate(minStart, maxStart)
 
     const minEnd = new Date(_start.getTime() + minIncrement)
     const maxEnd = new Date(minEnd.getTime() + minIncrement * 2)
@@ -83,7 +95,7 @@ const randomState = (): TimelineNodeState => {
 
 const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   const nodes: TimescaleItem[] = []
-  const { size = 5, shape = 'linear', fanMultiplier = 1, start = randomDate() } = options ?? {}
+  const { size = 5, shape = 'linear', fanMultiplier = 1, start = randomDate(), zeroTimeGap = false } = options ?? {}
   let end = options?.end ?? new Date()
 
   if (!options?.end) {
@@ -107,7 +119,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   // Create dependency tree
   if (shape == 'linear') {
     for (let i = 1; i < nodes.length; ++i) {
-      nodes[i].upstreamDependencies = [nodes[i - 1]]
+      nodes[i].upstreamDependencies = [nodes[i - 1].id]
     }
   }
 
@@ -134,7 +146,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
 
       const upstreamNode = prevRow[floor(random() * prevLen)]
 
-      nodes[i].upstreamDependencies = [upstreamNode]
+      nodes[i].upstreamDependencies = [upstreamNode.id]
 
       if (shape == 'fanOut') {
         if (currLen + 1 >= prevLen * fanMultiplier) {
@@ -165,7 +177,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
 
       const addUpstreamDependency = (): void => {
         const upstreamNode = prevRow[floor(random() * prevLen)]
-        nodes[i].upstreamDependencies.push(upstreamNode)
+        nodes[i].upstreamDependencies.push(upstreamNode.id)
       }
 
       /* eslint-disable curly */
@@ -181,7 +193,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
   }
 
   // Assign start and end dates based on dependency tree
-  nodes.forEach(assignStartAndEndDates(start, end, size))
+  nodes.forEach(assignStartAndEndDates({ start, end, size, nodes, zeroTimeGap }))
 
   // Sort by start date
   nodes.sort((nodeA, nodeB) => nodeA.start.getTime() - nodeB.start.getTime())
