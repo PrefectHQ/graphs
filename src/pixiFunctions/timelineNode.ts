@@ -161,7 +161,7 @@ export class TimelineNode extends Container {
     this.addChild(this.selectedRing)
   }
 
-  private updatePosition(): void {
+  public updatePosition(): void {
     this.position.set(
       this.xScale(this.nodeData.start),
       this.yPositionIndex * this.yPositionOffset,
