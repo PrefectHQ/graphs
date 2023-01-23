@@ -1,5 +1,5 @@
 import type { Viewport } from 'pixi-viewport'
-import { Application, Container } from 'pixi.js'
+import { Application, Container, UPDATE_PRIORITY } from 'pixi.js'
 import { ComputedRef } from 'vue'
 import { DeselectLayer } from './deselectLayer'
 import { TimelineNode } from './timelineNode'
@@ -121,15 +121,19 @@ export class TimelineNodes extends Container {
     if (selectedNodeId) {
       const selectedNode = this.nodes.get(selectedNodeId)!
       selectedNode.node.select()
-      this.viewportRef.animate({
-        position: {
-          x: selectedNode.node.x + selectedNode.node.width / 2,
-          y: selectedNode.node.y + selectedNode.node.height / 2,
-        },
-        time: 1000,
-        ease: 'easeInOutQuad',
-        removeOnInterrupt: true,
-      })
+
+      // Wait for the outside animation to initialize
+      setTimeout(() => {
+        this.viewportRef.animate({
+          position: {
+            x: selectedNode.node.x + selectedNode.node.width / 2,
+            y: selectedNode.node.y + selectedNode.node.height / 2,
+          },
+          time: 1000,
+          ease: 'easeInOutQuad',
+          removeOnInterrupt: true,
+        })
+      }, 100)
     }
   }
 
