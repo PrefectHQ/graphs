@@ -40,6 +40,8 @@ export class TimelinePlayhead extends Container {
       this.playhead.clear()
       this.drawPlayhead()
     }, { deep: true })
+
+    this.interactive = false
   }
 
   private drawPlayhead(): void {

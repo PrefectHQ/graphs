@@ -29,15 +29,26 @@
       </div>
     </div>
 
-    <div class="flow-run-timeline-demo__graph-container">
-      <FlowRunTimeline
-        v-if="data"
-        :key="componentKey"
-        :graph-data="data"
-        :is-running="isRunning"
-        :theme="theme"
-        class="flow-run-timeline-demo-demo__graph"
-      />
+    <div class="flex">
+      <div class="flow-run-timeline-demo__graph-container">
+        <FlowRunTimeline
+          v-if="data"
+          :key="componentKey"
+          :graph-data="data"
+          :is-running="isRunning"
+          :theme="theme"
+          class="flow-run-timeline-demo-demo__graph"
+          :selected-node-id="selectedNodeId"
+          @click="selectNode"
+        />
+      </div>
+
+      <div v-if="selectedNodeId" class="flow-run-timeline-demo__selection-panel" :class="classes">
+        <p-label>
+          Selected Node
+          <p-text-input v-model="selectedNodeId" />
+        </p-label>
+      </div>
     </div>
   </main>
 </template>
@@ -47,7 +58,7 @@
   import { ref, watchEffect, computed } from 'vue'
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
-  import { TimelineThemeOptions, Color, HSL } from '@/models'
+  import { TimelineThemeOptions, HSL } from '@/models'
 
   const { value: colorThemeValue } = useColorTheme()
 
@@ -55,6 +66,7 @@
   const componentKey = ref(0)
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
+  const selectedNodeId = ref<string | null>(null)
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
@@ -90,6 +102,18 @@
     // So for demo purposes, when we get new data, we rerender the graph from scratch.
     componentKey.value += 1
   })
+
+  const selectNode = (value: string | null): void => {
+    if (selectedNodeId.value === value) {
+      selectedNodeId.value = null
+    } else {
+      selectedNodeId.value = value
+    }
+  }
+
+  const classes = computed(() => ({
+    'flow-run-timeline-demo__selection-panel--open': selectedNodeId.value,
+  }))
 
   const stateColors: Record<string, string> = {
     'completed': '#00a63d',
@@ -149,6 +173,7 @@
   flex
   flex-col
   gap-4
+  relative
 }
 
 .flow-run-timeline-demo__header { @apply
@@ -180,11 +205,38 @@
 
 .flow-run-timeline-demo__graph-container { @apply
   flex-1
+  h-[350px]
+  /* w-full */
 }
 
 .flow-run-timeline-demo-demo__graph { @apply
   bg-background-600
   dark:bg-background
   rounded-xl
+}
+
+.flow-run-timeline-demo__selection-panel { @apply
+  /* absolute
+  bottom-1
+  left-1
+  text-foreground */
+    h-[350px]
+  w-0
+  py-4
+  rounded-lg
+  overflow-hidden
+  transition-all
+  duration-500
+  opacity-0
+}
+
+.flow-run-timeline-demo__selection-panel--open { @apply
+  border
+  dark:border-background-600
+  w-96
+  ml-2
+  px-4
+  opacity-100
+  overflow-auto
 }
 </style>

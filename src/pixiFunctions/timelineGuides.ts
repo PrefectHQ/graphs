@@ -85,6 +85,8 @@ export class TimelineGuides extends Container {
       this.guides.clear()
       this.createGuides()
     }, { deep: true })
+
+    this.interactive = false
   }
 
   public updateGuides(): void {

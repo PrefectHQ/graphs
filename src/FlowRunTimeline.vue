@@ -38,6 +38,7 @@
     isRunning?: boolean,
     theme?: TimelineThemeOptions,
     formatDateFns?: Partial<FormatDateFns>,
+    selectedNodeId?: string | null,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -45,6 +46,8 @@
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
 
   const styles = computed(() => parseThemeOptions(props.theme?.defaults))
+
+  const isViewportDragging = ref(false)
 
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
@@ -72,7 +75,11 @@
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: Ticker | null = null
-  let nodes: TimelineNodes
+  let nodesContainer: TimelineNodes
+
+  const emit = defineEmits<{
+    (event: 'click', value: string | null): void,
+  }>()
 
   onMounted(async () => {
     if (!stage.value) {
@@ -86,6 +93,7 @@
 
     viewport = await initViewport(stage.value, pixiApp)
     viewport.zIndex = zIndex.viewport
+    initViewportDragMonitor()
 
     initFonts()
 
@@ -105,9 +113,18 @@
   function cleanupApp(): void {
     guides.destroy()
     playhead?.destroy()
-    nodes.destroy()
-
+    nodesContainer.destroy()
+    viewport.destroy()
     pixiApp.destroy(true)
+  }
+
+  function initViewportDragMonitor(): void {
+    viewport
+      .on('drag-start', () => {
+        isViewportDragging.value = true
+      }).on('drag-end', () => {
+        isViewportDragging.value = false
+      })
   }
 
   function initTimeScale(): void {
@@ -219,23 +236,31 @@
   }
 
   function initContent(): void {
-    nodes = new TimelineNodes({
+    nodesContainer = new TimelineNodes({
+      appRef: pixiApp,
+      viewportRef: viewport,
       graphData: props.graphData,
       xScale,
       styles,
       styleNode,
     })
-    viewport.addChild(nodes)
+    viewport.addChild(nodesContainer)
 
     centerViewportOnNodes()
 
     if (props.isRunning) {
       pixiApp.ticker.add(() => {
         if (props.isRunning) {
-          nodes.update()
+          nodesContainer.update()
         }
       })
     }
+
+    nodesContainer.on('node-click', (clickedNodeId) => {
+      if (!isViewportDragging.value) {
+        emit('click', clickedNodeId)
+      }
+    })
   }
 
   function centerViewportOnNodes(): void {
@@ -245,7 +270,7 @@
       y: nodesY,
       width: nodesWidth,
       height: nodesHeight,
-    } = nodes
+    } = nodesContainer
 
     viewport.ensureVisible(
       nodesX - spacingViewportPaddingDefault,
@@ -258,6 +283,10 @@
       nodesX + nodesWidth / 2,
       nodesY + nodesHeight / 2,
     )
+
+    watchEffect(() => {
+      nodesContainer.updateSelection(props.selectedNodeId)
+    })
   }
 
   watchEffect(() => {
@@ -265,7 +294,7 @@
     // If totally new data is added, it all gets appended way down the viewport Y axis.
     // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
     if (!loading.value) {
-      nodes.update(props.graphData)
+      nodesContainer.update(props.graphData)
       cullDirty = true
 
       if (props.isRunning && (!playhead || playhead.destroyed)) {
