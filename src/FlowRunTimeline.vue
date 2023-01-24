@@ -74,7 +74,7 @@
 
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
-  let playheadTicker: Ticker | null = null
+  let playheadTicker: (() => void) | null = null
   let nodesContainer: TimelineNodes
 
   const emit = defineEmits<{
@@ -183,7 +183,7 @@
       return
     }
 
-    playheadTicker = pixiApp.ticker.add(() => {
+    playheadTicker = () => {
       if (props.isRunning && playhead) {
         const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
@@ -201,7 +201,9 @@
       } else if (!playhead?.destroyed) {
         playhead?.destroy()
       }
-    })
+    }
+
+    pixiApp.ticker.add(playheadTicker)
   }
 
   function initGuides(): void {
@@ -281,6 +283,12 @@
 
       if (props.isRunning && (!playhead || playhead.destroyed)) {
         initPlayhead()
+      }
+
+      if (!props.isRunning && playhead && playheadTicker) {
+        playhead.destroy()
+        pixiApp.ticker.remove(playheadTicker)
+        playheadTicker = null
       }
     }
   })

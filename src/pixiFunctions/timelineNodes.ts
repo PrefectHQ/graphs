@@ -1,5 +1,5 @@
 import type { Viewport } from 'pixi-viewport'
-import { Application, Container, UPDATE_PRIORITY } from 'pixi.js'
+import { Application, Container } from 'pixi.js'
 import { ComputedRef } from 'vue'
 import { getBitmapFonts } from './bitmapFonts'
 import { DeselectLayer } from './deselectLayer'
@@ -204,6 +204,7 @@ export class TimelineNodes extends Container {
         this.viewportRef.animate({
           position: {
             x: selectedNode.node.x + selectedNode.node.width / 2,
+            // eslint-disable-next-line id-length
             y: selectedNode.node.y + selectedNode.node.height / 2,
           },
           time: 1000,
