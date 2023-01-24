@@ -1,3 +1,4 @@
+import gsap from 'gsap'
 import {
   BitmapText,
   Container,
@@ -19,6 +20,11 @@ type TimelineNodeProps = {
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   layoutPosition: number,
+}
+
+const animationDurations = {
+  fadeIn: 0.25,
+  move: 0.5,
 }
 
 export class TimelineNode extends Container {
@@ -51,8 +57,9 @@ export class TimelineNode extends Container {
     this.styleNode = styleNode
     this.layoutPosition = layoutPosition
 
-    this.nodeWidth = this.getNodeWidth()
+    this.alpha = 0
 
+    this.nodeWidth = this.getNodeWidth()
     this.layoutPositionOffset = this.getLayoutPositionOffset()
 
     this.drawBox()
@@ -62,7 +69,7 @@ export class TimelineNode extends Container {
 
     this.drawSelectedRing()
 
-    this.updatePosition()
+    this.updatePosition(true)
 
     this.unwatch = watch([styles, styleNode], () => {
       this.box.clear()
@@ -71,6 +78,8 @@ export class TimelineNode extends Container {
 
     this.interactive = true
     this.buttonMode = true
+
+    this.animateIn()
   }
 
   private getNodeWidth(): number {
@@ -159,11 +168,26 @@ export class TimelineNode extends Container {
     this.addChild(this.selectedRing)
   }
 
-  public updatePosition(): void {
-    this.position.set(
-      timelineScale.dateToX(this.nodeData.start),
-      this.layoutPosition * this.layoutPositionOffset,
-    )
+  private animateIn(): void {
+    gsap.to(this, { alpha: 1, duration: animationDurations.fadeIn })
+  }
+
+  public updatePosition(skipAnimation?: boolean): void {
+    const xPos = timelineScale.dateToX(this.nodeData.start)
+    const yPos = this.layoutPosition * this.layoutPositionOffset
+
+    if (skipAnimation) {
+      this.position.set(xPos, yPos)
+      return
+    }
+
+    gsap.to(this, {
+      x: xPos,
+      // eslint-disable-next-line id-length
+      y: yPos,
+      duration: animationDurations.move,
+      ease: 'power1.out',
+    })
   }
 
   private updateLabelPosition(): void {

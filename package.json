@@ -64,6 +64,7 @@
     "@prefecthq/vue-compositions": "1.0.0",
     "date-fns": "2.29.3",
     "fontfaceobserver": "^2.3.0",
+    "gsap": "^3.11.4",
     "pixi-viewport": "^4.38.0",
     "pixi.js": "^6.5.8"
   }

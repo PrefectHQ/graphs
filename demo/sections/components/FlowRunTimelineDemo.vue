@@ -32,7 +32,7 @@
       </div>
     </div>
 
-    <div class="flex">
+    <div class="flex h-full">
       <div class="flow-run-timeline-demo__graph-container">
         <FlowRunTimeline
           v-if="data"
@@ -210,8 +210,6 @@
 
 .flow-run-timeline-demo__graph-container { @apply
   flex-1
-  h-[350px]
-  /* w-full */
 }
 
 .flow-run-timeline-demo-demo__graph { @apply
@@ -221,11 +219,6 @@
 }
 
 .flow-run-timeline-demo__selection-panel { @apply
-  /* absolute
-  bottom-1
-  left-1
-  text-foreground */
-    h-[350px]
   w-0
   py-4
   rounded-lg

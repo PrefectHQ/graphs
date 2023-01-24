@@ -8,10 +8,7 @@
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
   import type { Viewport } from 'pixi-viewport'
-  import {
-    Application,
-    Ticker
-  } from 'pixi.js'
+  import type { Application } from 'pixi.js'
   import { computed, onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
   import {
     TimelineNodeData,
