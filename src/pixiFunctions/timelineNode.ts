@@ -6,25 +6,23 @@ import {
 } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
 import { getBitmapFonts } from './bitmapFonts'
+import { timelineScale } from './timelineScale'
 import {
   ParsedThemeStyles,
   TimelineNodeData,
-  NodeThemeFn,
-  XScale
+  NodeThemeFn
 } from '@/models'
 import { colorToHex } from '@/utilities/style'
 
 type TimelineNodeProps = {
   nodeData: TimelineNodeData,
-  xScale: XScale,
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
-  yPositionIndex: number,
+  layoutPosition: number,
 }
 
 export class TimelineNode extends Container {
   public nodeData
-  private readonly xScale
   private readonly styles
   private readonly styleNode
 
@@ -35,29 +33,27 @@ export class TimelineNode extends Container {
 
   private apxLabelWidth = 0
   private nodeWidth
-  private readonly yPositionOffset
-  private readonly yPositionIndex
+  private readonly layoutPositionOffset
+  public layoutPosition
   private isLabelInBox = true
 
   private readonly selectedRing = new Graphics()
 
   public constructor({
     nodeData,
-    xScale,
     styles,
     styleNode,
-    yPositionIndex,
+    layoutPosition,
   }: TimelineNodeProps) {
     super()
     this.nodeData = nodeData
-    this.xScale = xScale
     this.styles = styles
     this.styleNode = styleNode
-    this.yPositionIndex = yPositionIndex
+    this.layoutPosition = layoutPosition
 
     this.nodeWidth = this.getNodeWidth()
 
-    this.yPositionOffset = this.getYPositionOffset(styles.value)
+    this.layoutPositionOffset = this.getLayoutPositionOffset()
 
     this.drawBox()
     this.addChild(this.box)
@@ -78,12 +74,14 @@ export class TimelineNode extends Container {
   }
 
   private getNodeWidth(): number {
-    return this.xScale(this.nodeData.end ?? new Date()) - this.xScale(this.nodeData.start)
+    return timelineScale.dateToX(this.nodeData.end ?? new Date()) - timelineScale.dateToX(this.nodeData.start)
   }
 
-  private getYPositionOffset(styles: ParsedThemeStyles): number {
-    const nodeHeight = styles.textLineHeightDefault + styles.spacingNodeYPadding * 2
-    return nodeHeight + styles.spacingNodeMargin
+  private getLayoutPositionOffset(): number {
+    const { textLineHeightDefault, spacingNodeYPadding, spacingNodeMargin } = this.styles.value
+    const nodeHeight = textLineHeightDefault + spacingNodeYPadding * 2
+
+    return nodeHeight + spacingNodeMargin
   }
 
   private drawBox(): void {
@@ -163,8 +161,8 @@ export class TimelineNode extends Container {
 
   public updatePosition(): void {
     this.position.set(
-      this.xScale(this.nodeData.start),
-      this.yPositionIndex * this.yPositionOffset,
+      timelineScale.dateToX(this.nodeData.start),
+      this.layoutPosition * this.layoutPositionOffset,
     )
   }
 

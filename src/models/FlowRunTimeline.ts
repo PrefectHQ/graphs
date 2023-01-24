@@ -10,8 +10,40 @@ export type TimelineNodeData = {
   state: string,
 }
 
-export type XScale = (date: Date) => number
-export type DateScale = (xPosition: number) => number
+export type InitTimelineScaleProps = {
+  minimumStartTime: number,
+  overallGraphWidth: number,
+  initialOverallTimeSpan: number,
+}
+
+export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
+
+export type NodeShoveDirection = 1 | -1
+export type NodeLayoutWorkerProps = {
+  data: {
+    layoutSetting?: TimelineNodesLayoutOptions,
+    graphData: string,
+    defaultTextStyles?: TextStyle,
+    timeScaleProps?: InitTimelineScaleProps,
+  },
+}
+export type NodeLayoutItem = {
+  position: number,
+  nextDependencyShove?: NodeShoveDirection,
+  startX: number,
+  endX: number,
+}
+export type NodesLayout = Record<string, NodeLayoutItem>
+export type NodeLayoutWorkerResponse = {
+  data: NodesLayout,
+}
+
+export type DateToX = (date: Date) => number
+export type XToDate = (xPosition: number) => number
+export type TimelineScale = {
+  dateToX: DateToX,
+  xToDate: XToDate,
+}
 
 export type TextStyles = {
   nodeTextDefault: Partial<IBitmapTextStyle>,

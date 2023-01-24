@@ -16,8 +16,6 @@
           Fan Multiplier
           <p-number-input v-model="fanMultiplier" step="0.1" min="1" max="2" />
         </p-label>
-
-        <p-checkbox v-model="zeroTimeGap" class="whitespace-nowrap" label="Zero Time Gap" />
       </div>
 
       <div class="flow-run-timeline-demo__header-row">
@@ -25,6 +23,9 @@
           Date Range
           <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
+        <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
+          <p-checkbox v-model="zeroTimeGap" label="Zero Time Gap" />
+        </div>
         <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
           <p-checkbox v-model="isRunning" label="Show Running" />
         </div>

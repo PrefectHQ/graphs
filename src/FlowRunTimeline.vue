@@ -19,8 +19,7 @@
     TimelineThemeOptions,
     FormatDateFns,
     formatDateFnsDefault,
-    XScale,
-    DateScale
+    TimelineScale
   } from './models'
   import {
     initBitmapFonts,
@@ -29,9 +28,13 @@
     initViewport,
     TimelineGuides,
     TimelineNodes,
-    TimelinePlayhead
+    TimelinePlayhead,
+    initTimelineScale
   } from './pixiFunctions'
-  import { getDateBounds, parseThemeOptions } from './utilities'
+  import {
+    getDateBounds,
+    parseThemeOptions
+  } from './utilities'
 
   const props = defineProps<{
     graphData: TimelineNodeData[],
@@ -42,13 +45,9 @@
   }>()
 
   const stage = ref<HTMLDivElement>()
-
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
-
   const styles = computed(() => parseThemeOptions(props.theme?.defaults))
-
   const isViewportDragging = ref(false)
-
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
     ...props.formatDateFns,
@@ -71,6 +70,7 @@
   let maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
   let overallGraphWidth: number
+  let timelineScale: TimelineScale
 
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
@@ -144,8 +144,13 @@
     minimumStartDate = min
     maximumEndDate.value = max
     initialOverallTimeSpan = span
-
     overallGraphWidth = stage.value!.clientWidth * 2
+
+    timelineScale = initTimelineScale({
+      minimumStartTime: minimumStartDate.getTime(),
+      overallGraphWidth,
+      initialOverallTimeSpan,
+    })
   }
 
   function initFonts(): void {
@@ -164,7 +169,6 @@
     playhead = new TimelinePlayhead({
       viewportRef: viewport,
       appRef: pixiApp,
-      xScale,
       styles,
     })
     playhead.zIndex = zIndex.playhead
@@ -190,9 +194,9 @@
           && playheadStartedVisible
           && playhead.position.x > pixiApp.screen.width - styles.value.spacingViewportPaddingDefault
         ) {
-          const originalLeft = dateScale(viewport.left)
+          const originalLeft = timelineScale.xToDate(viewport.left)
           viewport.zoomPercent(-0.1, true)
-          viewport.left = xScale(new Date(originalLeft))
+          viewport.left = timelineScale.dateToX(new Date(originalLeft))
         }
       } else if (!playhead?.destroyed) {
         playhead?.destroy()
@@ -204,8 +208,6 @@
     guides = new TimelineGuides({
       viewportRef: viewport,
       appRef: pixiApp,
-      xScale,
-      dateScale,
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
@@ -240,13 +242,15 @@
       appRef: pixiApp,
       viewportRef: viewport,
       graphData: props.graphData,
-      xScale,
       styles,
       styleNode,
+      timeScaleProps: {
+        minimumStartTime: minimumStartDate.getTime(),
+        overallGraphWidth,
+        initialOverallTimeSpan,
+      },
     })
     viewport.addChild(nodesContainer)
-
-    centerViewportOnNodes()
 
     if (props.isRunning) {
       pixiApp.ticker.add(() => {
@@ -261,28 +265,6 @@
         emit('click', clickedNodeId)
       }
     })
-  }
-
-  function centerViewportOnNodes(): void {
-    const { spacingViewportPaddingDefault } = styles.value
-    const {
-      x: nodesX,
-      y: nodesY,
-      width: nodesWidth,
-      height: nodesHeight,
-    } = nodesContainer
-
-    viewport.ensureVisible(
-      nodesX - spacingViewportPaddingDefault,
-      nodesY - spacingViewportPaddingDefault,
-      nodesWidth + spacingViewportPaddingDefault * 2,
-      nodesHeight + spacingViewportPaddingDefault * 2,
-      true,
-    )
-    viewport.moveCenter(
-      nodesX + nodesWidth / 2,
-      nodesY + nodesHeight / 2,
-    )
 
     watchEffect(() => {
       nodesContainer.updateSelection(props.selectedNodeId)
@@ -302,16 +284,6 @@
       }
     }
   })
-
-  // Convert a date to an X position
-  const xScale: XScale = (date) => {
-    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / initialOverallTimeSpan))
-  }
-
-  // Convert an X position to a timestamp
-  const dateScale: DateScale = (xPosition) => {
-    return Math.ceil(minimumStartDate.getTime() + xPosition * (initialOverallTimeSpan / overallGraphWidth))
-  }
 </script>
 
 <style>
