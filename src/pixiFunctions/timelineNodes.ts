@@ -24,6 +24,7 @@ type TimelineNodesProps = {
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   timeScaleProps: InitTimelineScaleProps,
+  layoutSetting?: TimelineNodesLayoutOptions,
 }
 
 type EdgeRecord = {
@@ -56,6 +57,7 @@ export class TimelineNodes extends Container {
     graphData,
     styles,
     styleNode,
+    layoutSetting,
     timeScaleProps: {
       minimumStartTime,
       overallGraphWidth,
@@ -69,7 +71,7 @@ export class TimelineNodes extends Container {
     this.graphData = graphData
     this.styles = styles
     this.styleNode = styleNode
-    this.layoutSetting = 'nearestParent'
+    this.layoutSetting = layoutSetting ?? 'nearestParent'
 
     this.initDeselectLayer()
 

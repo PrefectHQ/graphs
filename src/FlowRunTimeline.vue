@@ -16,7 +16,8 @@
     TimelineThemeOptions,
     FormatDateFns,
     formatDateFnsDefault,
-    TimelineScale
+    TimelineScale,
+    TimelineNodesLayoutOptions
   } from './models'
   import {
     initBitmapFonts,
@@ -39,6 +40,7 @@
     theme?: TimelineThemeOptions,
     formatDateFns?: Partial<FormatDateFns>,
     selectedNodeId?: string | null,
+    layout?: TimelineNodesLayoutOptions,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -257,6 +259,7 @@
       graphData: props.graphData,
       styles,
       styleNode,
+      layoutSetting: props.layout,
       timeScaleProps: {
         minimumStartTime: minimumStartDate.getTime(),
         overallGraphWidth,

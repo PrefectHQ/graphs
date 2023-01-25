@@ -16,6 +16,14 @@
           Fan Multiplier
           <p-number-input v-model="fanMultiplier" step="0.1" min="1" max="2" />
         </p-label>
+
+        <p-label>
+          Layout
+          <p-select
+            v-model="layout"
+            :options="layoutOptions"
+          />
+        </p-label>
       </div>
 
       <div class="flow-run-timeline-demo__header-row">
@@ -40,6 +48,7 @@
           :graph-data="data"
           :is-running="isRunning"
           :theme="theme"
+          :layout="layout"
           class="flow-run-timeline-demo-demo__graph"
           :selected-node-id="selectedNodeId"
           @click="selectNode"
@@ -58,10 +67,10 @@
 
 <script lang="ts" setup>
   import { useColorTheme } from '@prefecthq/prefect-design'
-  import { ref, watchEffect, computed } from 'vue'
+  import { ref, watchEffect, computed, Ref, watch } from 'vue'
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
-  import { TimelineThemeOptions, HSL } from '@/models'
+  import { TimelineThemeOptions, HSL, TimelineNodesLayoutOptions } from '@/models'
 
   const { value: colorThemeValue } = useColorTheme()
 
@@ -78,6 +87,8 @@
   const end = ref<Date>(now)
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
   const zeroTimeGap = ref(true)
+  const layoutOptions: TimelineNodesLayoutOptions[] = ['waterfall', 'nearestParent']
+  const layout: Ref<TimelineNodesLayoutOptions> = ref('nearestParent')
 
   const dataOptions = computed(() => {
     return {
@@ -91,6 +102,13 @@
   })
 
   const data = ref<TimescaleItem[]>([])
+
+  // when layout changes, bump componentKey to force a rerender
+  watch(layout, (oldVal, newVal) => {
+    if (oldVal !== newVal) {
+      componentKey.value += 1
+    }
+  })
 
   watchEffect(() => {
     // set data and sort by startTime
