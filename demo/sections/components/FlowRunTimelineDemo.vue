@@ -140,22 +140,30 @@
   }>(() => {
     let colorTextDefault = '--foreground',
         colorTextInverse = '--white',
-        colorTextSubdued = '--foreground-300'
+        colorTextSubdued = '--foreground-300',
+        colorGuideLine = '--foreground-50',
+        colorEdge = '--foreground'
 
     if (colorThemeValue.value == 'dark') {
       colorTextDefault = '--white'
       colorTextInverse = '--foreground-600'
       colorTextSubdued = '--foreground-200'
+      colorGuideLine = '--foreground-50'
+      colorEdge = '--white'
     }
 
     const [defaultH, defaultS, defaultL] = computedStyle.getPropertyValue(colorTextDefault).trim().split(' ')
     const [inverseH, inverseS, inverseL] = computedStyle.getPropertyValue(colorTextInverse).trim().split(' ')
     const [subduedH, subduedS, subduedL] = computedStyle.getPropertyValue(colorTextSubdued).trim().split(' ')
+    const [guideLineH, guideLineS, guideLineL] = computedStyle.getPropertyValue(colorGuideLine).trim().split(' ')
+    const [edgeH, edgeS, edgeL] = computedStyle.getPropertyValue(colorEdge).trim().split(' ')
 
     return {
       colorTextDefault: `hsl(${defaultH}, ${defaultS}, ${defaultL})`,
       colorTextInverse: `hsl(${inverseH}, ${inverseS}, ${inverseL})`,
       colorTextSubdued: `hsl(${subduedH}, ${subduedS}, ${subduedL})`,
+      colorGuideLine: `hsl(${guideLineH}, ${guideLineS}, ${guideLineL})`,
+      colorEdge: `hsl(${edgeH}, ${edgeS}, ${edgeL})`,
     }
   })
 

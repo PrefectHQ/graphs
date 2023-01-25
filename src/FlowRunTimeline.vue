@@ -203,6 +203,20 @@
     pixiApp.ticker.add(playheadTicker)
   }
 
+  watchEffect(() => {
+    if (!loading.value) {
+      if (props.isRunning && (!playhead || playhead.destroyed)) {
+        initPlayhead()
+      }
+
+      if (!props.isRunning && playhead && playheadTicker) {
+        playhead.destroy()
+        pixiApp.ticker.remove(playheadTicker)
+        playheadTicker = null
+      }
+    }
+  })
+
   function initGuides(): void {
     guides = new TimelineGuides({
       viewportRef: viewport,
@@ -268,27 +282,14 @@
     watchEffect(() => {
       nodesContainer.updateSelection(props.selectedNodeId)
     })
-  }
-
-  watchEffect(() => {
-    // This accommodates updated nodeData or newly added nodes.
-    // If totally new data is added, it all gets appended way down the viewport Y axis.
-    // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
-    if (!loading.value) {
+    watchEffect(() => {
+      // This accommodates updated nodeData or newly added nodes.
+      // If totally new data is added, it all gets appended way down the viewport Y axis.
+      // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
       nodesContainer.update(props.graphData)
       cullDirty = true
-
-      if (props.isRunning && (!playhead || playhead.destroyed)) {
-        initPlayhead()
-      }
-
-      if (!props.isRunning && playhead && playheadTicker) {
-        playhead.destroy()
-        pixiApp.ticker.remove(playheadTicker)
-        playheadTicker = null
-      }
-    }
-  })
+    })
+  }
 </script>
 
 <style>

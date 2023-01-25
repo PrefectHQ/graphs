@@ -10,12 +10,12 @@ import {
 } from '@/models'
 import { initTimelineScale } from '@/pixiFunctions'
 
-const minimumNodeGap = 16
 const defaultPosition = 0
 
 let timelineScale: TimelineScale | undefined
 
 const labelTextStyle = new TextStyle()
+let minimumNodeEdgeGap = 0
 let currentLayoutSetting: TimelineNodesLayoutOptions = 'waterfall'
 let graphDataStore: TimelineNodeData[] = []
 
@@ -26,12 +26,17 @@ onmessage = ({
     layoutSetting,
     graphData,
     defaultTextStyles,
+    spacingMinimumNodeEdgeGap,
     timeScaleProps,
   },
 }: NodeLayoutWorkerProps) => {
   if (!graphData) {
     console.warn('nodeLayout worker: called without graphData, exiting.')
     return
+  }
+
+  if (spacingMinimumNodeEdgeGap) {
+    minimumNodeEdgeGap = spacingMinimumNodeEdgeGap
   }
 
   if (layoutSetting) {
@@ -62,8 +67,6 @@ onmessage = ({
   if (timelineScale) {
     graphDataStore = JSON.parse(graphData) as TimelineNodeData[]
     calculateNodeLayout()
-  } else {
-    console.error('nodeLayout worker: missing data required to calculate layout')
   }
 }
 
@@ -264,7 +267,7 @@ function isNodesOverlapping({
   lastNodePosition,
 }: IsNodesOverlappingProps): boolean {
   return firstNodePosition === lastNodePosition
-    && firstNodeEndX + minimumNodeGap >= lastNodeStartX
+    && firstNodeEndX + minimumNodeEdgeGap >= lastNodeStartX
 }
 
 function getOverlappingLayoutIds(nodeStartX: number, position: number): string[] | undefined {

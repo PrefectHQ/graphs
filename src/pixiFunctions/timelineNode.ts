@@ -27,6 +27,8 @@ const animationDurations = {
   move: 0.5,
 }
 
+export const timelineNodeBoxName = 'box'
+
 export class TimelineNode extends Container {
   public nodeData
   private readonly styles
@@ -62,6 +64,7 @@ export class TimelineNode extends Container {
     this.nodeWidth = this.getNodeWidth()
     this.layoutPositionOffset = this.getLayoutPositionOffset()
 
+    this.box.name = timelineNodeBoxName
     this.drawBox()
     this.addChild(this.box)
 
@@ -172,7 +175,7 @@ export class TimelineNode extends Container {
     gsap.to(this, { alpha: 1, duration: animationDurations.fadeIn })
   }
 
-  public updatePosition(skipAnimation?: boolean): void {
+  public async updatePosition(skipAnimation?: boolean): Promise<void> {
     const xPos = timelineScale.dateToX(this.nodeData.start)
     const yPos = this.layoutPosition * this.layoutPositionOffset
 
@@ -181,12 +184,16 @@ export class TimelineNode extends Container {
       return
     }
 
-    gsap.to(this, {
-      x: xPos,
-      // eslint-disable-next-line id-length
-      y: yPos,
-      duration: animationDurations.move,
-      ease: 'power1.out',
+    await new Promise((resolve) => {
+      gsap.to(this, {
+        x: xPos,
+        // eslint-disable-next-line id-length
+        y: yPos,
+        duration: animationDurations.move,
+        ease: 'power1.out',
+      }).then(() => {
+        resolve(null)
+      })
     })
   }
 
@@ -205,7 +212,7 @@ export class TimelineNode extends Container {
     )
   }
 
-  public update(newNodeData?: TimelineNodeData): void {
+  public async update(newNodeData?: TimelineNodeData): Promise<void> {
     let hasNewState = false
 
     if (newNodeData) {
@@ -215,7 +222,7 @@ export class TimelineNode extends Container {
 
     const nodeWidth = this.getNodeWidth()
 
-    if (nodeWidth !== this.nodeWidth || hasNewState) {
+    if (hasNewState || nodeWidth !== this.nodeWidth) {
       this.nodeWidth = nodeWidth
 
       this.box.clear()
@@ -232,7 +239,7 @@ export class TimelineNode extends Container {
       }
     }
 
-    this.updatePosition()
+    await this.updatePosition()
   }
 
   public select(): void {

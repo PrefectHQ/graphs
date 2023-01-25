@@ -24,6 +24,7 @@ export type NodeLayoutWorkerProps = {
     layoutSetting?: TimelineNodesLayoutOptions,
     graphData: string,
     defaultTextStyles?: TextStyle,
+    spacingMinimumNodeEdgeGap?: number,
     timeScaleProps?: InitTimelineScaleProps,
   },
 }
@@ -87,11 +88,11 @@ export type HEX = `#${string}`
 export type Color = RGB | RGBA | HSL | HEX
 
 export type ThemeStyleOverrides = {
-  colorGraphBg?: Color,
   colorTextDefault?: Color,
   colorTextInverse?: Color,
   colorTextSubdued?: Color,
   colorNodeSelection?: Color,
+  colorEdge?: Color,
   colorGuideLine?: Color,
   colorPlayheadBg?: Color,
   textFontFamilyDefault?: string,
@@ -104,21 +105,24 @@ export type ThemeStyleOverrides = {
   spacingNodeYPadding?: Sizing,
   spacingNodeMargin?: Sizing,
   spacingNodeLabelMargin?: Sizing,
+  spacingMinimumNodeEdgeGap?: Sizing,
+  spacingNodeEdgeLength?: Sizing,
   spacingNodeSelectionMargin?: Sizing,
   spacingNodeSelectionWidth?: Sizing,
+  spacingEdgeWidth?: Sizing,
   spacingGuideLabelPadding?: Sizing,
   spacingPlayheadWidth?: Sizing,
   spacingPlayheadGlowPadding?: Sizing,
-  borderRadiusGraph?: Sizing,
   borderRadiusNode?: Sizing,
+  alphaNodeDimmed?: number,
 }
 
 export type ParsedThemeStyles = {
-  colorGraphBg: string,
   colorTextDefault: number,
   colorTextInverse: number,
   colorTextSubdued: number,
   colorNodeSelection: number,
+  colorEdge: number,
   colorGuideLine: number,
   colorPlayheadBg: number,
   textFontFamilyDefault: string,
@@ -131,13 +135,16 @@ export type ParsedThemeStyles = {
   spacingNodeYPadding: number,
   spacingNodeMargin: number,
   spacingNodeLabelMargin: number,
+  spacingMinimumNodeEdgeGap: number,
+  spacingNodeEdgeLength: number,
   spacingNodeSelectionMargin: number,
   spacingNodeSelectionWidth: number,
+  spacingEdgeWidth: number,
   spacingGuideLabelPadding: number,
   spacingPlayheadWidth: number,
   spacingPlayheadGlowPadding: number,
-  borderRadiusGraph: string,
   borderRadiusNode: number,
+  alphaNodeDimmed: number,
 }
 
 export type TimelineThemeOptions = {
