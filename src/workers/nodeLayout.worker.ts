@@ -1,4 +1,5 @@
 import { TextMetrics, TextStyle } from 'pixi.js'
+import { createTimelineScale } from '../pixiFunctions/timelineScale'
 import {
   TimelineNodeData,
   TimelineNodesLayoutOptions,
@@ -8,7 +9,6 @@ import {
   TimelineScale,
   NodeLayoutItem
 } from '@/models'
-import { initTimelineScale } from '@/pixiFunctions'
 
 const defaultPosition = 0
 
@@ -57,7 +57,7 @@ onmessage = ({
       overallGraphWidth,
       initialOverallTimeSpan,
     } = timeScaleProps
-    timelineScale = initTimelineScale({
+    timelineScale = createTimelineScale({
       minimumStartTime,
       overallGraphWidth,
       initialOverallTimeSpan,

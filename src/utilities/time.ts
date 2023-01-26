@@ -1,5 +1,3 @@
-import { DateToX, XToDate } from '@/models'
-
 export const intervals = {
   year: 31536000,
   day: 86400,
@@ -87,18 +85,6 @@ export function formatDateByMinutes(date: Date): string {
 export function formatDate(date: Date): string {
   const currentLocale = navigator.language
   return new Intl.DateTimeFormat(currentLocale, { dateStyle: 'short' }).format(date)
-}
-
-export function createDateToXScale(minStartTime: number, overallWidth: number, overallTimeSpan: number): DateToX {
-  return function(date: Date): number {
-    return Math.ceil((date.getTime() - minStartTime) * (overallWidth / overallTimeSpan))
-  }
-}
-
-export function createXToDateScale(minStartTime: number, overallWidth: number, overallTimeSpan: number): XToDate {
-  return function(xPosition: number): number {
-    return Math.ceil(minStartTime + xPosition * (overallTimeSpan / overallWidth))
-  }
 }
 
 export function getDateBounds(

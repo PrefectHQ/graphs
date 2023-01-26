@@ -4,19 +4,20 @@ import {
   TimelineScale,
   InitTimelineScaleProps
 } from '@/models'
-import { createXToDateScale, createDateToXScale } from '@/utilities'
 
 export let timelineScale: {
   dateToX: DateToX,
   xToDate: XToDate,
 }
 
-export const initTimelineScale = ({
+// this function is also imported into the nodeLayout.worker, so
+// it can't return the cached timelineScale
+export const createTimelineScale = ({
   minimumStartTime,
   overallGraphWidth,
   initialOverallTimeSpan,
 }: InitTimelineScaleProps): TimelineScale => {
-  timelineScale = {
+  const newTimelineScale = {
     dateToX: createDateToXScale(
       minimumStartTime,
       overallGraphWidth,
@@ -29,5 +30,30 @@ export const initTimelineScale = ({
     ),
   }
 
+  return newTimelineScale
+}
+
+export const initTimelineScale = ({
+  minimumStartTime,
+  overallGraphWidth,
+  initialOverallTimeSpan,
+}: InitTimelineScaleProps): TimelineScale => {
+  timelineScale = createTimelineScale({
+    minimumStartTime,
+    overallGraphWidth,
+    initialOverallTimeSpan,
+  })
   return timelineScale
+}
+
+function createDateToXScale(minStartTime: number, overallWidth: number, overallTimeSpan: number): DateToX {
+  return function(date: Date): number {
+    return Math.ceil((date.getTime() - minStartTime) * (overallWidth / overallTimeSpan))
+  }
+}
+
+function createXToDateScale(minStartTime: number, overallWidth: number, overallTimeSpan: number): XToDate {
+  return function(xPosition: number): number {
+    return Math.ceil(minStartTime + xPosition * (overallTimeSpan / overallWidth))
+  }
 }
