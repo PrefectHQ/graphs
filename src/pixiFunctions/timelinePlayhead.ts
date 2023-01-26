@@ -2,19 +2,18 @@ import type { Viewport } from 'pixi-viewport'
 import { Container, Graphics } from 'pixi.js'
 import type { Application } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
-import { ParsedThemeStyles, XScale } from '@/models'
+import { timelineScale } from './timelineScale'
+import { ParsedThemeStyles } from '@/models'
 
 type TimelinePlayheadProps = {
   viewportRef: Viewport,
   appRef: Application,
-  xScale: XScale,
   styles: ComputedRef<ParsedThemeStyles>,
 }
 
 export class TimelinePlayhead extends Container {
   private readonly viewportRef
   private readonly appRef
-  private readonly xScale
   private readonly styles: ComputedRef<ParsedThemeStyles>
 
   private readonly unwatch: WatchStopHandle
@@ -24,14 +23,12 @@ export class TimelinePlayhead extends Container {
   public constructor({
     viewportRef,
     appRef,
-    xScale,
     styles,
   }: TimelinePlayheadProps) {
     super()
 
     this.viewportRef = viewportRef
     this.appRef = appRef
-    this.xScale = xScale
     this.styles = styles
 
     this.drawPlayhead()
@@ -78,7 +75,7 @@ export class TimelinePlayhead extends Container {
     } = this.styles.value
 
     this.position.x =
-      this.xScale(new Date()) * this.viewportRef.scale._x
+      timelineScale.dateToX(new Date()) * this.viewportRef.scale._x
       + this.viewportRef.worldTransform.tx
       - spacingPlayheadGlowPadding
       - spacingPlayheadWidth / 2

@@ -51,6 +51,7 @@ export class DeselectLayer extends Container {
   private update(): void {
     const { xPos, yPos, width, height } = this.getDimensions()
     this.x = xPos
+    // eslint-disable-next-line id-length
     this.y = yPos
     this.width = width
     this.height = height

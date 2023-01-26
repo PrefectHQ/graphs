@@ -16,6 +16,14 @@
           Fan Multiplier
           <p-number-input v-model="fanMultiplier" step="0.1" min="1" max="2" />
         </p-label>
+
+        <p-label>
+          Layout
+          <p-select
+            v-model="layout"
+            :options="layoutOptions"
+          />
+        </p-label>
       </div>
 
       <div class="flow-run-timeline-demo__header-row">
@@ -24,12 +32,15 @@
           <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
         <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
+          <p-checkbox v-model="zeroTimeGap" label="Zero Time Gap" />
+        </div>
+        <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
           <p-checkbox v-model="isRunning" label="Show Running" />
         </div>
       </div>
     </div>
 
-    <div class="flex">
+    <div class="flex h-full">
       <div class="flow-run-timeline-demo__graph-container">
         <FlowRunTimeline
           v-if="data"
@@ -37,6 +48,7 @@
           :graph-data="data"
           :is-running="isRunning"
           :theme="theme"
+          :layout="layout"
           class="flow-run-timeline-demo-demo__graph"
           :selected-node-id="selectedNodeId"
           @click="selectNode"
@@ -55,10 +67,10 @@
 
 <script lang="ts" setup>
   import { useColorTheme } from '@prefecthq/prefect-design'
-  import { ref, watchEffect, computed } from 'vue'
+  import { ref, watchEffect, computed, Ref, watch } from 'vue'
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
-  import { TimelineThemeOptions, HSL } from '@/models'
+  import { TimelineThemeOptions, HSL, TimelineNodesLayoutOptions } from '@/models'
 
   const { value: colorThemeValue } = useColorTheme()
 
@@ -74,6 +86,9 @@
   const start = ref<Date>(previous)
   const end = ref<Date>(now)
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
+  const zeroTimeGap = ref(true)
+  const layoutOptions: TimelineNodesLayoutOptions[] = ['waterfall', 'nearestParent']
+  const layout: Ref<TimelineNodesLayoutOptions> = ref('nearestParent')
 
   const dataOptions = computed(() => {
     return {
@@ -82,10 +97,18 @@
       fanMultiplier: fanMultiplier.value,
       start: start.value,
       end: end.value,
+      zeroTimeGap: zeroTimeGap.value,
     }
   })
 
   const data = ref<TimescaleItem[]>([])
+
+  // when layout changes, bump componentKey to force a rerender
+  watch(layout, (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      componentKey.value += 1
+    }
+  })
 
   watchEffect(() => {
     // set data and sort by startTime
@@ -135,22 +158,30 @@
   }>(() => {
     let colorTextDefault = '--foreground',
         colorTextInverse = '--white',
-        colorTextSubdued = '--foreground-300'
+        colorTextSubdued = '--foreground-300',
+        colorGuideLine = '--foreground-50',
+        colorEdge = '--foreground'
 
     if (colorThemeValue.value == 'dark') {
       colorTextDefault = '--white'
       colorTextInverse = '--foreground-600'
       colorTextSubdued = '--foreground-200'
+      colorGuideLine = '--foreground-50'
+      colorEdge = '--white'
     }
 
     const [defaultH, defaultS, defaultL] = computedStyle.getPropertyValue(colorTextDefault).trim().split(' ')
     const [inverseH, inverseS, inverseL] = computedStyle.getPropertyValue(colorTextInverse).trim().split(' ')
     const [subduedH, subduedS, subduedL] = computedStyle.getPropertyValue(colorTextSubdued).trim().split(' ')
+    const [guideLineH, guideLineS, guideLineL] = computedStyle.getPropertyValue(colorGuideLine).trim().split(' ')
+    const [edgeH, edgeS, edgeL] = computedStyle.getPropertyValue(colorEdge).trim().split(' ')
 
     return {
       colorTextDefault: `hsl(${defaultH}, ${defaultS}, ${defaultL})`,
       colorTextInverse: `hsl(${inverseH}, ${inverseS}, ${inverseL})`,
       colorTextSubdued: `hsl(${subduedH}, ${subduedS}, ${subduedL})`,
+      colorGuideLine: `hsl(${guideLineH}, ${guideLineS}, ${guideLineL})`,
+      colorEdge: `hsl(${edgeH}, ${edgeS}, ${edgeL})`,
     }
   })
 
@@ -205,8 +236,6 @@
 
 .flow-run-timeline-demo__graph-container { @apply
   flex-1
-  h-[350px]
-  /* w-full */
 }
 
 .flow-run-timeline-demo-demo__graph { @apply
@@ -216,11 +245,6 @@
 }
 
 .flow-run-timeline-demo__selection-panel { @apply
-  /* absolute
-  bottom-1
-  left-1
-  text-foreground */
-    h-[350px]
   w-0
   py-4
   rounded-lg

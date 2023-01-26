@@ -8,19 +8,22 @@
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
   import type { Viewport } from 'pixi-viewport'
+  import type { Application } from 'pixi.js'
   import {
-    Application,
-    Ticker
-  } from 'pixi.js'
-  import { computed, onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
+    computed,
+    onMounted,
+    onBeforeUnmount,
+    ref,
+    watch
+  } from 'vue'
   import {
     TimelineNodeData,
     nodeThemeFnDefault,
     TimelineThemeOptions,
     FormatDateFns,
     formatDateFnsDefault,
-    XScale,
-    DateScale
+    TimelineScale,
+    TimelineNodesLayoutOptions
   } from './models'
   import {
     initBitmapFonts,
@@ -29,9 +32,13 @@
     initViewport,
     TimelineGuides,
     TimelineNodes,
-    TimelinePlayhead
+    TimelinePlayhead,
+    initTimelineScale
   } from './pixiFunctions'
-  import { getDateBounds, parseThemeOptions } from './utilities'
+  import {
+    getDateBounds,
+    parseThemeOptions
+  } from './utilities'
 
   const props = defineProps<{
     graphData: TimelineNodeData[],
@@ -39,16 +46,13 @@
     theme?: TimelineThemeOptions,
     formatDateFns?: Partial<FormatDateFns>,
     selectedNodeId?: string | null,
+    layout?: TimelineNodesLayoutOptions,
   }>()
 
   const stage = ref<HTMLDivElement>()
-
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
-
   const styles = computed(() => parseThemeOptions(props.theme?.defaults))
-
   const isViewportDragging = ref(false)
-
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
     ...props.formatDateFns,
@@ -71,10 +75,11 @@
   let maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
   let overallGraphWidth: number
+  let timelineScale: TimelineScale
 
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
-  let playheadTicker: Ticker | null = null
+  let playheadTicker: (() => void) | null = null
   let nodesContainer: TimelineNodes
 
   const emit = defineEmits<{
@@ -144,15 +149,20 @@
     minimumStartDate = min
     maximumEndDate.value = max
     initialOverallTimeSpan = span
-
     overallGraphWidth = stage.value!.clientWidth * 2
+
+    timelineScale = initTimelineScale({
+      minimumStartTime: minimumStartDate.getTime(),
+      overallGraphWidth,
+      initialOverallTimeSpan,
+    })
   }
 
   function initFonts(): void {
     initBitmapFonts(styles.value)
 
-    watchEffect(() => {
-      updateBitmapFonts(styles.value)
+    watch(styles, (newValue) => {
+      updateBitmapFonts(newValue)
     })
   }
 
@@ -164,7 +174,6 @@
     playhead = new TimelinePlayhead({
       viewportRef: viewport,
       appRef: pixiApp,
-      xScale,
       styles,
     })
     playhead.zIndex = zIndex.playhead
@@ -179,7 +188,7 @@
       return
     }
 
-    playheadTicker = pixiApp.ticker.add(() => {
+    playheadTicker = () => {
       if (props.isRunning && playhead) {
         const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
@@ -190,22 +199,36 @@
           && playheadStartedVisible
           && playhead.position.x > pixiApp.screen.width - styles.value.spacingViewportPaddingDefault
         ) {
-          const originalLeft = dateScale(viewport.left)
+          const originalLeft = timelineScale.xToDate(viewport.left)
           viewport.zoomPercent(-0.1, true)
-          viewport.left = xScale(new Date(originalLeft))
+          viewport.left = timelineScale.dateToX(new Date(originalLeft))
         }
       } else if (!playhead?.destroyed) {
         playhead?.destroy()
       }
-    })
+    }
+
+    pixiApp.ticker.add(playheadTicker)
   }
+
+  watch(() => props.isRunning, (newVal) => {
+    if (!loading.value) {
+      if (newVal && (!playhead || playhead.destroyed)) {
+        initPlayhead()
+      }
+
+      if (!newVal && playhead && playheadTicker) {
+        playhead.destroy()
+        pixiApp.ticker.remove(playheadTicker)
+        playheadTicker = null
+      }
+    }
+  })
 
   function initGuides(): void {
     guides = new TimelineGuides({
       viewportRef: viewport,
       appRef: pixiApp,
-      xScale,
-      dateScale,
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
@@ -240,13 +263,16 @@
       appRef: pixiApp,
       viewportRef: viewport,
       graphData: props.graphData,
-      xScale,
       styles,
       styleNode,
+      layoutSetting: props.layout,
+      timeScaleProps: {
+        minimumStartTime: minimumStartDate.getTime(),
+        overallGraphWidth,
+        initialOverallTimeSpan,
+      },
     })
     viewport.addChild(nodesContainer)
-
-    centerViewportOnNodes()
 
     if (props.isRunning) {
       pixiApp.ticker.add(() => {
@@ -261,56 +287,17 @@
         emit('click', clickedNodeId)
       }
     })
-  }
 
-  function centerViewportOnNodes(): void {
-    const { spacingViewportPaddingDefault } = styles.value
-    const {
-      x: nodesX,
-      y: nodesY,
-      width: nodesWidth,
-      height: nodesHeight,
-    } = nodesContainer
-
-    viewport.ensureVisible(
-      nodesX - spacingViewportPaddingDefault,
-      nodesY - spacingViewportPaddingDefault,
-      nodesWidth + spacingViewportPaddingDefault * 2,
-      nodesHeight + spacingViewportPaddingDefault * 2,
-      true,
-    )
-    viewport.moveCenter(
-      nodesX + nodesWidth / 2,
-      nodesY + nodesHeight / 2,
-    )
-
-    watchEffect(() => {
-      nodesContainer.updateSelection(props.selectedNodeId)
+    watch(() => props.selectedNodeId, (newValue) => {
+      nodesContainer.updateSelection(newValue)
     })
-  }
-
-  watchEffect(() => {
-    // This accommodates updated nodeData or newly added nodes.
-    // If totally new data is added, it all gets appended way down the viewport Y axis.
-    // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
-    if (!loading.value) {
-      nodesContainer.update(props.graphData)
+    watch(() => props.graphData, (newValue) => {
+      // This accommodates updated nodeData or newly added nodes.
+      // If totally new data is added, it all gets appended way down the viewport Y axis.
+      // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
+      nodesContainer.update(newValue)
       cullDirty = true
-
-      if (props.isRunning && (!playhead || playhead.destroyed)) {
-        initPlayhead()
-      }
-    }
-  })
-
-  // Convert a date to an X position
-  const xScale: XScale = (date) => {
-    return Math.ceil((date.getTime() - minimumStartDate.getTime()) * (overallGraphWidth / initialOverallTimeSpan))
-  }
-
-  // Convert an X position to a timestamp
-  const dateScale: DateScale = (xPosition) => {
-    return Math.ceil(minimumStartDate.getTime() + xPosition * (initialOverallTimeSpan / overallGraphWidth))
+    })
   }
 </script>
 

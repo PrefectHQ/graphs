@@ -3,12 +3,12 @@ import { ParsedThemeStyles, ThemeStyleOverrides } from '@/models'
 
 export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeStyles {
   return {
-    colorGraphBg: overrides?.colorGraphBg ?? '#f1f5f9',
     colorTextDefault: colorToHex(overrides?.colorTextDefault ?? '#374151'),
     colorTextInverse: colorToHex(overrides?.colorTextInverse ?? '#f8fafc'),
     colorTextSubdued: colorToHex(overrides?.colorTextSubdued ?? '#6b7280'),
+    colorEdge: colorToHex(overrides?.colorEdge ?? '#374151'),
     colorNodeSelection: colorToHex(overrides?.colorNodeSelection ?? '#024DFD'),
-    colorGuideLine: colorToHex(overrides?.colorGuideLine ?? '#cacccf'),
+    colorGuideLine: colorToHex(overrides?.colorGuideLine ?? '#cbd5e1'),
     colorPlayheadBg: colorToHex(overrides?.colorPlayheadBg ?? '#4e82fe'),
     textFontFamilyDefault: overrides?.textFontFamilyDefault ?? 'InterVariable',
     textSizeDefault: spacingToNumber(overrides?.textSizeDefault ?? '14px'),
@@ -20,13 +20,16 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     spacingNodeYPadding: spacingToNumber(overrides?.spacingNodeYPadding ?? '8px'),
     spacingNodeMargin: spacingToNumber(overrides?.spacingNodeMargin ?? '16px'),
     spacingNodeLabelMargin: spacingToNumber(overrides?.spacingNodeLabelMargin ?? '4px'),
+    spacingMinimumNodeEdgeGap: spacingToNumber(overrides?.spacingMinimumNodeEdgeGap ?? '16px'),
+    spacingNodeEdgeLength: spacingToNumber(overrides?.spacingNodeEdgeLength ?? '8px'),
     spacingNodeSelectionMargin: spacingToNumber(overrides?.spacingNodeSelectionMargin ?? '2px'),
     spacingNodeSelectionWidth: spacingToNumber(overrides?.spacingNodeSelectionWidth ?? '4px'),
+    spacingEdgeWidth: spacingToNumber(overrides?.spacingEdgeWidth ?? '2px'),
     spacingGuideLabelPadding: spacingToNumber(overrides?.spacingGuideLabelPadding ?? '4px'),
     spacingPlayheadGlowPadding: spacingToNumber(overrides?.spacingPlayheadGlowPadding ?? '8px'),
     spacingPlayheadWidth: spacingToNumber(overrides?.spacingPlayheadWidth ?? '2px'),
-    borderRadiusGraph: overrides?.borderRadiusGraph ?? '8px',
     borderRadiusNode: spacingToNumber(overrides?.borderRadiusNode ?? '8px'),
+    alphaNodeDimmed: overrides?.alphaNodeDimmed ?? 0.2,
   }
 }
 

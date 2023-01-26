@@ -1,3 +1,4 @@
+import gsap from 'gsap'
 import {
   BitmapText,
   Container,
@@ -6,25 +7,30 @@ import {
 } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
 import { getBitmapFonts } from './bitmapFonts'
+import { timelineScale } from './timelineScale'
 import {
   ParsedThemeStyles,
   TimelineNodeData,
-  NodeThemeFn,
-  XScale
+  NodeThemeFn
 } from '@/models'
 import { colorToHex } from '@/utilities/style'
 
 type TimelineNodeProps = {
   nodeData: TimelineNodeData,
-  xScale: XScale,
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
-  yPositionIndex: number,
+  layoutPosition: number,
 }
+
+const animationDurations = {
+  fadeIn: 0.25,
+  move: 0.5,
+}
+
+export const timelineNodeBoxName = 'box'
 
 export class TimelineNode extends Container {
   public nodeData
-  private readonly xScale
   private readonly styles
   private readonly styleNode
 
@@ -35,30 +41,30 @@ export class TimelineNode extends Container {
 
   private apxLabelWidth = 0
   private nodeWidth
-  private readonly yPositionOffset
-  private readonly yPositionIndex
+  private readonly layoutPositionOffset
+  public layoutPosition
   private isLabelInBox = true
 
   private readonly selectedRing = new Graphics()
 
   public constructor({
     nodeData,
-    xScale,
     styles,
     styleNode,
-    yPositionIndex,
+    layoutPosition,
   }: TimelineNodeProps) {
     super()
     this.nodeData = nodeData
-    this.xScale = xScale
     this.styles = styles
     this.styleNode = styleNode
-    this.yPositionIndex = yPositionIndex
+    this.layoutPosition = layoutPosition
+
+    this.alpha = 0
 
     this.nodeWidth = this.getNodeWidth()
+    this.layoutPositionOffset = this.getLayoutPositionOffset()
 
-    this.yPositionOffset = this.getYPositionOffset(styles.value)
-
+    this.box.name = timelineNodeBoxName
     this.drawBox()
     this.addChild(this.box)
 
@@ -66,7 +72,7 @@ export class TimelineNode extends Container {
 
     this.drawSelectedRing()
 
-    this.updatePosition()
+    this.updatePosition(true)
 
     this.unwatch = watch([styles, styleNode], () => {
       this.box.clear()
@@ -75,15 +81,19 @@ export class TimelineNode extends Container {
 
     this.interactive = true
     this.buttonMode = true
+
+    this.animateIn()
   }
 
   private getNodeWidth(): number {
-    return this.xScale(this.nodeData.end ?? new Date()) - this.xScale(this.nodeData.start)
+    return timelineScale.dateToX(this.nodeData.end ?? new Date()) - timelineScale.dateToX(this.nodeData.start)
   }
 
-  private getYPositionOffset(styles: ParsedThemeStyles): number {
-    const nodeHeight = styles.textLineHeightDefault + styles.spacingNodeYPadding * 2
-    return nodeHeight + styles.spacingNodeMargin
+  private getLayoutPositionOffset(): number {
+    const { textLineHeightDefault, spacingNodeYPadding, spacingNodeMargin } = this.styles.value
+    const nodeHeight = textLineHeightDefault + spacingNodeYPadding * 2
+
+    return nodeHeight + spacingNodeMargin
   }
 
   private drawBox(): void {
@@ -161,11 +171,30 @@ export class TimelineNode extends Container {
     this.addChild(this.selectedRing)
   }
 
-  private updatePosition(): void {
-    this.position.set(
-      this.xScale(this.nodeData.start),
-      this.yPositionIndex * this.yPositionOffset,
-    )
+  private animateIn(): void {
+    gsap.to(this, { alpha: 1, duration: animationDurations.fadeIn })
+  }
+
+  public async updatePosition(skipAnimation?: boolean): Promise<void> {
+    const xPos = timelineScale.dateToX(this.nodeData.start)
+    const yPos = this.layoutPosition * this.layoutPositionOffset
+
+    if (skipAnimation) {
+      this.position.set(xPos, yPos)
+      return
+    }
+
+    await new Promise((resolve) => {
+      gsap.to(this, {
+        x: xPos,
+        // eslint-disable-next-line id-length
+        y: yPos,
+        duration: animationDurations.move,
+        ease: 'power1.out',
+      }).then(() => {
+        resolve(null)
+      })
+    })
   }
 
   private updateLabelPosition(): void {
@@ -183,7 +212,7 @@ export class TimelineNode extends Container {
     )
   }
 
-  public update(newNodeData?: TimelineNodeData): void {
+  public async update(newNodeData?: TimelineNodeData): Promise<void> {
     let hasNewState = false
 
     if (newNodeData) {
@@ -193,7 +222,7 @@ export class TimelineNode extends Container {
 
     const nodeWidth = this.getNodeWidth()
 
-    if (nodeWidth !== this.nodeWidth || hasNewState) {
+    if (hasNewState || nodeWidth !== this.nodeWidth) {
       this.nodeWidth = nodeWidth
 
       this.box.clear()
@@ -210,7 +239,7 @@ export class TimelineNode extends Container {
       }
     }
 
-    this.updatePosition()
+    await this.updatePosition()
   }
 
   public select(): void {

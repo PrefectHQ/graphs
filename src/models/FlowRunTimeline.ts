@@ -1,5 +1,4 @@
 import { IBitmapTextStyle, TextStyle } from 'pixi.js'
-import { TimelineNode } from '@/pixiFunctions/timelineNode'
 import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilities'
 
 export type TimelineNodeData = {
@@ -7,19 +6,45 @@ export type TimelineNodeData = {
   label: string,
   start: Date,
   end: Date | null,
-  upstreamDependencies?: TimelineNodeData[],
+  upstreamDependencies?: string[],
   state: string,
 }
 
-export type NodeRecord = {
-  node: TimelineNode,
-  id: string,
-  end: Date | null,
-  state: string,
+export type InitTimelineScaleProps = {
+  minimumStartTime: number,
+  overallGraphWidth: number,
+  initialOverallTimeSpan: number,
 }
 
-export type XScale = (date: Date) => number
-export type DateScale = (xPosition: number) => number
+export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
+
+export type NodeShoveDirection = 1 | -1
+export type NodeLayoutWorkerProps = {
+  data: {
+    layoutSetting?: TimelineNodesLayoutOptions,
+    graphData: string,
+    defaultTextStyles?: TextStyle,
+    spacingMinimumNodeEdgeGap?: number,
+    timeScaleProps?: InitTimelineScaleProps,
+  },
+}
+export type NodeLayoutItem = {
+  position: number,
+  nextDependencyShove?: NodeShoveDirection,
+  startX: number,
+  endX: number,
+}
+export type NodesLayout = Record<string, NodeLayoutItem>
+export type NodeLayoutWorkerResponse = {
+  data: NodesLayout,
+}
+
+export type DateToX = (date: Date) => number
+export type XToDate = (xPosition: number) => number
+export type TimelineScale = {
+  dateToX: DateToX,
+  xToDate: XToDate,
+}
 
 export type TextStyles = {
   nodeTextDefault: Partial<IBitmapTextStyle>,
@@ -63,11 +88,11 @@ export type HEX = `#${string}`
 export type Color = RGB | RGBA | HSL | HEX
 
 export type ThemeStyleOverrides = {
-  colorGraphBg?: Color,
   colorTextDefault?: Color,
   colorTextInverse?: Color,
   colorTextSubdued?: Color,
   colorNodeSelection?: Color,
+  colorEdge?: Color,
   colorGuideLine?: Color,
   colorPlayheadBg?: Color,
   textFontFamilyDefault?: string,
@@ -80,21 +105,24 @@ export type ThemeStyleOverrides = {
   spacingNodeYPadding?: Sizing,
   spacingNodeMargin?: Sizing,
   spacingNodeLabelMargin?: Sizing,
+  spacingMinimumNodeEdgeGap?: Sizing,
+  spacingNodeEdgeLength?: Sizing,
   spacingNodeSelectionMargin?: Sizing,
   spacingNodeSelectionWidth?: Sizing,
+  spacingEdgeWidth?: Sizing,
   spacingGuideLabelPadding?: Sizing,
   spacingPlayheadWidth?: Sizing,
   spacingPlayheadGlowPadding?: Sizing,
-  borderRadiusGraph?: Sizing,
   borderRadiusNode?: Sizing,
+  alphaNodeDimmed?: number,
 }
 
 export type ParsedThemeStyles = {
-  colorGraphBg: string,
   colorTextDefault: number,
   colorTextInverse: number,
   colorTextSubdued: number,
   colorNodeSelection: number,
+  colorEdge: number,
   colorGuideLine: number,
   colorPlayheadBg: number,
   textFontFamilyDefault: string,
@@ -107,13 +135,16 @@ export type ParsedThemeStyles = {
   spacingNodeYPadding: number,
   spacingNodeMargin: number,
   spacingNodeLabelMargin: number,
+  spacingMinimumNodeEdgeGap: number,
+  spacingNodeEdgeLength: number,
   spacingNodeSelectionMargin: number,
   spacingNodeSelectionWidth: number,
+  spacingEdgeWidth: number,
   spacingGuideLabelPadding: number,
   spacingPlayheadWidth: number,
   spacingPlayheadGlowPadding: number,
-  borderRadiusGraph: string,
   borderRadiusNode: number,
+  alphaNodeDimmed: number,
 }
 
 export type TimelineThemeOptions = {

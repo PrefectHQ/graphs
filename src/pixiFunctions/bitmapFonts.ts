@@ -4,11 +4,11 @@ import { TextStyles, ParsedThemeStyles } from '@/models'
 
 let bitmapFontsFontFamily = 'sans-serif'
 let bitmapFontsCache: Promise<TextStyles> | null = null
-const options = {
-  resolution: window.devicePixelRatio || 2,
+
+const nodeTextStyles = new TextStyle()
+const baseOptions = {
   chars: BitmapFont.ASCII,
 }
-const nodeTextStyles = new TextStyle()
 const timelineMarkerStyles = new TextStyle()
 
 async function loadBitmapFonts(styles: ParsedThemeStyles): Promise<TextStyles> {
@@ -38,6 +38,11 @@ function assignTextStyles(styles: ParsedThemeStyles): void {
 
 function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextStyles {
   assignTextStyles(styles)
+
+  const options = {
+    resolution: window.devicePixelRatio || 2,
+    ...baseOptions,
+  }
 
   BitmapFont.from(
     'NodeTextDefault',
@@ -85,6 +90,11 @@ function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextS
 
 export function updateBitmapFonts(styles: ParsedThemeStyles): void {
   assignTextStyles(styles)
+
+  const options = {
+    resolution: window.devicePixelRatio || 2,
+    ...baseOptions,
+  }
 
   setTimeout(() => {
     BitmapFont.uninstall('NodeTextDefault')
