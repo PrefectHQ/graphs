@@ -1,6 +1,7 @@
 <template>
   <div ref="container" class="resizable-section">
-    <p-frame :style="styles.iframe" :class="classes.iframe">
+    <!-- <p-frame :style="styles.iframe" :class="classes.iframe"> -->
+    <p-frame body-class="resizable-section__body" :style="styles.iframe" :class="classes.iframe">
       <div class="resizable-section__content">
         <slot />
       </div>
