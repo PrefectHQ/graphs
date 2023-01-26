@@ -104,8 +104,8 @@
   const data = ref<TimescaleItem[]>([])
 
   // when layout changes, bump componentKey to force a rerender
-  watch(layout, (oldVal, newVal) => {
-    if (oldVal !== newVal) {
+  watch(layout, (newVal, oldVal) => {
+    if (newVal !== oldVal) {
       componentKey.value += 1
     }
   })

@@ -9,7 +9,13 @@
   import { Cull } from '@pixi-essentials/cull'
   import type { Viewport } from 'pixi-viewport'
   import type { Application } from 'pixi.js'
-  import { computed, onMounted, onBeforeUnmount, ref, watchEffect } from 'vue'
+  import {
+    computed,
+    onMounted,
+    onBeforeUnmount,
+    ref,
+    watch
+  } from 'vue'
   import {
     TimelineNodeData,
     nodeThemeFnDefault,
@@ -155,8 +161,8 @@
   function initFonts(): void {
     initBitmapFonts(styles.value)
 
-    watchEffect(() => {
-      updateBitmapFonts(styles.value)
+    watch(styles, (newValue) => {
+      updateBitmapFonts(newValue)
     })
   }
 
@@ -205,13 +211,13 @@
     pixiApp.ticker.add(playheadTicker)
   }
 
-  watchEffect(() => {
+  watch(() => props.isRunning, (newVal) => {
     if (!loading.value) {
-      if (props.isRunning && (!playhead || playhead.destroyed)) {
+      if (newVal && (!playhead || playhead.destroyed)) {
         initPlayhead()
       }
 
-      if (!props.isRunning && playhead && playheadTicker) {
+      if (!newVal && playhead && playheadTicker) {
         playhead.destroy()
         pixiApp.ticker.remove(playheadTicker)
         playheadTicker = null
@@ -282,14 +288,14 @@
       }
     })
 
-    watchEffect(() => {
-      nodesContainer.updateSelection(props.selectedNodeId)
+    watch(() => props.selectedNodeId, (newValue) => {
+      nodesContainer.updateSelection(newValue)
     })
-    watchEffect(() => {
+    watch(() => props.graphData, (newValue) => {
       // This accommodates updated nodeData or newly added nodes.
       // If totally new data is added, it all gets appended way down the viewport Y axis.
       // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
-      nodesContainer.update(props.graphData)
+      nodesContainer.update(newValue)
       cullDirty = true
     })
   }
