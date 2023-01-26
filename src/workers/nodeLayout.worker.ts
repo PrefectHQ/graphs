@@ -162,10 +162,10 @@ async function getNearestParentPosition(nodeData: TimelineNodeData, nodeStartX: 
           upstreamLayoutItem.nextDependencyShove,
         )
 
-        return placeNearUpstreamNode(upstreamLayoutItem, nodeStartX)
+        return await placeNearUpstreamNode(upstreamLayoutItem, nodeStartX)
       }
 
-      return argueWithCompetingUpstreamPlacement({
+      return await argueWithCompetingUpstreamPlacement({
         competingLayoutItemId: overlappingLayoutIds[0],
         upstreamPositions,
         nodeStartX,
@@ -405,7 +405,7 @@ async function argueWithCompetingUpstreamPlacement({
     competitor.nextDependencyShove = 1
   }
 
-  return placeNearUpstreamNode(competitor, nodeStartX)
+  return await placeNearUpstreamNode(competitor, nodeStartX)
 }
 
 function getLayoutItemUpAndDownwardConnections(id: string): [number, number] {
