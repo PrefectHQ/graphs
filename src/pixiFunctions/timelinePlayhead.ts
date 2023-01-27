@@ -76,13 +76,13 @@ export class TimelinePlayhead extends Container {
     const textStyles = await getBitmapFonts(this.styles.value)
     this.label = new BitmapText('00:00:00', textStyles.playheadTimerLabel)
 
-    this.label.x = -this.label.width * 1.4
+    this.label.x = -this.label.width * 1.1
     this.label.y = this.appRef.screen.height - this.label.height * 1.5
     this.addChild(this.label)
 
     setInterval(() => {
       const date = new Date()
-      this.label!.text = date.toLocaleTimeString()
+      this.label!.text = date.toLocaleTimeString().replace(/AM|PM/, '')
     }, 1000)
   }
 
