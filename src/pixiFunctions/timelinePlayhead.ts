@@ -1,7 +1,8 @@
 import type { Viewport } from 'pixi-viewport'
-import { Container, Graphics } from 'pixi.js'
+import { BitmapText, Container, Graphics } from 'pixi.js'
 import type { Application } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
+import { getBitmapFonts } from './bitmapFonts'
 import { timelineScale } from './timelineScale'
 import { ParsedThemeStyles } from '@/models'
 
@@ -19,6 +20,7 @@ export class TimelinePlayhead extends Container {
   private readonly unwatch: WatchStopHandle
 
   private readonly playhead = new Graphics()
+  private label: BitmapText | undefined
 
   public constructor({
     viewportRef,
@@ -32,6 +34,8 @@ export class TimelinePlayhead extends Container {
     this.styles = styles
 
     this.drawPlayhead()
+
+    this.drawTimeLabel()
 
     this.unwatch = watch(styles, () => {
       this.playhead.clear()
@@ -66,6 +70,20 @@ export class TimelinePlayhead extends Container {
     this.playhead.endFill()
 
     this.addChild(this.playhead)
+  }
+
+  private async drawTimeLabel(): Promise<void> {
+    const textStyles = await getBitmapFonts(this.styles.value)
+    this.label = new BitmapText('00:00:00', textStyles.playheadTimerLabel)
+
+    this.label.x = -this.label.width * 1.4
+    this.label.y = this.appRef.screen.height - this.label.height * 1.5
+    this.addChild(this.label)
+
+    setInterval(() => {
+      const date = new Date()
+      this.label!.text = date.toLocaleTimeString()
+    }, 1000)
   }
 
   public updatePosition(): void {

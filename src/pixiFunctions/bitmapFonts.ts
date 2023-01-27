@@ -80,11 +80,24 @@ function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextS
     fontSize: styles.textSizeSmall,
   }
 
+  BitmapFont.from(
+    'PlayheadTimerLabel',
+    {
+      ...timelineMarkerStyles,
+      fill: styles.colorPlayheadBg,
+    }, options,
+  )
+  const playheadTimerLabel: Partial<IBitmapTextStyle> = {
+    fontName: 'PlayheadTimerLabel',
+    fontSize: styles.textSizeSmall,
+  }
+
   return {
     nodeTextDefault,
     nodeTextInverse,
     nodeTextStyles,
     timeMarkerLabel,
+    playheadTimerLabel,
   }
 }
 
@@ -121,6 +134,15 @@ export function updateBitmapFonts(styles: ParsedThemeStyles): void {
       {
         ...timelineMarkerStyles,
         fill: styles.colorTextSubdued,
+      }, options,
+    )
+
+    BitmapFont.uninstall('PlayheadTimerLabel')
+    BitmapFont.from(
+      'PlayheadTimerLabel',
+      {
+        ...timelineMarkerStyles,
+        fill: styles.colorPlayheadBg,
       }, options,
     )
   }, 0)
