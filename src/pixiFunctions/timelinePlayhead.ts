@@ -76,7 +76,7 @@ export class TimelinePlayhead extends Container {
     const textStyles = await getBitmapFonts(this.styles.value)
     this.label = new BitmapText('00:00:00', textStyles.playheadTimerLabel)
 
-    this.label.x = -this.label.width * 1.1
+    this.label.x = -this.label.width * 1.05
     this.label.y = this.appRef.screen.height - this.label.height * 1.5
     this.addChild(this.label)
 
