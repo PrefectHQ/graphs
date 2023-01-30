@@ -5,6 +5,7 @@ import { ComputedRef, watch, WatchStopHandle } from 'vue'
 import { getBitmapFonts } from './bitmapFonts'
 import { timelineScale } from './timelineScale'
 import { ParsedThemeStyles } from '@/models'
+import { getStrippedLocaleTimeString } from '@/utilities'
 
 type TimelinePlayheadProps = {
   viewportRef: Viewport,
@@ -73,16 +74,21 @@ export class TimelinePlayhead extends Container {
   }
 
   private async drawTimeLabel(): Promise<void> {
+    const {
+      spacingGuideLabelPadding,
+      spacingPlayheadGlowPadding,
+    } = this.styles.value
     const textStyles = await getBitmapFonts(this.styles.value)
-    this.label = new BitmapText('00:00:00', textStyles.playheadTimerLabel)
+    const startDate = getStrippedLocaleTimeString(new Date())
+    this.label = new BitmapText(startDate, textStyles.playheadTimerLabel)
 
-    this.label.x = -this.label.width * 1.05
-    this.label.y = this.appRef.screen.height - this.label.height * 1.5
+    this.label.x = -this.label.width - (spacingPlayheadGlowPadding + spacingGuideLabelPadding)
+    this.label.y = this.appRef.screen.height - (this.label.height + spacingGuideLabelPadding)
     this.addChild(this.label)
 
     setInterval(() => {
       const date = new Date()
-      this.label!.text = date.toLocaleTimeString().replace(/AM|PM/, '')
+      this.label!.text = getStrippedLocaleTimeString(date)
     }, 1000)
   }
 
