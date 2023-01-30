@@ -177,7 +177,7 @@ export class TimelineNodes extends Container {
 
     this.nodeRecords.set(nodeData.id, node)
 
-    this.addEdges(nodeData)
+    this.addNodeEdges(nodeData)
 
     this.nodeContainer.addChild(node)
   }
@@ -199,7 +199,7 @@ export class TimelineNodes extends Container {
     )
   }
 
-  private addEdges(nodeData: TimelineNodeData): void {
+  private addNodeEdges(nodeData: TimelineNodeData): void {
     if (!nodeData.upstreamDependencies) {
       return
     }
