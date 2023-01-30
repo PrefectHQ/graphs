@@ -71,6 +71,7 @@ export class TimelineNode extends Container {
     this.drawLabel()
 
     this.drawSelectedRing()
+    this.selectedRing.alpha = 0
 
     this.updatePosition(true)
 
@@ -167,8 +168,6 @@ export class TimelineNode extends Container {
       borderRadiusNode,
     )
 
-    this.selectedRing.alpha = 0
-
     this.addChild(this.selectedRing)
   }
 
@@ -228,6 +227,9 @@ export class TimelineNode extends Container {
 
       this.box.clear()
       this.drawBox()
+
+      this.selectedRing.clear()
+      this.drawSelectedRing()
 
       if (
         // 2px tolerance avoids the label bouncing in/out of the box
