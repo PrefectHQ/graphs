@@ -70,7 +70,7 @@
   import { ref, watchEffect, computed, Ref, watch } from 'vue'
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
-  import { TimelineThemeOptions, HSL, TimelineNodesLayoutOptions } from '@/models'
+  import { TimelineThemeOptions, TimelineNodesLayoutOptions, ThemeStyleOverrides } from '@/models'
 
   const { value: colorThemeValue } = useColorTheme()
 
@@ -151,11 +151,7 @@
 
   const computedStyle = getComputedStyle(document.documentElement)
 
-  const colorDefaults = computed<{
-    colorTextDefault: HSL,
-    colorTextInverse: HSL,
-    colorTextSubdued: HSL,
-  }>(() => {
+  const colorDefaults = computed<Partial<ThemeStyleOverrides>>(() => {
     let colorTextDefault = '--foreground',
         colorTextInverse = '--white',
         colorTextSubdued = '--foreground-300',

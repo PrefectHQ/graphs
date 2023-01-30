@@ -18,7 +18,7 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     spacingViewportPaddingDefault: spacingToNumber(overrides?.spacingViewportPaddingDefault ?? '40px'),
     spacingNodeXPadding: spacingToNumber(overrides?.spacingNodeXPadding ?? '8px'),
     spacingNodeYPadding: spacingToNumber(overrides?.spacingNodeYPadding ?? '8px'),
-    spacingNodeMargin: spacingToNumber(overrides?.spacingNodeMargin ?? '16px'),
+    spacingNodeMargin: spacingToNumber(overrides?.spacingNodeMargin ?? '24px'),
     spacingNodeLabelMargin: spacingToNumber(overrides?.spacingNodeLabelMargin ?? '4px'),
     spacingMinimumNodeEdgeGap: spacingToNumber(overrides?.spacingMinimumNodeEdgeGap ?? '16px'),
     spacingNodeEdgeLength: spacingToNumber(overrides?.spacingNodeEdgeLength ?? '8px'),

@@ -77,6 +77,7 @@ export class TimelineNode extends Container {
     this.unwatch = watch([styles, styleNode], () => {
       this.box.clear()
       this.drawBox()
+      this.drawLabel()
     }, { deep: true })
 
     this.interactive = true
