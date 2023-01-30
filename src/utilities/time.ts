@@ -139,10 +139,6 @@ export function roundDownToNearestEvenNumberedHour(date: Date): Date {
   )
 }
 
-export function getStrippedLocaleTimeString(date: Date): string {
-  return date.toLocaleTimeString().replace(/AM|PM/, '')
-}
-
 export const timeLengths = {
   second: 1000,
   minute: 1000 * 60,

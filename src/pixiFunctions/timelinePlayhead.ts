@@ -4,18 +4,19 @@ import type { Application } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
 import { getBitmapFonts } from './bitmapFonts'
 import { timelineScale } from './timelineScale'
-import { ParsedThemeStyles } from '@/models'
-import { getStrippedLocaleTimeString } from '@/utilities'
+import { FormatDateFns, ParsedThemeStyles } from '@/models'
 
 type TimelinePlayheadProps = {
   viewportRef: Viewport,
   appRef: Application,
+  formatDateFns: ComputedRef<FormatDateFns>,
   styles: ComputedRef<ParsedThemeStyles>,
 }
 
 export class TimelinePlayhead extends Container {
   private readonly viewportRef
   private readonly appRef
+  private readonly formatDateFns
   private readonly styles: ComputedRef<ParsedThemeStyles>
 
   private readonly unwatch: WatchStopHandle
@@ -26,12 +27,14 @@ export class TimelinePlayhead extends Container {
   public constructor({
     viewportRef,
     appRef,
+    formatDateFns,
     styles,
   }: TimelinePlayheadProps) {
     super()
 
     this.viewportRef = viewportRef
     this.appRef = appRef
+    this.formatDateFns = formatDateFns
     this.styles = styles
 
     this.drawPlayhead()
@@ -79,7 +82,8 @@ export class TimelinePlayhead extends Container {
       spacingPlayheadGlowPadding,
     } = this.styles.value
     const textStyles = await getBitmapFonts(this.styles.value)
-    const startDate = getStrippedLocaleTimeString(new Date())
+    const { timeBySeconds } = this.formatDateFns.value
+    const startDate = timeBySeconds(new Date())
     this.label = new BitmapText(startDate, textStyles.playheadTimerLabel)
 
     this.label.x = -this.label.width - (spacingPlayheadGlowPadding + spacingGuideLabelPadding)
@@ -88,7 +92,7 @@ export class TimelinePlayhead extends Container {
 
     setInterval(() => {
       const date = new Date()
-      this.label!.text = getStrippedLocaleTimeString(date)
+      this.label!.text = timeBySeconds(date)
     }, 1000)
   }
 

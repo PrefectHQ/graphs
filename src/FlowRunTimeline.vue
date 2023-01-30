@@ -174,6 +174,7 @@
     playhead = new TimelinePlayhead({
       viewportRef: viewport,
       appRef: pixiApp,
+      formatDateFns,
       styles,
     })
     playhead.zIndex = zIndex.playhead
