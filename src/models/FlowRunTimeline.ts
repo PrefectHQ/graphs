@@ -51,6 +51,7 @@ export type TextStyles = {
   nodeTextInverse: Partial<IBitmapTextStyle>,
   nodeTextStyles: TextStyle,
   timeMarkerLabel: Partial<IBitmapTextStyle>,
+  playheadTimerLabel: Partial<IBitmapTextStyle>,
 }
 
 type FormatDate = (date: Date) => string
