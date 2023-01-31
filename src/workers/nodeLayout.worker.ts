@@ -1,4 +1,3 @@
-import { TextMetrics, TextStyle } from 'pixi.js'
 import { createTimelineScale } from '../pixiFunctions/timelineScale'
 import {
   TimelineNodeData,
@@ -14,7 +13,7 @@ const defaultPosition = 0
 
 let timelineScale: TimelineScale | undefined
 
-const labelTextStyle = new TextStyle()
+let currentTextMWidth = 14
 let minimumNodeEdgeGap = 0
 let currentLayoutSetting: TimelineNodesLayoutOptions = 'waterfall'
 let graphDataStore: TimelineNodeData[] = []
@@ -25,7 +24,7 @@ onmessage = ({
   data: {
     layoutSetting,
     graphData,
-    defaultTextStyles,
+    textMWidth,
     spacingMinimumNodeEdgeGap,
     timeScaleProps,
   },
@@ -43,12 +42,8 @@ onmessage = ({
     currentLayoutSetting = layoutSetting
   }
 
-  if (defaultTextStyles) {
-    // custom font families aren't in this thread,
-    // sans-serif is good enough to calculate apx widths
-    labelTextStyle.fontFamily = 'sans-serif'
-    labelTextStyle.fontSize = defaultTextStyles.fontSize
-    labelTextStyle.lineHeight = defaultTextStyles.lineHeight
+  if (textMWidth) {
+    currentTextMWidth = textMWidth
   }
 
   if (!timelineScale && timeScaleProps) {
@@ -104,7 +99,7 @@ async function generateNearestParentLayout(): Promise<void> {
 
     const startX = timelineScale!.dateToX(new Date(nodeData.start))
     // Accommodate the label width so they don't overlap
-    const apxLabelWidth = TextMetrics.measureText(nodeData.label, labelTextStyle).width
+    const apxLabelWidth = nodeData.label.length * currentTextMWidth
 
     const position = await getNearestParentPosition(nodeData, startX)
 

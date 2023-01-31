@@ -1,5 +1,5 @@
 import type { Viewport } from 'pixi-viewport'
-import { Application, Container } from 'pixi.js'
+import { Application, Container, TextMetrics } from 'pixi.js'
 import { ComputedRef } from 'vue'
 import { getBitmapFonts } from './bitmapFonts'
 import { DeselectLayer } from './deselectLayer'
@@ -12,7 +12,8 @@ import {
   TimelineNodeData,
   TimelineNodesLayoutOptions,
   NodesLayout,
-  InitTimelineScaleProps
+  InitTimelineScaleProps,
+  NodeLayoutWorkerProps
 } from '@/models'
 // eslint-disable-next-line import/default
 import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
@@ -89,23 +90,28 @@ export class TimelineNodes extends Container {
   }: InitTimelineScaleProps): Promise<void> {
     const textStyles = await getBitmapFonts(this.styles.value)
     const { spacingMinimumNodeEdgeGap } = this.styles.value
+    const textMWidth = TextMetrics.measureText('M', textStyles.nodeTextStyles).width
+
+    const layoutWorkerOptions: NodeLayoutWorkerProps = {
+      data: {
+        timeScaleProps: {
+          minimumStartTime,
+          overallGraphWidth,
+          initialOverallTimeSpan,
+        },
+        spacingMinimumNodeEdgeGap,
+        textMWidth,
+        graphData: JSON.stringify(this.graphData),
+        layoutSetting: this.layoutSetting,
+      },
+    }
 
     this.layoutWorker.onmessage = (message: NodeLayoutWorkerResponse) => {
       this.layout = message.data
       this.renderLayout()
     }
 
-    this.layoutWorker.postMessage({
-      timeScaleProps: {
-        minimumStartTime,
-        overallGraphWidth,
-        spacingMinimumNodeEdgeGap,
-        initialOverallTimeSpan,
-      },
-      defaultTextStyles: textStyles.nodeTextStyles,
-      graphData: JSON.stringify(this.graphData),
-      layoutSetting: this.layoutSetting,
-    })
+    this.layoutWorker.postMessage(layoutWorkerOptions.data)
   }
 
   private initDeselectLayer(): void {
