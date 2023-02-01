@@ -145,7 +145,10 @@ export class TimelineNodes extends Container {
   }
 
   private async updateNodeRecordAndEdgesLayout(nodeId: string, nodeRecord: TimelineNode): Promise<void> {
+    const nodeData = this.graphData.find(node => node.id === nodeId)!
+
     if (nodeRecord.layoutPosition === this.layout[nodeId].position) {
+      nodeRecord.update(nodeData)
       return
     }
 
@@ -159,7 +162,7 @@ export class TimelineNodes extends Container {
       edgeRecord.edge.visible = false
     })
 
-    await nodeRecord.update()
+    await nodeRecord.update(nodeData)
 
     nodeEdgeRecords.forEach((edgeRecord) => {
       edgeRecord.edge.update()
