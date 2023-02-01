@@ -127,7 +127,11 @@ export class TimelineNode extends Container {
     const { spacingNodeXPadding } = this.styles.value
 
     if (this.apxLabelWidth === 0) {
-      this.apxLabelWidth = TextMetrics.measureText(this.nodeData.label, textStyles.nodeTextStyles).width
+      // the text metrics are consistently a bit off, so we add a buffer percentage
+      const labelWidthBufferPercentage = 7
+      this.apxLabelWidth =
+        TextMetrics.measureText(this.nodeData.label, textStyles.nodeTextStyles).width
+        * (1 + labelWidthBufferPercentage / 100)
     }
 
     this.label?.destroy()
