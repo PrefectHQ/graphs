@@ -288,10 +288,10 @@ export class TimelineNodes extends Container {
   }
 
   private centerViewportAfterOutsideAnimation(selectedNode: TimelineNode): void {
-    const xPos = selectedNode.x + selectedNode.width / 2
-    const yPos = selectedNode.y + selectedNode.height / 2
-
     setTimeout(() => {
+      const xPos = selectedNode.x + selectedNode.width / 2
+      const yPos = selectedNode.y + selectedNode.height / 2
+
       this.viewportRef.animate({
         position: {
           x: xPos,
