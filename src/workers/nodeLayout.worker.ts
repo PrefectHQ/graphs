@@ -1,4 +1,3 @@
-import { createTimelineScale } from '../pixiFunctions/timelineScale'
 import {
   TimelineNodeData,
   TimelineNodesLayoutOptions,
@@ -8,12 +7,13 @@ import {
   TimelineScale,
   NodeLayoutItem
 } from '@/models'
+import { createTimelineScale } from '@/pixiFunctions/timelineScale'
 
 const defaultPosition = 0
 
 let timelineScale: TimelineScale | undefined
 
-let currentTextMWidth = 14
+let currentApxCharacterWidth = 14
 let minimumNodeEdgeGap = 0
 let currentLayoutSetting: TimelineNodesLayoutOptions = 'waterfall'
 let graphDataStore: TimelineNodeData[] = []
@@ -24,7 +24,7 @@ onmessage = ({
   data: {
     layoutSetting,
     graphData,
-    textMWidth,
+    apxCharacterWidth,
     spacingMinimumNodeEdgeGap,
     timeScaleProps,
   },
@@ -42,8 +42,8 @@ onmessage = ({
     currentLayoutSetting = layoutSetting
   }
 
-  if (textMWidth) {
-    currentTextMWidth = textMWidth
+  if (apxCharacterWidth) {
+    currentApxCharacterWidth = apxCharacterWidth
   }
 
   if (!timelineScale && timeScaleProps) {
@@ -80,6 +80,10 @@ async function calculateNodeLayout(): Promise<void> {
 
 function generateWaterfallLayout(): void {
   graphDataStore.forEach((nodeData, index) => {
+    if (nodeData.id in layout) {
+      return
+    }
+
     layout[nodeData.id] = {
       position: index,
       startX: timelineScale!.dateToX(new Date(nodeData.start)),
@@ -90,7 +94,10 @@ function generateWaterfallLayout(): void {
 
 async function generateNearestParentLayout(): Promise<void> {
   for await (const nodeData of graphDataStore) {
-    const endX = timelineScale!.dateToX(nodeData.end ? new Date(nodeData.end) : new Date())
+    const endAsPx = timelineScale!.dateToX(nodeData.end ? new Date(nodeData.end) : new Date())
+    // Accommodate the label width so they don't overlap
+    const apxLabelWidth = nodeData.label.length * currentApxCharacterWidth
+    const endX = endAsPx + apxLabelWidth
 
     if (nodeData.id in layout) {
       layout[nodeData.id].endX = endX
@@ -98,15 +105,13 @@ async function generateNearestParentLayout(): Promise<void> {
     }
 
     const startX = timelineScale!.dateToX(new Date(nodeData.start))
-    // Accommodate the label width so they don't overlap
-    const apxLabelWidth = nodeData.label.length * currentTextMWidth
 
     const position = await getNearestParentPosition(nodeData, startX)
 
     layout[nodeData.id] = {
       position,
       startX,
-      endX: endX + apxLabelWidth,
+      endX,
     }
   }
 }

@@ -23,7 +23,7 @@ export type NodeLayoutWorkerProps = {
   data: {
     layoutSetting?: TimelineNodesLayoutOptions,
     graphData: string,
-    textMWidth?: number,
+    apxCharacterWidth?: number,
     spacingMinimumNodeEdgeGap?: number,
     timeScaleProps?: InitTimelineScaleProps,
   },

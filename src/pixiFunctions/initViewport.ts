@@ -1,7 +1,6 @@
 import type { Viewport as ViewportType } from 'pixi-viewport'
-import { UPDATE_PRIORITY } from 'pixi.js'
-import type { Application } from 'pixi.js'
-import { getPixiViewport } from './viewport'
+import { Application, UPDATE_PRIORITY } from 'pixi.js'
+import { getPixiViewport } from '@/pixiFunctions/viewport'
 
 export async function initViewport(stage: HTMLElement, appRef: Application): Promise<ViewportType> {
   const Viewport = await getPixiViewport()

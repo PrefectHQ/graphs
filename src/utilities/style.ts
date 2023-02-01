@@ -19,7 +19,7 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     spacingNodeXPadding: spacingToNumber(overrides?.spacingNodeXPadding ?? '8px'),
     spacingNodeYPadding: spacingToNumber(overrides?.spacingNodeYPadding ?? '8px'),
     spacingNodeMargin: spacingToNumber(overrides?.spacingNodeMargin ?? '24px'),
-    spacingNodeLabelMargin: spacingToNumber(overrides?.spacingNodeLabelMargin ?? '4px'),
+    spacingNodeLabelMargin: spacingToNumber(overrides?.spacingNodeLabelMargin ?? '20px'),
     spacingMinimumNodeEdgeGap: spacingToNumber(overrides?.spacingMinimumNodeEdgeGap ?? '16px'),
     spacingNodeEdgeLength: spacingToNumber(overrides?.spacingNodeEdgeLength ?? '8px'),
     spacingNodeSelectionMargin: spacingToNumber(overrides?.spacingNodeSelectionMargin ?? '2px'),

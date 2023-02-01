@@ -1,7 +1,7 @@
 import { BitmapText, Container, Graphics } from 'pixi.js'
 import { ComputedRef } from 'vue'
-import { getBitmapFonts } from './bitmapFonts'
 import { ParsedThemeStyles } from '@/models'
+import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
 
 type TimelineGuideProps = {
   labelText: string | null,

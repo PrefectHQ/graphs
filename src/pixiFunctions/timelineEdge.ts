@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
-import { TimelineNode, timelineNodeBoxName } from './timelineNode'
 import { ParsedThemeStyles } from '@/models'
+import { TimelineNode, timelineNodeBoxName } from '@/pixiFunctions/timelineNode'
 
 const minimumBezier = 64
 
