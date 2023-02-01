@@ -1,10 +1,6 @@
 import type { Viewport } from 'pixi-viewport'
 import { Application, Container, TextMetrics } from 'pixi.js'
 import { ComputedRef } from 'vue'
-import { getBitmapFonts } from './bitmapFonts'
-import { DeselectLayer } from './deselectLayer'
-import { TimelineEdge } from './timelineEdge'
-import { TimelineNode } from './timelineNode'
 import {
   NodeLayoutWorkerResponse,
   NodeThemeFn,
@@ -15,6 +11,10 @@ import {
   InitTimelineScaleProps,
   NodeLayoutWorkerProps
 } from '@/models'
+import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
+import { DeselectLayer } from '@/pixiFunctions/deselectLayer'
+import { TimelineEdge } from '@/pixiFunctions/timelineEdge'
+import { TimelineNode } from '@/pixiFunctions/timelineNode'
 // eslint-disable-next-line import/default
 import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
 
@@ -90,7 +90,7 @@ export class TimelineNodes extends Container {
   }: InitTimelineScaleProps): Promise<void> {
     const textStyles = await getBitmapFonts(this.styles.value)
     const { spacingMinimumNodeEdgeGap } = this.styles.value
-    const textMWidth = TextMetrics.measureText('M', textStyles.nodeTextStyles).width
+    const apxCharacterWidth = TextMetrics.measureText('M', textStyles.nodeTextStyles).width
 
     const layoutWorkerOptions: NodeLayoutWorkerProps = {
       data: {
@@ -100,7 +100,7 @@ export class TimelineNodes extends Container {
           initialOverallTimeSpan,
         },
         spacingMinimumNodeEdgeGap,
-        textMWidth,
+        apxCharacterWidth,
         graphData: JSON.stringify(this.graphData),
         layoutSetting: this.layoutSetting,
       },
@@ -254,39 +254,47 @@ export class TimelineNodes extends Container {
     this.unHighlightAll()
 
     if (!selectedNodeId && this.selectedNodeId) {
-      this.nodeRecords.get(this.selectedNodeId)?.deselect()
-      const oldSelectedNode = this.nodeRecords.get(this.selectedNodeId)!
-      this.animateViewportSelection(oldSelectedNode)
-      this.selectedNodeId = null
+      this.clearNodeSelection()
       return
     }
 
-    const oldSelection = this.selectedNodeId
-    this.selectedNodeId = selectedNodeId
+    this.setNodeSelection(selectedNodeId ?? null)
+  }
 
+  private clearNodeSelection(): void {
+    this.nodeRecords.get(this.selectedNodeId!)!.deselect()
+    const oldSelectedNode = this.nodeRecords.get(this.selectedNodeId!)!
+    this.centerViewportAfterOutsideAnimation(oldSelectedNode)
+    this.selectedNodeId = null
+  }
+
+  private setNodeSelection(selectedNodeId: string | null): void {
+    const oldSelection = this.selectedNodeId
     if (oldSelection) {
       this.nodeRecords.get(oldSelection)?.deselect()
     }
 
-    if (selectedNodeId) {
-      const selectedNode = this.nodeRecords.get(selectedNodeId)!
-      selectedNode.select()
-      this.highlightSelectedNodePath(selectedNodeId, selectedNode)
+    this.selectedNodeId = selectedNodeId
 
-      this.animateViewportSelection(selectedNode)
+    if (!this.selectedNodeId) {
+      return
     }
+
+    const selectedNode = this.nodeRecords.get(this.selectedNodeId)!
+    selectedNode.select()
+    this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
+
+    this.centerViewportAfterOutsideAnimation(selectedNode)
   }
 
-  private animateViewportSelection(selectedNode: TimelineNode): void {
+  private centerViewportAfterOutsideAnimation(selectedNode: TimelineNode): void {
     const xPos = selectedNode.x + selectedNode.width / 2
     const yPos = selectedNode.y + selectedNode.height / 2
 
-    // Wait for the outside animation to initialize
     setTimeout(() => {
       this.viewportRef.animate({
         position: {
           x: xPos,
-          // eslint-disable-next-line id-length
           y: yPos,
         },
         time: 1000,

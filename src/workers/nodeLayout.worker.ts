@@ -1,4 +1,3 @@
-import { createTimelineScale } from '../pixiFunctions/timelineScale'
 import {
   TimelineNodeData,
   TimelineNodesLayoutOptions,
@@ -8,12 +7,13 @@ import {
   TimelineScale,
   NodeLayoutItem
 } from '@/models'
+import { createTimelineScale } from '@/pixiFunctions/timelineScale'
 
 const defaultPosition = 0
 
 let timelineScale: TimelineScale | undefined
 
-let currentTextMWidth = 14
+let currentApxCharacterWidth = 14
 let minimumNodeEdgeGap = 0
 let currentLayoutSetting: TimelineNodesLayoutOptions = 'waterfall'
 let graphDataStore: TimelineNodeData[] = []
@@ -24,7 +24,7 @@ onmessage = ({
   data: {
     layoutSetting,
     graphData,
-    textMWidth,
+    apxCharacterWidth,
     spacingMinimumNodeEdgeGap,
     timeScaleProps,
   },
@@ -42,8 +42,8 @@ onmessage = ({
     currentLayoutSetting = layoutSetting
   }
 
-  if (textMWidth) {
-    currentTextMWidth = textMWidth
+  if (apxCharacterWidth) {
+    currentApxCharacterWidth = apxCharacterWidth
   }
 
   if (!timelineScale && timeScaleProps) {
@@ -96,7 +96,7 @@ async function generateNearestParentLayout(): Promise<void> {
   for await (const nodeData of graphDataStore) {
     const endAsPx = timelineScale!.dateToX(nodeData.end ? new Date(nodeData.end) : new Date())
     // Accommodate the label width so they don't overlap
-    const apxLabelWidth = nodeData.label.length * currentTextMWidth
+    const apxLabelWidth = nodeData.label.length * currentApxCharacterWidth
     const endX = endAsPx + apxLabelWidth
 
     if (nodeData.id in layout) {
@@ -111,7 +111,7 @@ async function generateNearestParentLayout(): Promise<void> {
     layout[nodeData.id] = {
       position,
       startX,
-      endX: endX,
+      endX,
     }
   }
 }

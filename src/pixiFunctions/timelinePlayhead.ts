@@ -1,10 +1,9 @@
 import type { Viewport } from 'pixi-viewport'
-import { BitmapText, Container, Graphics } from 'pixi.js'
-import type { Application } from 'pixi.js'
+import { Application, BitmapText, Container, Graphics } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
-import { getBitmapFonts } from './bitmapFonts'
-import { timelineScale } from './timelineScale'
 import { FormatDateFns, ParsedThemeStyles } from '@/models'
+import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
+import { timelineScale } from '@/pixiFunctions/timelineScale'
 
 type TimelinePlayheadProps = {
   viewportRef: Viewport,

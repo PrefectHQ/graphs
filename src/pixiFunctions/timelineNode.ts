@@ -6,13 +6,13 @@ import {
   TextMetrics
 } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
-import { getBitmapFonts } from './bitmapFonts'
-import { timelineScale } from './timelineScale'
 import {
   ParsedThemeStyles,
   TimelineNodeData,
   NodeThemeFn
 } from '@/models'
+import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
+import { timelineScale } from '@/pixiFunctions/timelineScale'
 import { colorToHex } from '@/utilities/style'
 
 type TimelineNodeProps = {
@@ -191,7 +191,6 @@ export class TimelineNode extends Container {
     await new Promise((resolve) => {
       gsap.to(this, {
         x: xPos,
-        // eslint-disable-next-line id-length
         y: yPos,
         duration: animationDurations.move,
         ease: 'power1.out',

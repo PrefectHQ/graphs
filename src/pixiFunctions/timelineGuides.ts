@@ -1,13 +1,12 @@
 import type { Viewport } from 'pixi-viewport'
-import { Container } from 'pixi.js'
-import type { Application } from 'pixi.js'
+import { Application, Container } from 'pixi.js'
 import { ComputedRef, Ref, watch, WatchStopHandle } from 'vue'
-import { TimelineGuide } from './timelineGuide'
-import { timelineScale } from './timelineScale'
 import {
   FormatDateFns,
   ParsedThemeStyles
 } from '@/models'
+import { TimelineGuide } from '@/pixiFunctions/timelineGuide'
+import { timelineScale } from '@/pixiFunctions/timelineScale'
 import {
   labelFormats,
   roundDownToNearestDay,

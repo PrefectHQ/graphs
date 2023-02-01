@@ -24,7 +24,7 @@
     formatDateFnsDefault,
     TimelineScale,
     TimelineNodesLayoutOptions
-  } from './models'
+  } from '@/models'
   import {
     initBitmapFonts,
     updateBitmapFonts,
@@ -34,11 +34,11 @@
     TimelineNodes,
     TimelinePlayhead,
     initTimelineScale
-  } from './pixiFunctions'
+  } from '@/pixiFunctions'
   import {
     getDateBounds,
     parseThemeOptions
-  } from './utilities'
+  } from '@/utilities'
 
   const props = defineProps<{
     graphData: TimelineNodeData[],
@@ -64,15 +64,15 @@
     playhead: 20,
   }
 
-  let loading = ref(true)
+  const loading = ref(true)
   let pixiApp: Application
   let viewport: Viewport
-  let cull = new Cull()
+  const cull = new Cull()
   // flag cullDirty when new nodes are added to the viewport after init
   let cullDirty = false
 
   let minimumStartDate: Date
-  let maximumEndDate = ref<Date | undefined>()
+  const maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
   let overallGraphWidth: number
   let timelineScale: TimelineScale
