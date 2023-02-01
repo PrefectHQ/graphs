@@ -258,6 +258,11 @@ export class TimelineNodes extends Container {
       return
     }
 
+    const oldSelection = this.selectedNodeId
+    if (oldSelection) {
+      this.nodeRecords.get(oldSelection)?.deselect()
+    }
+
     this.setNodeSelection(selectedNodeId ?? null)
   }
 
@@ -269,11 +274,6 @@ export class TimelineNodes extends Container {
   }
 
   private setNodeSelection(selectedNodeId: string | null): void {
-    const oldSelection = this.selectedNodeId
-    if (oldSelection) {
-      this.nodeRecords.get(oldSelection)?.deselect()
-    }
-
     this.selectedNodeId = selectedNodeId
 
     if (!this.selectedNodeId) {
