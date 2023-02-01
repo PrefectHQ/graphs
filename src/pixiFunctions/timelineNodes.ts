@@ -255,6 +255,8 @@ export class TimelineNodes extends Container {
 
     if (!selectedNodeId && this.selectedNodeId) {
       this.nodeRecords.get(this.selectedNodeId)?.deselect()
+      const oldSelectedNode = this.nodeRecords.get(this.selectedNodeId)!
+      this.animateViewportSelection(oldSelectedNode)
       this.selectedNodeId = null
       return
     }
@@ -271,20 +273,27 @@ export class TimelineNodes extends Container {
       selectedNode.select()
       this.highlightSelectedNodePath(selectedNodeId, selectedNode)
 
-      // Wait for the outside animation to initialize
-      setTimeout(() => {
-        this.viewportRef.animate({
-          position: {
-            x: selectedNode.x + selectedNode.width / 2,
-            // eslint-disable-next-line id-length
-            y: selectedNode.y + selectedNode.height / 2,
-          },
-          time: 1000,
-          ease: 'easeInOutQuad',
-          removeOnInterrupt: true,
-        })
-      }, 100)
+      this.animateViewportSelection(selectedNode)
     }
+  }
+
+  private animateViewportSelection(selectedNode: TimelineNode): void {
+    const xPos = selectedNode.x + selectedNode.width / 2
+    const yPos = selectedNode.y + selectedNode.height / 2
+
+    // Wait for the outside animation to initialize
+    setTimeout(() => {
+      this.viewportRef.animate({
+        position: {
+          x: xPos,
+          // eslint-disable-next-line id-length
+          y: yPos,
+        },
+        time: 1000,
+        ease: 'easeInOutQuad',
+        removeOnInterrupt: true,
+      })
+    }, 100)
   }
 
   private highlightSelectedNodePath(selectedNodeId: string, selectedNode: TimelineNode): void {
