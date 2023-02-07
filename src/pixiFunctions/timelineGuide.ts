@@ -14,7 +14,7 @@ export class TimelineGuide extends Container {
   private readonly styles
   private appHeight
 
-  private readonly guideLine: Graphics
+  private readonly guideLine = new Graphics()
   private label: BitmapText | undefined
 
   public constructor({
@@ -28,7 +28,6 @@ export class TimelineGuide extends Container {
     this.styles = styles
     this.appHeight = appHeight
 
-    this.guideLine = new Graphics()
     this.drawGuideLine()
     this.addChild(this.guideLine)
 

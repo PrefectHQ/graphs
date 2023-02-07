@@ -14,7 +14,8 @@
     onMounted,
     onBeforeUnmount,
     ref,
-    watch
+    watch,
+    ComputedRef
   } from 'vue'
   import {
     TimelineNodeData,
@@ -47,6 +48,7 @@
     formatDateFns?: Partial<FormatDateFns>,
     selectedNodeId?: string | null,
     layout?: TimelineNodesLayoutOptions,
+    hideEdges?: boolean,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -57,6 +59,8 @@
     ...formatDateFnsDefault,
     ...props.formatDateFns,
   }))
+  const layoutSetting: ComputedRef<TimelineNodesLayoutOptions> = computed(() => props.layout ?? 'nearestParent')
+  const hideEdges = computed(() => props.hideEdges ?? true)
 
   const zIndex = {
     timelineGuides: 0,
@@ -266,7 +270,8 @@
       graphData: props.graphData,
       styles,
       styleNode,
-      layoutSetting: props.layout,
+      layoutSetting,
+      hideEdges,
       timeScaleProps: {
         minimumStartTime: minimumStartDate.getTime(),
         overallGraphWidth,
