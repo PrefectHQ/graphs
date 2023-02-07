@@ -65,7 +65,7 @@ onmessage = async ({
 
   const newData = JSON.parse(graphData) as TimelineNodeData[]
 
-  if (graphDataStore !== newData && timelineScale) {
+  if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
     graphDataStore = newData
     await calculateNodeLayout()
     postMessage({ layout })

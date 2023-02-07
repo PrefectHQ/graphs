@@ -1,6 +1,6 @@
 import type { Viewport } from 'pixi-viewport'
 import { Application, Container, TextMetrics } from 'pixi.js'
-import { ComputedRef, watch, WatchStopHandle } from 'vue'
+import { ComputedRef } from 'vue'
 import {
   NodeLayoutWorkerResponse,
   NodeThemeFn,
@@ -24,8 +24,8 @@ type TimelineNodesProps = {
   graphData: TimelineNodeData[],
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
-  layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
-  hideEdges: ComputedRef<boolean>,
+  layoutSetting: TimelineNodesLayoutOptions,
+  hideEdges: boolean,
   timeScaleProps: InitTimelineScaleProps,
 }
 
@@ -46,16 +46,13 @@ export class TimelineNodes extends Container {
   public readonly nodeRecords: Map<string, TimelineNode> = new Map()
   public selectedNodeId: string | null | undefined = null
 
-  private readonly layoutSetting
-  private readonly hideEdges
+  private layoutSetting
+  private hideEdges
   private readonly layoutWorker: Worker = new LayoutWorker()
   private layout: NodesLayout = {}
 
   private readonly edgeContainer = new Container()
   private readonly edgeRecords: EdgeRecord[] = []
-
-  private readonly unwatchLayout: WatchStopHandle
-  private readonly unwatchHideEdges: WatchStopHandle
 
   public constructor({
     appRef,
@@ -88,28 +85,6 @@ export class TimelineNodes extends Container {
       overallGraphWidth,
       initialOverallTimeSpan,
     })
-
-    this.unwatchLayout = watch(layoutSetting, () => {
-      this.layoutWorker.postMessage({
-        graphData: JSON.stringify(this.graphData),
-        layoutSetting: this.layoutSetting.value,
-      })
-    })
-    this.unwatchHideEdges = watch(hideEdges, () => {
-      this.edgeRecords.forEach(({ edge }) => edge.renderable = !this.hideEdges.value)
-
-      if (!this.hideEdges.value) {
-        // the viewport needs to update transforms so the edges show in the right place
-        this.viewportRef.dirty = true
-        this.viewportRef.updateTransform()
-        return
-      }
-
-      if (this.selectedNodeId) {
-        const selectedNode = this.nodeRecords.get(this.selectedNodeId)!
-        this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
-      }
-    })
   }
 
   private async initLayoutWorker({
@@ -131,7 +106,7 @@ export class TimelineNodes extends Container {
         spacingMinimumNodeEdgeGap,
         apxCharacterWidth,
         graphData: JSON.stringify(this.graphData),
-        layoutSetting: this.layoutSetting.value,
+        layoutSetting: this.layoutSetting,
       },
     }
 
@@ -257,7 +232,7 @@ export class TimelineNodes extends Container {
         targetNode,
       })
 
-      if (this.hideEdges.value) {
+      if (this.hideEdges) {
         edge.renderable = false
       }
 
@@ -297,6 +272,32 @@ export class TimelineNodes extends Container {
     }
 
     this.setNodeSelection(selectedNodeId ?? null)
+  }
+
+  public updateHideEdges(hideEdges: boolean): void {
+    this.hideEdges = hideEdges
+
+    this.edgeRecords.forEach(({ edge }) => edge.renderable = !this.hideEdges)
+
+    if (!this.hideEdges) {
+      // the viewport needs to update transforms so the edges show in the right place
+      this.viewportRef.dirty = true
+      this.viewportRef.updateTransform()
+      return
+    }
+
+    if (this.selectedNodeId) {
+      const selectedNode = this.nodeRecords.get(this.selectedNodeId)!
+      this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
+    }
+  }
+
+  public updateLayoutSetting(layoutSettings: TimelineNodesLayoutOptions): void {
+    this.layoutSetting = layoutSettings
+    this.layoutWorker.postMessage({
+      graphData: JSON.stringify(this.graphData),
+      layoutSettings,
+    })
   }
 
   private clearNodeSelection(): void {
@@ -367,7 +368,7 @@ export class TimelineNodes extends Container {
 
   private unHighlightAll(): void {
     this.edgeRecords.forEach(({ edge }) => {
-      if (this.hideEdges.value) {
+      if (this.hideEdges) {
         edge.renderable = false
       }
       edge.alpha = 1
@@ -415,8 +416,6 @@ export class TimelineNodes extends Container {
   }
 
   public destroy(): void {
-    this.unwatchLayout()
-    this.unwatchHideEdges()
     this.removeChildren()
     this.nodeRecords.forEach(nodeRecord => nodeRecord.destroy())
     this.nodeRecords.clear()

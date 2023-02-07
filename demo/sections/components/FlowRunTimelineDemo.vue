@@ -41,7 +41,7 @@
         />
       </p-label>
       <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
-        <p-checkbox v-model="showEdges" label="Show Edges" />
+        <p-checkbox v-model="hideEdges" label="Hide Edges" />
       </div>
     </div>
     <div class="flex h-full">
@@ -53,7 +53,7 @@
           :is-running="isRunning"
           :theme="theme"
           :layout="layout"
-          :show-edges="showEdges"
+          :hide-edges="hideEdges"
           class="flow-run-timeline-demo-demo__graph"
           :selected-node-id="selectedNodeId"
           @click="selectNode"
@@ -72,7 +72,7 @@
 
 <script lang="ts" setup>
   import { useColorTheme } from '@prefecthq/prefect-design'
-  import { ref, watchEffect, computed, Ref, watch } from 'vue'
+  import { ref, watchEffect, computed, Ref } from 'vue'
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
   import { TimelineThemeOptions, TimelineNodesLayoutOptions, ThemeStyleOverrides } from '@/models'
@@ -84,7 +84,7 @@
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
   const selectedNodeId = ref<string | null>(null)
-  const showEdges = ref(true)
+  const hideEdges = ref(false)
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
