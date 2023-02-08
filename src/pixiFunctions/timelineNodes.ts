@@ -231,6 +231,7 @@ export class TimelineNodes extends Container {
       }
 
       const edge = new TimelineEdge({
+        appRef: this.appRef,
         styles: this.styles,
         sourceNode,
         targetNode,

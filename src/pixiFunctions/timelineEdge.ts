@@ -1,17 +1,23 @@
-import { Container, Graphics } from 'pixi.js'
+import { Application, Container, Graphics, Sprite } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
 import { ParsedThemeStyles } from '@/models'
-import { TimelineNode, timelineNodeBoxName } from '@/pixiFunctions/timelineNode'
+import {
+  TimelineNode,
+  timelineNodeBoxName,
+  getEdgeArrowTexture
+} from '@/pixiFunctions'
 
 const minimumBezier = 64
 
 type TimelineEdgeProps = {
+  appRef: Application,
   styles: ComputedRef<ParsedThemeStyles>,
   sourceNode: TimelineNode,
   targetNode: TimelineNode,
 }
 
 export class TimelineEdge extends Container {
+  private readonly appRef: Application
   private readonly styles
   private readonly sourceNode
   private readonly targetNode
@@ -22,17 +28,19 @@ export class TimelineEdge extends Container {
   private targetY: number = 0
 
   private readonly edge = new Graphics()
-  private readonly arrow = new Graphics()
+  private readonly arrow = new Container()
 
   private readonly unwatch: WatchStopHandle
 
   public constructor({
+    appRef,
     styles,
     sourceNode,
     targetNode,
   }: TimelineEdgeProps) {
     super()
 
+    this.appRef = appRef
     this.styles = styles
     this.sourceNode = sourceNode
     this.targetNode = targetNode
@@ -46,7 +54,7 @@ export class TimelineEdge extends Container {
     this.addChild(this.arrow)
 
     this.unwatch = watch([styles], () => {
-      this.update()
+      this.update(true)
     }, { deep: true })
   }
 
@@ -70,7 +78,7 @@ export class TimelineEdge extends Container {
     edge.bezierCurveTo(
       sourceBezierX, sourceY,
       targetBezierX, targetY,
-      targetX, targetY,
+      targetX - spacingEdgeWidth, targetY,
     )
   }
 
@@ -81,21 +89,37 @@ export class TimelineEdge extends Container {
     return xPos + (bezierLength > minimumBezier ? bezierLength : minimumBezier) * (upstream ? -1 : 1)
   }
 
-  private drawArrow(): void {
-    const { colorEdge, spacingEdgeWidth, spacingNodeEdgeLength } = this.styles.value
+  private drawArrow(newStyles?: boolean): void {
     const { arrow, targetX, targetY } = this
 
-    arrow.clear()
-    arrow.lineStyle(spacingEdgeWidth, colorEdge, 1, 0.5)
-    arrow.moveTo(targetX - spacingNodeEdgeLength, targetY - spacingNodeEdgeLength)
-    arrow.lineTo(targetX, targetY)
-    arrow.lineTo(targetX - spacingNodeEdgeLength, targetY + spacingNodeEdgeLength)
+    if (newStyles) {
+      arrow.removeChildren()
+    }
+
+    if (arrow.children.length > 0) {
+      arrow.position.set(targetX, targetY)
+    }
+
+    const { colorEdge, spacingEdgeWidth, spacingNodeEdgeLength } = this.styles.value
+
+    const arrowTexture = getEdgeArrowTexture({
+      appRef: this.appRef,
+      strokeColor: colorEdge,
+      edgeWidth: spacingEdgeWidth,
+      edgeLength: spacingNodeEdgeLength,
+    })
+
+    const arrowSprite = new Sprite(arrowTexture)
+    arrowSprite.anchor.set(1, 0.5)
+
+    arrow.addChild(arrowSprite)
+    arrow.position.set(targetX, targetY)
   }
 
-  public update(): void {
+  public update(newStyles?: boolean): void {
     this.assignStartAndEndPositions()
     this.drawEdge()
-    this.drawArrow()
+    this.drawArrow(newStyles)
   }
 
   public destroy(): void {

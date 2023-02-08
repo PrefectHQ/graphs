@@ -2,18 +2,12 @@ import { Application, Graphics, Texture } from 'pixi.js'
 
 type BoxTextures = Record<'cap' | 'body', Texture>
 
-type GetNodeBoxTexturesProps = {
-  appRef: Application,
-  fill: number,
-  borderRadius: number,
-  boxCapWidth: number,
-  height: number,
-}
-
 let nodeBoxTextureCache: Map<number, BoxTextures> | undefined
+let edgeArrowTextureCache: Map<number, Texture> | undefined
 
 export function initNodeTextureCache(): void {
   nodeBoxTextureCache = new Map()
+  edgeArrowTextureCache = new Map()
 }
 
 export function destroyNodeTextureCache(): void {
@@ -25,8 +19,22 @@ export function destroyNodeTextureCache(): void {
     nodeBoxTextureCache.clear()
     nodeBoxTextureCache = undefined
   }
+  if (edgeArrowTextureCache) {
+    edgeArrowTextureCache.forEach((texture) => {
+      texture.destroy()
+    })
+    edgeArrowTextureCache.clear()
+    edgeArrowTextureCache = undefined
+  }
 }
 
+type GetNodeBoxTexturesProps = {
+  appRef: Application,
+  fill: number,
+  borderRadius: number,
+  boxCapWidth: number,
+  height: number,
+}
 export function getNodeBoxTextures({
   appRef,
   fill,
@@ -81,4 +89,38 @@ export function getNodeBoxTextures({
   }
 
   return nodeBoxTextureCache!.get(fill)!
+}
+
+type GetEdgeArrowTextureProps = {
+  appRef: Application,
+  strokeColor: number,
+  edgeWidth: number,
+  edgeLength: number,
+}
+export function getEdgeArrowTexture({
+  appRef,
+  strokeColor,
+  edgeWidth,
+  edgeLength,
+}: GetEdgeArrowTextureProps): Texture {
+  if (!edgeArrowTextureCache) {
+    initNodeTextureCache()
+  }
+
+  if (!edgeArrowTextureCache?.has(strokeColor)) {
+    const arrow = new Graphics()
+    arrow.lineStyle(edgeWidth, strokeColor, 1, 0.5)
+    arrow.moveTo(-edgeLength, -edgeLength)
+    arrow.lineTo(0, 0)
+    arrow.lineTo(-edgeLength, edgeLength)
+
+    const arrowTexture = appRef.renderer.generateTexture(arrow, {
+      multisample: 2,
+      resolution: 4,
+    })
+
+    edgeArrowTextureCache!.set(strokeColor, arrowTexture)
+  }
+
+  return edgeArrowTextureCache!.get(strokeColor)!
 }
