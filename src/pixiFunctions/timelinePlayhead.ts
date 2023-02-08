@@ -114,6 +114,7 @@ export class TimelinePlayhead extends Container {
 
   public destroy(): void {
     this.unwatch()
+    this.playhead.destroy()
     super.destroy.call(this)
   }
 }

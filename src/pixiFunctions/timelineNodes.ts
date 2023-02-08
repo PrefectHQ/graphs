@@ -11,10 +11,13 @@ import {
   InitTimelineScaleProps,
   NodeLayoutWorkerProps
 } from '@/models'
-import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
-import { DeselectLayer } from '@/pixiFunctions/deselectLayer'
-import { TimelineEdge } from '@/pixiFunctions/timelineEdge'
-import { TimelineNode } from '@/pixiFunctions/timelineNode'
+import {
+  getBitmapFonts,
+  DeselectLayer,
+  TimelineEdge,
+  TimelineNode,
+  destroyNodeTextureCache
+} from '@/pixiFunctions'
 // eslint-disable-next-line import/default
 import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
 
@@ -175,9 +178,10 @@ export class TimelineNodes extends Container {
   }
 
   private createNode(nodeData: TimelineNodeData): void {
-    const { styles, styleNode } = this
+    const { appRef, styles, styleNode } = this
 
     const node = new TimelineNode({
+      appRef,
       nodeData,
       styles,
       styleNode,
@@ -428,6 +432,7 @@ export class TimelineNodes extends Container {
     this.edgeRecords.forEach(edgeRecord => edgeRecord.edge.destroy())
     this.layoutWorker.terminate()
     this.layoutWorker.onmessage = null
+    destroyNodeTextureCache()
     super.destroy.call(this)
   }
 }

@@ -204,6 +204,7 @@ export class TimelineGuides extends Container {
 
   public destroy(): void {
     this.removeChildren()
+    this.guides.forEach(guide => guide.destroy())
     this.guides.clear()
     this.unwatch()
     super.destroy.call(this)
