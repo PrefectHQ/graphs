@@ -249,9 +249,12 @@ export class TimelineNodes extends Container {
   public update(newData?: TimelineNodeData[]): void {
     if (newData) {
       this.graphData = newData
-      this.layoutWorker.postMessage({
-        graphData: JSON.stringify(this.graphData),
-      })
+      const message: NodeLayoutWorkerProps = {
+        data: {
+          graphData: JSON.stringify(this.graphData),
+        },
+      }
+      this.layoutWorker.postMessage(message.data)
       return
     }
 
@@ -292,12 +295,15 @@ export class TimelineNodes extends Container {
     }
   }
 
-  public updateLayoutSetting(layoutSettings: TimelineNodesLayoutOptions): void {
-    this.layoutSetting = layoutSettings
-    this.layoutWorker.postMessage({
-      graphData: JSON.stringify(this.graphData),
-      layoutSettings,
-    })
+  public updateLayoutSetting(layoutSetting: TimelineNodesLayoutOptions): void {
+    this.layoutSetting = layoutSetting
+    const message: NodeLayoutWorkerProps = {
+      data: {
+        graphData: JSON.stringify(this.graphData),
+        layoutSetting,
+      },
+    }
+    this.layoutWorker.postMessage(message.data)
   }
 
   private clearNodeSelection(): void {
