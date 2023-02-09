@@ -23,10 +23,10 @@
           Date Range
           <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
-        <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
+        <div class="flow-run-timeline-demo__checkbox-wrapper">
           <p-checkbox v-model="zeroTimeGap" label="Zero Time Gap" />
         </div>
-        <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
+        <div class="flow-run-timeline-demo__checkbox-wrapper">
           <p-checkbox v-model="isRunning" label="Show Running" />
         </div>
       </div>
@@ -40,7 +40,7 @@
           :options="layoutOptions"
         />
       </p-label>
-      <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
+      <div class="flow-run-timeline-demo__checkbox-wrapper">
         <p-checkbox v-model="hideEdges" label="Hide Edges" />
       </div>
     </div>
@@ -224,7 +224,7 @@
   mb-0
 }
 
-.flow-run-timeline-demo__header-row__checkbox-wrapper { @apply
+.flow-run-timeline-demo__checkbox-wrapper { @apply
   min-w-fit
   pt-5
 }
