@@ -24,8 +24,9 @@ type TimelineNodesProps = {
   graphData: TimelineNodeData[],
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
+  layoutSetting: TimelineNodesLayoutOptions,
+  hideEdges: boolean,
   timeScaleProps: InitTimelineScaleProps,
-  layoutSetting?: TimelineNodesLayoutOptions,
 }
 
 type EdgeRecord = {
@@ -45,7 +46,8 @@ export class TimelineNodes extends Container {
   public readonly nodeRecords: Map<string, TimelineNode> = new Map()
   public selectedNodeId: string | null | undefined = null
 
-  private readonly layoutSetting: TimelineNodesLayoutOptions
+  private layoutSetting
+  private hideEdges
   private readonly layoutWorker: Worker = new LayoutWorker()
   private layout: NodesLayout = {}
 
@@ -59,6 +61,7 @@ export class TimelineNodes extends Container {
     styles,
     styleNode,
     layoutSetting,
+    hideEdges,
     timeScaleProps: {
       minimumStartTime,
       overallGraphWidth,
@@ -72,7 +75,8 @@ export class TimelineNodes extends Container {
     this.graphData = graphData
     this.styles = styles
     this.styleNode = styleNode
-    this.layoutSetting = layoutSetting ?? 'nearestParent'
+    this.layoutSetting = layoutSetting
+    this.hideEdges = hideEdges
 
     this.initDeselectLayer()
 
@@ -107,7 +111,7 @@ export class TimelineNodes extends Container {
     }
 
     this.layoutWorker.onmessage = (message: NodeLayoutWorkerResponse) => {
-      this.layout = message.data
+      this.layout = message.data.layout
       this.renderLayout()
     }
 
@@ -228,6 +232,10 @@ export class TimelineNodes extends Container {
         targetNode,
       })
 
+      if (this.hideEdges) {
+        edge.renderable = false
+      }
+
       this.edgeRecords.push({
         edge,
         sourceId: upstreamDependency,
@@ -241,9 +249,12 @@ export class TimelineNodes extends Container {
   public update(newData?: TimelineNodeData[]): void {
     if (newData) {
       this.graphData = newData
-      this.layoutWorker.postMessage({
-        graphData: JSON.stringify(this.graphData),
-      })
+      const message: NodeLayoutWorkerProps = {
+        data: {
+          graphData: JSON.stringify(this.graphData),
+        },
+      }
+      this.layoutWorker.postMessage(message.data)
       return
     }
 
@@ -264,6 +275,35 @@ export class TimelineNodes extends Container {
     }
 
     this.setNodeSelection(selectedNodeId ?? null)
+  }
+
+  public updateHideEdges(hideEdges: boolean): void {
+    this.hideEdges = hideEdges
+
+    this.edgeRecords.forEach(({ edge }) => edge.renderable = !this.hideEdges)
+
+    if (!this.hideEdges) {
+      // the viewport needs to update transforms so the edges show in the right place
+      this.viewportRef.dirty = true
+      this.viewportRef.updateTransform()
+      return
+    }
+
+    if (this.selectedNodeId) {
+      const selectedNode = this.nodeRecords.get(this.selectedNodeId)!
+      this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
+    }
+  }
+
+  public updateLayoutSetting(layoutSetting: TimelineNodesLayoutOptions): void {
+    this.layoutSetting = layoutSetting
+    const message: NodeLayoutWorkerProps = {
+      data: {
+        graphData: JSON.stringify(this.graphData),
+        layoutSetting,
+      },
+    }
+    this.layoutWorker.postMessage(message.data)
   }
 
   private clearNodeSelection(): void {
@@ -319,6 +359,7 @@ export class TimelineNodes extends Container {
         const downstreamNode = this.nodeRecords.get(edgeRecord.targetId)!
         highlightedNodes.set(edgeRecord.sourceId, upstreamNode)
         highlightedNodes.set(edgeRecord.targetId, downstreamNode)
+        edgeRecord.edge.renderable = true
         return
       }
       edgeRecord.edge.alpha = alphaNodeDimmed
@@ -332,8 +373,11 @@ export class TimelineNodes extends Container {
   }
 
   private unHighlightAll(): void {
-    this.edgeRecords.forEach((edgeRecord) => {
-      edgeRecord.edge.alpha = 1
+    this.edgeRecords.forEach(({ edge }) => {
+      if (this.hideEdges) {
+        edge.renderable = false
+      }
+      edge.alpha = 1
     })
     this.nodeRecords.forEach((nodeRecord) => {
       nodeRecord.alpha = 1
@@ -379,7 +423,9 @@ export class TimelineNodes extends Container {
 
   public destroy(): void {
     this.removeChildren()
+    this.nodeRecords.forEach(nodeRecord => nodeRecord.destroy())
     this.nodeRecords.clear()
+    this.edgeRecords.forEach(edgeRecord => edgeRecord.edge.destroy())
     this.layoutWorker.terminate()
     this.layoutWorker.onmessage = null
     super.destroy.call(this)

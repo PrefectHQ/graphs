@@ -47,6 +47,7 @@
     formatDateFns?: Partial<FormatDateFns>,
     selectedNodeId?: string | null,
     layout?: TimelineNodesLayoutOptions,
+    hideEdges?: boolean,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -266,7 +267,8 @@
       graphData: props.graphData,
       styles,
       styleNode,
-      layoutSetting: props.layout,
+      layoutSetting: props.layout ?? 'nearestParent',
+      hideEdges: props.hideEdges ?? false,
       timeScaleProps: {
         minimumStartTime: minimumStartDate.getTime(),
         overallGraphWidth,
@@ -289,15 +291,21 @@
       }
     })
 
-    watch(() => props.selectedNodeId, (newValue) => {
-      nodesContainer.updateSelection(newValue)
-    })
     watch(() => props.graphData, (newValue) => {
       // This accommodates updated nodeData or newly added nodes.
       // If totally new data is added, it all gets appended way down the viewport Y axis.
       // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
       nodesContainer.update(newValue)
       cullDirty = true
+    })
+    watch(() => props.selectedNodeId, (newValue) => {
+      nodesContainer.updateSelection(newValue)
+    })
+    watch(() => props.hideEdges, (newValue) => {
+      nodesContainer.updateHideEdges(newValue ?? false)
+    })
+    watch(() => props.layout, (newValue) => {
+      nodesContainer.updateLayoutSetting(newValue ?? 'nearestParent')
     })
   }
 </script>

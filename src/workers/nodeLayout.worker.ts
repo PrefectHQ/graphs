@@ -20,7 +20,7 @@ let graphDataStore: TimelineNodeData[] = []
 
 const layout: NodesLayout = {}
 
-onmessage = ({
+onmessage = async ({
   data: {
     layoutSetting,
     graphData,
@@ -39,6 +39,10 @@ onmessage = ({
   }
 
   if (layoutSetting) {
+    // if the layout changes, clear the layout so it's recalculated
+    for (const item in layout) {
+      delete layout[item]
+    }
     currentLayoutSetting = layoutSetting
   }
 
@@ -59,14 +63,16 @@ onmessage = ({
     })
   }
 
-  if (timelineScale) {
-    graphDataStore = JSON.parse(graphData) as TimelineNodeData[]
-    calculateNodeLayout()
+  const newData = JSON.parse(graphData) as TimelineNodeData[]
+
+  if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
+    graphDataStore = newData
+    await calculateNodeLayout()
+    postMessage({ layout })
   }
 }
 
 async function calculateNodeLayout(): Promise<void> {
-
   if (currentLayoutSetting === 'waterfall') {
     generateWaterfallLayout()
   }
@@ -74,20 +80,14 @@ async function calculateNodeLayout(): Promise<void> {
   if (currentLayoutSetting === 'nearestParent') {
     await generateNearestParentLayout()
   }
-
-  postMessage(layout)
 }
 
 function generateWaterfallLayout(): void {
   graphDataStore.forEach((nodeData, index) => {
-    if (nodeData.id in layout) {
-      return
-    }
-
     layout[nodeData.id] = {
       position: index,
-      startX: timelineScale!.dateToX(new Date(nodeData.start)),
-      endX: timelineScale!.dateToX(nodeData.end ? new Date(nodeData.end) : new Date()),
+      startX: 0,
+      endX: 0,
     }
   })
 }
@@ -104,7 +104,9 @@ async function generateNearestParentLayout(): Promise<void> {
       continue
     }
 
-    const startX = timelineScale!.dateToX(new Date(nodeData.start))
+    const startX = nodeData.id in layout
+      ? layout[nodeData.id].startX
+      : timelineScale!.dateToX(new Date(nodeData.start))
 
     const position = await getNearestParentPosition(nodeData, startX)
 

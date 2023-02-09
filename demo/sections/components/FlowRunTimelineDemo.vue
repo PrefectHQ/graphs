@@ -16,14 +16,6 @@
           Fan Multiplier
           <p-number-input v-model="fanMultiplier" step="0.1" min="1" max="2" />
         </p-label>
-
-        <p-label>
-          Layout
-          <p-select
-            v-model="layout"
-            :options="layoutOptions"
-          />
-        </p-label>
       </div>
 
       <div class="flow-run-timeline-demo__header-row">
@@ -31,15 +23,27 @@
           Date Range
           <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
-        <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
+        <div class="flow-run-timeline-demo__checkbox-wrapper">
           <p-checkbox v-model="zeroTimeGap" label="Zero Time Gap" />
         </div>
-        <div class="flow-run-timeline-demo__header-row__checkbox-wrapper">
+        <div class="flow-run-timeline-demo__checkbox-wrapper">
           <p-checkbox v-model="isRunning" label="Show Running" />
         </div>
       </div>
     </div>
-
+    <hr>
+    <div class="flow-run-timeline-demo__header-row">
+      <p-label>
+        Layout
+        <p-select
+          v-model="layout"
+          :options="layoutOptions"
+        />
+      </p-label>
+      <div class="flow-run-timeline-demo__checkbox-wrapper">
+        <p-checkbox v-model="hideEdges" label="Hide Edges" />
+      </div>
+    </div>
     <div class="flex h-full">
       <div class="flow-run-timeline-demo__graph-container">
         <FlowRunTimeline
@@ -49,6 +53,7 @@
           :is-running="isRunning"
           :theme="theme"
           :layout="layout"
+          :hide-edges="hideEdges"
           class="flow-run-timeline-demo-demo__graph"
           :selected-node-id="selectedNodeId"
           @click="selectNode"
@@ -67,7 +72,7 @@
 
 <script lang="ts" setup>
   import { useColorTheme } from '@prefecthq/prefect-design'
-  import { ref, watchEffect, computed, Ref, watch } from 'vue'
+  import { ref, watchEffect, computed, Ref } from 'vue'
   import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
   import { TimelineThemeOptions, TimelineNodesLayoutOptions, ThemeStyleOverrides } from '@/models'
@@ -79,6 +84,7 @@
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
   const selectedNodeId = ref<string | null>(null)
+  const hideEdges = ref(false)
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
@@ -102,13 +108,6 @@
   })
 
   const data = ref<TimescaleItem[]>([])
-
-  // when layout changes, bump componentKey to force a rerender
-  watch(layout, (newVal, oldVal) => {
-    if (newVal !== oldVal) {
-      componentKey.value += 1
-    }
-  })
 
   watchEffect(() => {
     // set data and sort by startTime
@@ -225,7 +224,7 @@
   mb-0
 }
 
-.flow-run-timeline-demo__header-row__checkbox-wrapper { @apply
+.flow-run-timeline-demo__checkbox-wrapper { @apply
   min-w-fit
   pt-5
 }

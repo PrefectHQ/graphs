@@ -36,7 +36,9 @@ export type NodeLayoutItem = {
 }
 export type NodesLayout = Record<string, NodeLayoutItem>
 export type NodeLayoutWorkerResponse = {
-  data: NodesLayout,
+  data: {
+    layout: NodesLayout,
+  },
 }
 
 export type DateToX = (date: Date) => number
