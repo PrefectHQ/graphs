@@ -5,6 +5,11 @@ type BoxTextures = Record<'cap' | 'body', Texture>
 let nodeBoxTextureCache: Map<number, BoxTextures> | undefined
 let edgeArrowTextureCache: Map<number, Texture> | undefined
 
+const textureSampleSettings = {
+  multisample: 2,
+  resolution: 4,
+}
+
 export function initNodeTextureCache(): void {
   nodeBoxTextureCache = new Map()
   edgeArrowTextureCache = new Map()
@@ -76,10 +81,7 @@ export function getNodeBoxTextures({
     )
     boxBody.endFill()
 
-    const cap = appRef.renderer.generateTexture(boxCap, {
-      multisample: 2,
-      resolution: 4,
-    })
+    const cap = appRef.renderer.generateTexture(boxCap, textureSampleSettings)
     const body = appRef.renderer.generateTexture(boxBody)
 
     nodeBoxTextureCache!.set(fill, {
@@ -114,10 +116,7 @@ export function getEdgeArrowTexture({
     arrow.lineTo(0, 0)
     arrow.lineTo(-edgeLength, edgeLength)
 
-    const arrowTexture = appRef.renderer.generateTexture(arrow, {
-      multisample: 2,
-      resolution: 4,
-    })
+    const arrowTexture = appRef.renderer.generateTexture(arrow, textureSampleSettings)
 
     edgeArrowTextureCache!.set(strokeColor, arrowTexture)
   }
