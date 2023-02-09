@@ -1,8 +1,10 @@
 import gsap from 'gsap'
 import {
+  Application,
   BitmapText,
   Container,
   Graphics,
+  Sprite,
   TextMetrics
 } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
@@ -11,11 +13,15 @@ import {
   TimelineNodeData,
   NodeThemeFn
 } from '@/models'
-import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
-import { timelineScale } from '@/pixiFunctions/timelineScale'
+import {
+  getBitmapFonts,
+  timelineScale,
+  getNodeBoxTextures
+} from '@/pixiFunctions'
 import { colorToHex } from '@/utilities/style'
 
 type TimelineNodeProps = {
+  appRef: Application,
   nodeData: TimelineNodeData,
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
@@ -27,9 +33,18 @@ const animationDurations = {
   move: 0.5,
 }
 
+// The name giving to the box container, this is used by
+// edges to determine their positions
 export const timelineNodeBoxName = 'box'
 
+const nodeBoxSpriteNames = {
+  startCap: 'startCap',
+  endCap: 'endCap',
+  body: 'body',
+}
+
 export class TimelineNode extends Container {
+  private readonly appRef: Application
   public nodeData
   private readonly styles
   private readonly styleNode
@@ -37,7 +52,9 @@ export class TimelineNode extends Container {
   private readonly unwatch: WatchStopHandle
 
   private label: BitmapText | undefined
-  private readonly box = new Graphics()
+
+  private readonly boxCapWidth: number = 0
+  private readonly box = new Container()
 
   private apxLabelWidth = 0
   private nodeWidth
@@ -48,18 +65,20 @@ export class TimelineNode extends Container {
   private readonly selectedRing = new Graphics()
 
   public constructor({
+    appRef,
     nodeData,
     styles,
     styleNode,
     layoutPosition,
   }: TimelineNodeProps) {
     super()
+    this.appRef = appRef
     this.nodeData = nodeData
     this.styles = styles
     this.styleNode = styleNode
     this.layoutPosition = layoutPosition
 
-    this.alpha = 0
+    this.boxCapWidth = this.styles.value.borderRadiusNode
 
     this.nodeWidth = this.getNodeWidth()
     this.layoutPositionOffset = this.getLayoutPositionOffset()
@@ -76,7 +95,7 @@ export class TimelineNode extends Container {
     this.updatePosition(true)
 
     this.unwatch = watch([styles, styleNode], () => {
-      this.box.clear()
+      this.box.removeChildren()
       this.drawBox()
       this.drawLabel()
     }, { deep: true })
@@ -88,7 +107,10 @@ export class TimelineNode extends Container {
   }
 
   private getNodeWidth(): number {
-    return timelineScale.dateToX(this.nodeData.end ?? new Date()) - timelineScale.dateToX(this.nodeData.start)
+    const minimumWidth = this.boxCapWidth * 2
+    const actualWidth = timelineScale.dateToX(this.nodeData.end ?? new Date()) - timelineScale.dateToX(this.nodeData.start)
+
+    return actualWidth > minimumWidth ? actualWidth : minimumWidth
   }
 
   private getLayoutPositionOffset(): number {
@@ -99,26 +121,53 @@ export class TimelineNode extends Container {
   }
 
   private drawBox(): void {
+    const { appRef, nodeWidth, box, boxCapWidth } = this
     const { fill } = this.styleNode.value(this.nodeData)
     const hexadecimalFill = colorToHex(fill)
+    const isRunningNode = !this.nodeData.end
     const {
       textLineHeightDefault,
       spacingNodeYPadding,
       borderRadiusNode,
     } = this.styles.value
 
-    const width = this.nodeWidth >= 1 ? this.nodeWidth : 1
     const height = textLineHeightDefault + spacingNodeYPadding * 2
 
-    this.box.beginFill(hexadecimalFill)
-    this.box.drawRoundedRect(
-      0,
-      0,
-      width,
+    const { cap, body } = getNodeBoxTextures({
+      appRef,
+      fill: hexadecimalFill,
+      borderRadius: borderRadiusNode,
+      boxCapWidth,
       height,
-      borderRadiusNode,
-    )
-    this.box.endFill()
+    })
+
+    const startCapSprite = new Sprite(cap)
+    startCapSprite.name = nodeBoxSpriteNames.startCap
+
+    const bodySprite = new Sprite(body)
+    bodySprite.name = nodeBoxSpriteNames.body
+    bodySprite.width = this.getBoxBodyWidth()
+    bodySprite.position.set(boxCapWidth, 0)
+
+    box.addChild(startCapSprite)
+    box.addChild(bodySprite)
+
+    if (!isRunningNode) {
+      const endCapSprite = new Sprite(cap)
+      endCapSprite.name = nodeBoxSpriteNames.endCap
+      endCapSprite.rotation = Math.PI
+      endCapSprite.position.set(nodeWidth, height)
+
+      box.addChild(endCapSprite)
+    }
+  }
+
+  private getBoxBodyWidth(): number {
+    const { nodeData, nodeWidth, boxCapWidth } = this
+    const isRunningNode = !nodeData.end
+    return isRunningNode
+      ? nodeWidth - boxCapWidth
+      : nodeWidth - boxCapWidth * 2
   }
 
   private async drawLabel(): Promise<void> {
@@ -179,6 +228,22 @@ export class TimelineNode extends Container {
     gsap.to(this, { alpha: 1, duration: animationDurations.fadeIn })
   }
 
+  private updateBoxWidth(): void {
+    this.box.children.forEach((child) => {
+      const childName = child.name
+      switch (childName) {
+        case nodeBoxSpriteNames.body:
+          child.scale.x = this.getBoxBodyWidth()
+          break
+        case nodeBoxSpriteNames.endCap:
+          child.position.set(this.nodeWidth, this.box.height)
+          break
+        default:
+          break
+      }
+    })
+  }
+
   public async updatePosition(skipAnimation?: boolean): Promise<void> {
     const xPos = timelineScale.dateToX(this.nodeData.start)
     const yPos = this.layoutPosition * this.layoutPositionOffset
@@ -225,11 +290,17 @@ export class TimelineNode extends Container {
 
     const nodeWidth = this.getNodeWidth()
 
-    if (hasNewState || nodeWidth !== this.nodeWidth) {
-      this.nodeWidth = nodeWidth
-
-      this.box.clear()
+    if (hasNewState) {
+      this.box.removeChildren()
       this.drawBox()
+    }
+
+    if (nodeWidth !== this.nodeWidth) {
+      if (!hasNewState) {
+        this.updateBoxWidth()
+      }
+
+      this.nodeWidth = nodeWidth
 
       this.selectedRing.clear()
       this.drawSelectedRing()
