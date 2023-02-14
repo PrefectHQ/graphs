@@ -326,8 +326,9 @@
     })
   }
 
-  function recenter(): void {
+  function recenter(instant?: boolean): void {
     const { spacingViewportPaddingDefault } = styles.value
+    const defaultAnimationDuration = 500
 
     pauseCulling()
     const {
@@ -348,8 +349,8 @@
         x: contentX + width / 2,
         y: contentY + height / 2,
       },
-      scale,
-      time: 500,
+      scale: scale > 1 ? 1 : scale,
+      time: instant ? 0 : defaultAnimationDuration,
       ease: 'easeInOutQuad',
       removeOnInterrupt: true,
     })
