@@ -16,7 +16,8 @@ import {
   DeselectLayer,
   TimelineEdge,
   TimelineNode,
-  destroyNodeTextureCache
+  destroyNodeTextureCache,
+  nodeAnimationDurations
 } from '@/pixiFunctions'
 // eslint-disable-next-line import/default
 import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
@@ -136,7 +137,7 @@ export class TimelineNodes extends Container {
     // allow time for nodes to move to new position
     setTimeout(() => {
       this.recenter()
-    }, 500)
+    }, nodeAnimationDurations.move * 1000)
   }
 
   private initDeselectLayer(): void {
