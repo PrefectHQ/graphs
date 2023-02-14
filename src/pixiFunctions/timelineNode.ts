@@ -28,7 +28,7 @@ type TimelineNodeProps = {
   layoutPosition: number,
 }
 
-const animationDurations = {
+export const nodeAnimationDurations = {
   fadeIn: 0.25,
   move: 0.5,
 }
@@ -225,7 +225,7 @@ export class TimelineNode extends Container {
   }
 
   private animateIn(): void {
-    gsap.to(this, { alpha: 1, duration: animationDurations.fadeIn })
+    gsap.to(this, { alpha: 1, duration: nodeAnimationDurations.fadeIn })
   }
 
   private updateBoxWidth(): void {
@@ -257,7 +257,7 @@ export class TimelineNode extends Container {
       gsap.to(this, {
         x: xPos,
         y: yPos,
-        duration: animationDurations.move,
+        duration: nodeAnimationDurations.move,
         ease: 'power1.out',
       }).then(() => {
         resolve(null)

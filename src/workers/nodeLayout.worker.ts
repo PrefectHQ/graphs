@@ -27,6 +27,7 @@ onmessage = async ({
     apxCharacterWidth,
     spacingMinimumNodeEdgeGap,
     timeScaleProps,
+    recenterAfter,
   },
 }: NodeLayoutWorkerProps) => {
   if (!graphData) {
@@ -68,7 +69,7 @@ onmessage = async ({
   if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
     graphDataStore = newData
     await calculateNodeLayout()
-    postMessage({ layout })
+    postMessage({ layout, recenterAfter })
   }
 }
 
