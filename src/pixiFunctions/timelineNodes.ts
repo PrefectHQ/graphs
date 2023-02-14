@@ -30,6 +30,7 @@ type TimelineNodesProps = {
   layoutSetting: TimelineNodesLayoutOptions,
   hideEdges: boolean,
   timeScaleProps: InitTimelineScaleProps,
+  recenter: () => void,
 }
 
 type EdgeRecord = {
@@ -38,12 +39,16 @@ type EdgeRecord = {
   targetId: string,
 }
 
+// this makes the actual node container accessible outside of the class
+export const nodeContainerName = 'nodeContainer'
+
 export class TimelineNodes extends Container {
   private readonly appRef: Application
   private readonly viewportRef: Viewport
   private graphData
   private readonly styles
   private readonly styleNode
+  private readonly recenter
 
   private readonly nodeContainer = new Container()
   public readonly nodeRecords: Map<string, TimelineNode> = new Map()
@@ -70,6 +75,7 @@ export class TimelineNodes extends Container {
       overallGraphWidth,
       initialOverallTimeSpan,
     },
+    recenter,
   }: TimelineNodesProps) {
     super()
 
@@ -78,11 +84,13 @@ export class TimelineNodes extends Container {
     this.graphData = graphData
     this.styles = styles
     this.styleNode = styleNode
+    this.recenter = recenter
     this.layoutSetting = layoutSetting
     this.hideEdges = hideEdges
 
     this.initDeselectLayer()
 
+    this.nodeContainer.name = nodeContainerName
     this.initLayoutWorker({
       minimumStartTime,
       overallGraphWidth,
@@ -113,12 +121,22 @@ export class TimelineNodes extends Container {
       },
     }
 
-    this.layoutWorker.onmessage = (message: NodeLayoutWorkerResponse) => {
-      this.layout = message.data.layout
+    this.layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
+      this.layout = data.layout
       this.renderLayout()
+      if (data.recenterAfter) {
+        this.recenterAfterDelay()
+      }
     }
 
     this.layoutWorker.postMessage(layoutWorkerOptions.data)
+  }
+
+  private recenterAfterDelay(): void {
+    // allow time for nodes to move to new position
+    setTimeout(() => {
+      this.recenter()
+    }, 500)
   }
 
   private initDeselectLayer(): void {
@@ -306,6 +324,7 @@ export class TimelineNodes extends Container {
       data: {
         graphData: JSON.stringify(this.graphData),
         layoutSetting,
+        recenterAfter: true,
       },
     }
     this.layoutWorker.postMessage(message.data)

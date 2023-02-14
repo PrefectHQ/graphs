@@ -43,11 +43,15 @@
       <div class="flow-run-timeline-demo__checkbox-wrapper">
         <p-checkbox v-model="hideEdges" label="Hide Edges" />
       </div>
+      <p-button secondary @click="recenter">
+        Recenter
+      </p-button>
     </div>
     <div class="flex h-full">
       <div class="flow-run-timeline-demo__graph-container">
         <FlowRunTimeline
           v-if="data"
+          ref="graph"
           :key="componentKey"
           :graph-data="data"
           :is-running="isRunning"
@@ -79,6 +83,7 @@
 
   const { value: colorThemeValue } = useColorTheme()
 
+  const graph = ref<InstanceType<typeof FlowRunTimeline> | null>(null)
   const isRunning = ref(false)
   const componentKey = ref(0)
   const now = new Date()
@@ -131,6 +136,10 @@
     } else {
       selectedNodeId.value = value
     }
+  }
+
+  const recenter = (): void => {
+    graph.value?.recenter()
   }
 
   const classes = computed(() => ({
@@ -216,7 +225,7 @@
 .flow-run-timeline-demo__header-row { @apply
   flex
   gap-4
-  items-center
+  items-end
   mb-4
 }
 
@@ -226,7 +235,7 @@
 
 .flow-run-timeline-demo__checkbox-wrapper { @apply
   min-w-fit
-  pt-5
+  pb-2
 }
 
 .flow-run-timeline-demo__graph-container { @apply

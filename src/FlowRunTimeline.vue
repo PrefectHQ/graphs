@@ -8,7 +8,7 @@
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
   import type { Viewport } from 'pixi-viewport'
-  import type { Application } from 'pixi.js'
+  import { Application } from 'pixi.js'
   import {
     computed,
     onMounted,
@@ -33,7 +33,8 @@
     TimelineGuides,
     TimelineNodes,
     TimelinePlayhead,
-    initTimelineScale
+    initTimelineScale,
+    nodeContainerName
   } from '@/pixiFunctions'
   import {
     getDateBounds,
@@ -49,6 +50,10 @@
     layout?: TimelineNodesLayoutOptions,
     hideEdges?: boolean,
   }>()
+
+  defineExpose({
+    recenter,
+  })
 
   const stage = ref<HTMLDivElement>()
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
@@ -259,6 +264,17 @@
       }
     })
   }
+  function pauseCulling(): void {
+    /*
+     * Use to pause culling when you need to calculate bounds, otherwise
+     * the bounds will not account for the culled (hidden) elements.
+     * Make sure to call resumeCulling() after.
+     */
+    cull.uncull()
+  }
+  function resumeCulling(): void {
+    cull.cull(pixiApp.renderer.screen)
+  }
 
   function initContent(): void {
     nodesContainer = new TimelineNodes({
@@ -274,6 +290,7 @@
         overallGraphWidth,
         initialOverallTimeSpan,
       },
+      recenter,
     })
     viewport.addChild(nodesContainer)
 
@@ -306,6 +323,35 @@
     })
     watch(() => props.layout, (newValue) => {
       nodesContainer.updateLayoutSetting(newValue ?? 'nearestParent')
+    })
+  }
+
+  function recenter(): void {
+    const { spacingViewportPaddingDefault } = styles.value
+
+    pauseCulling()
+    const {
+      x: contentX,
+      y: contentY,
+      width,
+      height,
+    } = nodesContainer.getChildByName(nodeContainerName).getLocalBounds()
+    resumeCulling()
+
+    const scale = viewport.findFit(
+      width + spacingViewportPaddingDefault * 2,
+      height + spacingViewportPaddingDefault * 2,
+    )
+
+    viewport.animate({
+      position: {
+        x: contentX + width / 2,
+        y: contentY + height / 2,
+      },
+      scale,
+      time: 500,
+      ease: 'easeInOutQuad',
+      removeOnInterrupt: true,
     })
   }
 </script>
