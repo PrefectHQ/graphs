@@ -1,7 +1,7 @@
 <template>
   <div
     ref="stage"
-    class="flow-run-timeline"
+    class="g-flow-run-timeline"
   />
 </template>
 
@@ -357,14 +357,14 @@
 </script>
 
 <style>
-.flow-run-timeline { @apply
+.g-flow-run-timeline { @apply
   w-full
   h-full
   overflow-hidden
   relative
 }
 
-.flow-run-timeline canvas { @apply
+.g-flow-run-timeline canvas { @apply
   absolute
   top-0
   left-0
