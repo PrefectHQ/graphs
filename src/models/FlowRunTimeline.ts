@@ -50,6 +50,10 @@ export type TimelineScale = {
   xToDate: XToDate,
 }
 
+export type CenterViewportOptions = {
+  skipAnimation?: boolean,
+}
+
 export type TextStyles = {
   nodeTextDefault: Partial<IBitmapTextStyle>,
   nodeTextInverse: Partial<IBitmapTextStyle>,

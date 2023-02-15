@@ -23,7 +23,8 @@
     FormatDateFns,
     formatDateFnsDefault,
     TimelineScale,
-    TimelineNodesLayoutOptions
+    TimelineNodesLayoutOptions,
+    CenterViewportOptions
   } from '@/models'
   import {
     initBitmapFonts,
@@ -327,7 +328,7 @@
     })
   }
 
-  function centerViewport(instant?: boolean): void {
+  function centerViewport({ skipAnimation }: CenterViewportOptions = {}): void {
     const { spacingViewportPaddingDefault } = styles.value
     const defaultAnimationDuration = 500
 
@@ -351,7 +352,7 @@
         y: contentY + height / 2,
       },
       scale: scale > 1 ? 1 : scale,
-      time: instant ? 0 : defaultAnimationDuration,
+      time: skipAnimation ? 0 : defaultAnimationDuration,
       ease: 'easeInOutQuad',
       removeOnInterrupt: true,
     })

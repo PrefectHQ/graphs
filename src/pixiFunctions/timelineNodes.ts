@@ -9,7 +9,8 @@ import {
   TimelineNodesLayoutOptions,
   NodesLayout,
   InitTimelineScaleProps,
-  NodeLayoutWorkerProps
+  NodeLayoutWorkerProps,
+  CenterViewportOptions
 } from '@/models'
 import {
   getBitmapFonts,
@@ -31,7 +32,7 @@ type TimelineNodesProps = {
   layoutSetting: TimelineNodesLayoutOptions,
   hideEdges: boolean,
   timeScaleProps: InitTimelineScaleProps,
-  centerViewport: (instant?: boolean) => void,
+  centerViewport: (options?: CenterViewportOptions) => void,
 }
 
 type EdgeRecord = {
@@ -166,7 +167,7 @@ export class TimelineNodes extends Container {
       this.addChild(this.edgeContainer)
       this.addChild(this.nodeContainer)
 
-      this.centerViewport(true)
+      this.centerViewport({ skipAnimation: true })
     }
   }
 
