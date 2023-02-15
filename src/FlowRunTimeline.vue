@@ -23,7 +23,8 @@
     FormatDateFns,
     formatDateFnsDefault,
     TimelineScale,
-    TimelineNodesLayoutOptions
+    TimelineNodesLayoutOptions,
+    CenterViewportOptions
   } from '@/models'
   import {
     initBitmapFonts,
@@ -52,7 +53,8 @@
   }>()
 
   defineExpose({
-    recenter,
+    centerViewport,
+    moveViewportCenter,
   })
 
   const stage = ref<HTMLDivElement>()
@@ -290,7 +292,7 @@
         overallGraphWidth,
         initialOverallTimeSpan,
       },
-      recenter,
+      centerViewport,
     })
     viewport.addChild(nodesContainer)
 
@@ -326,8 +328,9 @@
     })
   }
 
-  function recenter(): void {
+  function centerViewport({ skipAnimation }: CenterViewportOptions = {}): void {
     const { spacingViewportPaddingDefault } = styles.value
+    const defaultAnimationDuration = 500
 
     pauseCulling()
     const {
@@ -348,11 +351,25 @@
         x: contentX + width / 2,
         y: contentY + height / 2,
       },
-      scale,
-      time: 500,
+      scale: scale > 1 ? 1 : scale,
+      time: skipAnimation ? 0 : defaultAnimationDuration,
       ease: 'easeInOutQuad',
       removeOnInterrupt: true,
     })
+  }
+
+  type MoveViewportCenterOptions = {
+    xOffset: number,
+    yOffset: number,
+  }
+  function moveViewportCenter({ xOffset, yOffset }: MoveViewportCenterOptions): void {
+    const { x: xPos, y: yPos } = viewport.transform.position
+    viewport.setTransform(
+      xPos + xOffset,
+      yPos + yOffset,
+      viewport.transform.scale.x,
+      viewport.transform.scale.y,
+    )
   }
 </script>
 
