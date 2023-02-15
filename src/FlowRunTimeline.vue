@@ -54,7 +54,7 @@
 
   defineExpose({
     centerViewport,
-    updateViewportCenter,
+    moveViewportCenter,
   })
 
   const stage = ref<HTMLDivElement>()
@@ -358,11 +358,11 @@
     })
   }
 
-  type UpdateViewportCenterOptions = {
+  type MoveViewportCenterOptions = {
     xOffset: number,
     yOffset: number,
   }
-  function updateViewportCenter({ xOffset, yOffset }: UpdateViewportCenterOptions): void {
+  function moveViewportCenter({ xOffset, yOffset }: MoveViewportCenterOptions): void {
     const { x: xPos, y: yPos } = viewport.transform.position
     viewport.setTransform(
       xPos + xOffset,
