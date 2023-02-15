@@ -26,7 +26,7 @@ export type NodeLayoutWorkerProps = {
     apxCharacterWidth?: number,
     spacingMinimumNodeEdgeGap?: number,
     timeScaleProps?: InitTimelineScaleProps,
-    recenterAfter?: boolean,
+    centerViewportAfter?: boolean,
   },
 }
 export type NodeLayoutItem = {
@@ -39,7 +39,7 @@ export type NodesLayout = Record<string, NodeLayoutItem>
 export type NodeLayoutWorkerResponse = {
   data: {
     layout: NodesLayout,
-    recenterAfter: boolean,
+    centerViewportAfter: boolean,
   },
 }
 

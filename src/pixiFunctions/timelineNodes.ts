@@ -31,7 +31,7 @@ type TimelineNodesProps = {
   layoutSetting: TimelineNodesLayoutOptions,
   hideEdges: boolean,
   timeScaleProps: InitTimelineScaleProps,
-  recenter: () => void,
+  centerViewport: (instant?: boolean) => void,
 }
 
 type EdgeRecord = {
@@ -49,7 +49,7 @@ export class TimelineNodes extends Container {
   private graphData
   private readonly styles
   private readonly styleNode
-  private readonly recenter
+  private readonly centerViewport
 
   private readonly nodeContainer = new Container()
   public readonly nodeRecords: Map<string, TimelineNode> = new Map()
@@ -76,7 +76,7 @@ export class TimelineNodes extends Container {
       overallGraphWidth,
       initialOverallTimeSpan,
     },
-    recenter,
+    centerViewport,
   }: TimelineNodesProps) {
     super()
 
@@ -85,7 +85,7 @@ export class TimelineNodes extends Container {
     this.graphData = graphData
     this.styles = styles
     this.styleNode = styleNode
-    this.recenter = recenter
+    this.centerViewport = centerViewport
     this.layoutSetting = layoutSetting
     this.hideEdges = hideEdges
 
@@ -125,18 +125,18 @@ export class TimelineNodes extends Container {
     this.layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
       this.layout = data.layout
       this.renderLayout()
-      if (data.recenterAfter) {
-        this.recenterAfterDelay()
+      if (data.centerViewportAfter) {
+        this.centerViewportAfterDelay()
       }
     }
 
     this.layoutWorker.postMessage(layoutWorkerOptions.data)
   }
 
-  private recenterAfterDelay(): void {
+  private centerViewportAfterDelay(): void {
     // allow time for nodes to move to new position
     setTimeout(() => {
-      this.recenter()
+      this.centerViewport()
     }, nodeAnimationDurations.move * 1000)
   }
 
@@ -166,7 +166,7 @@ export class TimelineNodes extends Container {
       this.addChild(this.edgeContainer)
       this.addChild(this.nodeContainer)
 
-      this.fitNodesInViewport()
+      this.centerViewport(true)
     }
   }
 
@@ -216,23 +216,6 @@ export class TimelineNodes extends Container {
     this.addNodeEdges(nodeData)
 
     this.nodeContainer.addChild(node)
-  }
-
-  private fitNodesInViewport(): void {
-    const { spacingViewportPaddingDefault } = this.styles.value
-    const { x: contentX, y: contentY, width, height } = this.nodeContainer.getBounds()
-
-    this.viewportRef.ensureVisible(
-      contentX - spacingViewportPaddingDefault,
-      contentY - spacingViewportPaddingDefault,
-      width + spacingViewportPaddingDefault * 2,
-      height + spacingViewportPaddingDefault * 2,
-      true,
-    )
-    this.viewportRef.moveCenter(
-      contentX + width / 2,
-      contentY + height / 2,
-    )
   }
 
   private addNodeEdges(nodeData: TimelineNodeData): void {
@@ -325,7 +308,7 @@ export class TimelineNodes extends Container {
       data: {
         graphData: JSON.stringify(this.graphData),
         layoutSetting,
-        recenterAfter: true,
+        centerViewportAfter: true,
       },
     }
     this.layoutWorker.postMessage(message.data)
@@ -334,7 +317,7 @@ export class TimelineNodes extends Container {
   private clearNodeSelection(): void {
     this.nodeRecords.get(this.selectedNodeId!)!.deselect()
     const oldSelectedNode = this.nodeRecords.get(this.selectedNodeId!)!
-    this.centerViewportAfterOutsideAnimation(oldSelectedNode)
+    this.centerViewportToNodeAfterDelay(oldSelectedNode)
     this.selectedNodeId = null
   }
 
@@ -349,10 +332,10 @@ export class TimelineNodes extends Container {
     selectedNode.select()
     this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
 
-    this.centerViewportAfterOutsideAnimation(selectedNode)
+    this.centerViewportToNodeAfterDelay(selectedNode)
   }
 
-  private centerViewportAfterOutsideAnimation(selectedNode: TimelineNode): void {
+  private centerViewportToNodeAfterDelay(selectedNode: TimelineNode): void {
     setTimeout(() => {
       const xPos = selectedNode.x + selectedNode.width / 2
       const yPos = selectedNode.y + selectedNode.height / 2

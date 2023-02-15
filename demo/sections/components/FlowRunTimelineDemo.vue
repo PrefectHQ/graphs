@@ -43,7 +43,7 @@
       <div class="flow-run-timeline-demo__checkbox-wrapper">
         <p-checkbox v-model="hideEdges" label="Hide Edges" />
       </div>
-      <p-button secondary @click="recenter">
+      <p-button secondary @click="centerViewport">
         Recenter
       </p-button>
     </div>
@@ -138,8 +138,8 @@
     }
   }
 
-  const recenter = (): void => {
-    graph.value?.recenter()
+  const centerViewport = (): void => {
+    graph.value?.centerViewport()
   }
 
   const classes = computed(() => ({

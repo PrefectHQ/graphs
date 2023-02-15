@@ -52,7 +52,8 @@
   }>()
 
   defineExpose({
-    recenter,
+    centerViewport,
+    updateViewportCenter,
   })
 
   const stage = ref<HTMLDivElement>()
@@ -290,7 +291,7 @@
         overallGraphWidth,
         initialOverallTimeSpan,
       },
-      recenter,
+      centerViewport,
     })
     viewport.addChild(nodesContainer)
 
@@ -326,7 +327,7 @@
     })
   }
 
-  function recenter(instant?: boolean): void {
+  function centerViewport(instant?: boolean): void {
     const { spacingViewportPaddingDefault } = styles.value
     const defaultAnimationDuration = 500
 
@@ -354,6 +355,16 @@
       ease: 'easeInOutQuad',
       removeOnInterrupt: true,
     })
+  }
+
+  function updateViewportCenter(xOffset: number, yOffset: number): void {
+    const { x: xPos, y: yPos } = viewport.transform.position
+    viewport.setTransform(
+      xPos + xOffset,
+      yPos + yOffset,
+      viewport.transform.scale.x,
+      viewport.transform.scale.y,
+    )
   }
 </script>
 
