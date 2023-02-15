@@ -358,7 +358,11 @@
     })
   }
 
-  function updateViewportCenter(xOffset: number, yOffset: number): void {
+  type UpdateViewportCenterOptions = {
+    xOffset: number,
+    yOffset: number,
+  }
+  function updateViewportCenter({ xOffset, yOffset }: UpdateViewportCenterOptions): void {
     const { x: xPos, y: yPos } = viewport.transform.position
     viewport.setTransform(
       xPos + xOffset,
