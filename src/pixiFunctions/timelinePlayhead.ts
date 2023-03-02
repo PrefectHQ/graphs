@@ -86,13 +86,18 @@ export class TimelinePlayhead extends Container {
     this.label = new BitmapText(startDate, textStyles.playheadTimerLabel)
 
     this.label.x = -this.label.width - (spacingPlayheadGlowPadding + spacingGuideLabelPadding)
-    this.label.y = this.appRef.screen.height - (this.label.height + spacingGuideLabelPadding)
+    this.label.y = this.getTimeLabelY()
     this.addChild(this.label)
 
     setInterval(() => {
       const date = new Date()
       this.label!.text = timeBySeconds(date)
     }, 1000)
+  }
+
+  private getTimeLabelY(): number {
+    const { spacingGuideLabelPadding } = this.styles.value
+    return this.appRef.screen.height - (this.label!.height + spacingGuideLabelPadding)
   }
 
   public updatePosition(): void {
@@ -109,6 +114,7 @@ export class TimelinePlayhead extends Container {
 
     if (this.playhead.height !== this.appRef.screen.height) {
       this.playhead.height = this.appRef.screen.height
+      this.label!.y = this.getTimeLabelY()
     }
   }
 
