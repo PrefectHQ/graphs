@@ -49,6 +49,7 @@ export class TimelineNode extends Container {
   private readonly styles
   private readonly styleNode
 
+  private readonly isSubFlow: boolean = false
   private readonly unwatch: WatchStopHandle
 
   private label: BitmapText | undefined
@@ -78,7 +79,9 @@ export class TimelineNode extends Container {
     this.styleNode = styleNode
     this.layoutPosition = layoutPosition
 
-    this.boxCapWidth = this.styles.value.borderRadiusNode
+    this.isSubFlow = nodeData.subFlowId !== undefined
+
+    this.boxCapWidth = styles.value.borderRadiusNode
 
     this.nodeWidth = this.getNodeWidth()
     this.layoutPositionOffset = this.getLayoutPositionOffset()
@@ -172,14 +175,17 @@ export class TimelineNode extends Container {
 
   private async drawLabel(): Promise<void> {
     const textStyles = await getBitmapFonts(this.styles.value)
+    const { label, subFlowLabel } = this.nodeData
     const { inverseTextOnFill } = this.styleNode.value(this.nodeData)
     const { spacingNodeXPadding } = this.styles.value
 
-    if (this.apxLabelWidth === 0) {
+    const labelText = this.isSubFlow && subFlowLabel ? subFlowLabel : label
+
+    if (this.apxLabelWidth === 0 || this.label?.text !== labelText) {
       // the text metrics are consistently a bit off, so we add a buffer percentage
       const labelWidthBufferPercentage = 7
       this.apxLabelWidth =
-        TextMetrics.measureText(this.nodeData.label, textStyles.nodeTextStyles).width
+        TextMetrics.measureText(labelText, textStyles.nodeTextStyles).width
         * (1 + labelWidthBufferPercentage / 100)
     }
 
@@ -187,11 +193,11 @@ export class TimelineNode extends Container {
 
     if (this.apxLabelWidth + spacingNodeXPadding * 2 > this.nodeWidth) {
       this.isLabelInBox = false
-      this.label = new BitmapText(this.nodeData.label, textStyles.nodeTextDefault)
+      this.label = new BitmapText(labelText, textStyles.nodeTextDefault)
     } else {
       const styleForLabelInBox = inverseTextOnFill ? textStyles.nodeTextInverse : textStyles.nodeTextDefault
       this.isLabelInBox = true
-      this.label = new BitmapText(this.nodeData.label, styleForLabelInBox)
+      this.label = new BitmapText(labelText, styleForLabelInBox)
     }
 
     this.updateLabelPosition()
@@ -282,6 +288,9 @@ export class TimelineNode extends Container {
 
   public async update(newNodeData?: TimelineNodeData): Promise<void> {
     let hasNewState = false
+    const hasNewLabelText = this.isSubFlow
+      && this.nodeData.subFlowLabel
+      && this.label?.text !== this.nodeData.subFlowLabel
 
     if (newNodeData) {
       hasNewState = newNodeData.state !== this.nodeData.state
@@ -295,6 +304,10 @@ export class TimelineNode extends Container {
       this.drawBox()
     }
 
+    if (hasNewLabelText) {
+      this.drawLabel()
+    }
+
     if (nodeWidth !== this.nodeWidth) {
       if (!hasNewState) {
         this.updateBoxWidth()
@@ -305,11 +318,11 @@ export class TimelineNode extends Container {
       this.selectedRing.clear()
       this.drawSelectedRing()
 
-      if (
-        // 2px tolerance avoids the label bouncing in/out of the box
-        this.isLabelInBox && this.apxLabelWidth > this.nodeWidth + 2
+      // 2px tolerance avoids the label bouncing in/out of the box
+      const isLabelInBoxChanged = this.isLabelInBox && this.apxLabelWidth > this.nodeWidth + 2
         || !this.isLabelInBox && this.apxLabelWidth < this.nodeWidth - 2
-      ) {
+
+      if (!hasNewLabelText && isLabelInBoxChanged) {
         this.drawLabel()
       } else if (!this.isLabelInBox) {
         this.updateLabelPosition()

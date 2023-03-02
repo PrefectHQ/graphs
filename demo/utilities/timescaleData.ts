@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
-import { randomDate } from './randomDate'
-import { randomStarName } from './randomStarName'
+import { randomDate } from '@/../demo/utilities/randomDate'
+import { randomStarName } from '@/../demo/utilities/randomStarName'
 import { random, floor } from '@/utilities/math'
 
 export type TimelineNodeState =
@@ -20,6 +20,7 @@ export type DataOptions = {
   shape?: Shape,
   size?: number,
   fanMultiplier?: number,
+  subFlowOccurrence?: number,
   zeroTimeGap?: boolean,
 }
 
@@ -30,6 +31,8 @@ type TimescaleItem = {
   end: Date | null,
   upstreamDependencies: string[],
   state: TimelineNodeState,
+  subFlowLabel?: string,
+  subFlowId?: string,
 }
 
 type AssignStartAndEndDates = {
@@ -104,6 +107,8 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
 
   // Create initial nodes
   while (nodes.length < size) {
+    const isSubFlow = options?.subFlowOccurrence ? random() < options.subFlowOccurrence : false
+
     const target: TimescaleItem = {
       id: crypto.randomUUID(),
       upstreamDependencies: [],
@@ -112,6 +117,12 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
       start: new Date(),
       end: null,
     }
+
+    if (isSubFlow) {
+      target.subFlowLabel = randomStarName()
+      target.subFlowId = crypto.randomUUID()
+    }
+
     const proxy = new Proxy(target, {})
     nodes.push(proxy)
   }

@@ -6,8 +6,10 @@ export type TimelineNodeData = {
   label: string,
   start: Date,
   end: Date | null,
-  upstreamDependencies?: string[],
   state: string,
+  upstreamDependencies?: string[],
+  subFlowLabel?: string,
+  subFlowId?: string,
 }
 
 export type InitTimelineScaleProps = {

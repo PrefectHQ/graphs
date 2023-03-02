@@ -16,6 +16,11 @@
           Fan Multiplier
           <p-number-input v-model="fanMultiplier" step="0.1" min="1" max="2" />
         </p-label>
+
+        <p-label>
+          Sub Flow Potential
+          <p-number-input v-model="subFlowOccurrences" step="1" min="0" max="100" append="%" />
+        </p-label>
       </div>
 
       <div class="flow-run-timeline-demo__header-row">
@@ -93,6 +98,7 @@
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
+  const subFlowOccurrences = ref(20)
   const shape = ref<Shape>('fanOut')
   const start = ref<Date>(previous)
   const end = ref<Date>(now)
@@ -106,6 +112,7 @@
       size: size.value,
       shape: shape.value,
       fanMultiplier: fanMultiplier.value,
+      subFlowOccurrence: subFlowOccurrences.value / 100,
       start: start.value,
       end: end.value,
       zeroTimeGap: zeroTimeGap.value,
@@ -115,7 +122,6 @@
   const data = ref<TimescaleItem[]>([])
 
   watchEffect(() => {
-    // set data and sort by startTime
     data.value = generateTimescaleData(dataOptions.value)
 
     if (isRunning.value) {
