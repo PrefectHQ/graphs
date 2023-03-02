@@ -141,7 +141,7 @@
   }
 
   function initTimeScale(): void {
-    const minimumTimeSpan = 1000 * 60
+    const minimumTimeSpan = 1000 * 10
 
     const dates = props.graphData.filter(node => node.end).map(({ start, end }) => ({ start, end }))
 
@@ -157,13 +157,18 @@
     minimumStartDate = min
     maximumEndDate.value = max
     initialOverallTimeSpan = span
-    overallGraphWidth = stage.value!.clientWidth * 2
+    overallGraphWidth = getInitialOverallGraphWidth(stage.value!.clientWidth, props.graphData.length)
 
     timelineScale = initTimelineScale({
       minimumStartTime: minimumStartDate.getTime(),
       overallGraphWidth,
       initialOverallTimeSpan,
     })
+  }
+
+  function getInitialOverallGraphWidth(stageWidth: number, nodeCount: number): number {
+    const multiplier = nodeCount > 30 ? nodeCount / 10 : 2
+    return stageWidth * multiplier
   }
 
   function initFonts(): void {
