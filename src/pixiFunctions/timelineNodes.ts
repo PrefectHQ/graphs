@@ -18,7 +18,8 @@ import {
   TimelineEdge,
   TimelineNode,
   destroyNodeTextureCache,
-  nodeAnimationDurations
+  nodeAnimationDurations,
+  nodeClickEvents
 } from '@/pixiFunctions'
 // eslint-disable-next-line import/default
 import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
@@ -147,7 +148,7 @@ export class TimelineNodes extends Container {
     this.addChild(deselectLayer)
 
     deselectLayer.on('click', () => {
-      this.emit('node-click', null)
+      this.emit(nodeClickEvents.nodeDetails, null)
     })
   }
 
@@ -172,10 +173,10 @@ export class TimelineNodes extends Container {
   }
 
   private async updateNodeRecordAndEdgesLayout(nodeId: string, nodeRecord: TimelineNode): Promise<void> {
-    const nodeData = this.graphData.find(node => node.id === nodeId)!
+    const newNodeData = this.graphData.find(node => node.id === nodeId)!
 
     if (nodeRecord.layoutPosition === this.layout[nodeId].position) {
-      nodeRecord.update(nodeData)
+      nodeRecord.update({ newNodeData })
       return
     }
 
@@ -184,12 +185,11 @@ export class TimelineNodes extends Container {
     const nodeEdgeRecords: EdgeRecord[] = this.edgeRecords.filter((edgeRecord) => {
       return edgeRecord.sourceId === nodeId || edgeRecord.targetId === nodeId
     })
-
     nodeEdgeRecords.forEach((edgeRecord) => {
       edgeRecord.edge.visible = false
     })
 
-    await nodeRecord.update(nodeData)
+    await nodeRecord.update({ newNodeData, animate: true })
 
     nodeEdgeRecords.forEach((edgeRecord) => {
       edgeRecord.edge.update()
@@ -208,8 +208,11 @@ export class TimelineNodes extends Container {
       layoutPosition: this.layout[nodeData.id].position,
     })
 
-    node.on('click', () => {
-      this.emit('node-click', nodeData.id)
+    node.on(nodeClickEvents.nodeDetails, () => {
+      this.emit(nodeClickEvents.nodeDetails, nodeData.id)
+    })
+    node.on(nodeClickEvents.subFlowToggle, () => {
+      this.emit(nodeClickEvents.subFlowToggle, nodeData.id)
     })
 
     this.nodeRecords.set(nodeData.id, node)

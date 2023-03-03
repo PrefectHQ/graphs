@@ -8,7 +8,6 @@ export type TimelineNodeData = {
   end: Date | null,
   state: string,
   upstreamDependencies?: string[],
-  subFlowLabel?: string,
   subFlowId?: string,
 }
 
@@ -103,6 +102,9 @@ export type ThemeStyleOverrides = {
   colorTextInverse?: Color,
   colorTextSubdued?: Color,
   colorNodeSelection?: Color,
+  colorButtonBg?: Color,
+  colorButtonBgHover?: Color,
+  colorButtonBorder?: Color,
   colorEdge?: Color,
   colorGuideLine?: Color,
   colorPlayheadBg?: Color,
@@ -125,6 +127,7 @@ export type ThemeStyleOverrides = {
   spacingPlayheadWidth?: Sizing,
   spacingPlayheadGlowPadding?: Sizing,
   borderRadiusNode?: Sizing,
+  borderRadiusButton?: Sizing,
   alphaNodeDimmed?: number,
 }
 
@@ -133,6 +136,9 @@ export type ParsedThemeStyles = {
   colorTextInverse: number,
   colorTextSubdued: number,
   colorNodeSelection: number,
+  colorButtonBg: number,
+  colorButtonBgHover: number,
+  colorButtonBorder: number,
   colorEdge: number,
   colorGuideLine: number,
   colorPlayheadBg: number,
@@ -155,6 +161,7 @@ export type ParsedThemeStyles = {
   spacingPlayheadWidth: number,
   spacingPlayheadGlowPadding: number,
   borderRadiusNode: number,
+  borderRadiusButton: number,
   alphaNodeDimmed: number,
 }
 

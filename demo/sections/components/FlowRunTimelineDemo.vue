@@ -65,7 +65,8 @@
           :hide-edges="hideEdges"
           class="flow-run-timeline-demo-demo__graph"
           :selected-node-id="selectedNodeId"
-          @click="selectNode"
+          @selection="selectNode"
+          @sub-flow-toggle="toggleSubFlow"
         />
       </div>
 
@@ -144,6 +145,10 @@
     }
   }
 
+  const toggleSubFlow = (value: string): void => {
+    console.log('sub flow toggle clicked', value)
+  }
+
   const centerViewport = (): void => {
     graph.value?.centerViewport()
   }
@@ -170,7 +175,9 @@
         colorTextInverse = '--white',
         colorTextSubdued = '--foreground-300',
         colorGuideLine = '--foreground-50',
-        colorEdge = '--foreground'
+        colorEdge = '--foreground',
+        colorButtonBg = '--background-600',
+        colorButtonBorder = '--white'
 
     if (colorThemeValue.value == 'dark') {
       colorTextDefault = '--white'
@@ -178,6 +185,8 @@
       colorTextSubdued = '--foreground-200'
       colorGuideLine = '--foreground-50'
       colorEdge = '--white'
+      colorButtonBg = '--background'
+      colorButtonBorder = '--foreground-600'
     }
 
     const [defaultH, defaultS, defaultL] = computedStyle.getPropertyValue(colorTextDefault).trim().split(' ')
@@ -185,6 +194,8 @@
     const [subduedH, subduedS, subduedL] = computedStyle.getPropertyValue(colorTextSubdued).trim().split(' ')
     const [guideLineH, guideLineS, guideLineL] = computedStyle.getPropertyValue(colorGuideLine).trim().split(' ')
     const [edgeH, edgeS, edgeL] = computedStyle.getPropertyValue(colorEdge).trim().split(' ')
+    const [btnBgH, btnBgS, btnBgL] = computedStyle.getPropertyValue(colorButtonBg).trim().split(' ')
+    const [btnBorderH, btnBorderS, btnBorderL] = computedStyle.getPropertyValue(colorButtonBorder).trim().split(' ')
 
     return {
       colorTextDefault: `hsl(${defaultH}, ${defaultS}, ${defaultL})`,
@@ -192,6 +203,8 @@
       colorTextSubdued: `hsl(${subduedH}, ${subduedS}, ${subduedL})`,
       colorGuideLine: `hsl(${guideLineH}, ${guideLineS}, ${guideLineL})`,
       colorEdge: `hsl(${edgeH}, ${edgeS}, ${edgeL})`,
+      colorButtonBg: `hsl(${btnBgH}, ${btnBgS}, ${btnBgL})`,
+      colorButtonBorder: `hsl(${btnBorderH}, ${btnBorderS}, ${btnBorderL})`,
     }
   })
 
@@ -222,10 +235,6 @@
   text-sm
   rounded-lg
   text-foreground-600
-}
-
-.flow-run-timeline-demo__{ @apply
-  !rounded-t-none
 }
 
 .flow-run-timeline-demo__header-row { @apply

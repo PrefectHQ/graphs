@@ -4,7 +4,7 @@ import { ParsedThemeStyles } from '@/models'
 import {
   TimelineNode,
   timelineNodeBoxName,
-  getEdgeArrowTexture
+  getArrowTexture
 } from '@/pixiFunctions'
 
 const minimumBezier = 64
@@ -102,7 +102,7 @@ export class TimelineEdge extends Container {
 
     const { colorEdge, spacingEdgeWidth, spacingNodeEdgeLength } = this.styles.value
 
-    const arrowTexture = getEdgeArrowTexture({
+    const arrowTexture = getArrowTexture({
       appRef: this.appRef,
       strokeColor: colorEdge,
       edgeWidth: spacingEdgeWidth,

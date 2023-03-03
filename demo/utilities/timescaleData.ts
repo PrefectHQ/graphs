@@ -31,7 +31,6 @@ type TimescaleItem = {
   end: Date | null,
   upstreamDependencies: string[],
   state: TimelineNodeState,
-  subFlowLabel?: string,
   subFlowId?: string,
 }
 
@@ -119,7 +118,6 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
     }
 
     if (isSubFlow) {
-      target.subFlowLabel = randomStarName()
       target.subFlowId = crypto.randomUUID()
     }
 

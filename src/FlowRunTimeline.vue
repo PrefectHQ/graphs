@@ -35,7 +35,8 @@
     TimelineNodes,
     TimelinePlayhead,
     initTimelineScale,
-    nodeContainerName
+    nodeContainerName,
+    nodeClickEvents
   } from '@/pixiFunctions'
   import {
     getDateBounds,
@@ -91,7 +92,8 @@
   let nodesContainer: TimelineNodes
 
   const emit = defineEmits<{
-    (event: 'click', value: string | null): void,
+    (event: 'selection', value: string | null): void,
+    (event: 'subFlowToggle', value: string): void,
   }>()
 
   onMounted(async () => {
@@ -304,9 +306,14 @@
       })
     }
 
-    nodesContainer.on('node-click', (clickedNodeId) => {
+    nodesContainer.on(nodeClickEvents.nodeDetails, (clickedNodeId) => {
       if (!isViewportDragging.value) {
-        emit('click', clickedNodeId)
+        emit('selection', clickedNodeId)
+      }
+    })
+    nodesContainer.on(nodeClickEvents.subFlowToggle, (clickedNodeId) => {
+      if (!isViewportDragging.value) {
+        emit('subFlowToggle', clickedNodeId)
       }
     })
 

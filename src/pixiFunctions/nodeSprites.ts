@@ -3,7 +3,7 @@ import { Application, Graphics, Texture } from 'pixi.js'
 type BoxTextures = Record<'cap' | 'body', Texture>
 
 let nodeBoxTextureCache: Map<number, BoxTextures> | undefined
-let edgeArrowTextureCache: Map<number, Texture> | undefined
+let arrowTextureCache: Map<number, Texture> | undefined
 
 const textureSampleSettings = {
   multisample: 2,
@@ -12,7 +12,7 @@ const textureSampleSettings = {
 
 export function initNodeTextureCache(): void {
   nodeBoxTextureCache = new Map()
-  edgeArrowTextureCache = new Map()
+  arrowTextureCache = new Map()
 }
 
 export function destroyNodeTextureCache(): void {
@@ -24,12 +24,12 @@ export function destroyNodeTextureCache(): void {
     nodeBoxTextureCache.clear()
     nodeBoxTextureCache = undefined
   }
-  if (edgeArrowTextureCache) {
-    edgeArrowTextureCache.forEach((texture) => {
+  if (arrowTextureCache) {
+    arrowTextureCache.forEach((texture) => {
       texture.destroy()
     })
-    edgeArrowTextureCache.clear()
-    edgeArrowTextureCache = undefined
+    arrowTextureCache.clear()
+    arrowTextureCache = undefined
   }
 }
 
@@ -93,23 +93,23 @@ export function getNodeBoxTextures({
   return nodeBoxTextureCache!.get(fill)!
 }
 
-type GetEdgeArrowTextureProps = {
+type GetArrowTextureProps = {
   appRef: Application,
   strokeColor: number,
   edgeWidth: number,
   edgeLength: number,
 }
-export function getEdgeArrowTexture({
+export function getArrowTexture({
   appRef,
   strokeColor,
   edgeWidth,
   edgeLength,
-}: GetEdgeArrowTextureProps): Texture {
-  if (!edgeArrowTextureCache) {
+}: GetArrowTextureProps): Texture {
+  if (!arrowTextureCache) {
     initNodeTextureCache()
   }
 
-  if (!edgeArrowTextureCache?.has(strokeColor)) {
+  if (!arrowTextureCache?.has(strokeColor)) {
     const arrow = new Graphics()
     arrow.lineStyle(edgeWidth, strokeColor, 1, 0.5)
     arrow.moveTo(-edgeLength, -edgeLength)
@@ -118,8 +118,8 @@ export function getEdgeArrowTexture({
 
     const arrowTexture = appRef.renderer.generateTexture(arrow, textureSampleSettings)
 
-    edgeArrowTextureCache!.set(strokeColor, arrowTexture)
+    arrowTextureCache!.set(strokeColor, arrowTexture)
   }
 
-  return edgeArrowTextureCache!.get(strokeColor)!
+  return arrowTextureCache!.get(strokeColor)!
 }

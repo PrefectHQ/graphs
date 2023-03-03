@@ -16,7 +16,8 @@ import {
 import {
   getBitmapFonts,
   timelineScale,
-  getNodeBoxTextures
+  getNodeBoxTextures,
+  getArrowTexture
 } from '@/pixiFunctions'
 import { colorToHex } from '@/utilities/style'
 
@@ -26,6 +27,16 @@ type TimelineNodeProps = {
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   layoutPosition: number,
+}
+
+type UpdateTimelineNodeOptions = {
+  newNodeData?: TimelineNodeData,
+  animate?: boolean,
+}
+
+export const nodeClickEvents = {
+  nodeDetails: 'nodeDetailsClick',
+  subFlowToggle: 'subFlowToggleClick',
 }
 
 export const nodeAnimationDurations = {
@@ -52,6 +63,9 @@ export class TimelineNode extends Container {
   private readonly isSubFlow: boolean = false
   private readonly unwatch: WatchStopHandle
 
+  private readonly labelContainer = new Container()
+  private readonly subFlowToggleSize: number
+  private readonly subFlowToggle: Container | undefined
   private label: BitmapText | undefined
 
   private readonly boxCapWidth: number = 0
@@ -80,33 +94,27 @@ export class TimelineNode extends Container {
     this.layoutPosition = layoutPosition
 
     this.isSubFlow = nodeData.subFlowId !== undefined
-
     this.boxCapWidth = styles.value.borderRadiusNode
 
     this.nodeWidth = this.getNodeWidth()
     this.layoutPositionOffset = this.getLayoutPositionOffset()
 
-    this.box.name = timelineNodeBoxName
-    this.drawBox()
-    this.addChild(this.box)
+    this.initBox()
 
+    this.subFlowToggleSize = this.getSubFlowToggleSize()
     this.drawLabel()
 
     this.drawSelectedRing()
     this.selectedRing.alpha = 0
 
-    this.updatePosition(true)
+    this.updatePosition()
 
     this.unwatch = watch([styles, styleNode], () => {
-      this.box.removeChildren()
       this.drawBox()
       this.drawLabel()
     }, { deep: true })
 
-    this.interactive = true
-    this.buttonMode = true
-
-    this.animateIn()
+    this.interactive = false
   }
 
   private getNodeWidth(): number {
@@ -123,6 +131,19 @@ export class TimelineNode extends Container {
     return nodeHeight + spacingNodeMargin
   }
 
+  private initBox(): void {
+    const { box } = this
+    box.name = timelineNodeBoxName
+    this.drawBox()
+    this.addChild(box)
+
+    box.interactive = true
+    box.buttonMode = true
+    box.on('click', () => {
+      this.emit(nodeClickEvents.nodeDetails)
+    })
+  }
+
   private drawBox(): void {
     const { appRef, nodeWidth, box, boxCapWidth } = this
     const { fill } = this.styleNode.value(this.nodeData)
@@ -135,6 +156,8 @@ export class TimelineNode extends Container {
     } = this.styles.value
 
     const height = textLineHeightDefault + spacingNodeYPadding * 2
+
+    this.box.removeChildren()
 
     const { cap, body } = getNodeBoxTextures({
       appRef,
@@ -174,35 +197,145 @@ export class TimelineNode extends Container {
   }
 
   private async drawLabel(): Promise<void> {
-    const textStyles = await getBitmapFonts(this.styles.value)
-    const { label, subFlowLabel } = this.nodeData
-    const { inverseTextOnFill } = this.styleNode.value(this.nodeData)
-    const { spacingNodeXPadding } = this.styles.value
+    this.labelContainer.removeChildren()
 
-    const labelText = this.isSubFlow && subFlowLabel ? subFlowLabel : label
+    await this.setApxLabelWidth()
+    this.setIsLabelInBox()
 
-    if (this.apxLabelWidth === 0 || this.label?.text !== labelText) {
-      // the text metrics are consistently a bit off, so we add a buffer percentage
-      const labelWidthBufferPercentage = 7
-      this.apxLabelWidth =
-        TextMetrics.measureText(labelText, textStyles.nodeTextStyles).width
-        * (1 + labelWidthBufferPercentage / 100)
+    if (this.isSubFlow) {
+      this.drawSubFlowToggle()
     }
+
+    this.drawLabelText()
+
+    this.updateLabelContainerPosition()
+
+    this.addChild(this.labelContainer)
+  }
+
+  private setIsLabelInBox(): void {
+    this.isLabelInBox = this.apxLabelWidth < this.nodeWidth
+  }
+
+  private async setApxLabelWidth(): Promise<void> {
+    const { isSubFlow, subFlowToggleSize } = this
+    const { spacingNodeXPadding } = this.styles.value
+    const { nodeTextStyles } = await getBitmapFonts(this.styles.value)
+    const { label: labelText } = this.nodeData
+
+    // the text metrics are consistently a bit off, so we add a buffer percentage
+    const labelWidthBufferPercentage = 7
+    const apxLabelTextWidth =
+      TextMetrics.measureText(labelText, nodeTextStyles).width
+      * (1 + labelWidthBufferPercentage / 100)
+
+    const totalWidth = isSubFlow
+      ? subFlowToggleSize + spacingNodeXPadding + apxLabelTextWidth
+      : apxLabelTextWidth
+    const widthWithPadding = this.isSubFlow
+      ? totalWidth + spacingNodeXPadding
+      : totalWidth + spacingNodeXPadding * 2
+
+    this.apxLabelWidth = widthWithPadding
+  }
+
+  private async drawLabelText(): Promise<void> {
+    const textStyles = await getBitmapFonts(this.styles.value)
+    const { spacingNodeYPadding, spacingNodeXPadding } = this.styles.value
+    const { inverseTextOnFill } = this.styleNode.value(this.nodeData)
+    const labelStyleOnFill = inverseTextOnFill ? textStyles.nodeTextInverse : textStyles.nodeTextDefault
+
+    const { label: labelText } = this.nodeData
+    const labelStyle = this.isLabelInBox ? labelStyleOnFill : textStyles.nodeTextDefault
+    const labelXPos = this.isSubFlow
+      ? this.subFlowToggleSize + spacingNodeXPadding
+      : 0
 
     this.label?.destroy()
 
-    if (this.apxLabelWidth + spacingNodeXPadding * 2 > this.nodeWidth) {
-      this.isLabelInBox = false
-      this.label = new BitmapText(labelText, textStyles.nodeTextDefault)
-    } else {
-      const styleForLabelInBox = inverseTextOnFill ? textStyles.nodeTextInverse : textStyles.nodeTextDefault
-      this.isLabelInBox = true
-      this.label = new BitmapText(labelText, styleForLabelInBox)
+    this.label = new BitmapText(labelText, labelStyle)
+    this.label.position.set(labelXPos, spacingNodeYPadding)
+
+    if (!this.isLabelInBox) {
+      this.label.interactive = true
+      this.label.buttonMode = true
+      this.label.on('click', () => {
+        this.emit(nodeClickEvents.nodeDetails)
+      })
     }
 
-    this.updateLabelPosition()
+    this.labelContainer.addChild(this.label)
+  }
 
-    this.addChild(this.label)
+  private getSubFlowToggleSize(): number {
+    const { textLineHeightDefault, spacingNodeYPadding } = this.styles.value
+    return textLineHeightDefault + spacingNodeYPadding * 2
+  }
+
+  private drawSubFlowToggle(): void {
+    let { subFlowToggle } = this
+    const {
+      subFlowToggleSize,
+      isLabelInBox,
+      labelContainer,
+    } = this
+    const { inverseTextOnFill } = this.styleNode.value(this.nodeData)
+    const {
+      colorTextDefault,
+      colorTextInverse,
+      colorButtonBorder,
+      colorButtonBg,
+      borderRadiusButton,
+    } = this.styles.value
+    const arrowColorOnFill = inverseTextOnFill ? colorTextInverse : colorTextDefault
+    const arrowColor = isLabelInBox ? arrowColorOnFill : colorTextDefault
+
+    subFlowToggle?.destroy()
+    subFlowToggle = new Container()
+
+    const subFlowBox = new Graphics()
+    subFlowBox.lineStyle(1, colorButtonBorder)
+    subFlowBox.beginFill(colorButtonBg)
+    subFlowBox.drawRoundedRect(
+      0,
+      0,
+      subFlowToggleSize,
+      subFlowToggleSize,
+      borderRadiusButton,
+    )
+    subFlowBox.endFill()
+    subFlowToggle.addChild(subFlowBox)
+    subFlowBox.alpha = isLabelInBox ? 0 : 1
+
+    if (isLabelInBox) {
+      const rightBorder = new Graphics()
+      rightBorder.lineStyle(1, arrowColor)
+      rightBorder.moveTo(subFlowToggleSize, 0)
+      rightBorder.lineTo(subFlowToggleSize, subFlowToggleSize)
+      subFlowToggle.addChild(rightBorder)
+    }
+
+    const arrowTexture = getArrowTexture({
+      appRef: this.appRef,
+      strokeColor: arrowColor,
+      edgeWidth: 2,
+      edgeLength: 8,
+    })
+
+    const arrowSprite = new Sprite(arrowTexture)
+    arrowSprite.transform.rotation = Math.PI / 2
+    arrowSprite.anchor.set(0.5, 0.5)
+    arrowSprite.position.set(subFlowToggleSize / 2, subFlowToggleSize / 2)
+
+    subFlowToggle.addChild(arrowSprite)
+
+    labelContainer.addChild(subFlowToggle)
+
+    subFlowToggle.interactive = true
+    subFlowToggle.buttonMode = true
+    subFlowToggle.on('click', () => {
+      this.emit(nodeClickEvents.subFlowToggle)
+    })
   }
 
   private drawSelectedRing(): void {
@@ -212,6 +345,8 @@ export class TimelineNode extends Container {
       spacingNodeSelectionWidth,
       borderRadiusNode,
     } = this.styles.value
+
+    this.selectedRing.clear()
 
     this.selectedRing.lineStyle(
       spacingNodeSelectionWidth,
@@ -230,10 +365,6 @@ export class TimelineNode extends Container {
     this.addChild(this.selectedRing)
   }
 
-  private animateIn(): void {
-    gsap.to(this, { alpha: 1, duration: nodeAnimationDurations.fadeIn })
-  }
-
   private updateBoxWidth(): void {
     this.box.children.forEach((child) => {
       const childName = child.name
@@ -250,11 +381,11 @@ export class TimelineNode extends Container {
     })
   }
 
-  public async updatePosition(skipAnimation?: boolean): Promise<void> {
+  public async updatePosition(animate?: boolean): Promise<void> {
     const xPos = timelineScale.dateToX(this.nodeData.start)
     const yPos = this.layoutPosition * this.layoutPositionOffset
 
-    if (skipAnimation) {
+    if (!animate) {
       this.position.set(xPos, yPos)
       return
     }
@@ -271,36 +402,35 @@ export class TimelineNode extends Container {
     })
   }
 
-  private updateLabelPosition(): void {
+  private updateLabelContainerPosition(): void {
     const {
       spacingNodeXPadding,
-      spacingNodeYPadding,
       spacingNodeLabelMargin,
     } = this.styles.value
 
-    this.label?.position.set(
-      this.isLabelInBox
-        ? spacingNodeXPadding
-        : this.nodeWidth + spacingNodeLabelMargin,
-      spacingNodeYPadding,
-    )
+    const inBoxXPos = this.isSubFlow ? 0 : spacingNodeXPadding
+    const xPos = this.isLabelInBox
+      ? inBoxXPos
+      : this.nodeWidth + spacingNodeLabelMargin
+
+    this.labelContainer.position.set(xPos, 0)
   }
 
-  public async update(newNodeData?: TimelineNodeData): Promise<void> {
+  public async update(options?: UpdateTimelineNodeOptions): Promise<void> {
+    const { newNodeData, animate } = options ?? {}
     let hasNewState = false
-    const hasNewLabelText = this.isSubFlow
-      && this.nodeData.subFlowLabel
-      && this.label?.text !== this.nodeData.subFlowLabel
+    let hasNewLabelText = false
 
     if (newNodeData) {
       hasNewState = newNodeData.state !== this.nodeData.state
+      hasNewLabelText = this.label?.text !== newNodeData.label
+
       this.nodeData = newNodeData
     }
 
     const nodeWidth = this.getNodeWidth()
 
     if (hasNewState) {
-      this.box.removeChildren()
       this.drawBox()
     }
 
@@ -309,13 +439,10 @@ export class TimelineNode extends Container {
     }
 
     if (nodeWidth !== this.nodeWidth) {
-      if (!hasNewState) {
-        this.updateBoxWidth()
-      }
-
       this.nodeWidth = nodeWidth
 
-      this.selectedRing.clear()
+      this.updateBoxWidth()
+
       this.drawSelectedRing()
 
       // 2px tolerance avoids the label bouncing in/out of the box
@@ -325,11 +452,11 @@ export class TimelineNode extends Container {
       if (!hasNewLabelText && isLabelInBoxChanged) {
         this.drawLabel()
       } else if (!this.isLabelInBox) {
-        this.updateLabelPosition()
+        this.updateLabelContainerPosition()
       }
     }
 
-    await this.updatePosition()
+    await this.updatePosition(animate)
   }
 
   public select(): void {

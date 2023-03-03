@@ -1,5 +1,5 @@
-import { max, min, round } from './math'
 import { ParsedThemeStyles, ThemeStyleOverrides } from '@/models'
+import { max, min, round } from '@/utilities/math'
 
 export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeStyles {
   return {
@@ -8,6 +8,9 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     colorTextSubdued: colorToHex(overrides?.colorTextSubdued ?? '#6b7280'),
     colorEdge: colorToHex(overrides?.colorEdge ?? '#374151'),
     colorNodeSelection: colorToHex(overrides?.colorNodeSelection ?? '#024DFD'),
+    colorButtonBg: colorToHex(overrides?.colorButtonBg ?? '#ffffff'),
+    colorButtonBgHover: colorToHex(overrides?.colorButtonBgHover ?? '#cbd5e1'),
+    colorButtonBorder: colorToHex(overrides?.colorButtonBorder ?? '#cbd5e1'),
     colorGuideLine: colorToHex(overrides?.colorGuideLine ?? '#cbd5e1'),
     colorPlayheadBg: colorToHex(overrides?.colorPlayheadBg ?? '#4e82fe'),
     textFontFamilyDefault: overrides?.textFontFamilyDefault ?? 'InterVariable',
@@ -29,6 +32,7 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     spacingPlayheadGlowPadding: spacingToNumber(overrides?.spacingPlayheadGlowPadding ?? '8px'),
     spacingPlayheadWidth: spacingToNumber(overrides?.spacingPlayheadWidth ?? '2px'),
     borderRadiusNode: spacingToNumber(overrides?.borderRadiusNode ?? '8px'),
+    borderRadiusButton: spacingToNumber(overrides?.borderRadiusButton ?? '8px'),
     alphaNodeDimmed: overrides?.alphaNodeDimmed ?? 0.2,
   }
 }
@@ -59,7 +63,7 @@ function hslToHex(hue: number, saturation: number, lightness: number): string {
   const alpha = saturation * min(lightness, 1 - lightness) / 100
 
   const hexValue = (num: number): string => {
-    const kar = (num + (hue as number) / 30) % 12
+    const kar = num + hue as number / 30 % 12
     const color = lightness - alpha * max(min(kar - 3, 9 - kar, 1), -1)
     return round(255 * color).toString(16).padStart(2, '0')
   }
