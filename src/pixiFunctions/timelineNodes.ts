@@ -1,3 +1,4 @@
+import gsap from 'gsap'
 import type { Viewport } from 'pixi-viewport'
 import { Application, Container, TextMetrics } from 'pixi.js'
 import { ComputedRef } from 'vue'
@@ -17,6 +18,7 @@ import {
   DeselectLayer,
   TimelineEdge,
   TimelineNode,
+  timelineScale,
   destroyNodeTextureCache,
   nodeAnimationDurations,
   nodeClickEvents
@@ -179,28 +181,26 @@ export class TimelineNodes extends Container {
   }
 
   private async updateNodeRecordAndEdgesLayout(nodeId: string, nodeRecord: TimelineNode): Promise<void> {
-    const newNodeData = this.graphData.find(node => node.id === nodeId)!
+    const layoutPosition = this.layout[nodeId].position
 
-    if (nodeRecord.layoutPosition === this.layout[nodeId].position) {
-      nodeRecord.update({ newNodeData })
-      return
+    nodeRecord.update(true)
+
+    if (nodeRecord.position.y !== this.getNodeYPosition(layoutPosition)) {
+      const nodeEdgeRecords: EdgeRecord[] = this.edgeRecords.filter((edgeRecord) => {
+        return edgeRecord.sourceId === nodeId || edgeRecord.targetId === nodeId
+      })
+      nodeEdgeRecords.forEach((edgeRecord) => {
+        edgeRecord.edge.visible = false
+      })
+
+      // !!!! @TODO: If the pairing node hasn't updated yet, this could lead to incorrect targets.
+      await this.updateNodePosition(nodeRecord, true)
+
+      nodeEdgeRecords.forEach((edgeRecord) => {
+        edgeRecord.edge.update()
+        edgeRecord.edge.visible = true
+      })
     }
-
-    nodeRecord.layoutPosition = this.layout[nodeId].position
-
-    const nodeEdgeRecords: EdgeRecord[] = this.edgeRecords.filter((edgeRecord) => {
-      return edgeRecord.sourceId === nodeId || edgeRecord.targetId === nodeId
-    })
-    nodeEdgeRecords.forEach((edgeRecord) => {
-      edgeRecord.edge.visible = false
-    })
-
-    await nodeRecord.update({ newNodeData, animate: true })
-
-    nodeEdgeRecords.forEach((edgeRecord) => {
-      edgeRecord.edge.update()
-      edgeRecord.edge.visible = true
-    })
   }
 
   private createNode(nodeData: TimelineNodeData): void {
@@ -211,7 +211,6 @@ export class TimelineNodes extends Container {
       nodeData,
       styles,
       styleNode,
-      layoutPosition: this.layout[nodeData.id].position,
     })
 
     node.on(nodeClickEvents.nodeDetails, () => {
@@ -223,9 +222,41 @@ export class TimelineNodes extends Container {
 
     this.nodeRecords.set(nodeData.id, node)
 
+    this.updateNodePosition(node)
+
     this.addNodeEdges(nodeData)
 
     this.nodeContainer.addChild(node)
+  }
+
+  private readonly getNodeYPosition = (layoutPosition: number): number => {
+    const { spacingNodeMargin, textLineHeightDefault, spacingNodeYPadding } = this.styles.value
+    const nodeHeight = textLineHeightDefault + spacingNodeYPadding * 2
+    const layoutPositionOffset = nodeHeight + spacingNodeMargin
+
+    return layoutPosition * layoutPositionOffset
+  }
+
+  private async updateNodePosition(node: TimelineNode, animate?: boolean): Promise<void> {
+    const layoutPosition = this.layout[node.nodeData.id].position
+    const xPos = timelineScale.dateToX(node.nodeData.start)
+    const yPos = this.getNodeYPosition(layoutPosition)
+
+    if (!animate) {
+      node.position.set(xPos, yPos)
+      return
+    }
+
+    await new Promise((resolve) => {
+      gsap.to(node, {
+        x: xPos,
+        y: yPos,
+        duration: nodeAnimationDurations.move,
+        ease: 'power1.out',
+      }).then(() => {
+        resolve(null)
+      })
+    })
   }
 
   private addNodeEdges(nodeData: TimelineNodeData): void {

@@ -1,4 +1,3 @@
-import gsap from 'gsap'
 import {
   Application,
   BitmapText,
@@ -26,12 +25,6 @@ type TimelineNodeProps = {
   nodeData: TimelineNodeData,
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
-  layoutPosition: number,
-}
-
-type UpdateTimelineNodeOptions = {
-  newNodeData?: TimelineNodeData,
-  animate?: boolean,
 }
 
 export const nodeClickEvents = {
@@ -66,8 +59,6 @@ export class TimelineNode extends Container {
   private apxLabelWidth = 0
   private nodeWidth
   private readonly nodeHeight
-  private readonly layoutPositionOffset
-  public layoutPosition
   private isLabelInBox = true
 
   private readonly boxCapWidth: number = 0
@@ -88,14 +79,12 @@ export class TimelineNode extends Container {
     nodeData,
     styles,
     styleNode,
-    layoutPosition,
   }: TimelineNodeProps) {
     super()
     this.appRef = appRef
     this.nodeData = nodeData
     this.styles = styles
     this.styleNode = styleNode
-    this.layoutPosition = layoutPosition
 
     this.currentState = nodeData.state
     this.hasSubNodes = nodeData.subFlowId !== undefined
@@ -103,7 +92,6 @@ export class TimelineNode extends Container {
 
     this.nodeWidth = this.getNodeWidth()
     this.nodeHeight = this.getNodeHeight()
-    this.layoutPositionOffset = this.getLayoutPositionOffset()
 
     this.initBox()
 
@@ -114,8 +102,6 @@ export class TimelineNode extends Container {
 
     this.drawSelectedRing()
     this.selectedRing.alpha = 0
-
-    this.updatePosition()
 
     this.unwatch = watch([styles, styleNode], () => {
       this.drawBox()
@@ -130,13 +116,6 @@ export class TimelineNode extends Container {
     const actualWidth = timelineScale.dateToX(this.nodeData.end ?? new Date()) - timelineScale.dateToX(this.nodeData.start)
 
     return actualWidth > minimumWidth ? actualWidth : minimumWidth
-  }
-
-  private getLayoutPositionOffset(): number {
-    const { nodeHeight } = this
-    const { spacingNodeMargin } = this.styles.value
-
-    return nodeHeight + spacingNodeMargin
   }
 
   private initBox(): void {
@@ -425,27 +404,6 @@ export class TimelineNode extends Container {
     }
   }
 
-  public async updatePosition(animate?: boolean): Promise<void> {
-    const xPos = timelineScale.dateToX(this.nodeData.start)
-    const yPos = this.layoutPosition * this.layoutPositionOffset
-
-    if (!animate) {
-      this.position.set(xPos, yPos)
-      return
-    }
-
-    await new Promise((resolve) => {
-      gsap.to(this, {
-        x: xPos,
-        y: yPos,
-        duration: nodeAnimationDurations.move,
-        ease: 'power1.out',
-      }).then(() => {
-        resolve(null)
-      })
-    })
-  }
-
   private updateLabelContainerPosition(): void {
     const {
       spacingNodeXPadding,
@@ -460,17 +418,16 @@ export class TimelineNode extends Container {
     this.labelContainer.position.set(xPos, 0)
   }
 
-  public async update(options?: UpdateTimelineNodeOptions): Promise<void> {
-    const { newNodeData, animate } = options ?? {}
+  public update(hasUpdatedData?: boolean): void {
     let hasNewState = false
     let hasNewLabelText = false
 
 
-    if (newNodeData) {
-      hasNewState = this.currentState !== newNodeData.state
-      this.currentState = newNodeData.state
+    if (hasUpdatedData) {
+      hasNewState = this.currentState !== this.nodeData.state
+      this.currentState = this.nodeData.state
 
-      hasNewLabelText = this.label?.text !== newNodeData.label
+      hasNewLabelText = this.label?.text !== this.nodeData.label
     }
 
     const nodeWidth = this.getNodeWidth()
@@ -501,8 +458,6 @@ export class TimelineNode extends Container {
         this.updateLabelContainerPosition()
       }
     }
-
-    await this.updatePosition(animate)
   }
 
   public select(): void {
