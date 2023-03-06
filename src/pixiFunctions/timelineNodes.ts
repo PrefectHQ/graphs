@@ -32,6 +32,7 @@ type TimelineNodesProps = {
   styleNode: ComputedRef<NodeThemeFn>,
   layoutSetting: TimelineNodesLayoutOptions,
   hideEdges: boolean,
+  expandedSubFlowIds: string[],
   timeScaleProps: InitTimelineScaleProps,
   centerViewport: (options?: CenterViewportOptions) => void,
 }
@@ -61,6 +62,7 @@ export class TimelineNodes extends Container {
   private hideEdges
   private readonly layoutWorker: Worker = new LayoutWorker()
   private layout: NodesLayout = {}
+  private readonly expandedSubFlowIds: string[]
 
   private readonly edgeContainer = new Container()
   private readonly edgeRecords: EdgeRecord[] = []
@@ -73,6 +75,7 @@ export class TimelineNodes extends Container {
     styleNode,
     layoutSetting,
     hideEdges,
+    expandedSubFlowIds,
     timeScaleProps: {
       minimumStartTime,
       overallGraphWidth,
@@ -90,6 +93,7 @@ export class TimelineNodes extends Container {
     this.centerViewport = centerViewport
     this.layoutSetting = layoutSetting
     this.hideEdges = hideEdges
+    this.expandedSubFlowIds = expandedSubFlowIds
 
     this.initDeselectLayer()
 
@@ -126,7 +130,9 @@ export class TimelineNodes extends Container {
 
     this.layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
       this.layout = data.layout
+
       this.renderLayout()
+
       if (data.centerViewportAfter) {
         this.centerViewportAfterDelay()
       }

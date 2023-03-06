@@ -51,6 +51,7 @@
     selectedNodeId?: string | null,
     layout?: TimelineNodesLayoutOptions,
     hideEdges?: boolean,
+    expandedSubFlowIds?: string[],
   }>()
 
   defineExpose({
@@ -289,6 +290,7 @@
       styleNode,
       layoutSetting: props.layout ?? 'nearestParent',
       hideEdges: props.hideEdges ?? false,
+      expandedSubFlowIds: props.expandedSubFlowIds ?? [],
       timeScaleProps: {
         minimumStartTime: minimumStartDate.getTime(),
         overallGraphWidth,

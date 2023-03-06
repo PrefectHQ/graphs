@@ -65,6 +65,7 @@
           :hide-edges="hideEdges"
           class="flow-run-timeline-demo-demo__graph"
           :selected-node-id="selectedNodeId"
+          :expanded-sub-flow-ids="expandedSubFlowIds"
           @selection="selectNode"
           @sub-flow-toggle="toggleSubFlow"
         />
@@ -95,12 +96,12 @@
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
   const selectedNodeId = ref<string | null>(null)
-  const visibleSubFlowIds = ref<string[]>([])
+  const expandedSubFlowIds = ref<string[]>([])
   const hideEdges = ref(false)
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
-  const subFlowOccurrences = ref(20)
+  const subFlowOccurrences = ref(100)
   const shape = ref<Shape>('fanOut')
   const start = ref<Date>(previous)
   const end = ref<Date>(now)
@@ -147,14 +148,14 @@
   }
 
   const toggleSubFlow = (value: string): void => {
-    const isValueVisible = visibleSubFlowIds.value.includes(value)
+    const isValueVisible = expandedSubFlowIds.value.includes(value)
 
     if (isValueVisible) {
-      visibleSubFlowIds.value = visibleSubFlowIds.value.filter(id => id !== value)
+      expandedSubFlowIds.value = expandedSubFlowIds.value.filter(id => id !== value)
       return
     }
 
-    visibleSubFlowIds.value = [...visibleSubFlowIds.value, value]
+    expandedSubFlowIds.value = [...expandedSubFlowIds.value, value]
   }
 
   const centerViewport = (): void => {
