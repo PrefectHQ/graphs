@@ -311,7 +311,7 @@
         emit('selection', clickedNodeId)
       }
     })
-    nodesContainer.on(nodeClickEvents.subFlowToggle, (clickedNodeId) => {
+    nodesContainer.on(nodeClickEvents.subNodesToggle, (clickedNodeId) => {
       if (!isViewportDragging.value) {
         emit('subFlowToggle', clickedNodeId)
       }

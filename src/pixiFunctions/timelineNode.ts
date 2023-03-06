@@ -36,7 +36,7 @@ type UpdateTimelineNodeOptions = {
 
 export const nodeClickEvents = {
   nodeDetails: 'nodeDetailsClick',
-  subFlowToggle: 'subFlowToggleClick',
+  subNodesToggle: 'subNodesToggleClick',
 }
 
 export const nodeAnimationDurations = {
@@ -56,26 +56,30 @@ const nodeBoxSpriteNames = {
 
 export class TimelineNode extends Container {
   private readonly appRef: Application
-  public nodeData
+  public readonly nodeData
   private readonly styles
   private readonly styleNode
 
-  private readonly isSubFlow: boolean = false
+  private currentState: string
+  private readonly hasSubNodes: boolean = false
   private readonly unwatch: WatchStopHandle
-
-  private readonly labelContainer = new Container()
-  private readonly subFlowToggleSize: number
-  private readonly subFlowToggle: Container | undefined
-  private label: BitmapText | undefined
+  private apxLabelWidth = 0
+  private nodeWidth
+  private readonly nodeHeight
+  private readonly layoutPositionOffset
+  public layoutPosition
+  private isLabelInBox = true
 
   private readonly boxCapWidth: number = 0
   private readonly box = new Container()
 
-  private apxLabelWidth = 0
-  private nodeWidth
-  private readonly layoutPositionOffset
-  public layoutPosition
-  private isLabelInBox = true
+  private readonly labelContainer = new Container()
+  private readonly subNodesToggleSize: number
+  private readonly subNodesToggle: Container | undefined
+  private label: BitmapText | undefined
+
+  private subNodesContainer: Container | undefined
+  private subNodesOutline: Graphics | undefined
 
   private readonly selectedRing = new Graphics()
 
@@ -93,16 +97,20 @@ export class TimelineNode extends Container {
     this.styleNode = styleNode
     this.layoutPosition = layoutPosition
 
-    this.isSubFlow = nodeData.subFlowId !== undefined
+    this.currentState = nodeData.state
+    this.hasSubNodes = nodeData.subFlowId !== undefined
     this.boxCapWidth = styles.value.borderRadiusNode
 
     this.nodeWidth = this.getNodeWidth()
+    this.nodeHeight = this.getNodeHeight()
     this.layoutPositionOffset = this.getLayoutPositionOffset()
 
     this.initBox()
 
-    this.subFlowToggleSize = this.getSubFlowToggleSize()
+    this.subNodesToggleSize = this.nodeHeight
     this.drawLabel()
+
+    this.drawSubNodesContainer()
 
     this.drawSelectedRing()
     this.selectedRing.alpha = 0
@@ -125,8 +133,8 @@ export class TimelineNode extends Container {
   }
 
   private getLayoutPositionOffset(): number {
-    const { textLineHeightDefault, spacingNodeYPadding, spacingNodeMargin } = this.styles.value
-    const nodeHeight = textLineHeightDefault + spacingNodeYPadding * 2
+    const { nodeHeight } = this
+    const { spacingNodeMargin } = this.styles.value
 
     return nodeHeight + spacingNodeMargin
   }
@@ -145,17 +153,13 @@ export class TimelineNode extends Container {
   }
 
   private drawBox(): void {
-    const { appRef, nodeWidth, box, boxCapWidth } = this
+    const { appRef, nodeWidth, nodeHeight, box, boxCapWidth } = this
     const { fill } = this.styleNode.value(this.nodeData)
     const hexadecimalFill = colorToHex(fill)
     const isRunningNode = !this.nodeData.end
     const {
-      textLineHeightDefault,
-      spacingNodeYPadding,
       borderRadiusNode,
     } = this.styles.value
-
-    const height = textLineHeightDefault + spacingNodeYPadding * 2
 
     this.box.removeChildren()
 
@@ -164,7 +168,7 @@ export class TimelineNode extends Container {
       fill: hexadecimalFill,
       borderRadius: borderRadiusNode,
       boxCapWidth,
-      height,
+      height: nodeHeight,
     })
 
     const startCapSprite = new Sprite(cap)
@@ -182,7 +186,7 @@ export class TimelineNode extends Container {
       const endCapSprite = new Sprite(cap)
       endCapSprite.name = nodeBoxSpriteNames.endCap
       endCapSprite.rotation = Math.PI
-      endCapSprite.position.set(nodeWidth, height)
+      endCapSprite.position.set(nodeWidth, nodeHeight)
 
       box.addChild(endCapSprite)
     }
@@ -202,8 +206,8 @@ export class TimelineNode extends Container {
     await this.setApxLabelWidth()
     this.setIsLabelInBox()
 
-    if (this.isSubFlow) {
-      this.drawSubFlowToggle()
+    if (this.hasSubNodes) {
+      this.drawSubNodesToggle()
     }
 
     this.drawLabelText()
@@ -218,7 +222,7 @@ export class TimelineNode extends Container {
   }
 
   private async setApxLabelWidth(): Promise<void> {
-    const { isSubFlow, subFlowToggleSize } = this
+    const { hasSubNodes, subNodesToggleSize } = this
     const { spacingNodeXPadding } = this.styles.value
     const { nodeTextStyles } = await getBitmapFonts(this.styles.value)
     const { label: labelText } = this.nodeData
@@ -229,10 +233,10 @@ export class TimelineNode extends Container {
       TextMetrics.measureText(labelText, nodeTextStyles).width
       * (1 + labelWidthBufferPercentage / 100)
 
-    const totalWidth = isSubFlow
-      ? subFlowToggleSize + spacingNodeXPadding + apxLabelTextWidth
+    const totalWidth = hasSubNodes
+      ? subNodesToggleSize + spacingNodeXPadding + apxLabelTextWidth
       : apxLabelTextWidth
-    const widthWithPadding = this.isSubFlow
+    const widthWithPadding = this.hasSubNodes
       ? totalWidth + spacingNodeXPadding
       : totalWidth + spacingNodeXPadding * 2
 
@@ -247,8 +251,8 @@ export class TimelineNode extends Container {
 
     const { label: labelText } = this.nodeData
     const labelStyle = this.isLabelInBox ? labelStyleOnFill : textStyles.nodeTextDefault
-    const labelXPos = this.isSubFlow
-      ? this.subFlowToggleSize + spacingNodeXPadding
+    const labelXPos = this.hasSubNodes
+      ? this.subNodesToggleSize + spacingNodeXPadding
       : 0
 
     this.label?.destroy()
@@ -267,15 +271,15 @@ export class TimelineNode extends Container {
     this.labelContainer.addChild(this.label)
   }
 
-  private getSubFlowToggleSize(): number {
+  private getNodeHeight(): number {
     const { textLineHeightDefault, spacingNodeYPadding } = this.styles.value
     return textLineHeightDefault + spacingNodeYPadding * 2
   }
 
-  private drawSubFlowToggle(): void {
-    let { subFlowToggle } = this
+  private drawSubNodesToggle(): void {
+    let { subNodesToggle } = this
     const {
-      subFlowToggleSize,
+      subNodesToggleSize,
       isLabelInBox,
       labelContainer,
     } = this
@@ -290,8 +294,8 @@ export class TimelineNode extends Container {
     const arrowColorOnFill = inverseTextOnFill ? colorTextInverse : colorTextDefault
     const arrowColor = isLabelInBox ? arrowColorOnFill : colorTextDefault
 
-    subFlowToggle?.destroy()
-    subFlowToggle = new Container()
+    subNodesToggle?.destroy()
+    subNodesToggle = new Container()
 
     const subFlowBox = new Graphics()
     subFlowBox.lineStyle(1, colorButtonBorder)
@@ -299,20 +303,20 @@ export class TimelineNode extends Container {
     subFlowBox.drawRoundedRect(
       0,
       0,
-      subFlowToggleSize,
-      subFlowToggleSize,
+      subNodesToggleSize,
+      subNodesToggleSize,
       borderRadiusButton,
     )
     subFlowBox.endFill()
-    subFlowToggle.addChild(subFlowBox)
+    subNodesToggle.addChild(subFlowBox)
     subFlowBox.alpha = isLabelInBox ? 0 : 1
 
     if (isLabelInBox) {
       const rightBorder = new Graphics()
       rightBorder.lineStyle(1, arrowColor)
-      rightBorder.moveTo(subFlowToggleSize, 0)
-      rightBorder.lineTo(subFlowToggleSize, subFlowToggleSize)
-      subFlowToggle.addChild(rightBorder)
+      rightBorder.moveTo(subNodesToggleSize, 0)
+      rightBorder.lineTo(subNodesToggleSize, subNodesToggleSize)
+      subNodesToggle.addChild(rightBorder)
     }
 
     const arrowTexture = getArrowTexture({
@@ -325,20 +329,55 @@ export class TimelineNode extends Container {
     const arrowSprite = new Sprite(arrowTexture)
     arrowSprite.transform.rotation = Math.PI / 2
     arrowSprite.anchor.set(0.5, 0.5)
-    arrowSprite.position.set(subFlowToggleSize / 2, subFlowToggleSize / 2)
+    arrowSprite.position.set(subNodesToggleSize / 2, subNodesToggleSize / 2)
 
-    subFlowToggle.addChild(arrowSprite)
+    subNodesToggle.addChild(arrowSprite)
 
-    labelContainer.addChild(subFlowToggle)
+    labelContainer.addChild(subNodesToggle)
 
-    subFlowToggle.interactive = true
-    subFlowToggle.buttonMode = true
-    subFlowToggle.on('click', () => {
-      this.emit(nodeClickEvents.subFlowToggle)
+    subNodesToggle.interactive = true
+    subNodesToggle.buttonMode = true
+    subNodesToggle.on('click', () => {
+      this.emit(nodeClickEvents.subNodesToggle)
     })
   }
 
+  private drawSubNodesContainer(): void {
+    if (!this.hasSubNodes) {
+      return
+    }
+
+    const { nodeWidth, nodeHeight } = this
+    const {
+      borderRadiusNode,
+      alphaSubNodesOutlineDimmed,
+      spacingSubNodesOutlineOffset,
+    } = this.styles.value
+    const { fill } = this.styleNode.value(this.nodeData)
+    const hexadecimalFill = colorToHex(fill)
+
+    if (!this.subNodesContainer) {
+      this.subNodesContainer = new Container()
+      this.addChild(this.subNodesContainer)
+      this.subNodesOutline = new Graphics()
+      this.subNodesContainer.addChild(this.subNodesOutline)
+    }
+
+    this.subNodesOutline!.clear()
+
+    this.subNodesOutline!.lineStyle(1, hexadecimalFill)
+    this.subNodesOutline!.drawRoundedRect(
+      4,
+      4,
+      nodeWidth - spacingSubNodesOutlineOffset * 2,
+      nodeHeight,
+      borderRadiusNode,
+    )
+    this.subNodesOutline!.alpha = alphaSubNodesOutlineDimmed
+  }
+
   private drawSelectedRing(): void {
+    const { nodeHeight } = this
     const {
       colorNodeSelection,
       spacingNodeSelectionMargin,
@@ -358,7 +397,7 @@ export class TimelineNode extends Container {
       -spacingNodeSelectionMargin,
       -spacingNodeSelectionMargin,
       this.nodeWidth + spacingNodeSelectionMargin * 2,
-      this.box.height + spacingNodeSelectionMargin * 2,
+      nodeHeight + spacingNodeSelectionMargin * 2,
       borderRadiusNode,
     )
 
@@ -373,12 +412,17 @@ export class TimelineNode extends Container {
           child.scale.x = this.getBoxBodyWidth()
           break
         case nodeBoxSpriteNames.endCap:
-          child.position.set(this.nodeWidth, this.box.height)
+          child.position.set(this.nodeWidth, this.nodeHeight)
           break
         default:
           break
       }
     })
+
+    if (this.subNodesOutline) {
+      const { spacingSubNodesOutlineOffset } = this.styles.value
+      this.subNodesOutline.width = this.nodeWidth - spacingSubNodesOutlineOffset * 2
+    }
   }
 
   public async updatePosition(animate?: boolean): Promise<void> {
@@ -408,7 +452,7 @@ export class TimelineNode extends Container {
       spacingNodeLabelMargin,
     } = this.styles.value
 
-    const inBoxXPos = this.isSubFlow ? 0 : spacingNodeXPadding
+    const inBoxXPos = this.hasSubNodes ? 0 : spacingNodeXPadding
     const xPos = this.isLabelInBox
       ? inBoxXPos
       : this.nodeWidth + spacingNodeLabelMargin
@@ -421,17 +465,19 @@ export class TimelineNode extends Container {
     let hasNewState = false
     let hasNewLabelText = false
 
-    if (newNodeData) {
-      hasNewState = newNodeData.state !== this.nodeData.state
-      hasNewLabelText = this.label?.text !== newNodeData.label
 
-      this.nodeData = newNodeData
+    if (newNodeData) {
+      hasNewState = this.currentState !== newNodeData.state
+      this.currentState = newNodeData.state
+
+      hasNewLabelText = this.label?.text !== newNodeData.label
     }
 
     const nodeWidth = this.getNodeWidth()
 
     if (hasNewState) {
       this.drawBox()
+      this.drawSubNodesContainer()
     }
 
     if (hasNewLabelText) {

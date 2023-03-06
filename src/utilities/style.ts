@@ -27,6 +27,7 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     spacingNodeEdgeLength: spacingToNumber(overrides?.spacingNodeEdgeLength ?? '8px'),
     spacingNodeSelectionMargin: spacingToNumber(overrides?.spacingNodeSelectionMargin ?? '2px'),
     spacingNodeSelectionWidth: spacingToNumber(overrides?.spacingNodeSelectionWidth ?? '4px'),
+    spacingSubNodesOutlineOffset: spacingToNumber(overrides?.spacingSubNodesOutlineOffset ?? '4px'),
     spacingEdgeWidth: spacingToNumber(overrides?.spacingEdgeWidth ?? '2px'),
     spacingGuideLabelPadding: spacingToNumber(overrides?.spacingGuideLabelPadding ?? '4px'),
     spacingPlayheadGlowPadding: spacingToNumber(overrides?.spacingPlayheadGlowPadding ?? '8px'),
@@ -34,6 +35,7 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     borderRadiusNode: spacingToNumber(overrides?.borderRadiusNode ?? '8px'),
     borderRadiusButton: spacingToNumber(overrides?.borderRadiusButton ?? '8px'),
     alphaNodeDimmed: overrides?.alphaNodeDimmed ?? 0.2,
+    alphaSubNodesOutlineDimmed: overrides?.alphaSubNodesOutlineDimmed ?? 0.5,
   }
 }
 

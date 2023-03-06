@@ -122,6 +122,7 @@ export type ThemeStyleOverrides = {
   spacingNodeEdgeLength?: Sizing,
   spacingNodeSelectionMargin?: Sizing,
   spacingNodeSelectionWidth?: Sizing,
+  spacingSubNodesOutlineOffset?: Sizing,
   spacingEdgeWidth?: Sizing,
   spacingGuideLabelPadding?: Sizing,
   spacingPlayheadWidth?: Sizing,
@@ -129,6 +130,7 @@ export type ThemeStyleOverrides = {
   borderRadiusNode?: Sizing,
   borderRadiusButton?: Sizing,
   alphaNodeDimmed?: number,
+  alphaSubNodesOutlineDimmed?: number,
 }
 
 export type ParsedThemeStyles = {
@@ -156,6 +158,7 @@ export type ParsedThemeStyles = {
   spacingNodeEdgeLength: number,
   spacingNodeSelectionMargin: number,
   spacingNodeSelectionWidth: number,
+  spacingSubNodesOutlineOffset: number,
   spacingEdgeWidth: number,
   spacingGuideLabelPadding: number,
   spacingPlayheadWidth: number,
@@ -163,6 +166,7 @@ export type ParsedThemeStyles = {
   borderRadiusNode: number,
   borderRadiusButton: number,
   alphaNodeDimmed: number,
+  alphaSubNodesOutlineDimmed: number,
 }
 
 export type TimelineThemeOptions = {

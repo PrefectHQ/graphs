@@ -95,6 +95,7 @@
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
   const selectedNodeId = ref<string | null>(null)
+  const visibleSubFlowIds = ref<string[]>([])
   const hideEdges = ref(false)
 
   const size = ref(15)
@@ -146,7 +147,14 @@
   }
 
   const toggleSubFlow = (value: string): void => {
-    console.log('sub flow toggle clicked', value)
+    const isValueVisible = visibleSubFlowIds.value.includes(value)
+
+    if (isValueVisible) {
+      visibleSubFlowIds.value = visibleSubFlowIds.value.filter(id => id !== value)
+      return
+    }
+
+    visibleSubFlowIds.value = [...visibleSubFlowIds.value, value]
   }
 
   const centerViewport = (): void => {

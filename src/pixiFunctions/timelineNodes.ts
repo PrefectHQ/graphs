@@ -211,8 +211,8 @@ export class TimelineNodes extends Container {
     node.on(nodeClickEvents.nodeDetails, () => {
       this.emit(nodeClickEvents.nodeDetails, nodeData.id)
     })
-    node.on(nodeClickEvents.subFlowToggle, () => {
-      this.emit(nodeClickEvents.subFlowToggle, nodeData.id)
+    node.on(nodeClickEvents.subNodesToggle, () => {
+      this.emit(nodeClickEvents.subNodesToggle, nodeData.id)
     })
 
     this.nodeRecords.set(nodeData.id, node)
