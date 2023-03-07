@@ -29,6 +29,9 @@
           <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
         <div class="flow-run-timeline-demo__checkbox-wrapper">
+          <p-checkbox v-model="slowFeedData" label="Slow Feed Data" />
+        </div>
+        <div class="flow-run-timeline-demo__checkbox-wrapper">
           <p-checkbox v-model="zeroTimeGap" label="Zero Time Gap" />
         </div>
         <div class="flow-run-timeline-demo__checkbox-wrapper">
@@ -106,6 +109,7 @@
   const start = ref<Date>(previous)
   const end = ref<Date>(now)
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
+  const slowFeedData = ref(false)
   const zeroTimeGap = ref(true)
   const layoutOptions: TimelineNodesLayoutOptions[] = ['waterfall', 'nearestParent']
   const layout: Ref<TimelineNodesLayoutOptions> = ref('nearestParent')
@@ -124,8 +128,31 @@
 
   const data = ref<TimescaleItem[]>([])
 
+  const slowlySetData = (graphData: TimescaleItem[], count: number = 1): void => {
+    const newData = graphData.filter((item, index) => index <= count)
+
+    if (count === 1) {
+      data.value = newData
+      slowlySetData(graphData, count + 1)
+      return
+    }
+
+    setTimeout(() => {
+      data.value = newData
+      if (count < graphData.length) {
+        slowlySetData(graphData, count + 1)
+      }
+    }, 1000)
+  }
+
   watchEffect(() => {
-    data.value = generateTimescaleData(dataOptions.value)
+    const generatedData = generateTimescaleData(dataOptions.value)
+    if (slowFeedData.value) {
+      slowlySetData(generatedData)
+    } else {
+      data.value = generateTimescaleData(dataOptions.value)
+    }
+
 
     if (isRunning.value) {
       const lastItem = data.value[data.value.length - 1]

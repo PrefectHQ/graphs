@@ -134,14 +134,16 @@ export class TimelineNodes extends Container {
       },
     }
 
-    this.layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
+    this.layoutWorker.onmessage = async ({ data }: NodeLayoutWorkerResponse) => {
       this.layout = data.layout
 
-      this.renderLayout()
+      await this.renderLayout()
 
       if (data.centerViewportAfter) {
         this.centerViewportAfterDelay()
       }
+
+      this.emitUpdate()
     }
 
     this.layoutWorker.postMessage(layoutWorkerOptions.data)
@@ -172,17 +174,27 @@ export class TimelineNodes extends Container {
     })
   }
 
-  private renderLayout(): void {
+  private async renderLayout(): Promise<void> {
     const isInitialRender = this.nodeRecords.size === 0
 
-    Object.keys(this.layout).forEach((nodeId) => {
+    this.temporarilyHideEdges()
+
+    const nodeUpdates = Object.keys(this.layout).map(async (nodeId) => {
       if (this.nodeRecords.has(nodeId)) {
         const nodeRecord = this.nodeRecords.get(nodeId)!
-        this.updateNodeRecordAndEdgesLayout(nodeId, nodeRecord)
+        const layoutPosition = this.layout[nodeId].position
+        nodeRecord.update(true)
+        if (nodeRecord.position.y !== this.getNodeYPosition(layoutPosition)) {
+          await this.updateNodePosition(nodeRecord, true)
+        }
       } else {
         this.createNode(this.graphData.find(node => node.id === nodeId)!)
       }
     })
+
+    await Promise.all(nodeUpdates)
+
+    this.endTemporarilyHideEdges()
 
     if (isInitialRender) {
       this.addChild(this.edgeContainer)
@@ -194,28 +206,16 @@ export class TimelineNodes extends Container {
     }
   }
 
-  private async updateNodeRecordAndEdgesLayout(nodeId: string, nodeRecord: TimelineNode): Promise<void> {
-    const layoutPosition = this.layout[nodeId].position
-
-    nodeRecord.update(true)
-
-    if (nodeRecord.position.y !== this.getNodeYPosition(layoutPosition)) {
-      const nodeEdgeRecords: EdgeRecord[] = this.edgeRecords.filter((edgeRecord) => {
-        return edgeRecord.sourceId === nodeId || edgeRecord.targetId === nodeId
-      })
-      nodeEdgeRecords.forEach((edgeRecord) => {
-        edgeRecord.edge.visible = false
-      })
-
-      // !!!! @TODO: If the pairing node hasn't updated yet, this could lead to incorrect targets and
-      // will lead to double updates.
-      await this.updateNodePosition(nodeRecord, true)
-
-      nodeEdgeRecords.forEach((edgeRecord) => {
-        edgeRecord.edge.update()
-        edgeRecord.edge.visible = true
-      })
-    }
+  private temporarilyHideEdges(): void {
+    this.edgeRecords.forEach((edgeRecord) => {
+      edgeRecord.edge.visible = false
+    })
+  }
+  private endTemporarilyHideEdges(): void {
+    this.edgeRecords.forEach((edgeRecord) => {
+      edgeRecord.edge.update()
+      edgeRecord.edge.visible = true
+    })
   }
 
   private createNode(nodeData: TimelineNodeData): void {
@@ -354,15 +354,7 @@ export class TimelineNodes extends Container {
       return
     }
 
-    let oldSelectedNode = this.nodeRecords.get(this.selectedNodeId)
-
-    if (!oldSelectedNode) {
-      this.subNodesRecords?.forEach((subFlow) => {
-        if (subFlow.nodeRecords.has(this.selectedNodeId!)) {
-          oldSelectedNode = subFlow.nodeRecords.get(this.selectedNodeId!)!
-        }
-      })
-    }
+    const oldSelectedNode = this.findNodeRecord(this.selectedNodeId)
 
     if (oldSelectedNode) {
       oldSelectedNode.deselect()
@@ -540,7 +532,13 @@ export class TimelineNodes extends Container {
       this.viewportRef.addChild(subNodes)
     })
 
-    this.subNodesRecords.forEach((subNodes, nodeId) => {
+    this.checkRemovedExpandedSubNodes()
+
+    // check layout
+  }
+
+  private checkRemovedExpandedSubNodes(): void {
+    this.subNodesRecords?.forEach((subNodes, nodeId) => {
       if (!this.expandedSubNodes?.has(nodeId)) {
         if (this.selectedNodeId && subNodes.nodeRecords.has(this.selectedNodeId)) {
           this.emitNullSelection()
@@ -549,12 +547,30 @@ export class TimelineNodes extends Container {
         this.subNodesRecords!.delete(nodeId)
       }
     })
+  }
 
-    // check layout
+  private findNodeRecord(nodeId: string): TimelineNode | null {
+    if (this.nodeRecords.has(nodeId)) {
+      return this.nodeRecords.get(nodeId)!
+    }
+
+    if (this.subNodesRecords) {
+      for (const subNodes of this.subNodesRecords.values()) {
+        if (subNodes.nodeRecords.has(nodeId)) {
+          return subNodes.nodeRecords.get(nodeId)!
+        }
+      }
+    }
+
+    return null
   }
 
   private emitNullSelection(): void {
     this.emit(nodeClickEvents.nodeDetails, null)
+  }
+
+  private emitUpdate(): void {
+    this.emit('updated')
   }
 
   public destroy(): void {
