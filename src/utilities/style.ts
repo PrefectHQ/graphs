@@ -35,7 +35,7 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     borderRadiusNode: spacingToNumber(overrides?.borderRadiusNode ?? '8px'),
     borderRadiusButton: spacingToNumber(overrides?.borderRadiusButton ?? '8px'),
     alphaNodeDimmed: overrides?.alphaNodeDimmed ?? 0.2,
-    alphaSubNodesOutlineDimmed: overrides?.alphaSubNodesOutlineDimmed ?? 0.5,
+    alphaSubNodesOutlineDimmed: overrides?.alphaSubNodesOutlineDimmed ?? 0.7,
   }
 }
 

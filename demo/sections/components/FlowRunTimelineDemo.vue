@@ -65,7 +65,7 @@
           :hide-edges="hideEdges"
           class="flow-run-timeline-demo-demo__graph"
           :selected-node-id="selectedNodeId"
-          :expanded-sub-flow-ids="expandedSubFlowIds"
+          :expanded-sub-flows="expandedSubFlows"
           @selection="selectNode"
           @sub-flow-toggle="toggleSubFlow"
         />
@@ -96,7 +96,7 @@
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
   const selectedNodeId = ref<string | null>(null)
-  const expandedSubFlowIds = ref<string[]>([])
+  const expandedSubFlows = ref<Map<string, TimescaleItem[]>>(new Map())
   const hideEdges = ref(false)
 
   const size = ref(15)
@@ -137,6 +137,8 @@
     // but not completely change. This allows it to animate changes in nodes as the data updates.
     // So for demo purposes, when we get new data, we rerender the graph from scratch.
     componentKey.value += 1
+    selectedNodeId.value = null
+    expandedSubFlows.value = new Map()
   })
 
   const selectNode = (value: string | null): void => {
@@ -148,14 +150,43 @@
   }
 
   const toggleSubFlow = (value: string): void => {
-    const isValueVisible = expandedSubFlowIds.value.includes(value)
+    const isValueVisible = expandedSubFlows.value.has(value)
 
     if (isValueVisible) {
-      expandedSubFlowIds.value = expandedSubFlowIds.value.filter(id => id !== value)
+      expandedSubFlows.value.delete(value)
       return
     }
 
-    expandedSubFlowIds.value = [...expandedSubFlowIds.value, value]
+    expandedSubFlows.value.set(value, [])
+
+    // timeout simulates the delay while requesting subflow data.
+    setTimeout(() => {
+      if (expandedSubFlows.value.has(value)) {
+        let nodeData = data.value.find(item => item.id === value)
+        if (!nodeData) {
+          expandedSubFlows.value.forEach((subFlowData) => {
+            const match = subFlowData.find(item => item.id === value)
+            if (match) {
+              nodeData = match
+            }
+          })
+        }
+
+        if (!nodeData) {
+          throw new Error('Could not find node data')
+        }
+
+        const subFlowDataOptions = {
+          ...dataOptions.value,
+          size: Math.floor(Math.random() * 5) + 1,
+          start: new Date(nodeData.start),
+          end: nodeData.end ? new Date(nodeData.end) : new Date(),
+        }
+        const subFlowData = generateTimescaleData(subFlowDataOptions)
+
+        expandedSubFlows.value.set(value, subFlowData)
+      }
+    }, 2000)
   }
 
   const centerViewport = (): void => {

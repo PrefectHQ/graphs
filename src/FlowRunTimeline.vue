@@ -24,7 +24,8 @@
     formatDateFnsDefault,
     TimelineScale,
     TimelineNodesLayoutOptions,
-    CenterViewportOptions
+    CenterViewportOptions,
+    ExpandedSubNodes
   } from '@/models'
   import {
     initBitmapFonts,
@@ -35,7 +36,6 @@
     TimelineNodes,
     TimelinePlayhead,
     initTimelineScale,
-    nodeContainerName,
     nodeClickEvents
   } from '@/pixiFunctions'
   import {
@@ -51,7 +51,7 @@
     selectedNodeId?: string | null,
     layout?: TimelineNodesLayoutOptions,
     hideEdges?: boolean,
-    expandedSubFlowIds?: string[],
+    expandedSubFlows?: ExpandedSubNodes,
   }>()
 
   defineExpose({
@@ -90,6 +90,7 @@
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: (() => void) | null = null
+  const nodesContentContainerName = 'rootNodesContainer'
   let nodesContainer: TimelineNodes
 
   const emit = defineEmits<{
@@ -283,6 +284,7 @@
 
   function initContent(): void {
     nodesContainer = new TimelineNodes({
+      nodeContentContainerName: nodesContentContainerName,
       appRef: pixiApp,
       viewportRef: viewport,
       graphData: props.graphData,
@@ -290,7 +292,7 @@
       styleNode,
       layoutSetting: props.layout ?? 'nearestParent',
       hideEdges: props.hideEdges ?? false,
-      expandedSubFlowIds: props.expandedSubFlowIds ?? [],
+      expandedSubNodes: props.expandedSubFlows,
       timeScaleProps: {
         minimumStartTime: minimumStartDate.getTime(),
         overallGraphWidth,
@@ -335,6 +337,9 @@
     watch(() => props.layout, (newValue) => {
       nodesContainer.updateLayoutSetting(newValue ?? 'nearestParent')
     })
+    watch(() => props.expandedSubFlows, () => {
+      nodesContainer.updateExpandedSubNodes()
+    }, { deep: true })
   }
 
   function centerViewport({ skipAnimation }: CenterViewportOptions = {}): void {
@@ -347,7 +352,7 @@
       y: contentY,
       width,
       height,
-    } = nodesContainer.getChildByName(nodeContainerName).getLocalBounds()
+    } = nodesContainer.getChildByName(nodesContentContainerName).getLocalBounds()
     resumeCulling()
 
     const scale = viewport.findFit(

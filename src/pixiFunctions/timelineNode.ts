@@ -127,7 +127,7 @@ export class TimelineNode extends Container {
     box.interactive = true
     box.buttonMode = true
     box.on('click', () => {
-      this.emit(nodeClickEvents.nodeDetails)
+      this.emit(nodeClickEvents.nodeDetails, this.nodeData.id)
     })
   }
 
@@ -243,7 +243,7 @@ export class TimelineNode extends Container {
       this.label.interactive = true
       this.label.buttonMode = true
       this.label.on('click', () => {
-        this.emit(nodeClickEvents.nodeDetails)
+        this.emit(nodeClickEvents.nodeDetails, this.nodeData.id)
       })
     }
 
@@ -317,7 +317,7 @@ export class TimelineNode extends Container {
     subNodesToggle.interactive = true
     subNodesToggle.buttonMode = true
     subNodesToggle.on('click', () => {
-      this.emit(nodeClickEvents.subNodesToggle)
+      this.emit(nodeClickEvents.subNodesToggle, this.nodeData.id)
     })
   }
 

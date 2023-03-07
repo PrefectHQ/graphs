@@ -62,21 +62,21 @@ const maxDate = (nodes: TimescaleItem[], property: keyof TimescaleItem, start: D
 const assignStartAndEndDates = ({ start, end, size, nodes, zeroTimeGap }: AssignStartAndEndDates): (node: TimescaleItem) => void => {
   const minIncrement = (end.getTime() - start.getTime()) / size
 
-
   return (node: TimescaleItem) => {
     const upstreamDependencies = node.upstreamDependencies
       .map(id => nodes.find(nodeItem => nodeItem.id == id)) as TimescaleItem[]
 
     const minStart = maxDate(upstreamDependencies, 'end', start)
-    const maxStart = new Date(minStart.getTime() + minIncrement * 2)
+    const maxStart = new Date(minStart.getTime() + minIncrement)
     const _start = zeroTimeGap ? minStart : randomDate(minStart, maxStart)
 
     const minEnd = new Date(_start.getTime() + minIncrement)
-    const maxEnd = new Date(minEnd.getTime() + minIncrement * 2)
-    const _end = randomDate(minEnd, maxEnd)
+    const maxEnd = new Date(minEnd.getTime() + minIncrement * 1.5)
+    const randomEnd = randomDate(minEnd, maxEnd)
+    const _end = randomEnd.getTime() > end.getTime() ? end : randomEnd
 
     node.start = _start
-    node.end = _end
+    node.end = _end.getTime() > end.getTime() ? end : _end
   }
 }
 

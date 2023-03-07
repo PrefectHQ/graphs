@@ -19,6 +19,8 @@ export type InitTimelineScaleProps = {
 
 export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
 
+export type ExpandedSubNodes = Map<string, TimelineNodeData[]>
+
 export type NodeShoveDirection = 1 | -1
 export type NodeLayoutWorkerProps = {
   data: {
