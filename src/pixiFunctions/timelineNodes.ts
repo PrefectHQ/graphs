@@ -1,7 +1,7 @@
 import gsap from 'gsap'
 import type { Viewport } from 'pixi-viewport'
 import { Application, Container, TextMetrics } from 'pixi.js'
-import { ComputedRef } from 'vue'
+import { ComputedRef, watch, WatchStopHandle } from 'vue'
 import {
   NodeLayoutWorkerResponse,
   NodeThemeFn,
@@ -34,7 +34,7 @@ type TimelineNodesProps = {
   graphData: TimelineNodeData[],
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
-  layoutSetting: TimelineNodesLayoutOptions,
+  layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
   hideEdges: boolean,
   expandedSubNodes?: ExpandedSubNodes,
   isSubNodes?: boolean,
@@ -54,6 +54,7 @@ export class TimelineNodes extends Container {
   private graphData
   private readonly styles
   private readonly styleNode
+  private readonly layoutSetting
   private readonly timeScaleProps: InitTimelineScaleProps
   private readonly centerViewport
 
@@ -61,7 +62,7 @@ export class TimelineNodes extends Container {
   public readonly nodeRecords: Map<string, TimelineNode> = new Map()
   public selectedNodeId: string | null | undefined = null
 
-  private layoutSetting
+  private readonly unwatchLayoutSetting: WatchStopHandle
   private hideEdges
   private readonly layoutWorker: Worker = new LayoutWorker()
   private layout: NodesLayout = {}
@@ -108,6 +109,10 @@ export class TimelineNodes extends Container {
     }
 
     this.initLayoutWorker()
+
+    this.unwatchLayoutSetting = watch(layoutSetting, () => {
+      this.updateLayoutSetting()
+    })
   }
 
   private async initLayoutWorker(): Promise<void> {
@@ -121,7 +126,7 @@ export class TimelineNodes extends Container {
         spacingMinimumNodeEdgeGap,
         apxCharacterWidth,
         graphData: JSON.stringify(this.graphData),
-        layoutSetting: this.layoutSetting,
+        layoutSetting: this.layoutSetting.value,
       },
     }
 
@@ -487,12 +492,11 @@ export class TimelineNodes extends Container {
     }
   }
 
-  public updateLayoutSetting(layoutSetting: TimelineNodesLayoutOptions): void {
-    this.layoutSetting = layoutSetting
+  public updateLayoutSetting(): void {
     const message: NodeLayoutWorkerProps = {
       data: {
         graphData: JSON.stringify(this.graphData),
-        layoutSetting,
+        layoutSetting: this.layoutSetting.value,
         centerViewportAfter: true,
       },
     }
@@ -560,6 +564,7 @@ export class TimelineNodes extends Container {
     this.layoutWorker.onmessage = null
     this.subNodesRecords?.forEach(subNodes => subNodes.destroy())
     this.subNodesRecords?.clear()
+    this.unwatchLayoutSetting()
 
     if (!this.isSubNodes) {
       destroyNodeTextureCache()

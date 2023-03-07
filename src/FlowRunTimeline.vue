@@ -62,6 +62,7 @@
   const stage = ref<HTMLDivElement>()
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
   const styles = computed(() => parseThemeOptions(props.theme?.defaults))
+  const layoutSetting = computed(() => props.layout ?? 'nearestParent')
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
@@ -290,7 +291,7 @@
       graphData: props.graphData,
       styles,
       styleNode,
-      layoutSetting: props.layout ?? 'nearestParent',
+      layoutSetting,
       hideEdges: props.hideEdges ?? false,
       expandedSubNodes: props.expandedSubFlows,
       timeScaleProps: {
@@ -333,9 +334,6 @@
     })
     watch(() => props.hideEdges, (newValue) => {
       nodesContainer.updateHideEdges(newValue ?? false)
-    })
-    watch(() => props.layout, (newValue) => {
-      nodesContainer.updateLayoutSetting(newValue ?? 'nearestParent')
     })
     watch(() => props.expandedSubFlows, () => {
       nodesContainer.updateExpandedSubNodes()
