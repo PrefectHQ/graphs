@@ -35,7 +35,7 @@ type TimelineNodesProps = {
   styles: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
-  hideEdges: boolean,
+  hideEdges: ComputedRef<boolean>,
   expandedSubNodes?: ExpandedSubNodes,
   isSubNodes?: boolean,
   timeScaleProps: InitTimelineScaleProps,
@@ -63,7 +63,8 @@ export class TimelineNodes extends Container {
   public selectedNodeId: string | null | undefined = null
 
   private readonly unwatchLayoutSetting: WatchStopHandle
-  private hideEdges
+  private readonly unwatchHideEdges: WatchStopHandle
+  private readonly hideEdges
   private readonly layoutWorker: Worker = new LayoutWorker()
   private layout: NodesLayout = {}
 
@@ -112,6 +113,9 @@ export class TimelineNodes extends Container {
 
     this.unwatchLayoutSetting = watch(layoutSetting, () => {
       this.updateLayoutSetting()
+    })
+    this.unwatchHideEdges = watch(hideEdges, () => {
+      this.updateHideEdges()
     })
   }
 
@@ -295,7 +299,7 @@ export class TimelineNodes extends Container {
         targetNode,
       })
 
-      if (this.hideEdges) {
+      if (this.hideEdges.value) {
         edge.renderable = false
       }
 
@@ -332,7 +336,7 @@ export class TimelineNodes extends Container {
 
   private unHighlightAll(): void {
     this.edgeRecords.forEach(({ edge }) => {
-      if (this.hideEdges) {
+      if (this.hideEdges.value) {
         edge.renderable = false
       }
       edge.alpha = 1
@@ -474,12 +478,10 @@ export class TimelineNodes extends Container {
     return connectedEdges
   }
 
-  public updateHideEdges(hideEdges: boolean): void {
-    this.hideEdges = hideEdges
+  public updateHideEdges(): void {
+    this.edgeRecords.forEach(({ edge }) => edge.renderable = !this.hideEdges.value)
 
-    this.edgeRecords.forEach(({ edge }) => edge.renderable = !this.hideEdges)
-
-    if (!this.hideEdges) {
+    if (!this.hideEdges.value) {
       // the viewport needs to update transforms so the edges show in the right place
       this.viewportRef.dirty = true
       this.viewportRef.updateTransform()
@@ -565,6 +567,7 @@ export class TimelineNodes extends Container {
     this.subNodesRecords?.forEach(subNodes => subNodes.destroy())
     this.subNodesRecords?.clear()
     this.unwatchLayoutSetting()
+    this.unwatchHideEdges()
 
     if (!this.isSubNodes) {
       destroyNodeTextureCache()

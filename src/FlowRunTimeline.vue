@@ -63,6 +63,7 @@
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
   const styles = computed(() => parseThemeOptions(props.theme?.defaults))
   const layoutSetting = computed(() => props.layout ?? 'nearestParent')
+  const hideEdges = computed(() => props.hideEdges ?? false)
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
@@ -292,7 +293,7 @@
       styles,
       styleNode,
       layoutSetting,
-      hideEdges: props.hideEdges ?? false,
+      hideEdges,
       expandedSubNodes: props.expandedSubFlows,
       timeScaleProps: {
         minimumStartTime: minimumStartDate.getTime(),
@@ -331,9 +332,6 @@
     })
     watch(() => props.selectedNodeId, (newValue) => {
       nodesContainer.updateSelection(newValue)
-    })
-    watch(() => props.hideEdges, (newValue) => {
-      nodesContainer.updateHideEdges(newValue ?? false)
     })
     watch(() => props.expandedSubFlows, () => {
       nodesContainer.updateExpandedSubNodes()
