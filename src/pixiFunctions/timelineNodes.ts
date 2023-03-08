@@ -71,6 +71,7 @@ export class TimelineNodes extends Container {
   private readonly isSubNodes
   private readonly expandedSubNodes
   private subNodesRecords: Map<string, TimelineNodes> | undefined
+  private subNodesContainer: Container | undefined
 
   private readonly edgeContainer = new Container()
   private readonly edgeRecords: EdgeRecord[] = []
@@ -503,38 +504,48 @@ export class TimelineNodes extends Container {
     }
 
     this.expandedSubNodes?.forEach((subNodesData, nodeId) => {
-      // handle loading
-
       if (this.subNodesRecords!.has(nodeId)) {
         const subNodes = this.subNodesRecords!.get(nodeId)!
         subNodes.update(subNodesData)
         return
       }
-
-      const subNodes = new TimelineNodes({
-        isSubNodes: true,
-        appRef: this.appRef,
-        viewportRef: this.viewportRef,
-        graphData: subNodesData,
-        styles: this.styles,
-        styleNode: this.styleNode,
-        layoutSetting: this.layoutSetting,
-        hideEdges: this.hideEdges,
-        timeScaleProps: this.timeScaleProps,
-        centerViewport: this.centerViewport,
-      })
-      subNodes.position.set(subNodes.position.x, this.nodeContainer.height)
-
-      this.subNodesRecords!.set(nodeId, subNodes)
-      this.registerEmits(subNodes)
-
-      // Allow node to render in it's own container
-      this.viewportRef.addChild(subNodes)
+      this.createSubNodes(nodeId, subNodesData)
     })
 
     this.checkRemovedExpandedSubNodes()
 
     // check layout
+  }
+
+  private readonly createSubNodes = (nodeId: string, subNodesData: TimelineNodeData[]): void => {
+    if (!this.subNodesContainer) {
+      this.subNodesContainer = new Container()
+      this.addChild(this.subNodesContainer)
+    }
+
+    const parentNode = this.findNodeRecord(nodeId)
+
+    if (!parentNode) {
+      return
+    }
+
+    const subNodes = new TimelineNodes({
+      isSubNodes: true,
+      appRef: this.appRef,
+      viewportRef: this.viewportRef,
+      graphData: subNodesData,
+      styles: this.styles,
+      styleNode: this.styleNode,
+      layoutSetting: this.layoutSetting,
+      hideEdges: this.hideEdges,
+      timeScaleProps: this.timeScaleProps,
+      centerViewport: this.centerViewport,
+    })
+
+    this.subNodesRecords!.set(nodeId, subNodes)
+    this.registerEmits(subNodes)
+
+    parentNode.expandSubNodes(subNodes)
   }
 
   private checkRemovedExpandedSubNodes(): void {
@@ -573,6 +584,21 @@ export class TimelineNodes extends Container {
     this.emit('updated')
   }
 
+  public getEarliestNodeStart(): Date | null {
+    if (this.graphData.length < 1) {
+      return null
+    }
+
+    const earliestNodeStart = this.graphData.reduce((earliestDate: Date, nodeData) => {
+      if (nodeData.start.getTime() < earliestDate.getTime()) {
+        return nodeData.start
+      }
+      return earliestDate
+    }, this.graphData[0].start)
+
+    return earliestNodeStart
+  }
+
   public destroy(): void {
     this.removeChildren()
     this.nodeRecords.forEach(nodeRecord => nodeRecord.destroy())
@@ -582,6 +608,7 @@ export class TimelineNodes extends Container {
     this.layoutWorker.onmessage = null
     this.subNodesRecords?.forEach(subNodes => subNodes.destroy())
     this.subNodesRecords?.clear()
+    this.subNodesContainer?.destroy()
     this.unwatchLayoutSetting()
     this.unwatchHideEdges()
 

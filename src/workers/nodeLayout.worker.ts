@@ -81,6 +81,8 @@ async function calculateNodeLayout(): Promise<void> {
   if (currentLayoutSetting === 'nearestParent') {
     await generateNearestParentLayout()
   }
+
+  purgeNegativePositions()
 }
 
 function generateWaterfallLayout(): void {
@@ -433,4 +435,19 @@ function getLayoutItemUpAndDownwardConnections(id: string): [number, number] {
     console.warn('nodeLayout.worker.ts: Parent node not found on layout data', id)
     return counts
   }, [0, 0]) ?? [0, 0]
+}
+
+function purgeNegativePositions(): void {
+  const lowestPosition = Object.values(layout).reduce((lowest, layoutItem) => {
+    if (layoutItem.position < lowest) {
+      return layoutItem.position
+    }
+    return lowest
+  }, 0)
+
+  if (lowestPosition < 0) {
+    Object.values(layout).forEach(layoutItem => {
+      layoutItem.position += Math.abs(lowestPosition)
+    })
+  }
 }

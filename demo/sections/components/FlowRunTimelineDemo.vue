@@ -213,7 +213,7 @@
 
         expandedSubFlows.value.set(value, subFlowData)
       }
-    }, 2000)
+    }, 200)
   }
 
   const centerViewport = (): void => {

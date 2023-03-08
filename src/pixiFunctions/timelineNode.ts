@@ -16,7 +16,8 @@ import {
   getBitmapFonts,
   timelineScale,
   getNodeBoxTextures,
-  getArrowTexture
+  getArrowTexture,
+  TimelineNodes
 } from '@/pixiFunctions'
 import { colorToHex } from '@/utilities/style'
 
@@ -71,6 +72,7 @@ export class TimelineNode extends Container {
 
   private subNodesContainer: Container | undefined
   private subNodesOutline: Graphics | undefined
+  private subNodesContent: Container | undefined
 
   private readonly selectedRing = new Graphics()
 
@@ -468,7 +470,68 @@ export class TimelineNode extends Container {
     this.selectedRing.alpha = 0
   }
 
+  public expandSubNodes(subNodes: TimelineNodes): void {
+    if (!this.hasSubNodes || !this.subNodesContainer) {
+      return
+    }
+
+    // update trigger.
+
+    if (!this.subNodesContent) {
+      this.createSubNodesContentContainer()
+    }
+
+    this.updateSubNodes(subNodes)
+
+    this.subNodesContent?.addChild(subNodes)
+
+    subNodes.on('updated', () => {
+      this.updateSubNodes(subNodes)
+    })
+  }
+
+  public updateSubNodes(subNodes: TimelineNodes): void {
+    // handle loading
+
+
+    // The subNodes nodes are positioned relative to the global timeline, but we're drawing
+    // the subNodes container relative to this node, so we need to offset the X to compensate.
+    const earliestSubNodes = subNodes.getEarliestNodeStart()
+    const xPosNegativeOffset = earliestSubNodes ? -timelineScale.dateToX(earliestSubNodes) : 0
+    subNodes.position.x = xPosNegativeOffset
+  }
+
+  private createSubNodesContentContainer(): void {
+    if (!this.subNodesContainer) {
+      console.warn('FlowRunTimeline: node cannot create subNodesContent without subNodesContainer')
+      return
+    }
+
+    this.subNodesContent?.destroy()
+
+    const { spacingNodeMargin } = this.styles.value
+    this.subNodesContent = new Container()
+    this.subNodesContainer.addChild(this.subNodesContent)
+    this.subNodesContent.position.set(
+      this.box.x,
+      this.box.y + this.box.height + spacingNodeMargin,
+    )
+    this.subNodesContainer.addChild(this.subNodesContent)
+  }
+
   public destroy(): void {
+    this.box.destroy()
+
+    this.label?.destroy()
+    this.subNodesToggle?.destroy()
+    this.labelContainer.destroy()
+
+    this.subNodesOutline?.destroy()
+    this.subNodesContent?.destroy()
+    this.subNodesContainer?.destroy()
+
+    this.selectedRing.destroy()
+
     this.unwatch()
     super.destroy.call(this)
   }

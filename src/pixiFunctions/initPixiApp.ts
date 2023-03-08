@@ -14,6 +14,10 @@ export function initPixiApp(stage: HTMLElement): Application {
     resizeTo: stage,
   })
 
+  if (process.env.NODE_ENV === 'development') {
+    initPixiDevTools(pixiApp)
+  }
+
   stage.appendChild(pixiApp.view)
 
   pixiApp.ticker.add(() => {
@@ -23,4 +27,10 @@ export function initPixiApp(stage: HTMLElement): Application {
   }, null, UPDATE_PRIORITY.LOW)
 
   return pixiApp
+}
+
+function initPixiDevTools(app: Application): void {
+  // @ts-expect-error - Pixi dev tools are not in the types
+  // eslint-disable-next-line no-undef
+  globalThis.__PIXI_APP__ = app
 }
