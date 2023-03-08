@@ -190,7 +190,7 @@ export class TimelineNodes extends Container {
       this.addChild(this.edgeContainer)
       this.addChild(this.nodeContainer)
 
-      if (!this.isSubNodes && this.centerViewport) {
+      if (!this.isSubNodes) {
         this.centerViewport({ skipAnimation: true })
       }
     }
@@ -364,6 +364,10 @@ export class TimelineNodes extends Container {
     }
 
     this.selectedNodeId = null
+
+    this.subNodesRecords?.forEach((subNodes) => {
+      subNodes.selectedNodeId = null
+    })
   }
 
   private setNodeSelection(selectedNodeId: string | null): void {
@@ -482,11 +486,11 @@ export class TimelineNodes extends Container {
 
     this.expandedSubNodes?.forEach((subNodesData, nodeId) => {
       if (this.subNodesRecords!.has(nodeId)) {
-        const subNodes = this.subNodesRecords!.get(nodeId)!
-        subNodes.update(subNodesData)
+        const subNodes = this.subNodesRecords!.get(nodeId)
+        subNodes?.update(subNodesData)
         return
       }
-      this.createSubNodes(nodeId, subNodesData)
+      this.createSubNodesInstance(nodeId, subNodesData)
     })
 
     this.checkRemovedExpandedSubNodes()
@@ -494,7 +498,7 @@ export class TimelineNodes extends Container {
     // check layout
   }
 
-  private readonly createSubNodes = (nodeId: string, subNodesData: TimelineNodeData[]): void => {
+  private readonly createSubNodesInstance = (nodeId: string, subNodesData: TimelineNodeData[]): void => {
     if (!this.subNodesContainer) {
       this.subNodesContainer = new Container()
       this.addChild(this.subNodesContainer)
@@ -528,11 +532,14 @@ export class TimelineNodes extends Container {
   private checkRemovedExpandedSubNodes(): void {
     this.subNodesRecords?.forEach((subNodes, nodeId) => {
       if (!this.expandedSubNodes?.has(nodeId)) {
-        if (this.selectedNodeId && subNodes.nodeRecords.has(this.selectedNodeId)) {
+        const clearSelectionAfter = this.subNodesRecords?.get(nodeId)?.selectedNodeId
+
+        this.findNodeRecord(nodeId)?.collapseSubNodes()
+        this.subNodesRecords!.delete(nodeId)
+
+        if (clearSelectionAfter) {
           this.emitNullSelection()
         }
-        subNodes.destroy()
-        this.subNodesRecords!.delete(nodeId)
       }
     })
   }
@@ -603,7 +610,6 @@ export class TimelineNodes extends Container {
   }
 
   public destroy(): void {
-    this.removeChildren()
     this.nodeRecords.forEach(nodeRecord => nodeRecord.destroy())
     this.nodeRecords.clear()
     this.edgeRecords.forEach(edgeRecord => edgeRecord.edge.destroy())
@@ -612,6 +618,7 @@ export class TimelineNodes extends Container {
     this.subNodesRecords?.forEach(subNodes => subNodes.destroy())
     this.subNodesRecords?.clear()
     this.subNodesContainer?.destroy()
+    this.removeChildren()
     this.unwatchLayoutSetting()
     this.unwatchHideEdges()
 

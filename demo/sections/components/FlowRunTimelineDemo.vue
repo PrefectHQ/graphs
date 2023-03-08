@@ -104,7 +104,7 @@
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
-  const subFlowOccurrences = ref(100)
+  const subFlowOccurrences = ref(20)
   const shape = ref<Shape>('fanOut')
   const start = ref<Date>(previous)
   const end = ref<Date>(now)

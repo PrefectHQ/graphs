@@ -1,9 +1,16 @@
 import { Application, Graphics, Texture } from 'pixi.js'
 
 type BoxTextures = Record<'cap' | 'body', Texture>
+type BorderRectTextures = Record<'corner' | 'edge', Texture>
+type RoundedBorderRectCacheKey = {
+  borderRadius: number,
+  borderColor: number,
+  borderWidth: number,
+}
 
 let nodeBoxTextureCache: Map<number, BoxTextures> | undefined
 let arrowTextureCache: Map<number, Texture> | undefined
+let roundedBorderRectCache: Map<RoundedBorderRectCacheKey, BorderRectTextures> | undefined
 
 const textureSampleSettings = {
   multisample: 2,
@@ -13,6 +20,7 @@ const textureSampleSettings = {
 export function initNodeTextureCache(): void {
   nodeBoxTextureCache = new Map()
   arrowTextureCache = new Map()
+  roundedBorderRectCache = new Map()
 }
 
 export function destroyNodeTextureCache(): void {
@@ -30,6 +38,14 @@ export function destroyNodeTextureCache(): void {
     })
     arrowTextureCache.clear()
     arrowTextureCache = undefined
+  }
+  if (roundedBorderRectCache) {
+    roundedBorderRectCache.forEach(({ corner, edge }) => {
+      corner.destroy()
+      edge.destroy()
+    })
+    roundedBorderRectCache.clear()
+    roundedBorderRectCache = undefined
   }
 }
 
@@ -122,4 +138,54 @@ export function getArrowTexture({
   }
 
   return arrowTextureCache!.get(strokeColor)!
+}
+
+type GetRoundedBorderRectTexturesProps = {
+  appRef: Application,
+  borderRadius: number,
+  borderColor: number,
+  borderWidth: number,
+}
+export function getRoundedBorderRectTextures({
+  appRef,
+  borderRadius,
+  borderColor,
+  borderWidth,
+}: GetRoundedBorderRectTexturesProps): BorderRectTextures {
+  if (!roundedBorderRectCache) {
+    initNodeTextureCache()
+  }
+
+  const cacheKey = { borderRadius, borderColor, borderWidth }
+
+  if (!roundedBorderRectCache?.has(cacheKey)) {
+    const corner = new Graphics()
+    corner.lineStyle(borderWidth, borderColor)
+    corner.moveTo(0, borderRadius)
+    corner.bezierCurveTo(
+      0, borderRadius,
+      0, 0,
+      borderRadius, 0,
+    )
+
+    const edge = new Graphics()
+    edge.beginFill(borderColor)
+    edge.drawRect(
+      0,
+      0,
+      borderWidth,
+      borderWidth,
+    )
+    edge.endFill()
+
+    const cornerTexture = appRef.renderer.generateTexture(corner, textureSampleSettings)
+    const edgeTexture = appRef.renderer.generateTexture(edge, textureSampleSettings)
+
+    roundedBorderRectCache!.set(cacheKey, {
+      corner: cornerTexture,
+      edge: edgeTexture,
+    })
+  }
+
+  return roundedBorderRectCache!.get(cacheKey)!
 }

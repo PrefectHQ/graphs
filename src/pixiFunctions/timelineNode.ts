@@ -19,6 +19,7 @@ import {
   getArrowTexture,
   TimelineNodes
 } from '@/pixiFunctions'
+import { RoundedBorderRect } from '@/pixiFunctions/roundedBorderRect'
 import { colorToHex } from '@/utilities/style'
 
 type TimelineNodeProps = {
@@ -70,11 +71,14 @@ export class TimelineNode extends Container {
   private readonly subNodesToggle: Container | undefined
   private label: BitmapText | undefined
 
-  private subNodesContainer: Container | undefined
-  private subNodesOutline: Graphics | undefined
+  private isSubNodesExpanded = false
+  private subNodesWrapper: Container | undefined
+  private subNodesOutline: RoundedBorderRect | undefined
   private subNodesContent: Container | undefined
+  private subNodesHeight = 0
+  private subNodesContentTicker: (() => void) | null = null
 
-  private readonly selectedRing = new Graphics()
+  private readonly selectedRing: RoundedBorderRect
 
   public constructor({
     appRef,
@@ -100,10 +104,11 @@ export class TimelineNode extends Container {
     this.subNodesToggleSize = this.nodeHeight
     this.drawLabel()
 
-    this.drawSubNodesContainer()
+    this.initSubNodesOutline()
 
-    this.drawSelectedRing()
+    this.selectedRing = this.initSelectedRing()
     this.selectedRing.alpha = 0
+    this.addChild(this.selectedRing)
 
     this.unwatch = watch([styles, styleNode], () => {
       this.drawBox()
@@ -323,66 +328,99 @@ export class TimelineNode extends Container {
     })
   }
 
-  private drawSubNodesContainer(): void {
+  private initSubNodesOutline(): void {
     if (!this.hasSubNodes) {
       return
     }
+
+    if (!this.subNodesWrapper) {
+      this.subNodesWrapper = new Container()
+      this.addChild(this.subNodesWrapper)
+    }
+
+    this.subNodesOutline?.destroy()
 
     const { nodeWidth, nodeHeight } = this
     const {
       borderRadiusNode,
       alphaSubNodesOutlineDimmed,
+      spacingSubNodesOutlineBorderWidth,
       spacingSubNodesOutlineOffset,
     } = this.styles.value
     const { fill } = this.styleNode.value(this.nodeData)
-    const hexadecimalFill = colorToHex(fill)
+    const outlineColor = colorToHex(fill)
 
-    if (!this.subNodesContainer) {
-      this.subNodesContainer = new Container()
-      this.addChild(this.subNodesContainer)
-      this.subNodesOutline = new Graphics()
-      this.subNodesContainer.addChild(this.subNodesOutline)
-    }
-
-    this.subNodesOutline!.clear()
-
-    this.subNodesOutline!.lineStyle(1, hexadecimalFill)
-    this.subNodesOutline!.drawRoundedRect(
-      4,
-      4,
-      nodeWidth - spacingSubNodesOutlineOffset * 2,
-      nodeHeight,
-      borderRadiusNode,
+    this.subNodesOutline = new RoundedBorderRect({
+      appRef: this.appRef,
+      width: nodeWidth - spacingSubNodesOutlineOffset * 2,
+      height: nodeHeight,
+      borderRadius: borderRadiusNode,
+      borderWidth: spacingSubNodesOutlineBorderWidth,
+      borderColor: outlineColor,
+    })
+    this.subNodesOutline.position.set(
+      spacingSubNodesOutlineOffset,
+      spacingSubNodesOutlineOffset,
     )
-    this.subNodesOutline!.alpha = alphaSubNodesOutlineDimmed
+    this.subNodesOutline.alpha = alphaSubNodesOutlineDimmed
+    this.subNodesWrapper!.addChild(this.subNodesOutline)
   }
 
-  private drawSelectedRing(): void {
-    const { nodeHeight } = this
+  private updateSubNodesOutlineSize(): void {
+    if (!this.subNodesOutline) {
+      return
+    }
+
+    const {
+      isSubNodesExpanded,
+      subNodesContent,
+      subNodesOutline,
+      nodeWidth,
+      nodeHeight,
+    } = this
+    const {
+      spacingSubNodesOutlineOffset,
+      alphaSubNodesOutlineDimmed,
+      spacingNodeLabelMargin,
+    } = this.styles.value
+
+    if (isSubNodesExpanded) {
+      subNodesOutline.position.set(-spacingSubNodesOutlineOffset, -spacingSubNodesOutlineOffset)
+      subNodesOutline.alpha = 1
+    } else {
+      subNodesOutline.position.set(spacingSubNodesOutlineOffset, spacingSubNodesOutlineOffset)
+      subNodesOutline.alpha = alphaSubNodesOutlineDimmed
+    }
+
+    const width = isSubNodesExpanded
+      ? nodeWidth + spacingSubNodesOutlineOffset * 2
+      : nodeWidth - spacingSubNodesOutlineOffset * 2
+    const height = isSubNodesExpanded
+      ? nodeHeight + subNodesContent!.height + spacingNodeLabelMargin
+      : nodeHeight
+
+    subNodesOutline.resize(width, height)
+  }
+
+  private initSelectedRing(): RoundedBorderRect {
+    const { width, height, margin } = this.getUpdateSelectedRingSize()
     const {
       colorNodeSelection,
-      spacingNodeSelectionMargin,
       spacingNodeSelectionWidth,
       borderRadiusNode,
     } = this.styles.value
 
-    this.selectedRing.clear()
+    const newSelectedRing = new RoundedBorderRect({
+      appRef: this.appRef,
+      width,
+      height,
+      borderRadius: borderRadiusNode,
+      borderColor: colorNodeSelection,
+      borderWidth: spacingNodeSelectionWidth,
+    })
+    newSelectedRing.position.set(-margin, -margin)
 
-    this.selectedRing.lineStyle(
-      spacingNodeSelectionWidth,
-      colorNodeSelection,
-      1,
-      1,
-    )
-    this.selectedRing.drawRoundedRect(
-      -spacingNodeSelectionMargin,
-      -spacingNodeSelectionMargin,
-      this.nodeWidth + spacingNodeSelectionMargin * 2,
-      nodeHeight + spacingNodeSelectionMargin * 2,
-      borderRadiusNode,
-    )
-
-    this.addChild(this.selectedRing)
+    return newSelectedRing
   }
 
   private updateBoxWidth(): void {
@@ -399,11 +437,6 @@ export class TimelineNode extends Container {
           break
       }
     })
-
-    if (this.subNodesOutline) {
-      const { spacingSubNodesOutlineOffset } = this.styles.value
-      this.subNodesOutline.width = this.nodeWidth - spacingSubNodesOutlineOffset * 2
-    }
   }
 
   private updateLabelContainerPosition(): void {
@@ -418,6 +451,30 @@ export class TimelineNode extends Container {
       : this.nodeWidth + spacingNodeLabelMargin
 
     this.labelContainer.position.set(xPos, 0)
+  }
+
+  private getUpdateSelectedRingSize(): { width: number, height: number, margin: number } {
+    const {
+      spacingNodeSelectionMargin,
+      spacingNodeSelectionWidth,
+      spacingSubNodesOutlineBorderWidth,
+      spacingSubNodesOutlineOffset,
+    } = this.styles.value
+
+    // The margin compensates for RoundedBorderRect using an inset border
+    const margin = spacingNodeSelectionMargin + spacingNodeSelectionWidth
+
+    const width = this.nodeWidth + margin * 2
+    const height = this.hasSubNodes && !this.subNodesContent
+      ? this.nodeHeight + spacingSubNodesOutlineBorderWidth + spacingSubNodesOutlineOffset + margin * 2
+      : this.nodeHeight + margin * 2
+
+    return { width, height, margin }
+  }
+
+  private updateSelectedRingSize(): void {
+    const { width, height } = this.getUpdateSelectedRingSize()
+    this.selectedRing.resize(width, height)
   }
 
   public update(hasUpdatedData?: boolean): void {
@@ -436,7 +493,7 @@ export class TimelineNode extends Container {
 
     if (hasNewState) {
       this.drawBox()
-      this.drawSubNodesContainer()
+      this.initSubNodesOutline()
     }
 
     if (hasNewLabelText) {
@@ -447,8 +504,10 @@ export class TimelineNode extends Container {
       this.nodeWidth = nodeWidth
 
       this.updateBoxWidth()
-
-      this.drawSelectedRing()
+      this.updateSelectedRingSize()
+      if (this.subNodesOutline) {
+        this.updateSubNodesOutlineSize()
+      }
 
       // 2px tolerance avoids the label bouncing in/out of the box
       const isLabelInBoxChanged = this.isLabelInBox && this.apxLabelWidth > this.nodeWidth + 2
@@ -471,29 +530,27 @@ export class TimelineNode extends Container {
   }
 
   public expandSubNodes(subNodes: TimelineNodes): void {
-    if (!this.hasSubNodes || !this.subNodesContainer) {
+    if (!this.hasSubNodes || !this.subNodesWrapper) {
       return
     }
 
     // update trigger.
+    // handle loading
 
-    if (!this.subNodesContent) {
+    if (!this.subNodesContent || this.subNodesContent.destroyed) {
       this.createSubNodesContentContainer()
     }
 
-    this.updateSubNodes(subNodes)
+    this.updateSubNodesOffsetPosition(subNodes)
+    subNodes.on('updated', () => this.updateSubNodesOffsetPosition(subNodes))
 
-    this.subNodesContent?.addChild(subNodes)
+    this.subNodesContent!.addChild(subNodes)
 
-    subNodes.on('updated', () => {
-      this.updateSubNodes(subNodes)
-    })
+    this.isSubNodesExpanded = true
+    this.initSubNodesTicker(subNodes)
   }
 
-  public updateSubNodes(subNodes: TimelineNodes): void {
-    // handle loading
-
-
+  public updateSubNodesOffsetPosition(subNodes: TimelineNodes): void {
     // The subNodes nodes are positioned relative to the global timeline, but we're drawing
     // the subNodes container relative to this node, so we need to offset the X to compensate.
     const earliestSubNodes = subNodes.getEarliestNodeStart()
@@ -501,22 +558,56 @@ export class TimelineNode extends Container {
     subNodes.position.x = xPosNegativeOffset
   }
 
+  private initSubNodesTicker(subNodes: TimelineNodes): void {
+    this.subNodesHeight = subNodes.height
+
+    this.subNodesContentTicker = () => {
+      if (this.subNodesContent?.height !== this.subNodesHeight) {
+        this.updateSubNodesOutlineSize()
+        this.updateSelectedRingSize()
+        this.subNodesHeight = subNodes.height
+      }
+    }
+    this.appRef.ticker.add(this.subNodesContentTicker)
+  }
+
+  public collapseSubNodes(): void {
+    this.isSubNodesExpanded = false
+
+    this.destroySubNodesContent()
+
+    this.updateSubNodesOutlineSize()
+    this.updateSelectedRingSize()
+  }
+
   private createSubNodesContentContainer(): void {
-    if (!this.subNodesContainer) {
-      console.warn('FlowRunTimeline: node cannot create subNodesContent without subNodesContainer')
+    if (!this.subNodesWrapper) {
+      console.warn('FlowRunTimeline: node cannot create subNodesContent without subNodesWrapper')
       return
     }
 
-    this.subNodesContent?.destroy()
+    const {
+      spacingNodeMargin,
+      spacingSubNodesOutlineOffset,
+    } = this.styles.value
 
-    const { spacingNodeMargin } = this.styles.value
     this.subNodesContent = new Container()
-    this.subNodesContainer.addChild(this.subNodesContent)
     this.subNodesContent.position.set(
       this.box.x,
-      this.box.y + this.box.height + spacingNodeMargin,
+      this.box.y + this.box.height + spacingNodeMargin - spacingSubNodesOutlineOffset,
     )
-    this.subNodesContainer.addChild(this.subNodesContent)
+
+    this.subNodesWrapper.addChild(this.subNodesContent)
+  }
+
+  private destroySubNodesContent(): void {
+    if (this.subNodesContentTicker) {
+      this.appRef.ticker.remove(this.subNodesContentTicker)
+      this.subNodesContentTicker = null
+    }
+
+    this.subNodesContent?.getChildAt(0)?.destroy()
+    this.subNodesContent?.destroy()
   }
 
   public destroy(): void {
@@ -526,9 +617,9 @@ export class TimelineNode extends Container {
     this.subNodesToggle?.destroy()
     this.labelContainer.destroy()
 
+    this.destroySubNodesContent()
     this.subNodesOutline?.destroy()
-    this.subNodesContent?.destroy()
-    this.subNodesContainer?.destroy()
+    this.subNodesWrapper?.destroy()
 
     this.selectedRing.destroy()
 
