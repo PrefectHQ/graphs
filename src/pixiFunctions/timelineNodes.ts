@@ -167,7 +167,7 @@ export class TimelineNodes extends Container {
   private async renderLayout(): Promise<void> {
     const isInitialRender = this.nodeRecords.size === 0
 
-    this.temporarilyHideEdges()
+    this.temporarilyHideEdges.start()
 
     const nodeUpdates = Object.keys(this.layout).map(async (nodeId) => {
       if (this.nodeRecords.has(nodeId)) {
@@ -184,7 +184,7 @@ export class TimelineNodes extends Container {
 
     await Promise.all(nodeUpdates)
 
-    this.endTemporarilyHideEdges()
+    this.temporarilyHideEdges.finish()
 
     if (isInitialRender) {
       this.addChild(this.edgeContainer)
@@ -194,18 +194,6 @@ export class TimelineNodes extends Container {
         this.centerViewport({ skipAnimation: true })
       }
     }
-  }
-
-  private temporarilyHideEdges(): void {
-    this.edgeRecords.forEach((edgeRecord) => {
-      edgeRecord.edge.visible = false
-    })
-  }
-  private endTemporarilyHideEdges(): void {
-    this.edgeRecords.forEach((edgeRecord) => {
-      edgeRecord.edge.update()
-      edgeRecord.edge.visible = true
-    })
   }
 
   private createNode(nodeData: TimelineNodeData): void {
@@ -227,15 +215,6 @@ export class TimelineNodes extends Container {
     this.addNodeEdges(nodeData)
 
     this.nodeContainer.addChild(node)
-  }
-
-  private registerEmits(el: TimelineNode | TimelineNodes): void {
-    el.on(nodeClickEvents.nodeDetails, (id) => {
-      this.emit(nodeClickEvents.nodeDetails, id)
-    })
-    el.on(nodeClickEvents.subNodesToggle, (id) => {
-      this.emit(nodeClickEvents.subNodesToggle, id)
-    })
   }
 
   private readonly getNodeYPosition = (layoutPosition: number): number => {
@@ -303,6 +282,9 @@ export class TimelineNodes extends Container {
     })
   }
 
+  /**
+   * Update Functions
+   */
   public update(newData?: TimelineNodeData[]): void {
     if (newData) {
       this.graphData = newData
@@ -318,6 +300,36 @@ export class TimelineNodes extends Container {
     this.nodeRecords.forEach(nodeItem => nodeItem.update())
   }
 
+  public updateHideEdges(): void {
+    this.edgeRecords.forEach(({ edge }) => edge.renderable = !this.hideEdges.value)
+
+    if (!this.hideEdges.value) {
+      // the viewport needs to update transforms so the edges show in the right place
+      this.viewportRef.dirty = true
+      this.viewportRef.updateTransform()
+      return
+    }
+
+    if (this.selectedNodeId) {
+      const selectedNode = this.nodeRecords.get(this.selectedNodeId)!
+      this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
+    }
+  }
+
+  public updateLayoutSetting(): void {
+    const message: NodeLayoutWorkerProps = {
+      data: {
+        graphData: JSON.stringify(this.graphData),
+        layoutSetting: this.layoutSetting.value,
+        centerViewportAfter: true,
+      },
+    }
+    this.layoutWorker.postMessage(message.data)
+  }
+
+  /**
+   * Node Selection
+   */
   public updateSelection(selectedNodeId?: string | null): void {
     this.unHighlightAll()
     this.clearNodeSelection()
@@ -460,33 +472,9 @@ export class TimelineNodes extends Container {
     return connectedEdges
   }
 
-  public updateHideEdges(): void {
-    this.edgeRecords.forEach(({ edge }) => edge.renderable = !this.hideEdges.value)
-
-    if (!this.hideEdges.value) {
-      // the viewport needs to update transforms so the edges show in the right place
-      this.viewportRef.dirty = true
-      this.viewportRef.updateTransform()
-      return
-    }
-
-    if (this.selectedNodeId) {
-      const selectedNode = this.nodeRecords.get(this.selectedNodeId)!
-      this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
-    }
-  }
-
-  public updateLayoutSetting(): void {
-    const message: NodeLayoutWorkerProps = {
-      data: {
-        graphData: JSON.stringify(this.graphData),
-        layoutSetting: this.layoutSetting.value,
-        centerViewportAfter: true,
-      },
-    }
-    this.layoutWorker.postMessage(message.data)
-  }
-
+  /**
+   * Sub Nodes
+   */
   public updateExpandedSubNodes(): void {
     if (!this.subNodesRecords) {
       this.subNodesRecords = new Map()
@@ -549,6 +537,9 @@ export class TimelineNodes extends Container {
     })
   }
 
+  /**
+   * Utilities
+   */
   private findNodeRecord(nodeId: string): TimelineNode | null {
     if (this.nodeRecords.has(nodeId)) {
       return this.nodeRecords.get(nodeId)!
@@ -563,6 +554,29 @@ export class TimelineNodes extends Container {
     }
 
     return null
+  }
+
+  private readonly temporarilyHideEdges = {
+    start: (): void => {
+      this.edgeRecords.forEach((edgeRecord) => {
+        edgeRecord.edge.visible = false
+      })
+    },
+    finish: (): void => {
+      this.edgeRecords.forEach((edgeRecord) => {
+        edgeRecord.edge.update()
+        edgeRecord.edge.visible = true
+      })
+    },
+  }
+
+  private registerEmits(el: TimelineNode | TimelineNodes): void {
+    el.on(nodeClickEvents.nodeDetails, (id) => {
+      this.emit(nodeClickEvents.nodeDetails, id)
+    })
+    el.on(nodeClickEvents.subNodesToggle, (id) => {
+      this.emit(nodeClickEvents.subNodesToggle, id)
+    })
   }
 
   private emitNullSelection(): void {
