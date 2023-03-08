@@ -67,11 +67,11 @@ const assignStartAndEndDates = ({ start, end, size, nodes, zeroTimeGap }: Assign
       .map(id => nodes.find(nodeItem => nodeItem.id == id)) as TimescaleItem[]
 
     const minStart = maxDate(upstreamDependencies, 'end', start)
-    const maxStart = new Date(minStart.getTime() + minIncrement)
+    const maxStart = new Date(minStart.getTime() + minIncrement / 2)
     const _start = zeroTimeGap ? minStart : randomDate(minStart, maxStart)
 
     const minEnd = new Date(_start.getTime() + minIncrement)
-    const maxEnd = new Date(minEnd.getTime() + minIncrement * 1.5)
+    const maxEnd = new Date(minEnd.getTime() + minIncrement * 1.25)
     const randomEnd = randomDate(minEnd, maxEnd)
     const _end = randomEnd.getTime() > end.getTime() ? end : randomEnd
 

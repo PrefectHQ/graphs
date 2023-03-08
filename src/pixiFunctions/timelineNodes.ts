@@ -39,7 +39,7 @@ type TimelineNodesProps = {
   expandedSubNodes?: ExpandedSubNodes,
   isSubNodes?: boolean,
   timeScaleProps: InitTimelineScaleProps,
-  centerViewport?: (options?: CenterViewportOptions) => void,
+  centerViewport: (options?: CenterViewportOptions) => void,
 }
 
 type EdgeRecord = {
@@ -140,25 +140,14 @@ export class TimelineNodes extends Container {
 
       await this.renderLayout()
 
-      if (data.centerViewportAfter) {
-        this.centerViewportAfterDelay()
+      if (data.centerViewportAfter && !this.isSubNodes) {
+        this.centerViewport()
       }
 
       this.emitUpdate()
     }
 
     this.layoutWorker.postMessage(layoutWorkerOptions.data)
-  }
-
-  private centerViewportAfterDelay(): void {
-    if (this.isSubNodes || !this.centerViewport) {
-      return
-    }
-
-    // allow time for nodes to move to new position
-    setTimeout(() => {
-      this.centerViewport!()
-    }, nodeAnimationDurations.move * 1000)
   }
 
   private initDeselectLayer(): void {
