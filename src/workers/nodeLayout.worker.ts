@@ -5,7 +5,8 @@ import {
   NodeShoveDirection,
   NodesLayout,
   TimelineScale,
-  NodeLayoutItem
+  NodeLayoutItem,
+  NodeLayoutWorkerResponseData
 } from '@/models'
 import { createTimelineScale } from '@/pixiFunctions/timelineScale'
 
@@ -22,6 +23,7 @@ const layout: NodesLayout = {}
 
 onmessage = async ({
   data: {
+    id,
     layoutSetting,
     graphData,
     apxCharacterWidth,
@@ -30,9 +32,8 @@ onmessage = async ({
     centerViewportAfter,
   },
 }: NodeLayoutWorkerProps) => {
-  if (!graphData) {
-    console.warn('nodeLayout worker: called without graphData, exiting.')
-    return
+  for (const item in layout) {
+    delete layout[item]
   }
 
   if (spacingMinimumNodeEdgeGap) {
@@ -40,10 +41,6 @@ onmessage = async ({
   }
 
   if (layoutSetting) {
-    // if the layout changes, clear the layout so it's recalculated
-    for (const item in layout) {
-      delete layout[item]
-    }
     currentLayoutSetting = layoutSetting
   }
 
@@ -51,7 +48,7 @@ onmessage = async ({
     currentApxCharacterWidth = apxCharacterWidth
   }
 
-  if (!timelineScale && timeScaleProps) {
+  if (timeScaleProps) {
     const {
       minimumStartTime,
       overallGraphWidth,
@@ -64,12 +61,19 @@ onmessage = async ({
     })
   }
 
-  const newData = JSON.parse(graphData) as TimelineNodeData[]
+  if (graphData) {
+    const newData = JSON.parse(graphData) as TimelineNodeData[]
 
-  if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
-    graphDataStore = newData
-    await calculateNodeLayout()
-    postMessage({ layout, centerViewportAfter })
+    if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
+      graphDataStore = newData
+      await calculateNodeLayout()
+      const response: NodeLayoutWorkerResponseData = {
+        id,
+        layout,
+        centerViewportAfter,
+      }
+      postMessage(response)
+    }
   }
 }
 
@@ -101,11 +105,6 @@ async function generateNearestParentLayout(): Promise<void> {
     // Accommodate the label width so they don't overlap
     const apxLabelWidth = nodeData.label.length * currentApxCharacterWidth
     const endX = endAsPx + apxLabelWidth
-
-    if (nodeData.id in layout) {
-      layout[nodeData.id].endX = endX
-      continue
-    }
 
     const startX = nodeData.id in layout
       ? layout[nodeData.id].startX

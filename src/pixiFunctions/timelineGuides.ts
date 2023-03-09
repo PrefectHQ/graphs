@@ -26,7 +26,7 @@ type TimelineGuidesProps = {
   minimumStartDate: Date,
   maximumEndDate: Ref<Date | undefined>,
   isRunning: boolean,
-  styles: ComputedRef<ParsedThemeStyles>,
+  styleOptions: ComputedRef<ParsedThemeStyles>,
   formatDateFns: ComputedRef<FormatDateFns>,
 }
 
@@ -36,7 +36,7 @@ export class TimelineGuides extends Container {
   private readonly minimumStartDate
   private readonly maximumEndDate
   private readonly isRunning
-  private readonly styles
+  private readonly styleOptions
   private readonly formatDateFns
 
   private readonly unwatch: WatchStopHandle
@@ -52,7 +52,7 @@ export class TimelineGuides extends Container {
     minimumStartDate,
     maximumEndDate,
     isRunning,
-    styles,
+    styleOptions,
     formatDateFns,
   }: TimelineGuidesProps) {
     super()
@@ -62,7 +62,7 @@ export class TimelineGuides extends Container {
     this.minimumStartDate = minimumStartDate
     this.maximumEndDate = maximumEndDate
     this.isRunning = isRunning
-    this.styles = styles
+    this.styleOptions = styleOptions
     this.formatDateFns = formatDateFns
 
     this.updateIdealGuideCount()
@@ -70,7 +70,7 @@ export class TimelineGuides extends Container {
 
     this.createGuides()
 
-    this.unwatch = watch(styles, () => {
+    this.unwatch = watch(styleOptions, () => {
       this.removeChildren()
       this.guides.clear()
       this.createGuides()
@@ -124,7 +124,7 @@ export class TimelineGuides extends Container {
     while (lastGuidePoint.getTime() < maxGuidePlacement) {
       const guide = new TimelineGuide({
         labelText: this.labelFormatter(lastGuidePoint),
-        styles: this.styles,
+        styles: this.styleOptions,
         appHeight: this.appRef.screen.height,
       })
       guide.position.set(this.getGuidePosition(lastGuidePoint), 0)

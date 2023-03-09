@@ -50,14 +50,14 @@ export function destroyNodeTextureCache(): void {
 }
 
 type GetNodeBoxTexturesProps = {
-  appRef: Application,
+  pixiApp: Application,
   fill: number,
   borderRadius: number,
   boxCapWidth: number,
   height: number,
 }
 export function getNodeBoxTextures({
-  appRef,
+  pixiApp,
   fill,
   borderRadius,
   boxCapWidth,
@@ -97,8 +97,8 @@ export function getNodeBoxTextures({
     )
     boxBody.endFill()
 
-    const cap = appRef.renderer.generateTexture(boxCap, textureSampleSettings)
-    const body = appRef.renderer.generateTexture(boxBody)
+    const cap = pixiApp.renderer.generateTexture(boxCap, textureSampleSettings)
+    const body = pixiApp.renderer.generateTexture(boxBody)
 
     nodeBoxTextureCache!.set(fill, {
       cap,
@@ -110,13 +110,13 @@ export function getNodeBoxTextures({
 }
 
 type GetArrowTextureProps = {
-  appRef: Application,
+  pixiApp: Application,
   strokeColor: number,
   edgeWidth: number,
   edgeLength: number,
 }
 export function getArrowTexture({
-  appRef,
+  pixiApp,
   strokeColor,
   edgeWidth,
   edgeLength,
@@ -132,7 +132,7 @@ export function getArrowTexture({
     arrow.lineTo(0, 0)
     arrow.lineTo(-edgeLength, edgeLength)
 
-    const arrowTexture = appRef.renderer.generateTexture(arrow, textureSampleSettings)
+    const arrowTexture = pixiApp.renderer.generateTexture(arrow, textureSampleSettings)
 
     arrowTextureCache!.set(strokeColor, arrowTexture)
   }
@@ -141,13 +141,13 @@ export function getArrowTexture({
 }
 
 type GetRoundedBorderRectTexturesProps = {
-  appRef: Application,
+  pixiApp: Application,
   borderRadius: number,
   borderColor: number,
   borderWidth: number,
 }
 export function getRoundedBorderRectTextures({
-  appRef,
+  pixiApp,
   borderRadius,
   borderColor,
   borderWidth,
@@ -178,8 +178,8 @@ export function getRoundedBorderRectTextures({
     )
     edge.endFill()
 
-    const cornerTexture = appRef.renderer.generateTexture(corner, textureSampleSettings)
-    const edgeTexture = appRef.renderer.generateTexture(edge, textureSampleSettings)
+    const cornerTexture = pixiApp.renderer.generateTexture(corner, textureSampleSettings)
+    const edgeTexture = pixiApp.renderer.generateTexture(edge, textureSampleSettings)
 
     roundedBorderRectCache!.set(cacheKey, {
       corner: cornerTexture,

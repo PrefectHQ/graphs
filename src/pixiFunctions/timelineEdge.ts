@@ -1,6 +1,6 @@
-import { Application, Container, Graphics, Sprite } from 'pixi.js'
-import { ComputedRef, watch, WatchStopHandle } from 'vue'
-import { ParsedThemeStyles } from '@/models'
+import { Container, Graphics, Sprite } from 'pixi.js'
+import { watch, WatchStopHandle } from 'vue'
+import { GraphState } from '@/models'
 import {
   TimelineNode,
   timelineNodeBoxName,
@@ -10,17 +10,15 @@ import {
 const minimumBezier = 64
 
 type TimelineEdgeProps = {
-  appRef: Application,
-  styles: ComputedRef<ParsedThemeStyles>,
   sourceNode: TimelineNode,
   targetNode: TimelineNode,
+  graphState: GraphState,
 }
 
 export class TimelineEdge extends Container {
-  private readonly appRef: Application
-  private readonly styles
   private readonly sourceNode
   private readonly targetNode
+  private readonly graphState
 
   private sourceX: number = 0
   private sourceY: number = 0
@@ -30,20 +28,18 @@ export class TimelineEdge extends Container {
   private readonly edge = new Graphics()
   private readonly arrow = new Container()
 
-  private readonly unwatch: WatchStopHandle
+  private readonly unWatchers: WatchStopHandle[] = []
 
   public constructor({
-    appRef,
-    styles,
     sourceNode,
     targetNode,
+    graphState,
   }: TimelineEdgeProps) {
     super()
 
-    this.appRef = appRef
-    this.styles = styles
     this.sourceNode = sourceNode
     this.targetNode = targetNode
+    this.graphState = graphState
 
     this.assignStartAndEndPositions()
 
@@ -53,9 +49,17 @@ export class TimelineEdge extends Container {
     this.drawArrow()
     this.addChild(this.arrow)
 
-    this.unwatch = watch([styles], () => {
-      this.update(true)
-    }, { deep: true })
+    this.initWatchers()
+  }
+
+  private initWatchers(): void {
+    const { styleOptions } = this.graphState
+
+    this.unWatchers.push(
+      watch([styleOptions], () => {
+        this.update(true)
+      }, { deep: true }),
+    )
   }
 
   private assignStartAndEndPositions(): void {
@@ -66,7 +70,7 @@ export class TimelineEdge extends Container {
   }
 
   private drawEdge(): void {
-    const { colorEdge, spacingEdgeWidth } = this.styles.value
+    const { colorEdge, spacingEdgeWidth } = this.graphState.styleOptions.value
     const { edge, sourceX, sourceY, targetX, targetY } = this
 
     const sourceBezierX = this.getXBezier(sourceX)
@@ -100,10 +104,11 @@ export class TimelineEdge extends Container {
       arrow.position.set(targetX, targetY)
     }
 
-    const { colorEdge, spacingEdgeWidth, spacingNodeEdgeLength } = this.styles.value
+    const { pixiApp, styleOptions } = this.graphState
+    const { colorEdge, spacingEdgeWidth, spacingNodeEdgeLength } = styleOptions.value
 
     const arrowTexture = getArrowTexture({
-      appRef: this.appRef,
+      pixiApp,
       strokeColor: colorEdge,
       edgeWidth: spacingEdgeWidth,
       edgeLength: spacingNodeEdgeLength,
@@ -123,7 +128,7 @@ export class TimelineEdge extends Container {
   }
 
   public destroy(): void {
-    this.unwatch()
+    this.unWatchers.forEach((unwatch) => unwatch())
     super.destroy.call(this)
   }
 }

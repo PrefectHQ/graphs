@@ -8,7 +8,7 @@
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
   import type { Viewport } from 'pixi-viewport'
-  import { Application } from 'pixi.js'
+  import { Application, TextMetrics } from 'pixi.js'
   import {
     computed,
     onMounted,
@@ -25,7 +25,10 @@
     TimelineScale,
     TimelineNodesLayoutOptions,
     CenterViewportOptions,
-    ExpandedSubNodes
+    ExpandedSubNodes,
+    NodeLayoutWorkerProps,
+    InitTimelineScaleProps,
+    GraphState
   } from '@/models'
   import {
     initBitmapFonts,
@@ -36,12 +39,15 @@
     TimelineNodes,
     TimelinePlayhead,
     initTimelineScale,
-    nodeClickEvents
+    nodeClickEvents,
+    getBitmapFonts
   } from '@/pixiFunctions'
   import {
     getDateBounds,
     parseThemeOptions
   } from '@/utilities'
+  // eslint-disable-next-line import/default
+  import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
 
   const props = defineProps<{
     graphData: TimelineNodeData[],
@@ -51,7 +57,7 @@
     selectedNodeId?: string | null,
     layout?: TimelineNodesLayoutOptions,
     hideEdges?: boolean,
-    expandedSubFlows?: ExpandedSubNodes,
+    expandedSubNodes?: ExpandedSubNodes,
   }>()
 
   defineExpose({
@@ -61,9 +67,11 @@
 
   const stage = ref<HTMLDivElement>()
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
-  const styles = computed(() => parseThemeOptions(props.theme?.defaults))
+  const styleOptions = computed(() => parseThemeOptions(props.theme?.defaults))
+  const selectedNodeId = computed(() => props.selectedNodeId ?? null)
   const layoutSetting = computed(() => props.layout ?? 'nearestParent')
   const hideEdges = computed(() => props.hideEdges ?? false)
+  const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
@@ -76,13 +84,14 @@
     playhead: 20,
   }
 
+  const layoutWorker: Worker = new LayoutWorker()
+
   const loading = ref(true)
   let pixiApp: Application
   let viewport: Viewport
   const cull = new Cull()
-  // flag cullDirty when new nodes are added to the viewport after init
-  let cullDirty = false
 
+  let timeScaleProps: InitTimelineScaleProps
   let minimumStartDate: Date
   const maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
@@ -105,7 +114,8 @@
       console.error('Stage reference not found in initPixiApp')
       return
     }
-    initTimeScale()
+    initTimeScaleProps()
+    timelineScale = initTimelineScale(timeScaleProps)
 
     pixiApp = initPixiApp(stage.value)
     pixiApp.stage.sortableChildren = true
@@ -117,7 +127,7 @@
     initFonts()
 
     initGuides()
-    initContent()
+    await initContent()
     initPlayhead()
 
     initCulling()
@@ -130,6 +140,8 @@
   })
 
   function cleanupApp(): void {
+    layoutWorker.terminate()
+    layoutWorker.onmessage = null
     guides.destroy()
     playhead?.destroy()
     nodesContainer.destroy()
@@ -146,7 +158,7 @@
       })
   }
 
-  function initTimeScale(): void {
+  function initTimeScaleProps(): void {
     const minimumTimeSpan = 1000 * 60
 
     const dates = props.graphData.filter(node => node.end).map(({ start, end }) => ({ start, end }))
@@ -165,17 +177,17 @@
     initialOverallTimeSpan = span
     overallGraphWidth = stage.value!.clientWidth * 2
 
-    timelineScale = initTimelineScale({
+    timeScaleProps = {
       minimumStartTime: minimumStartDate.getTime(),
       overallGraphWidth,
       initialOverallTimeSpan,
-    })
+    }
   }
 
   function initFonts(): void {
-    initBitmapFonts(styles.value)
+    initBitmapFonts(styleOptions.value)
 
-    watch(styles, (newValue) => {
+    watch(styleOptions, (newValue) => {
       updateBitmapFonts(newValue)
     })
   }
@@ -189,7 +201,7 @@
       viewportRef: viewport,
       appRef: pixiApp,
       formatDateFns,
-      styles,
+      styleOptions,
     })
     playhead.zIndex = zIndex.playhead
 
@@ -212,7 +224,7 @@
         if (
           !viewport.moving
           && playheadStartedVisible
-          && playhead.position.x > pixiApp.screen.width - styles.value.spacingViewportPaddingDefault
+          && playhead.position.x > pixiApp.screen.width - styleOptions.value.spacingViewportPaddingDefault
         ) {
           const originalLeft = timelineScale.xToDate(viewport.left)
           viewport.zoomPercent(-0.1, true)
@@ -247,7 +259,7 @@
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
-      styles,
+      styleOptions,
       formatDateFns,
     })
 
@@ -264,11 +276,10 @@
     cull.addAll(viewport.children)
 
     viewport.on('frame-end', () => {
-      if (viewport.dirty || cullDirty) {
+      if (viewport.dirty) {
         cull.cull(pixiApp.renderer.screen)
 
         viewport.dirty = false
-        cullDirty = false
       }
     })
   }
@@ -284,23 +295,44 @@
     cull.cull(pixiApp.renderer.screen)
   }
 
-  function initContent(): void {
-    nodesContainer = new TimelineNodes({
-      nodeContentContainerName: nodesContentContainerName,
-      appRef: pixiApp,
-      viewportRef: viewport,
-      graphData: props.graphData,
-      styles,
+  async function initLayoutWorker(): Promise<void> {
+    const textStyles = await getBitmapFonts(styleOptions.value)
+    const { spacingMinimumNodeEdgeGap } = styleOptions.value
+    const apxCharacterWidth = TextMetrics.measureText('M', textStyles.nodeTextStyles).width
+
+    const layoutWorkerOptions: NodeLayoutWorkerProps = {
+      data: {
+        id: '',
+        timeScaleProps: timeScaleProps,
+        spacingMinimumNodeEdgeGap,
+        apxCharacterWidth,
+        layoutSetting: layoutSetting.value,
+      },
+    }
+
+    layoutWorker.postMessage(layoutWorkerOptions.data)
+  }
+
+  async function initContent(): Promise<void> {
+    await initLayoutWorker()
+
+    const graphState: GraphState = {
+      layoutWorker,
+      pixiApp,
+      viewport,
+      styleOptions,
       styleNode,
       layoutSetting,
       hideEdges,
-      expandedSubNodes: props.expandedSubFlows,
-      timeScaleProps: {
-        minimumStartTime: minimumStartDate.getTime(),
-        overallGraphWidth,
-        initialOverallTimeSpan,
-      },
+      selectedNodeId,
+      expandedSubNodes,
       centerViewport,
+    }
+
+    nodesContainer = new TimelineNodes({
+      nodeContentContainerName: nodesContentContainerName,
+      graphData: props.graphData,
+      graphState,
     })
     viewport.addChild(nodesContainer)
 
@@ -328,18 +360,12 @@
       // If totally new data is added, it all gets appended way down the viewport Y axis.
       // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
       nodesContainer.update(newValue)
-      cullDirty = true
+      viewport.dirty = true
     })
-    watch(() => props.selectedNodeId, (newValue) => {
-      nodesContainer.updateSelection(newValue)
-    })
-    watch(() => props.expandedSubFlows, () => {
-      nodesContainer.updateExpandedSubNodes()
-    }, { deep: true })
   }
 
   function centerViewport({ skipAnimation }: CenterViewportOptions = {}): void {
-    const { spacingViewportPaddingDefault } = styles.value
+    const { spacingViewportPaddingDefault } = styleOptions.value
     const defaultAnimationDuration = 500
 
     pauseCulling()

@@ -2,7 +2,7 @@ import { Application, Container, Sprite } from 'pixi.js'
 import { getRoundedBorderRectTextures } from '@/pixiFunctions'
 
 type RoundedBorderRectProps = {
-  appRef: Application,
+  pixiApp: Application,
   width: number,
   height: number,
   borderRadius: number,
@@ -22,7 +22,7 @@ const rectElements = {
 }
 
 export class RoundedBorderRect extends Container {
-  private readonly AppRef
+  private readonly pixiApp
   private rectWidth
   private rectHeight
   private readonly borderRadius
@@ -30,7 +30,7 @@ export class RoundedBorderRect extends Container {
   private readonly borderWidth
 
   public constructor({
-    appRef,
+    pixiApp,
     width,
     height,
     borderRadius,
@@ -42,7 +42,7 @@ export class RoundedBorderRect extends Container {
     this.rectWidth = width
     this.rectHeight = height
 
-    this.AppRef = appRef
+    this.pixiApp = pixiApp
     this.borderRadius = borderRadius
     this.borderColor = borderColor
     this.borderWidth = borderWidth
@@ -51,11 +51,13 @@ export class RoundedBorderRect extends Container {
   }
 
   private initRect(): void {
+    const { pixiApp, borderRadius, borderColor, borderWidth } = this
+
     const { corner, edge } = getRoundedBorderRectTextures({
-      appRef: this.AppRef,
-      borderRadius: this.borderRadius,
-      borderColor: this.borderColor,
-      borderWidth: this.borderWidth,
+      pixiApp,
+      borderRadius,
+      borderColor,
+      borderWidth,
     })
 
     const topLeft = new Sprite(corner)

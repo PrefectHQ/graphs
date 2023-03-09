@@ -1,16 +1,14 @@
 import {
-  Application,
   BitmapText,
   Container,
   Graphics,
   Sprite,
   TextMetrics
 } from 'pixi.js'
-import { ComputedRef, watch, WatchStopHandle } from 'vue'
+import { watch, WatchStopHandle } from 'vue'
 import {
-  ParsedThemeStyles,
   TimelineNodeData,
-  NodeThemeFn
+  GraphState
 } from '@/models'
 import {
   getBitmapFonts,
@@ -23,10 +21,8 @@ import { RoundedBorderRect } from '@/pixiFunctions/roundedBorderRect'
 import { colorToHex } from '@/utilities/style'
 
 type TimelineNodeProps = {
-  appRef: Application,
   nodeData: TimelineNodeData,
-  styles: ComputedRef<ParsedThemeStyles>,
-  styleNode: ComputedRef<NodeThemeFn>,
+  graphState: GraphState,
 }
 
 export const nodeClickEvents = {
@@ -50,14 +46,12 @@ const nodeBoxSpriteNames = {
 }
 
 export class TimelineNode extends Container {
-  private readonly appRef: Application
   public readonly nodeData
-  private readonly styles
-  private readonly styleNode
+  private readonly graphState
 
   private currentState: string
   private readonly hasSubNodes: boolean = false
-  private readonly unwatch: WatchStopHandle
+  private readonly unWatchers: WatchStopHandle[] = []
   private apxLabelWidth = 0
   private nodeWidth
   private readonly nodeHeight
@@ -72,29 +66,28 @@ export class TimelineNode extends Container {
   private label: BitmapText | undefined
 
   private isSubNodesExpanded = false
-  private subNodesWrapper: Container | undefined
   private subNodesOutline: RoundedBorderRect | undefined
-  private subNodesContent: Container | undefined
+  private subNodesContent: TimelineNodes | undefined
   private subNodesHeight = 0
   private subNodesContentTicker: (() => void) | null = null
 
+  private isSelected = false
   private readonly selectedRing: RoundedBorderRect
 
   public constructor({
-    appRef,
     nodeData,
-    styles,
-    styleNode,
+    graphState,
   }: TimelineNodeProps) {
     super()
-    this.appRef = appRef
+
+    this.interactive = false
+
     this.nodeData = nodeData
-    this.styles = styles
-    this.styleNode = styleNode
+    this.graphState = graphState
 
     this.currentState = nodeData.state
     this.hasSubNodes = nodeData.subFlowId !== undefined
-    this.boxCapWidth = styles.value.borderRadiusNode
+    this.boxCapWidth = graphState.styleOptions.value.borderRadiusNode
 
     this.nodeWidth = this.getNodeWidth()
     this.nodeHeight = this.getNodeHeight()
@@ -110,12 +103,49 @@ export class TimelineNode extends Container {
     this.selectedRing.alpha = 0
     this.addChild(this.selectedRing)
 
-    this.unwatch = watch([styles, styleNode], () => {
-      this.drawBox()
-      this.drawLabel()
-    }, { deep: true })
+    this.initWatchers()
+  }
 
-    this.interactive = false
+  private initWatchers(): void {
+    const {
+      styleOptions,
+      styleNode,
+      selectedNodeId,
+      expandedSubNodes,
+    } = this.graphState
+
+    this.unWatchers.push(
+      watch([styleOptions, styleNode], () => {
+        this.drawBox()
+        this.drawLabel()
+      }, { deep: true }),
+      watch(selectedNodeId, () => {
+        if (selectedNodeId.value === this.nodeData.id) {
+          this.select()
+          return
+        }
+        if (this.isSelected && selectedNodeId.value !== this.nodeData.id) {
+          this.deselect()
+        }
+      }),
+      watch(expandedSubNodes, () => {
+        if (this.isSubNodesExpanded) {
+          if (!expandedSubNodes.value.has(this.nodeData.id)) {
+            this.isSubNodesExpanded = false
+            this.collapseSubNodes()
+            return
+          }
+
+          const newData = expandedSubNodes.value.get(this.nodeData.id)
+          this.subNodesContent?.update(newData)
+          return
+        }
+        if (expandedSubNodes.value.has(this.nodeData.id)) {
+          this.isSubNodesExpanded = true
+          this.expandSubNodes()
+        }
+      }, { deep: true }),
+    )
   }
 
   private getNodeWidth(): number {
@@ -139,18 +169,17 @@ export class TimelineNode extends Container {
   }
 
   private drawBox(): void {
-    const { appRef, nodeWidth, nodeHeight, box, boxCapWidth } = this
-    const { fill } = this.styleNode.value(this.nodeData)
+    const { pixiApp, styleOptions, styleNode } = this.graphState
+    const { nodeWidth, nodeHeight, box, boxCapWidth } = this
+    const { borderRadiusNode } = styleOptions.value
+    const { fill } = styleNode.value(this.nodeData)
     const hexadecimalFill = colorToHex(fill)
     const isRunningNode = !this.nodeData.end
-    const {
-      borderRadiusNode,
-    } = this.styles.value
 
     this.box.removeChildren()
 
     const { cap, body } = getNodeBoxTextures({
-      appRef,
+      pixiApp,
       fill: hexadecimalFill,
       borderRadius: borderRadiusNode,
       boxCapWidth,
@@ -209,8 +238,9 @@ export class TimelineNode extends Container {
 
   private async setApxLabelWidth(): Promise<void> {
     const { hasSubNodes, subNodesToggleSize } = this
-    const { spacingNodeXPadding } = this.styles.value
-    const { nodeTextStyles } = await getBitmapFonts(this.styles.value)
+    const { styleOptions } = this.graphState
+    const { spacingNodeXPadding } = styleOptions.value
+    const { nodeTextStyles } = await getBitmapFonts(styleOptions.value)
     const { label: labelText } = this.nodeData
 
     // the text metrics are consistently a bit off, so we add a buffer percentage
@@ -230,9 +260,10 @@ export class TimelineNode extends Container {
   }
 
   private async drawLabelText(): Promise<void> {
-    const textStyles = await getBitmapFonts(this.styles.value)
-    const { spacingNodeYPadding, spacingNodeXPadding } = this.styles.value
-    const { inverseTextOnFill } = this.styleNode.value(this.nodeData)
+    const { styleOptions, styleNode } = this.graphState
+    const textStyles = await getBitmapFonts(styleOptions.value)
+    const { spacingNodeYPadding, spacingNodeXPadding } = styleOptions.value
+    const { inverseTextOnFill } = styleNode.value(this.nodeData)
     const labelStyleOnFill = inverseTextOnFill ? textStyles.nodeTextInverse : textStyles.nodeTextDefault
 
     const { label: labelText } = this.nodeData
@@ -258,7 +289,11 @@ export class TimelineNode extends Container {
   }
 
   private getNodeHeight(): number {
-    const { textLineHeightDefault, spacingNodeYPadding } = this.styles.value
+    const {
+      textLineHeightDefault,
+      spacingNodeYPadding,
+    } = this.graphState.styleOptions.value
+
     return textLineHeightDefault + spacingNodeYPadding * 2
   }
 
@@ -269,14 +304,15 @@ export class TimelineNode extends Container {
       isLabelInBox,
       labelContainer,
     } = this
-    const { inverseTextOnFill } = this.styleNode.value(this.nodeData)
+    const { pixiApp, styleOptions, styleNode } = this.graphState
+    const { inverseTextOnFill } = styleNode.value(this.nodeData)
     const {
       colorTextDefault,
       colorTextInverse,
       colorButtonBorder,
       colorButtonBg,
       borderRadiusButton,
-    } = this.styles.value
+    } = styleOptions.value
     const arrowColorOnFill = inverseTextOnFill ? colorTextInverse : colorTextDefault
     const arrowColor = isLabelInBox ? arrowColorOnFill : colorTextDefault
 
@@ -306,7 +342,7 @@ export class TimelineNode extends Container {
     }
 
     const arrowTexture = getArrowTexture({
-      appRef: this.appRef,
+      pixiApp,
       strokeColor: arrowColor,
       edgeWidth: 2,
       edgeLength: 8,
@@ -333,25 +369,21 @@ export class TimelineNode extends Container {
       return
     }
 
-    if (!this.subNodesWrapper) {
-      this.subNodesWrapper = new Container()
-      this.addChild(this.subNodesWrapper)
-    }
-
     this.subNodesOutline?.destroy()
 
     const { nodeWidth, nodeHeight } = this
+    const { pixiApp, styleOptions, styleNode } = this.graphState
     const {
       borderRadiusNode,
       alphaSubNodesOutlineDimmed,
       spacingSubNodesOutlineBorderWidth,
       spacingSubNodesOutlineOffset,
-    } = this.styles.value
-    const { fill } = this.styleNode.value(this.nodeData)
+    } = styleOptions.value
+    const { fill } = styleNode.value(this.nodeData)
     const outlineColor = colorToHex(fill)
 
     this.subNodesOutline = new RoundedBorderRect({
-      appRef: this.appRef,
+      pixiApp,
       width: nodeWidth - spacingSubNodesOutlineOffset * 2,
       height: nodeHeight,
       borderRadius: borderRadiusNode,
@@ -363,7 +395,7 @@ export class TimelineNode extends Container {
       spacingSubNodesOutlineOffset,
     )
     this.subNodesOutline.alpha = alphaSubNodesOutlineDimmed
-    this.subNodesWrapper!.addChild(this.subNodesOutline)
+    this.addChild(this.subNodesOutline)
   }
 
   private updateSubNodesOutlineSize(): void {
@@ -382,7 +414,7 @@ export class TimelineNode extends Container {
       spacingSubNodesOutlineOffset,
       alphaSubNodesOutlineDimmed,
       spacingNodeLabelMargin,
-    } = this.styles.value
+    } = this.graphState.styleOptions.value
 
     if (isSubNodesExpanded) {
       subNodesOutline.position.set(-spacingSubNodesOutlineOffset, -spacingSubNodesOutlineOffset)
@@ -403,15 +435,16 @@ export class TimelineNode extends Container {
   }
 
   private initSelectedRing(): RoundedBorderRect {
+    const { pixiApp, styleOptions } = this.graphState
     const { width, height, margin } = this.getUpdateSelectedRingSize()
     const {
       colorNodeSelection,
       spacingNodeSelectionWidth,
       borderRadiusNode,
-    } = this.styles.value
+    } = styleOptions.value
 
     const newSelectedRing = new RoundedBorderRect({
-      appRef: this.appRef,
+      pixiApp,
       width,
       height,
       borderRadius: borderRadiusNode,
@@ -443,7 +476,7 @@ export class TimelineNode extends Container {
     const {
       spacingNodeXPadding,
       spacingNodeLabelMargin,
-    } = this.styles.value
+    } = this.graphState.styleOptions.value
 
     const inBoxXPos = this.hasSubNodes ? 0 : spacingNodeXPadding
     const xPos = this.isLabelInBox
@@ -454,20 +487,21 @@ export class TimelineNode extends Container {
   }
 
   private getUpdateSelectedRingSize(): { width: number, height: number, margin: number } {
+    const { nodeWidth, nodeHeight, hasSubNodes, subNodesContent } = this
     const {
       spacingNodeSelectionMargin,
       spacingNodeSelectionWidth,
       spacingSubNodesOutlineBorderWidth,
       spacingSubNodesOutlineOffset,
-    } = this.styles.value
+    } = this.graphState.styleOptions.value
 
     // The margin compensates for RoundedBorderRect using an inset border
     const margin = spacingNodeSelectionMargin + spacingNodeSelectionWidth
 
-    const width = this.nodeWidth + margin * 2
-    const height = this.hasSubNodes && !this.subNodesContent
-      ? this.nodeHeight + spacingSubNodesOutlineBorderWidth + spacingSubNodesOutlineOffset + margin * 2
-      : this.nodeHeight + margin * 2
+    const width = nodeWidth + margin * 2
+    const height = hasSubNodes && !subNodesContent
+      ? nodeHeight + spacingSubNodesOutlineBorderWidth + spacingSubNodesOutlineOffset + margin * 2
+      : nodeHeight + margin * 2
 
     return { width, height, margin }
   }
@@ -522,53 +556,115 @@ export class TimelineNode extends Container {
   }
 
   public select(): void {
+    this.isSelected = true
     this.selectedRing.alpha = 1
+    this.centerViewportToNodeAfterDelay()
   }
 
   public deselect(): void {
+    this.isSelected = false
     this.selectedRing.alpha = 0
+
+    if (!this.graphState.selectedNodeId.value) {
+      this.centerViewportToNodeAfterDelay()
+    }
   }
 
-  public expandSubNodes(subNodes: TimelineNodes): void {
-    if (!this.hasSubNodes || !this.subNodesWrapper) {
+  private centerViewportToNodeAfterDelay(): void {
+    const { viewport } = this.graphState
+    setTimeout(() => {
+      const xPos = (this.worldTransform.tx - viewport.x) / viewport.scale.x + this.width / 2
+      const yPos = (this.worldTransform.ty - viewport.y) / viewport.scale.y + this.height / 2
+
+      viewport.animate({
+        position: {
+          x: xPos,
+          y: yPos,
+        },
+        time: 1000,
+        ease: 'easeInOutQuad',
+        removeOnInterrupt: true,
+      })
+    }, 100)
+  }
+
+  /**
+   * Subnodes
+   */
+  public expandSubNodes(): void {
+    const subNodesData = this.graphState.expandedSubNodes.value.get(this.nodeData.id)
+
+    if (!this.hasSubNodes || !subNodesData) {
       return
     }
 
-    // update trigger.
     // handle loading
 
-    if (!this.subNodesContent || this.subNodesContent.destroyed) {
-      this.createSubNodesContentContainer()
+    this.subNodesContent?.destroy()
+
+    this.subNodesContent = new TimelineNodes({
+      isSubNodes: true,
+      graphData: subNodesData,
+      graphState: this.graphState,
+    })
+
+    this.subNodesContent.on(nodeClickEvents.nodeDetails, (id) => {
+      this.emit(nodeClickEvents.nodeDetails, id)
+    })
+    this.subNodesContent.on(nodeClickEvents.subNodesToggle, (id) => {
+      this.emit(nodeClickEvents.subNodesToggle, id)
+    })
+
+    this.updateSubNodesContentPosition()
+    this.subNodesContent.on('updated', () => this.updateSubNodesContentPosition())
+
+    this.addChild(this.subNodesContent)
+
+    this.initSubNodesTicker()
+  }
+
+  public updateSubNodesContentPosition(): void {
+    const { subNodesContent, box } = this
+    const {
+      spacingNodeMargin,
+      spacingSubNodesOutlineOffset,
+    } = this.graphState.styleOptions.value
+
+    if (!subNodesContent) {
+      return
     }
 
-    this.updateSubNodesOffsetPosition(subNodes)
-    subNodes.on('updated', () => this.updateSubNodesOffsetPosition(subNodes))
-
-    this.subNodesContent!.addChild(subNodes)
-
-    this.isSubNodesExpanded = true
-    this.initSubNodesTicker(subNodes)
-  }
-
-  public updateSubNodesOffsetPosition(subNodes: TimelineNodes): void {
     // The subNodes nodes are positioned relative to the global timeline, but we're drawing
     // the subNodes container relative to this node, so we need to offset the X to compensate.
-    const earliestSubNodes = subNodes.getEarliestNodeStart()
+    const earliestSubNodes = subNodesContent.getEarliestNodeStart()
     const xPosNegativeOffset = earliestSubNodes ? -timelineScale.dateToX(earliestSubNodes) : 0
-    subNodes.position.x = xPosNegativeOffset
+
+    const yPos = box.y + box.height + spacingNodeMargin - spacingSubNodesOutlineOffset
+
+    subNodesContent.position.set(
+      xPosNegativeOffset,
+      yPos,
+    )
   }
 
-  private initSubNodesTicker(subNodes: TimelineNodes): void {
-    this.subNodesHeight = subNodes.height
+  private initSubNodesTicker(): void {
+    const { subNodesContent } = this
+    const { pixiApp } = this.graphState
+
+    if (!subNodesContent) {
+      return
+    }
+
+    this.subNodesHeight = subNodesContent.height
 
     this.subNodesContentTicker = () => {
       if (this.subNodesContent?.height !== this.subNodesHeight) {
         this.updateSubNodesOutlineSize()
         this.updateSelectedRingSize()
-        this.subNodesHeight = subNodes.height
+        this.subNodesHeight = subNodesContent.height
       }
     }
-    this.appRef.ticker.add(this.subNodesContentTicker)
+    pixiApp.ticker.add(this.subNodesContentTicker)
   }
 
   public collapseSubNodes(): void {
@@ -580,33 +676,12 @@ export class TimelineNode extends Container {
     this.updateSelectedRingSize()
   }
 
-  private createSubNodesContentContainer(): void {
-    if (!this.subNodesWrapper) {
-      console.warn('FlowRunTimeline: node cannot create subNodesContent without subNodesWrapper')
-      return
-    }
-
-    const {
-      spacingNodeMargin,
-      spacingSubNodesOutlineOffset,
-    } = this.styles.value
-
-    this.subNodesContent = new Container()
-    this.subNodesContent.position.set(
-      this.box.x,
-      this.box.y + this.box.height + spacingNodeMargin - spacingSubNodesOutlineOffset,
-    )
-
-    this.subNodesWrapper.addChild(this.subNodesContent)
-  }
-
   private destroySubNodesContent(): void {
     if (this.subNodesContentTicker) {
-      this.appRef.ticker.remove(this.subNodesContentTicker)
+      this.graphState.pixiApp.ticker.remove(this.subNodesContentTicker)
       this.subNodesContentTicker = null
     }
 
-    this.subNodesContent?.getChildAt(0)?.destroy()
     this.subNodesContent?.destroy()
   }
 
@@ -619,11 +694,11 @@ export class TimelineNode extends Container {
 
     this.destroySubNodesContent()
     this.subNodesOutline?.destroy()
-    this.subNodesWrapper?.destroy()
 
     this.selectedRing.destroy()
 
-    this.unwatch()
+    this.unWatchers.forEach(unwatch => unwatch())
+
     super.destroy.call(this)
   }
 }

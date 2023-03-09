@@ -13,7 +13,7 @@
           :hide-edges="hideEdges"
           class="flow-run-timeline-demo-demo__graph"
           :selected-node-id="selectedNodeId"
-          :expanded-sub-flows="expandedSubFlows"
+          :expanded-sub-nodes="expandedSubFlows"
           @selection="selectNode"
           @sub-flow-toggle="toggleSubFlow"
         />

@@ -1,21 +1,14 @@
 import gsap from 'gsap'
-import type { Viewport } from 'pixi-viewport'
-import { Application, Container, TextMetrics } from 'pixi.js'
-import { ComputedRef, watch, WatchStopHandle } from 'vue'
+import { Container } from 'pixi.js'
+import { watch, WatchStopHandle } from 'vue'
 import {
   NodeLayoutWorkerResponse,
-  NodeThemeFn,
-  ParsedThemeStyles,
   TimelineNodeData,
-  TimelineNodesLayoutOptions,
-  NodesLayout,
-  InitTimelineScaleProps,
   NodeLayoutWorkerProps,
-  CenterViewportOptions,
-  ExpandedSubNodes
+  GraphState,
+  NodesLayout
 } from '@/models'
 import {
-  getBitmapFonts,
   DeselectLayer,
   TimelineEdge,
   TimelineNode,
@@ -24,22 +17,12 @@ import {
   nodeAnimationDurations,
   nodeClickEvents
 } from '@/pixiFunctions'
-// eslint-disable-next-line import/default
-import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
 
 type TimelineNodesProps = {
   nodeContentContainerName?: string,
-  appRef: Application,
-  viewportRef: Viewport,
-  graphData: TimelineNodeData[],
-  styles: ComputedRef<ParsedThemeStyles>,
-  styleNode: ComputedRef<NodeThemeFn>,
-  layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
-  hideEdges: ComputedRef<boolean>,
-  expandedSubNodes?: ExpandedSubNodes,
   isSubNodes?: boolean,
-  timeScaleProps: InitTimelineScaleProps,
-  centerViewport: (options?: CenterViewportOptions) => void,
+  graphData: TimelineNodeData[],
+  graphState: GraphState,
 }
 
 type EdgeRecord = {
@@ -49,105 +32,106 @@ type EdgeRecord = {
 }
 
 export class TimelineNodes extends Container {
-  private readonly appRef: Application
-  private readonly viewportRef: Viewport
+  private readonly id = crypto.randomUUID()
+
+  private readonly isSubNodes
   private graphData
-  private readonly styles
-  private readonly styleNode
-  private readonly layoutSetting
-  private readonly timeScaleProps: InitTimelineScaleProps
-  private readonly centerViewport
+  private readonly graphState: GraphState
 
   private readonly nodeContainer = new Container()
   public readonly nodeRecords: Map<string, TimelineNode> = new Map()
-  public selectedNodeId: string | null | undefined = null
-
-  private readonly unwatchLayoutSetting: WatchStopHandle
-  private readonly unwatchHideEdges: WatchStopHandle
-  private readonly hideEdges
-  private readonly layoutWorker: Worker = new LayoutWorker()
   private layout: NodesLayout = {}
-
-  private readonly isSubNodes
-  private readonly expandedSubNodes
-  private subNodesRecords: Map<string, TimelineNodes> | undefined
-  private subNodesContainer: Container | undefined
 
   private readonly edgeContainer = new Container()
   private readonly edgeRecords: EdgeRecord[] = []
 
+  private readonly unWatchers: WatchStopHandle[] = []
+  private isSelectionPathHighlighted = false
+
   public constructor({
     nodeContentContainerName,
-    appRef,
-    viewportRef,
-    graphData,
-    styles,
-    styleNode,
-    layoutSetting,
-    hideEdges,
-    expandedSubNodes,
     isSubNodes,
-    timeScaleProps,
-    centerViewport,
+    graphData,
+    graphState,
   }: TimelineNodesProps) {
     super()
-
-    this.appRef = appRef
-    this.viewportRef = viewportRef
-    this.graphData = graphData
-    this.styles = styles
-    this.styleNode = styleNode
-    this.timeScaleProps = timeScaleProps
-    this.centerViewport = centerViewport
-    this.layoutSetting = layoutSetting
-    this.hideEdges = hideEdges
-    this.isSubNodes = isSubNodes
-    this.expandedSubNodes = expandedSubNodes
-
-    this.initDeselectLayer()
 
     if (nodeContentContainerName) {
       this.nodeContainer.name = nodeContentContainerName
     }
 
-    this.initLayoutWorker()
+    this.isSubNodes = isSubNodes
+    this.graphData = graphData
+    this.graphState = graphState
 
-    this.unwatchLayoutSetting = watch(layoutSetting, () => {
-      this.updateLayoutSetting()
-    })
-    this.unwatchHideEdges = watch(hideEdges, () => {
-      this.updateHideEdges()
-    })
+    this.initDeselectLayer()
+    this.initLayoutWorker()
+    this.initWatchers()
   }
 
-  private async initLayoutWorker(): Promise<void> {
-    const textStyles = await getBitmapFonts(this.styles.value)
-    const { spacingMinimumNodeEdgeGap } = this.styles.value
-    const apxCharacterWidth = TextMetrics.measureText('M', textStyles.nodeTextStyles).width
+  private initWatchers(): void {
+    const {
+      layoutSetting,
+      hideEdges,
+      selectedNodeId,
+    } = this.graphState
+
+    this.unWatchers.push(
+      watch(layoutSetting, () => {
+        this.updateLayoutSetting()
+      }),
+      watch(hideEdges, () => {
+        this.updateHideEdges()
+      }),
+      watch(selectedNodeId, () => {
+        if (selectedNodeId.value && this.nodeRecords.has(selectedNodeId.value)) {
+          if (this.isSelectionPathHighlighted) {
+            this.unHighlightSelectedNodePath()
+          }
+          this.isSelectionPathHighlighted = true
+          this.highlightSelectedNodePath()
+          return
+        }
+        if (
+          this.isSelectionPathHighlighted
+          && (!selectedNodeId.value || !this.nodeRecords.has(selectedNodeId.value))
+        ) {
+          this.unHighlightSelectedNodePath()
+        }
+      }),
+    )
+  }
+
+  private initLayoutWorker(): void {
+    const { layoutWorker, layoutSetting, centerViewport } = this.graphState
+    const { spacingMinimumNodeEdgeGap } = this.graphState.styleOptions.value
 
     const layoutWorkerOptions: NodeLayoutWorkerProps = {
       data: {
-        timeScaleProps: this.timeScaleProps,
+        id: this.id,
         spacingMinimumNodeEdgeGap,
-        apxCharacterWidth,
         graphData: JSON.stringify(this.graphData),
-        layoutSetting: this.layoutSetting.value,
+        layoutSetting: layoutSetting.value,
       },
     }
 
-    this.layoutWorker.onmessage = async ({ data }: NodeLayoutWorkerResponse) => {
+    layoutWorker.onmessage = async ({ data }: NodeLayoutWorkerResponse) => {
+      if (data.id !== this.id) {
+        return
+      }
+
       this.layout = data.layout
 
       await this.renderLayout()
 
       if (data.centerViewportAfter && !this.isSubNodes) {
-        this.centerViewport()
+        centerViewport()
       }
 
       this.emitUpdate()
     }
 
-    this.layoutWorker.postMessage(layoutWorkerOptions.data)
+    layoutWorker.postMessage(layoutWorkerOptions.data)
   }
 
   private initDeselectLayer(): void {
@@ -155,7 +139,9 @@ export class TimelineNodes extends Container {
       return
     }
 
-    const deselectLayer = new DeselectLayer(this.appRef, this.viewportRef)
+    const { pixiApp, viewport } = this.graphState
+
+    const deselectLayer = new DeselectLayer(pixiApp, viewport)
 
     this.addChild(deselectLayer)
 
@@ -191,34 +177,27 @@ export class TimelineNodes extends Container {
       this.addChild(this.nodeContainer)
 
       if (!this.isSubNodes) {
-        this.centerViewport({ skipAnimation: true })
+        this.graphState.centerViewport({ skipAnimation: true })
       }
     }
   }
 
   private createNode(nodeData: TimelineNodeData): void {
-    const { appRef, styles, styleNode } = this
-
     const node = new TimelineNode({
-      appRef,
       nodeData,
-      styles,
-      styleNode,
+      graphState: this.graphState,
     })
-
+    this.updateNodePosition(node)
     this.registerEmits(node)
 
     this.nodeRecords.set(nodeData.id, node)
-
-    this.updateNodePosition(node)
-
     this.addNodeEdges(nodeData)
 
     this.nodeContainer.addChild(node)
   }
 
   private readonly getNodeYPosition = (layoutPosition: number): number => {
-    const { spacingNodeMargin, textLineHeightDefault, spacingNodeYPadding } = this.styles.value
+    const { spacingNodeMargin, textLineHeightDefault, spacingNodeYPadding } = this.graphState.styleOptions.value
     const nodeHeight = textLineHeightDefault + spacingNodeYPadding * 2
     const layoutPositionOffset = nodeHeight + spacingNodeMargin
 
@@ -262,13 +241,12 @@ export class TimelineNodes extends Container {
       }
 
       const edge = new TimelineEdge({
-        appRef: this.appRef,
-        styles: this.styles,
         sourceNode,
         targetNode,
+        graphState: this.graphState,
       })
 
-      if (this.hideEdges.value) {
+      if (this.graphState.hideEdges.value) {
         edge.renderable = false
       }
 
@@ -290,10 +268,11 @@ export class TimelineNodes extends Container {
       this.graphData = newData
       const message: NodeLayoutWorkerProps = {
         data: {
+          id: this.id,
           graphData: JSON.stringify(this.graphData),
         },
       }
-      this.layoutWorker.postMessage(message.data)
+      this.graphState.layoutWorker.postMessage(message.data)
       return
     }
 
@@ -301,122 +280,53 @@ export class TimelineNodes extends Container {
   }
 
   public updateHideEdges(): void {
-    this.edgeRecords.forEach(({ edge }) => edge.renderable = !this.hideEdges.value)
+    const { hideEdges, viewport } = this.graphState
 
-    if (!this.hideEdges.value) {
+    this.edgeRecords.forEach(({ edge }) => edge.renderable = !hideEdges.value)
+
+    if (!hideEdges.value) {
       // the viewport needs to update transforms so the edges show in the right place
-      this.viewportRef.dirty = true
-      this.viewportRef.updateTransform()
-      return
+      viewport.dirty = true
+      viewport.updateTransform()
     }
 
-    if (this.selectedNodeId) {
-      const selectedNode = this.nodeRecords.get(this.selectedNodeId)!
-      this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
+    if (this.isSelectionPathHighlighted) {
+      this.highlightSelectedNodePath()
     }
   }
 
   public updateLayoutSetting(): void {
+    const { layoutSetting, layoutWorker } = this.graphState
+
     const message: NodeLayoutWorkerProps = {
       data: {
+        id: this.id,
         graphData: JSON.stringify(this.graphData),
-        layoutSetting: this.layoutSetting.value,
+        layoutSetting: layoutSetting.value,
         centerViewportAfter: true,
       },
     }
-    this.layoutWorker.postMessage(message.data)
+    layoutWorker.postMessage(message.data)
   }
 
   /**
    * Node Selection
    */
-  public updateSelection(selectedNodeId?: string | null): void {
-    this.unHighlightAll()
-    this.clearNodeSelection()
-    this.setNodeSelection(selectedNodeId ?? null)
-  }
+  private highlightSelectedNodePath(): void {
+    const selectedNodeId = this.graphState.selectedNodeId.value
+    const selectedNode = selectedNodeId && this.nodeRecords.get(selectedNodeId)
 
-  private unHighlightAll(): void {
-    this.edgeRecords.forEach(({ edge }) => {
-      if (this.hideEdges.value) {
-        edge.renderable = false
-      }
-      edge.alpha = 1
-    })
-    this.nodeRecords.forEach((nodeRecord) => {
-      nodeRecord.alpha = 1
-    })
-    this.subNodesRecords?.forEach((subNodes) => {
-      subNodes.unHighlightAll()
-    })
-  }
-
-  private clearNodeSelection(): void {
-    if (!this.selectedNodeId) {
+    if (!selectedNodeId || !selectedNode) {
       return
     }
 
-    const oldSelectedNode = this.findNodeRecord(this.selectedNodeId)
+    const { alphaNodeDimmed } = this.graphState.styleOptions.value
 
-    if (oldSelectedNode) {
-      oldSelectedNode.deselect()
-      this.centerViewportToNodeAfterDelay(oldSelectedNode)
-    }
-
-    this.selectedNodeId = null
-
-    this.subNodesRecords?.forEach((subNodes) => {
-      subNodes.selectedNodeId = null
-    })
-  }
-
-  private setNodeSelection(selectedNodeId: string | null): void {
-    if (!selectedNodeId) {
-      return
-    }
-
-    this.selectedNodeId = selectedNodeId
-
-    if (this.nodeRecords.has(selectedNodeId)) {
-      const selectedNode = this.nodeRecords.get(selectedNodeId)!
-
-      selectedNode.select()
-      this.highlightSelectedNodePath(this.selectedNodeId, selectedNode)
-
-      this.centerViewportToNodeAfterDelay(selectedNode)
-      return
-    }
-
-    this.subNodesRecords?.forEach((subNodes) => {
-      if (subNodes.nodeRecords.has(selectedNodeId)) {
-        subNodes.setNodeSelection(selectedNodeId)
-      }
-    })
-  }
-
-  private centerViewportToNodeAfterDelay(selectedNode: TimelineNode): void {
-    setTimeout(() => {
-      const xPos = (selectedNode.worldTransform.tx - this.viewportRef.x) / this.viewportRef.scale.x + selectedNode.width / 2
-      const yPos = (selectedNode.worldTransform.ty - this.viewportRef.y) / this.viewportRef.scale.y + selectedNode.height / 2
-
-      this.viewportRef.animate({
-        position: {
-          x: xPos,
-          y: yPos,
-        },
-        time: 1000,
-        ease: 'easeInOutQuad',
-        removeOnInterrupt: true,
-      })
-    }, 100)
-  }
-
-  private highlightSelectedNodePath(selectedNodeId: string, selectedNode: TimelineNode): void {
-    const { alphaNodeDimmed } = this.styles.value
     const highlightedEdges = [
       ...this.getAllUpstreamEdges(selectedNodeId),
       ...this.getAllDownstreamEdges(selectedNodeId),
     ]
+
     const highlightedNodes: Map<string, TimelineNode> = new Map()
     highlightedNodes.set(selectedNodeId, selectedNode)
 
@@ -476,93 +386,23 @@ export class TimelineNodes extends Container {
     return connectedEdges
   }
 
-  /**
-   * Sub Nodes
-   */
-  public updateExpandedSubNodes(): void {
-    if (!this.subNodesRecords) {
-      this.subNodesRecords = new Map()
-    }
+  private unHighlightSelectedNodePath(): void {
+    const { hideEdges } = this.graphState
 
-    this.expandedSubNodes?.forEach((subNodesData, nodeId) => {
-      if (this.subNodesRecords!.has(nodeId)) {
-        const subNodes = this.subNodesRecords!.get(nodeId)
-        subNodes?.update(subNodesData)
-        return
+    this.edgeRecords.forEach(({ edge }) => {
+      if (hideEdges.value) {
+        edge.renderable = false
       }
-      this.createSubNodesInstance(nodeId, subNodesData)
+      edge.alpha = 1
     })
-
-    this.checkRemovedExpandedSubNodes()
-
-    // check layout
-  }
-
-  private readonly createSubNodesInstance = (nodeId: string, subNodesData: TimelineNodeData[]): void => {
-    if (!this.subNodesContainer) {
-      this.subNodesContainer = new Container()
-      this.addChild(this.subNodesContainer)
-    }
-
-    const parentNode = this.findNodeRecord(nodeId)
-
-    if (!parentNode) {
-      return
-    }
-
-    const subNodes = new TimelineNodes({
-      isSubNodes: true,
-      appRef: this.appRef,
-      viewportRef: this.viewportRef,
-      graphData: subNodesData,
-      styles: this.styles,
-      styleNode: this.styleNode,
-      layoutSetting: this.layoutSetting,
-      hideEdges: this.hideEdges,
-      timeScaleProps: this.timeScaleProps,
-      centerViewport: this.centerViewport,
-    })
-
-    this.subNodesRecords!.set(nodeId, subNodes)
-    this.registerEmits(subNodes)
-
-    parentNode.expandSubNodes(subNodes)
-  }
-
-  private checkRemovedExpandedSubNodes(): void {
-    this.subNodesRecords?.forEach((subNodes, nodeId) => {
-      if (!this.expandedSubNodes?.has(nodeId)) {
-        const clearSelectionAfter = this.subNodesRecords?.get(nodeId)?.selectedNodeId
-
-        this.findNodeRecord(nodeId)?.collapseSubNodes()
-        this.subNodesRecords!.delete(nodeId)
-
-        if (clearSelectionAfter) {
-          this.emitNullSelection()
-        }
-      }
+    this.nodeRecords.forEach((nodeRecord) => {
+      nodeRecord.alpha = 1
     })
   }
 
   /**
    * Utilities
    */
-  private findNodeRecord(nodeId: string): TimelineNode | null {
-    if (this.nodeRecords.has(nodeId)) {
-      return this.nodeRecords.get(nodeId)!
-    }
-
-    if (this.subNodesRecords) {
-      for (const subNodes of this.subNodesRecords.values()) {
-        if (subNodes.nodeRecords.has(nodeId)) {
-          return subNodes.nodeRecords.get(nodeId)!
-        }
-      }
-    }
-
-    return null
-  }
-
   private readonly temporarilyHideEdges = {
     start: (): void => {
       this.edgeRecords.forEach((edgeRecord) => {
@@ -613,14 +453,8 @@ export class TimelineNodes extends Container {
     this.nodeRecords.forEach(nodeRecord => nodeRecord.destroy())
     this.nodeRecords.clear()
     this.edgeRecords.forEach(edgeRecord => edgeRecord.edge.destroy())
-    this.layoutWorker.terminate()
-    this.layoutWorker.onmessage = null
-    this.subNodesRecords?.forEach(subNodes => subNodes.destroy())
-    this.subNodesRecords?.clear()
-    this.subNodesContainer?.destroy()
     this.removeChildren()
-    this.unwatchLayoutSetting()
-    this.unwatchHideEdges()
+    this.unWatchers.forEach(unwatch => unwatch())
 
     if (!this.isSubNodes) {
       destroyNodeTextureCache()

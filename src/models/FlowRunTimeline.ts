@@ -1,4 +1,6 @@
-import { IBitmapTextStyle, TextStyle } from 'pixi.js'
+import type { Viewport } from 'pixi-viewport'
+import type { Application, IBitmapTextStyle, TextStyle } from 'pixi.js'
+import type { ComputedRef } from 'vue'
 import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilities'
 
 export type TimelineNodeData = {
@@ -24,8 +26,9 @@ export type ExpandedSubNodes = Map<string, TimelineNodeData[]>
 export type NodeShoveDirection = 1 | -1
 export type NodeLayoutWorkerProps = {
   data: {
+    id: string,
     layoutSetting?: TimelineNodesLayoutOptions,
-    graphData: string,
+    graphData?: string,
     apxCharacterWidth?: number,
     spacingMinimumNodeEdgeGap?: number,
     timeScaleProps?: InitTimelineScaleProps,
@@ -39,11 +42,26 @@ export type NodeLayoutItem = {
   endX: number,
 }
 export type NodesLayout = Record<string, NodeLayoutItem>
+export type NodeLayoutWorkerResponseData = {
+  id: string,
+  layout: NodesLayout,
+  centerViewportAfter?: boolean,
+}
 export type NodeLayoutWorkerResponse = {
-  data: {
-    layout: NodesLayout,
-    centerViewportAfter: boolean,
-  },
+  data: NodeLayoutWorkerResponseData,
+}
+
+export type GraphState = {
+  layoutWorker: Worker,
+  pixiApp: Application,
+  viewport: Viewport,
+  styleOptions: ComputedRef<ParsedThemeStyles>,
+  styleNode: ComputedRef<NodeThemeFn>,
+  layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
+  hideEdges: ComputedRef<boolean>,
+  selectedNodeId: ComputedRef<string | null>,
+  expandedSubNodes: ComputedRef<ExpandedSubNodes>,
+  centerViewport: (options?: CenterViewportOptions) => void,
 }
 
 export type DateToX = (date: Date) => number

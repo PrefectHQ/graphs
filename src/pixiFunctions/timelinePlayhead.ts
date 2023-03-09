@@ -9,14 +9,14 @@ type TimelinePlayheadProps = {
   viewportRef: Viewport,
   appRef: Application,
   formatDateFns: ComputedRef<FormatDateFns>,
-  styles: ComputedRef<ParsedThemeStyles>,
+  styleOptions: ComputedRef<ParsedThemeStyles>,
 }
 
 export class TimelinePlayhead extends Container {
   private readonly viewportRef
   private readonly appRef
   private readonly formatDateFns
-  private readonly styles: ComputedRef<ParsedThemeStyles>
+  private readonly styleOptions: ComputedRef<ParsedThemeStyles>
 
   private readonly unwatch: WatchStopHandle
 
@@ -27,20 +27,20 @@ export class TimelinePlayhead extends Container {
     viewportRef,
     appRef,
     formatDateFns,
-    styles,
+    styleOptions,
   }: TimelinePlayheadProps) {
     super()
 
     this.viewportRef = viewportRef
     this.appRef = appRef
     this.formatDateFns = formatDateFns
-    this.styles = styles
+    this.styleOptions = styleOptions
 
     this.drawPlayhead()
 
     this.drawTimeLabel()
 
-    this.unwatch = watch(styles, () => {
+    this.unwatch = watch(styleOptions, () => {
       this.playhead.clear()
       this.drawPlayhead()
     }, { deep: true })
@@ -53,7 +53,7 @@ export class TimelinePlayhead extends Container {
       colorPlayheadBg,
       spacingPlayheadWidth,
       spacingPlayheadGlowPadding,
-    } = this.styles.value
+    } = this.styleOptions.value
 
     this.playhead.beginFill(colorPlayheadBg, 0.1)
     this.playhead.drawRect(
@@ -79,8 +79,8 @@ export class TimelinePlayhead extends Container {
     const {
       spacingGuideLabelPadding,
       spacingPlayheadGlowPadding,
-    } = this.styles.value
-    const textStyles = await getBitmapFonts(this.styles.value)
+    } = this.styleOptions.value
+    const textStyles = await getBitmapFonts(this.styleOptions.value)
     const { timeBySeconds } = this.formatDateFns.value
     const startDate = timeBySeconds(new Date())
     this.label = new BitmapText(startDate, textStyles.playheadTimerLabel)
@@ -99,7 +99,7 @@ export class TimelinePlayhead extends Container {
     const {
       spacingPlayheadWidth,
       spacingPlayheadGlowPadding,
-    } = this.styles.value
+    } = this.styleOptions.value
 
     this.position.x =
       timelineScale.dateToX(new Date()) * this.viewportRef.scale._x
