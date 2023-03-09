@@ -1,5 +1,47 @@
 <template>
   <main class="flow-run-timeline-demo">
+    <div class="flex h-full">
+      <div class="flow-run-timeline-demo__graph-container">
+        <FlowRunTimeline
+          v-if="data"
+          ref="graph"
+          :key="componentKey"
+          :graph-data="data"
+          :is-running="isRunning"
+          :theme="theme"
+          :layout="layout"
+          :hide-edges="hideEdges"
+          class="flow-run-timeline-demo-demo__graph"
+          :selected-node-id="selectedNodeId"
+          :expanded-sub-flows="expandedSubFlows"
+          @selection="selectNode"
+          @sub-flow-toggle="toggleSubFlow"
+        />
+      </div>
+
+      <div v-if="selectedNodeId" class="flow-run-timeline-demo__selection-panel" :class="classes">
+        <p-label>
+          Selected Node
+          <p-text-input v-model="selectedNodeId" />
+        </p-label>
+      </div>
+    </div>
+    <div class="flow-run-timeline-demo__header-row">
+      <p-label>
+        Layout
+        <p-select
+          v-model="layout"
+          :options="layoutOptions"
+        />
+      </p-label>
+      <div class="flow-run-timeline-demo__checkbox-wrapper">
+        <p-checkbox v-model="hideEdges" label="Hide Edges" />
+      </div>
+      <p-button secondary @click="centerViewport">
+        Recenter
+      </p-button>
+    </div>
+    <hr>
     <div class="flow-run-timeline-demo__header">
       <div class="flow-run-timeline-demo__header-row">
         <p-label>
@@ -37,48 +79,6 @@
         <div class="flow-run-timeline-demo__checkbox-wrapper">
           <p-checkbox v-model="isRunning" label="Show Running" />
         </div>
-      </div>
-    </div>
-    <hr>
-    <div class="flow-run-timeline-demo__header-row">
-      <p-label>
-        Layout
-        <p-select
-          v-model="layout"
-          :options="layoutOptions"
-        />
-      </p-label>
-      <div class="flow-run-timeline-demo__checkbox-wrapper">
-        <p-checkbox v-model="hideEdges" label="Hide Edges" />
-      </div>
-      <p-button secondary @click="centerViewport">
-        Recenter
-      </p-button>
-    </div>
-    <div class="flex h-full">
-      <div class="flow-run-timeline-demo__graph-container">
-        <FlowRunTimeline
-          v-if="data"
-          ref="graph"
-          :key="componentKey"
-          :graph-data="data"
-          :is-running="isRunning"
-          :theme="theme"
-          :layout="layout"
-          :hide-edges="hideEdges"
-          class="flow-run-timeline-demo-demo__graph"
-          :selected-node-id="selectedNodeId"
-          :expanded-sub-flows="expandedSubFlows"
-          @selection="selectNode"
-          @sub-flow-toggle="toggleSubFlow"
-        />
-      </div>
-
-      <div v-if="selectedNodeId" class="flow-run-timeline-demo__selection-panel" :class="classes">
-        <p-label>
-          Selected Node
-          <p-text-input v-model="selectedNodeId" />
-        </p-label>
       </div>
     </div>
   </main>
@@ -297,6 +297,12 @@
   relative
 }
 
+.flow-run-timeline-demo hr { @apply
+  border-0
+  border-t
+  border-foreground-50
+}
+
 .flow-run-timeline-demo__header { @apply
   items-center
   text-sm
@@ -308,11 +314,10 @@
   flex
   gap-4
   items-end
-  mb-4
 }
 
-.flow-run-timeline-demo__header-row:last-of-type { @apply
-  mb-0
+.flow-run-timeline-demo__header-row + .flow-run-timeline-demo__header-row { @apply
+  mt-4
 }
 
 .flow-run-timeline-demo__checkbox-wrapper { @apply
