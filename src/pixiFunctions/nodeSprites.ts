@@ -8,6 +8,7 @@ type RoundedBorderRectCacheKey = {
   borderWidth: number,
 }
 
+let simpleFillTextureCache: Map<number, Texture> | undefined
 let nodeBoxTextureCache: Map<number, BoxTextures> | undefined
 let arrowTextureCache: Map<number, Texture> | undefined
 let roundedBorderRectCache: Map<RoundedBorderRectCacheKey, BorderRectTextures> | undefined
@@ -18,12 +19,20 @@ const textureSampleSettings = {
 }
 
 export function initNodeTextureCache(): void {
+  simpleFillTextureCache = new Map()
   nodeBoxTextureCache = new Map()
   arrowTextureCache = new Map()
   roundedBorderRectCache = new Map()
 }
 
 export function destroyNodeTextureCache(): void {
+  if (simpleFillTextureCache) {
+    simpleFillTextureCache.forEach((texture) => {
+      texture.destroy()
+    })
+    simpleFillTextureCache.clear()
+    simpleFillTextureCache = undefined
+  }
   if (nodeBoxTextureCache) {
     nodeBoxTextureCache.forEach(({ cap, body }) => {
       cap.destroy()
@@ -47,6 +56,36 @@ export function destroyNodeTextureCache(): void {
     roundedBorderRectCache.clear()
     roundedBorderRectCache = undefined
   }
+}
+
+type SimpleFillTextureProps = {
+  pixiApp: Application,
+  fill: number,
+}
+export function getSimpleFillTexture({
+  pixiApp,
+  fill,
+}: SimpleFillTextureProps): Texture {
+  if (!simpleFillTextureCache) {
+    initNodeTextureCache()
+  }
+
+  if (!simpleFillTextureCache?.has(fill)) {
+    const square = new Graphics()
+    square.beginFill(fill)
+    square.drawRect(
+      0,
+      0,
+      10,
+      10,
+    )
+    square.endFill()
+
+    const texture = pixiApp.renderer.generateTexture(square)
+    simpleFillTextureCache!.set(fill, texture)
+  }
+
+  return simpleFillTextureCache!.get(fill)!
 }
 
 type GetNodeBoxTexturesProps = {
@@ -87,18 +126,13 @@ export function getNodeBoxTextures({
     boxCap.lineTo(boxCapWidth, 0)
     boxCap.endFill()
 
-    const boxBody = new Graphics()
-    boxBody.beginFill(fill)
-    boxBody.drawRect(
-      0,
-      0,
-      1,
-      height,
-    )
-    boxBody.endFill()
+    const boxBody = getSimpleFillTexture({
+      pixiApp,
+      fill,
+    })
 
     const cap = pixiApp.renderer.generateTexture(boxCap, textureSampleSettings)
-    const body = pixiApp.renderer.generateTexture(boxBody)
+    const body = boxBody
 
     nodeBoxTextureCache!.set(fill, {
       cap,
@@ -168,22 +202,16 @@ export function getRoundedBorderRectTextures({
       borderRadius, 0,
     )
 
-    const edge = new Graphics()
-    edge.beginFill(borderColor)
-    edge.drawRect(
-      0,
-      0,
-      borderWidth,
-      borderWidth,
-    )
-    edge.endFill()
+    const edge = getSimpleFillTexture({
+      pixiApp,
+      fill: borderColor,
+    })
 
     const cornerTexture = pixiApp.renderer.generateTexture(corner, textureSampleSettings)
-    const edgeTexture = pixiApp.renderer.generateTexture(edge, textureSampleSettings)
 
     roundedBorderRectCache!.set(cacheKey, {
       corner: cornerTexture,
-      edge: edgeTexture,
+      edge,
     })
   }
 

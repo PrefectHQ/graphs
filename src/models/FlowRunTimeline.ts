@@ -100,12 +100,17 @@ type NodeThemeOptions = {
   fill: string,
   // If your fill is a dark color, set inverse to true. Unless using dark mode text colors.
   inverseTextOnFill: boolean,
+  // for the SubNode toggle buttons
+  onFillSubNodeToggleHoverBg: string,
+  onFillSubNodeToggleHoverBgAlpha: number,
 }
 export type NodeThemeFn = (node: TimelineNodeData) => NodeThemeOptions
 export const nodeThemeFnDefault: NodeThemeFn = () => {
   return {
     fill: 'black',
     inverseTextOnFill: true,
+    onFillSubNodeToggleHoverBg: 'black',
+    onFillSubNodeToggleHoverBgAlpha: 0.4,
   }
 }
 
@@ -133,6 +138,7 @@ export type ThemeStyleOverrides = {
   textSizeSmall?: Sizing,
   textLineHeightDefault?: Sizing,
   textLineHeightSmall?: Sizing,
+  spacingButtonBorderWidth?: Sizing,
   spacingViewportPaddingDefault?: Sizing,
   spacingNodeXPadding?: Sizing,
   spacingNodeYPadding?: Sizing,
@@ -170,6 +176,7 @@ export type ParsedThemeStyles = {
   textSizeSmall: number,
   textLineHeightDefault: number,
   textLineHeightSmall: number,
+  spacingButtonBorderWidth: number,
   spacingViewportPaddingDefault: number,
   spacingNodeXPadding: number,
   spacingNodeYPadding: number,

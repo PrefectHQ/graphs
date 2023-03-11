@@ -18,6 +18,7 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     textSizeSmall: spacingToNumber(overrides?.textSizeSmall ?? '12px'),
     textLineHeightDefault: spacingToNumber(overrides?.textLineHeightDefault ?? '20px'),
     textLineHeightSmall: spacingToNumber(overrides?.textLineHeightSmall ?? '16px'),
+    spacingButtonBorderWidth: spacingToNumber(overrides?.spacingButtonBorderWidth ?? '2px'),
     spacingViewportPaddingDefault: spacingToNumber(overrides?.spacingViewportPaddingDefault ?? '40px'),
     spacingNodeXPadding: spacingToNumber(overrides?.spacingNodeXPadding ?? '8px'),
     spacingNodeYPadding: spacingToNumber(overrides?.spacingNodeYPadding ?? '8px'),

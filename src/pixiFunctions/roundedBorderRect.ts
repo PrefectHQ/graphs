@@ -81,21 +81,25 @@ export class RoundedBorderRect extends Container {
     const topEdge = new Sprite(edge)
     topEdge.position.set(this.borderRadius, 0)
     topEdge.width = this.rectWidth - this.borderRadius * 2
+    topEdge.height = borderWidth
     topEdge.name = rectElements.topEdge
 
     const rightEdge = new Sprite(edge)
     rightEdge.position.set(this.rectWidth - this.borderWidth, this.borderRadius)
     rightEdge.height = this.rectHeight - this.borderRadius * 2
+    rightEdge.width = borderWidth
     rightEdge.name = rectElements.rightEdge
 
     const bottomEdge = new Sprite(edge)
     bottomEdge.position.set(this.borderRadius, this.rectHeight - this.borderWidth)
     bottomEdge.width = this.rectWidth - this.borderRadius * 2
+    bottomEdge.height = borderWidth
     bottomEdge.name = rectElements.bottomEdge
 
     const leftEdge = new Sprite(edge)
     leftEdge.position.set(0, this.borderRadius)
     leftEdge.height = this.rectHeight - this.borderRadius * 2
+    leftEdge.width = borderWidth
     leftEdge.name = rectElements.leftEdge
 
     this.addChild(topLeft)
@@ -107,11 +111,19 @@ export class RoundedBorderRect extends Container {
     this.addChild(rightEdge)
     this.addChild(bottomEdge)
     this.addChild(leftEdge)
+
+    this.resize(this.rectWidth, this.rectHeight)
   }
 
   public resize(width: number, height: number): void {
+    this.scale.x = 1
     this.rectWidth = width
     this.rectHeight = height
+
+    const minRadiusWidth = this.borderRadius * 2
+    const isWidthTooSmall = width < minRadiusWidth
+
+    const adaptedWidth = isWidthTooSmall ? minRadiusWidth : width
 
     const topRight = this.getChildByName(rectElements.topRight) as Sprite
     const bottomRight = this.getChildByName(rectElements.bottomRight) as Sprite
@@ -122,15 +134,19 @@ export class RoundedBorderRect extends Container {
     const bottomEdge = this.getChildByName(rectElements.bottomEdge) as Sprite
     const leftEdge = this.getChildByName(rectElements.leftEdge) as Sprite
 
-    topRight.position.set(this.rectWidth, 0)
-    bottomRight.position.set(this.rectWidth, this.rectHeight)
+    topRight.position.set(adaptedWidth, 0)
+    bottomRight.position.set(adaptedWidth, this.rectHeight)
     bottomLeft.position.set(0, this.rectHeight)
 
-    topEdge.width = this.rectWidth - this.borderRadius * 2
-    rightEdge.height = this.rectHeight - this.borderRadius * 2
-    rightEdge.position.x = this.rectWidth - this.borderWidth
-    bottomEdge.width = this.rectWidth - this.borderRadius * 2
+    topEdge.width = adaptedWidth - minRadiusWidth
+    rightEdge.height = this.rectHeight - minRadiusWidth
+    rightEdge.position.x = adaptedWidth - this.borderWidth
+    bottomEdge.width = adaptedWidth - minRadiusWidth
     bottomEdge.position.y = this.rectHeight - this.borderWidth
-    leftEdge.height = this.rectHeight - this.borderRadius * 2
+    leftEdge.height = this.rectHeight - minRadiusWidth
+
+    if (width < minRadiusWidth) {
+      this.scale.x = width / minRadiusWidth
+    }
   }
 }

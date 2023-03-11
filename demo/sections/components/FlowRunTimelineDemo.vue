@@ -213,7 +213,7 @@
 
         expandedSubFlows.value.set(value, subFlowData)
       }
-    }, 200)
+    }, 50)
   }
 
   const centerViewport = (): void => {
@@ -271,15 +271,18 @@
       colorGuideLine: `hsl(${guideLineH}, ${guideLineS}, ${guideLineL})`,
       colorEdge: `hsl(${edgeH}, ${edgeS}, ${edgeL})`,
       colorButtonBg: `hsl(${btnBgH}, ${btnBgS}, ${btnBgL})`,
+      colorButtonBgHover: `hsl(${btnBgH}, ${btnBgS}, calc(${btnBgL} + 5%))`,
       colorButtonBorder: `hsl(${btnBorderH}, ${btnBorderS}, ${btnBorderL})`,
     }
   })
 
-  const theme = computed<TimelineThemeOptions>(() => {
+  const theme = computed<TimelineThemeOptions>((): TimelineThemeOptions => {
     return {
       node: (node) => {
         return {
           fill: stateColors[node.state],
+          onFillSubNodeToggleHoverBg: '#000000',
+          onFillSubNodeToggleHoverBgAlpha: 0.4,
           inverseTextOnFill: true,
         }
       },

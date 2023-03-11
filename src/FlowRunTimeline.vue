@@ -274,6 +274,7 @@
 
   function initCulling(): void {
     cull.addAll(viewport.children)
+    cull.addAll(guides.children)
 
     viewport.on('frame-end', () => {
       if (viewport.dirty) {
