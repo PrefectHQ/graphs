@@ -42,6 +42,9 @@ export type NodeLayoutItem = {
   endX: number,
 }
 export type NodesLayout = Record<string, NodeLayoutItem>
+
+export type NodeLayoutRow = { yPos: number, height: number }
+
 export type NodeLayoutWorkerResponseData = {
   id: string,
   layout: NodesLayout,
@@ -61,6 +64,7 @@ export type GraphState = {
   hideEdges: ComputedRef<boolean>,
   selectedNodeId: ComputedRef<string | null>,
   expandedSubNodes: ComputedRef<ExpandedSubNodes>,
+  suppressMotion: ComputedRef<boolean>,
   centerViewport: (options?: CenterViewportOptions) => void,
 }
 

@@ -72,6 +72,10 @@
   const layoutSetting = computed(() => props.layout ?? 'nearestParent')
   const hideEdges = computed(() => props.hideEdges ?? false)
   const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
+  const suppressMotion = computed(() => {
+    const prefersReducedMotion: boolean = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    return props.graphData.length >= 300 || prefersReducedMotion
+  })
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
@@ -130,7 +134,7 @@
     await initContent()
     initPlayhead()
 
-    initCulling()
+    // initCulling()
 
     loading.value = false
   })
@@ -327,6 +331,7 @@
       hideEdges,
       selectedNodeId,
       expandedSubNodes,
+      suppressMotion,
       centerViewport,
     }
 
@@ -389,7 +394,7 @@
         y: contentY + height / 2,
       },
       scale: scale > 1 ? 1 : scale,
-      time: skipAnimation ? 0 : defaultAnimationDuration,
+      time: skipAnimation || suppressMotion.value ? 0 : defaultAnimationDuration,
       ease: 'easeInOutQuad',
       removeOnInterrupt: true,
     })

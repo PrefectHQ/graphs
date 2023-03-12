@@ -1,3 +1,4 @@
+import gsap from 'gsap'
 import {
   BitmapText,
   Container,
@@ -5,10 +6,12 @@ import {
   TextMetrics,
   UPDATE_PRIORITY
 } from 'pixi.js'
-import { watch, WatchStopHandle } from 'vue'
+import { Ref, watch, WatchStopHandle } from 'vue'
 import {
   TimelineNodeData,
-  GraphState
+  GraphState,
+  NodeLayoutRow,
+  NodesLayout
 } from '@/models'
 import {
   getBitmapFonts,
@@ -16,19 +19,17 @@ import {
   getNodeBoxTextures,
   TimelineNodes,
   RoundedBorderRect,
-  SubNodesToggle
+  SubNodesToggle,
+  timelineUpdateEvent
 } from '@/pixiFunctions'
 import { colorToHex } from '@/utilities/style'
-
-type TimelineNodeProps = {
-  nodeData: TimelineNodeData,
-  graphState: GraphState,
-}
 
 export const nodeClickEvents = {
   nodeDetails: 'nodeDetailsClick',
   subNodesToggle: 'subNodesToggleClick',
 }
+
+export const nodeResizeEvent = 'nodeResize'
 
 export const nodeAnimationDurations = {
   fadeIn: 0.25,
@@ -45,14 +46,30 @@ const nodeBoxSpriteNames = {
   body: 'body',
 }
 
+type TimelineNodeUpdatePositionProps = {
+  skipAnimation?: boolean,
+  includeXPos?: boolean,
+}
+
+type TimelineNodeProps = {
+  nodeData: TimelineNodeData,
+  graphState: GraphState,
+  layout: Ref<NodesLayout>,
+  layoutRows: Ref<NodeLayoutRow[]>,
+}
+
 export class TimelineNode extends Container {
   public readonly nodeData
   private readonly graphState
+  private readonly layout
+  private readonly layoutRows
 
   private currentState: string
   private readonly hasSubNodes: boolean = false
   private readonly unWatchers: WatchStopHandle[] = []
 
+  // the position must be initialized before it will update itself.
+  public positionInitialized = false
   private nodeWidth
   private readonly nodeHeight
   private readonly boxCapWidth: number = 0
@@ -78,6 +95,8 @@ export class TimelineNode extends Container {
   public constructor({
     nodeData,
     graphState,
+    layout,
+    layoutRows,
   }: TimelineNodeProps) {
     super()
 
@@ -85,6 +104,9 @@ export class TimelineNode extends Container {
 
     this.nodeData = nodeData
     this.graphState = graphState
+    this.layout = layout
+    this.layoutRows = layoutRows
+
     this.currentState = nodeData.state
     this.hasSubNodes = nodeData.subFlowId !== undefined
     this.boxCapWidth = graphState.styleOptions.value.borderRadiusNode
@@ -101,6 +123,7 @@ export class TimelineNode extends Container {
   }
 
   private initWatchers(): void {
+    const { layoutRows } = this
     const {
       styleOptions,
       styleNode,
@@ -109,6 +132,11 @@ export class TimelineNode extends Container {
     } = this.graphState
 
     this.unWatchers.push(
+      watch(layoutRows, () => {
+        if (this.positionInitialized) {
+          this.updatePosition()
+        }
+      }),
       watch([styleOptions, styleNode], () => {
         this.drawBox()
         this.drawLabel()
@@ -350,7 +378,7 @@ export class TimelineNode extends Container {
   }
 
   private centerViewportToNodeAfterDelay(): void {
-    const { viewport } = this.graphState
+    const { viewport, suppressMotion } = this.graphState
     setTimeout(() => {
       const xPos = (this.worldTransform.tx - viewport.x) / viewport.scale.x + this.width / 2
       const yPos = (this.worldTransform.ty - viewport.y) / viewport.scale.y + this.height / 2
@@ -360,7 +388,7 @@ export class TimelineNode extends Container {
           x: xPos,
           y: yPos,
         },
-        time: 1000,
+        time: suppressMotion.value ? 0 : 1000,
         ease: 'easeInOutQuad',
         removeOnInterrupt: true,
       })
@@ -395,7 +423,7 @@ export class TimelineNode extends Container {
     })
 
     this.updateSubNodesContentPosition()
-    this.subNodesContent.on('updated', () => this.updateSubNodesContentPosition())
+    this.subNodesContent.on(timelineUpdateEvent, () => this.updateSubNodesContentPosition())
 
     this.addChild(this.subNodesContent)
 
@@ -438,6 +466,7 @@ export class TimelineNode extends Container {
         this.updateSubNodesOutlineSize()
         this.updateSelectedRingSize()
         this.subNodesHeight = subNodesContent.height
+        this.emit(nodeResizeEvent)
       }
     }
     pixiApp.ticker.add(
@@ -453,6 +482,8 @@ export class TimelineNode extends Container {
 
     this.updateSubNodesOutlineSize()
     this.updateSelectedRingSize()
+
+    this.emit(nodeResizeEvent)
   }
 
   /**
@@ -499,6 +530,39 @@ export class TimelineNode extends Container {
         this.updateLabelPosition()
       }
     }
+  }
+
+  private updatePosition(options?: TimelineNodeUpdatePositionProps): void {
+    const {
+      skipAnimation,
+      includeXPos,
+    } = options ?? {}
+    const { suppressMotion } = this.graphState
+    const { id } = this.nodeData
+    const { position } = this.layout.value[id]
+
+    if (!this.layoutRows.value[position]) {
+      return
+    }
+
+    const { yPos } = this.layoutRows.value[position]
+    const xPos = includeXPos ? timelineScale.dateToX(this.nodeData.start) : this.position.x
+
+    if (this.position.y === yPos && this.position.x === xPos) {
+      return
+    }
+
+    if (skipAnimation || suppressMotion.value) {
+      this.position.set(xPos, yPos)
+      return
+    }
+
+    gsap.to(this, {
+      x: xPos,
+      y: yPos,
+      duration: nodeAnimationDurations.move,
+      ease: 'power1.out',
+    })
   }
 
   private updateBoxWidth(): void {
@@ -592,6 +656,11 @@ export class TimelineNode extends Container {
   /**
    * Utilities
    */
+  public readonly initializePosition = (): void => {
+    this.positionInitialized = true
+    this.updatePosition({ skipAnimation: true, includeXPos: true })
+  }
+
   private getNodeWidth(): number {
     const minimumWidth = this.boxCapWidth * 2
     const actualWidth = timelineScale.dateToX(this.nodeData.end ?? new Date()) - timelineScale.dateToX(this.nodeData.start)

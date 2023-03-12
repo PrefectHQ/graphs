@@ -1,22 +1,24 @@
-import gsap from 'gsap'
 import { Container } from 'pixi.js'
-import { watch, WatchStopHandle } from 'vue'
+import { watch, WatchStopHandle, ref } from 'vue'
 import {
   NodeLayoutWorkerResponse,
   TimelineNodeData,
   NodeLayoutWorkerProps,
   GraphState,
-  NodesLayout
+  NodesLayout,
+  NodeLayoutRow
 } from '@/models'
 import {
   DeselectLayer,
   TimelineEdge,
   TimelineNode,
-  timelineScale,
   destroyNodeTextureCache,
-  nodeAnimationDurations,
-  nodeClickEvents
+  nodeClickEvents,
+  nodeResizeEvent,
+  nodeAnimationDurations
 } from '@/pixiFunctions'
+
+export const timelineUpdateEvent = 'timelineUpdateEvent'
 
 type TimelineNodesProps = {
   nodeContentContainerName?: string,
@@ -40,7 +42,8 @@ export class TimelineNodes extends Container {
 
   private readonly nodeContainer = new Container()
   public readonly nodeRecords: Map<string, TimelineNode> = new Map()
-  private layout: NodesLayout = {}
+  private readonly layout = ref<NodesLayout>({})
+  private readonly layoutRows = ref<NodeLayoutRow[]>([])
 
   private readonly edgeContainer = new Container()
   private readonly edgeRecords: EdgeRecord[] = []
@@ -103,7 +106,7 @@ export class TimelineNodes extends Container {
   }
 
   private initLayoutWorker(): void {
-    const { layoutWorker, layoutSetting, centerViewport } = this.graphState
+    const { layoutWorker, layoutSetting, centerViewport, suppressMotion } = this.graphState
     const { spacingMinimumNodeEdgeGap } = this.graphState.styleOptions.value
 
     const layoutWorkerOptions: NodeLayoutWorkerProps = {
@@ -115,20 +118,27 @@ export class TimelineNodes extends Container {
       },
     }
 
-    layoutWorker.onmessage = async ({ data }: NodeLayoutWorkerResponse) => {
+    layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
+      console.log('renderLayout', {
+        data: data.id,
+        this: this.id,
+      })
       if (data.id !== this.id) {
         return
       }
 
-      this.layout = data.layout
+      this.layout.value = data.layout
 
-      await this.renderLayout()
+      this.renderLayout()
 
       if (data.centerViewportAfter && !this.isSubNodes) {
-        centerViewport()
+        // allow time for nodes to move to their new positions
+        setTimeout(() => {
+          centerViewport()
+        }, suppressMotion.value ? 10 : nodeAnimationDurations.move * 1000 * 1.1)
       }
 
-      this.emitUpdate()
+      this.emit(timelineUpdateEvent)
     }
 
     layoutWorker.postMessage(layoutWorkerOptions.data)
@@ -150,30 +160,28 @@ export class TimelineNodes extends Container {
     })
   }
 
-  private async renderLayout(): Promise<void> {
+  private renderLayout(): void {
+    const { layout } = this
     const isInitialRender = this.nodeRecords.size === 0
+    const newlyCreatedNodes: string[] = []
 
-    this.temporarilyHideEdges.start()
-
-    const nodeUpdates = Object.keys(this.layout).map(async (nodeId) => {
+    Object.keys(layout.value).forEach((nodeId) => {
       if (this.nodeRecords.has(nodeId)) {
-        const nodeRecord = this.nodeRecords.get(nodeId)!
-        const layoutPosition = this.layout[nodeId].position
-        nodeRecord.update(true)
-        if (nodeRecord.position.y !== this.getNodeYPosition(layoutPosition)) {
-          await this.updateNodePosition(nodeRecord, true)
-        }
+        this.nodeRecords.get(nodeId)!.update(true)
       } else {
         this.createNode(this.graphData.find(node => node.id === nodeId)!)
+        newlyCreatedNodes.push(nodeId)
       }
     })
 
-    await Promise.all(nodeUpdates)
+    this.updateLayoutRows()
 
-    this.temporarilyHideEdges.finish()
+    newlyCreatedNodes.forEach((nodeId) => {
+      this.nodeRecords.get(nodeId)!.initializePosition()
+    })
 
     if (isInitialRender) {
-      this.addChild(this.edgeContainer)
+      // this.addChild(this.edgeContainer)
       this.addChild(this.nodeContainer)
 
       if (!this.isSubNodes) {
@@ -182,47 +190,47 @@ export class TimelineNodes extends Container {
     }
   }
 
-  private createNode(nodeData: TimelineNodeData): void {
-    const node = new TimelineNode({
-      nodeData,
-      graphState: this.graphState,
-    })
-    this.updateNodePosition(node)
-    this.registerEmits(node)
+  private updateLayoutRows(position: number = 0): void {
+    const { layout } = this
+    const { spacingNodeMargin } = this.graphState.styleOptions.value
+    const maxRows = Math.max(...Object.values(layout.value).map(node => node.position))
+    let newLayoutRows: NodeLayoutRow[] = []
 
-    this.nodeRecords.set(nodeData.id, node)
-    this.addNodeEdges(nodeData)
+    for (let i = position; i <= maxRows; i++) {
+      const yPos = newLayoutRows[i - 1]
+        ? newLayoutRows[i - 1].yPos + newLayoutRows[i - 1].height + spacingNodeMargin
+        : 0
+      const nodesInRow = Object.keys(layout.value).filter(nodeId => layout.value[nodeId].position === i)
+      const height = Math.max(...nodesInRow.map(nodeId => this.nodeRecords.get(nodeId)?.height ?? 0))
 
-    this.nodeContainer.addChild(node)
-  }
-
-  private readonly getNodeYPosition = (layoutPosition: number): number => {
-    const { spacingNodeMargin, textLineHeightDefault, spacingNodeYPadding } = this.graphState.styleOptions.value
-    const nodeHeight = textLineHeightDefault + spacingNodeYPadding * 2
-    const layoutPositionOffset = nodeHeight + spacingNodeMargin
-
-    return layoutPosition * layoutPositionOffset
-  }
-
-  private async updateNodePosition(node: TimelineNode, animate?: boolean): Promise<void> {
-    const layoutPosition = this.layout[node.nodeData.id].position
-    const xPos = timelineScale.dateToX(node.nodeData.start)
-    const yPos = this.getNodeYPosition(layoutPosition)
-
-    if (!animate) {
-      node.position.set(xPos, yPos)
-      return
+      newLayoutRows.push({ yPos, height })
     }
 
-    await new Promise((resolve) => {
-      gsap.to(node, {
-        x: xPos,
-        y: yPos,
-        duration: nodeAnimationDurations.move,
-        ease: 'power1.out',
-      }).then(() => {
-        resolve(null)
-      })
+    if (position > 0) {
+      const combinedLayoutRows = this.layoutRows.value.slice(0, position).concat(newLayoutRows)
+      newLayoutRows = combinedLayoutRows
+    }
+
+    this.layoutRows.value = newLayoutRows
+  }
+
+  private createNode(nodeData: TimelineNodeData): void {
+    const { graphState, layout, layoutRows } = this
+    const node = new TimelineNode({
+      nodeData,
+      graphState,
+      layout,
+      layoutRows,
+    })
+
+    this.registerEmits(node)
+    this.nodeRecords.set(nodeData.id, node)
+    // this.addNodeEdges(nodeData)
+
+    this.nodeContainer.addChild(node)
+
+    node.on(nodeResizeEvent, () => {
+      this.updateLayoutRows()
     })
   }
 
@@ -428,10 +436,6 @@ export class TimelineNodes extends Container {
 
   private emitNullSelection(): void {
     this.emit(nodeClickEvents.nodeDetails, null)
-  }
-
-  private emitUpdate(): void {
-    this.emit('updated')
   }
 
   public getEarliestNodeStart(): Date | null {
