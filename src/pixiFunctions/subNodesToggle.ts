@@ -1,3 +1,4 @@
+import gsap from 'gsap'
 import { Container, Sprite } from 'pixi.js'
 import { GraphState } from '@/models'
 import {
@@ -256,6 +257,24 @@ export class SubNodesToggle extends Container {
 
   private unHover(): void {
     this.hoverShade.alpha = 0
+  }
+
+  private setToggleArrowRotation(rotation: number): void {
+    const { suppressMotion } = this.graphState
+
+    gsap.to(this.toggleArrow, {
+      rotation,
+      duration: suppressMotion.value ? 0 : 0.2,
+      ease: 'power2.inOut',
+    })
+  }
+
+  public setExpanded(): void {
+    this.setToggleArrowRotation(Math.PI / 2 * -1)
+  }
+
+  public setCollapsed(): void {
+    this.setToggleArrowRotation(Math.PI / 2)
   }
 
   public destroy(): void {

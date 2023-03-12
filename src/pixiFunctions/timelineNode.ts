@@ -417,7 +417,7 @@ export class TimelineNode extends Container {
       return
     }
 
-    // handle loading
+    this.subNodesToggle?.setExpanded()
 
     this.subNodesContent?.destroy()
 
@@ -489,6 +489,8 @@ export class TimelineNode extends Container {
 
   public collapseSubNodes(): void {
     this.isSubNodesExpanded = false
+
+    this.subNodesToggle?.setCollapsed()
 
     this.destroySubNodesContent()
 
