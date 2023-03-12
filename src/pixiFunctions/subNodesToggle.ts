@@ -77,6 +77,20 @@ export class SubNodesToggle extends Container {
     this.on('pointerout', () => {
       this.unHover()
     })
+
+    this.initViewportWatcher()
+  }
+
+  private initViewportWatcher(): void {
+    const { viewport } = this.graphState
+
+    viewport.on('frame-end', () => {
+      if (viewport.scale.x < 0.2) {
+        this.visible = false
+      } else {
+        this.visible = true
+      }
+    })
   }
 
   private getTextColor(): number {

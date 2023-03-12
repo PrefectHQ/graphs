@@ -129,6 +129,7 @@ export class TimelineNode extends Container {
       styleNode,
       selectedNodeId,
       expandedSubNodes,
+      viewport,
     } = this.graphState
 
     this.unWatchers.push(
@@ -168,6 +169,14 @@ export class TimelineNode extends Container {
         }
       }, { deep: true }),
     )
+
+    viewport.on('frame-end', () => {
+      if (viewport.scale.x < 0.2 && this.label) {
+        this.label.visible = false
+      } else if (this.label) {
+        this.label.visible = true
+      }
+    })
   }
 
   private initSubNodesOutline(): void {
