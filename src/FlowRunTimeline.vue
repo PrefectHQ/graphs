@@ -124,10 +124,10 @@
     initFonts()
 
     initGuides()
-    await initContent()
+    initContent()
     initPlayhead()
 
-    // initCulling()
+    initCulling()
 
     loading.value = false
   })
@@ -195,6 +195,7 @@
     playhead = new TimelinePlayhead({
       viewportRef: viewport,
       appRef: pixiApp,
+      cull,
       formatDateFns,
       styleOptions,
     })
@@ -251,6 +252,7 @@
     guides = new TimelineGuides({
       viewportRef: viewport,
       appRef: pixiApp,
+      cull,
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
@@ -268,9 +270,6 @@
   }
 
   function initCulling(): void {
-    cull.addAll(viewport.children)
-    cull.addAll(guides.children)
-
     viewport.on('frame-end', () => {
       if (viewport.dirty) {
         cull.cull(pixiApp.renderer.screen)
@@ -295,6 +294,7 @@
     const graphState: GraphState = {
       pixiApp,
       viewport,
+      cull,
       timeScaleProps,
       styleOptions,
       styleNode,

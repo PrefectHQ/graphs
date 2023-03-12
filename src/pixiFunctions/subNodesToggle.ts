@@ -50,6 +50,7 @@ export class SubNodesToggle extends Container {
 
     this.interactive = true
     this.buttonMode = true
+    graphState.cull.add(this)
 
     this.graphState = graphState
     this.size = size
@@ -241,5 +242,10 @@ export class SubNodesToggle extends Container {
 
   private unHover(): void {
     this.hoverShade.alpha = 0
+  }
+
+  public destroy(): void {
+    this.graphState.cull.remove(this)
+    super.destroy.call(this)
   }
 }

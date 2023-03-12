@@ -201,7 +201,6 @@ export class TimelineNode extends Container {
       spacingSubNodesOutlineOffset,
     )
     this.subNodesOutline.alpha = alphaSubNodesOutlineDimmed
-    this.subNodesOutline.cullable = false
 
     this.addChild(this.subNodesOutline)
   }
@@ -217,6 +216,7 @@ export class TimelineNode extends Container {
     box.on('click', () => {
       this.emit(nodeClickEvents.nodeDetails, this.nodeData.id)
     })
+    this.graphState.cull.add(box)
   }
 
   private drawBox(): void {
@@ -295,7 +295,7 @@ export class TimelineNode extends Container {
 
   private async drawLabel(): Promise<void> {
     const { apxLabelWidth, nodeData } = this
-    const { styleOptions, styleNode } = this.graphState
+    const { styleOptions, styleNode, cull } = this.graphState
 
     const textStyles = await getBitmapFonts(styleOptions.value)
     const { spacingNodeXPadding } = styleOptions.value
@@ -318,7 +318,10 @@ export class TimelineNode extends Container {
 
     const labelStyle = this.isLabelInBox ? labelStyleOnFill : textStyles.nodeTextDefault
 
-    this.label?.destroy()
+    if (this.label) {
+      cull.remove(this.label)
+      this.label.destroy()
+    }
 
     this.label = new BitmapText(labelText, labelStyle)
     this.updateLabelPosition()
@@ -331,6 +334,7 @@ export class TimelineNode extends Container {
       })
     }
 
+    cull.add(this.label)
     this.addChild(this.label)
   }
 
@@ -353,7 +357,6 @@ export class TimelineNode extends Container {
     })
     this.selectedRing.position.set(-margin, -margin)
     this.selectedRing.alpha = 0
-    this.selectedRing.cullable = false
 
     this.addChild(this.selectedRing)
   }
@@ -723,6 +726,12 @@ export class TimelineNode extends Container {
   }
 
   public destroy(): void {
+    const { cull } = this.graphState
+    cull.remove(this.box)
+    if (this.label) {
+      cull.remove(this.label)
+    }
+
     this.destroySubNodesContent()
 
     this.subNodesOutline?.destroy()

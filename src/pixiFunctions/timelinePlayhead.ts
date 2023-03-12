@@ -1,3 +1,4 @@
+import { Cull } from '@pixi-essentials/cull'
 import type { Viewport } from 'pixi-viewport'
 import { Application, BitmapText, Container, Graphics } from 'pixi.js'
 import { ComputedRef, watch, WatchStopHandle } from 'vue'
@@ -8,6 +9,7 @@ import { timelineScale } from '@/pixiFunctions/timelineScale'
 type TimelinePlayheadProps = {
   viewportRef: Viewport,
   appRef: Application,
+  cull: Cull,
   formatDateFns: ComputedRef<FormatDateFns>,
   styleOptions: ComputedRef<ParsedThemeStyles>,
 }
@@ -15,6 +17,7 @@ type TimelinePlayheadProps = {
 export class TimelinePlayhead extends Container {
   private readonly viewportRef
   private readonly appRef
+  private readonly cull
   private readonly formatDateFns
   private readonly styleOptions: ComputedRef<ParsedThemeStyles>
 
@@ -26,13 +29,17 @@ export class TimelinePlayhead extends Container {
   public constructor({
     viewportRef,
     appRef,
+    cull,
     formatDateFns,
     styleOptions,
   }: TimelinePlayheadProps) {
     super()
 
+    cull.add(this)
+
     this.viewportRef = viewportRef
     this.appRef = appRef
+    this.cull = cull
     this.formatDateFns = formatDateFns
     this.styleOptions = styleOptions
 
@@ -113,6 +120,7 @@ export class TimelinePlayhead extends Container {
   }
 
   public destroy(): void {
+    this.cull.remove(this)
     this.unwatch()
     this.playhead.destroy()
     super.destroy.call(this)

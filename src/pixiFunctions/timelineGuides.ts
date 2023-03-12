@@ -1,3 +1,4 @@
+import { Cull } from '@pixi-essentials/cull'
 import type { Viewport } from 'pixi-viewport'
 import { Application, Container } from 'pixi.js'
 import { ComputedRef, Ref, watch, WatchStopHandle } from 'vue'
@@ -23,6 +24,7 @@ const timelineGuidesRenderPadding = 4000
 type TimelineGuidesProps = {
   viewportRef: Viewport,
   appRef: Application,
+  cull: Cull,
   minimumStartDate: Date,
   maximumEndDate: Ref<Date | undefined>,
   isRunning: boolean,
@@ -33,6 +35,7 @@ type TimelineGuidesProps = {
 export class TimelineGuides extends Container {
   private readonly viewportRef
   private readonly appRef
+  private readonly cull
   private readonly minimumStartDate
   private readonly maximumEndDate
   private readonly isRunning
@@ -49,6 +52,7 @@ export class TimelineGuides extends Container {
   public constructor({
     viewportRef,
     appRef,
+    cull,
     minimumStartDate,
     maximumEndDate,
     isRunning,
@@ -59,6 +63,7 @@ export class TimelineGuides extends Container {
 
     this.viewportRef = viewportRef
     this.appRef = appRef
+    this.cull = cull
     this.minimumStartDate = minimumStartDate
     this.maximumEndDate = maximumEndDate
     this.isRunning = isRunning
@@ -126,6 +131,7 @@ export class TimelineGuides extends Container {
         labelText: this.labelFormatter(lastGuidePoint),
         styles: this.styleOptions,
         appHeight: this.appRef.screen.height,
+        cull: this.cull,
       })
       guide.position.set(this.getGuidePosition(lastGuidePoint), 0)
 

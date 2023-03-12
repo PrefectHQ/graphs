@@ -1,3 +1,4 @@
+import { Cull } from '@pixi-essentials/cull'
 import type { Viewport } from 'pixi-viewport'
 import type { Application, IBitmapTextStyle, TextStyle } from 'pixi.js'
 import type { ComputedRef } from 'vue'
@@ -55,6 +56,7 @@ export type NodeLayoutWorkerResponse = {
 export type GraphState = {
   pixiApp: Application,
   viewport: Viewport,
+  cull: Cull,
   timeScaleProps: InitTimelineScaleProps,
   styleOptions: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,

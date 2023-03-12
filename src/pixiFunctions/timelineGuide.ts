@@ -1,3 +1,4 @@
+import { Cull } from '@pixi-essentials/cull'
 import { BitmapText, Container, Graphics } from 'pixi.js'
 import { ComputedRef } from 'vue'
 import { ParsedThemeStyles } from '@/models'
@@ -7,12 +8,14 @@ type TimelineGuideProps = {
   labelText: string | null,
   styles: ComputedRef<ParsedThemeStyles>,
   appHeight: number,
+  cull: Cull,
 }
 
 export class TimelineGuide extends Container {
   private readonly labelText
   private readonly styles
   private appHeight
+  private readonly cull
 
   private readonly guideLine = new Graphics()
   private label: BitmapText | undefined
@@ -21,12 +24,16 @@ export class TimelineGuide extends Container {
     labelText,
     styles,
     appHeight,
+    cull,
   }: TimelineGuideProps) {
     super()
+
+    cull.add(this)
 
     this.labelText = labelText
     this.styles = styles
     this.appHeight = appHeight
+    this.cull = cull
 
     this.drawGuideLine()
     this.addChild(this.guideLine)
@@ -68,5 +75,11 @@ export class TimelineGuide extends Container {
   public updateHeight(appHeight: number): void {
     this.appHeight = appHeight
     this.drawGuideLine()
+  }
+
+  public destroy(): void {
+    this.cull.remove(this)
+
+    super.destroy()
   }
 }
