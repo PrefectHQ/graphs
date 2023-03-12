@@ -171,10 +171,20 @@ export class TimelineNode extends Container {
     )
 
     viewport.on('frame-end', () => {
-      if (viewport.scale.x < 0.2 && this.label) {
-        this.label.visible = false
-      } else if (this.label) {
+      if (viewport.scale.x < 0.2) {
+        if (this.label) {
+          this.label.visible = false
+        }
+        if (this.subNodesOutline && !this.isSubNodesExpanded) {
+          this.subNodesOutline.visible = false
+        }
+        return
+      }
+      if (this.label) {
         this.label.visible = true
+      }
+      if (this.subNodesOutline) {
+        this.subNodesOutline.visible = true
       }
     })
   }
