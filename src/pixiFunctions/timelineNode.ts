@@ -402,8 +402,8 @@ export class TimelineNode extends Container {
   private centerViewportToNodeAfterDelay(): void {
     const { viewport, suppressMotion } = this.graphState
     setTimeout(() => {
-      const xPos = (this.worldTransform.tx - viewport.x) / viewport.scale.x + this.width / 2
-      const yPos = (this.worldTransform.ty - viewport.y) / viewport.scale.y + this.height / 2
+      const xPos = (this.worldTransform.tx - viewport.x) / viewport.scale.x + this.box.width / 2
+      const yPos = (this.worldTransform.ty - viewport.y) / viewport.scale.y + this.box.height / 2
 
       viewport.animate({
         position: {
