@@ -26,7 +26,6 @@ export type ExpandedSubNodes = Map<string, TimelineNodeData[]>
 export type NodeShoveDirection = 1 | -1
 export type NodeLayoutWorkerProps = {
   data: {
-    id: string,
     layoutSetting?: TimelineNodesLayoutOptions,
     graphData?: string,
     apxCharacterWidth?: number,
@@ -46,7 +45,6 @@ export type NodesLayout = Record<string, NodeLayoutItem>
 export type NodeLayoutRow = { yPos: number, height: number }
 
 export type NodeLayoutWorkerResponseData = {
-  id: string,
   layout: NodesLayout,
   centerViewportAfter?: boolean,
 }
@@ -55,9 +53,9 @@ export type NodeLayoutWorkerResponse = {
 }
 
 export type GraphState = {
-  layoutWorker: Worker,
   pixiApp: Application,
   viewport: Viewport,
+  timeScaleProps: InitTimelineScaleProps,
   styleOptions: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,

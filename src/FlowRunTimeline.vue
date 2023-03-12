@@ -8,7 +8,7 @@
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
   import type { Viewport } from 'pixi-viewport'
-  import { Application, TextMetrics } from 'pixi.js'
+  import { Application } from 'pixi.js'
   import {
     computed,
     onMounted,
@@ -26,7 +26,6 @@
     TimelineNodesLayoutOptions,
     CenterViewportOptions,
     ExpandedSubNodes,
-    NodeLayoutWorkerProps,
     InitTimelineScaleProps,
     GraphState
   } from '@/models'
@@ -39,16 +38,12 @@
     TimelineNodes,
     TimelinePlayhead,
     initTimelineScale,
-    nodeClickEvents,
-    getBitmapFonts
+    nodeClickEvents
   } from '@/pixiFunctions'
   import {
     getDateBounds,
     parseThemeOptions
   } from '@/utilities'
-  // eslint-disable-next-line import/default
-  import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
-
   const props = defineProps<{
     graphData: TimelineNodeData[],
     isRunning?: boolean,
@@ -87,8 +82,6 @@
     viewport: 10,
     playhead: 20,
   }
-
-  const layoutWorker: Worker = new LayoutWorker()
 
   const loading = ref(true)
   let pixiApp: Application
@@ -144,8 +137,6 @@
   })
 
   function cleanupApp(): void {
-    layoutWorker.terminate()
-    layoutWorker.onmessage = null
     guides.destroy()
     playhead?.destroy()
     nodesContainer.destroy()
@@ -300,31 +291,11 @@
     cull.cull(pixiApp.renderer.screen)
   }
 
-  async function initLayoutWorker(): Promise<void> {
-    const textStyles = await getBitmapFonts(styleOptions.value)
-    const { spacingMinimumNodeEdgeGap } = styleOptions.value
-    const apxCharacterWidth = TextMetrics.measureText('M', textStyles.nodeTextStyles).width
-
-    const layoutWorkerOptions: NodeLayoutWorkerProps = {
-      data: {
-        id: '',
-        timeScaleProps: timeScaleProps,
-        spacingMinimumNodeEdgeGap,
-        apxCharacterWidth,
-        layoutSetting: layoutSetting.value,
-      },
-    }
-
-    layoutWorker.postMessage(layoutWorkerOptions.data)
-  }
-
-  async function initContent(): Promise<void> {
-    await initLayoutWorker()
-
+  function initContent(): void {
     const graphState: GraphState = {
-      layoutWorker,
       pixiApp,
       viewport,
+      timeScaleProps,
       styleOptions,
       styleNode,
       layoutSetting,

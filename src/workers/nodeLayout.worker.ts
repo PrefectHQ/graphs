@@ -23,7 +23,6 @@ const layout: NodesLayout = {}
 
 onmessage = async ({
   data: {
-    id,
     layoutSetting,
     graphData,
     apxCharacterWidth,
@@ -68,7 +67,6 @@ onmessage = async ({
       graphDataStore = newData
       await calculateNodeLayout()
       const response: NodeLayoutWorkerResponseData = {
-        id,
         layout,
         centerViewportAfter,
       }

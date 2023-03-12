@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js'
+import { Container, TextMetrics } from 'pixi.js'
 import { watch, WatchStopHandle, ref } from 'vue'
 import {
   NodeLayoutWorkerResponse,
@@ -15,8 +15,11 @@ import {
   destroyNodeTextureCache,
   nodeClickEvents,
   nodeResizeEvent,
-  nodeAnimationDurations
+  nodeAnimationDurations,
+  getBitmapFonts
 } from '@/pixiFunctions'
+// eslint-disable-next-line import/default
+import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
 
 export const timelineUpdateEvent = 'timelineUpdateEvent'
 
@@ -34,7 +37,7 @@ type EdgeRecord = {
 }
 
 export class TimelineNodes extends Container {
-  private readonly id = crypto.randomUUID()
+  private readonly layoutWorker: Worker = new LayoutWorker()
 
   private readonly isSubNodes
   private graphData
@@ -105,28 +108,31 @@ export class TimelineNodes extends Container {
     )
   }
 
-  private initLayoutWorker(): void {
-    const { layoutWorker, layoutSetting, centerViewport, suppressMotion } = this.graphState
-    const { spacingMinimumNodeEdgeGap } = this.graphState.styleOptions.value
+  private async initLayoutWorker(): Promise<void> {
+    const {
+      styleOptions,
+      timeScaleProps,
+      layoutSetting,
+      centerViewport,
+      suppressMotion,
+    } = this.graphState
+
+    const textStyles = await getBitmapFonts(styleOptions.value)
+    const { spacingMinimumNodeEdgeGap } = styleOptions.value
+
+    const apxCharacterWidth = TextMetrics.measureText('M', textStyles.nodeTextStyles).width
 
     const layoutWorkerOptions: NodeLayoutWorkerProps = {
       data: {
-        id: this.id,
-        spacingMinimumNodeEdgeGap,
         graphData: JSON.stringify(this.graphData),
+        timeScaleProps: timeScaleProps,
+        spacingMinimumNodeEdgeGap,
+        apxCharacterWidth,
         layoutSetting: layoutSetting.value,
       },
     }
 
-    layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
-      console.log('renderLayout', {
-        data: data.id,
-        this: this.id,
-      })
-      if (data.id !== this.id) {
-        return
-      }
-
+    this.layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
       this.layout.value = data.layout
 
       this.renderLayout()
@@ -141,7 +147,7 @@ export class TimelineNodes extends Container {
       this.emit(timelineUpdateEvent)
     }
 
-    layoutWorker.postMessage(layoutWorkerOptions.data)
+    this.layoutWorker.postMessage(layoutWorkerOptions.data)
   }
 
   private initDeselectLayer(): void {
@@ -276,11 +282,10 @@ export class TimelineNodes extends Container {
       this.graphData = newData
       const message: NodeLayoutWorkerProps = {
         data: {
-          id: this.id,
           graphData: JSON.stringify(this.graphData),
         },
       }
-      this.graphState.layoutWorker.postMessage(message.data)
+      this.layoutWorker.postMessage(message.data)
       return
     }
 
@@ -304,17 +309,16 @@ export class TimelineNodes extends Container {
   }
 
   public updateLayoutSetting(): void {
-    const { layoutSetting, layoutWorker } = this.graphState
+    const { layoutSetting } = this.graphState
 
     const message: NodeLayoutWorkerProps = {
       data: {
-        id: this.id,
         graphData: JSON.stringify(this.graphData),
         layoutSetting: layoutSetting.value,
         centerViewportAfter: true,
       },
     }
-    layoutWorker.postMessage(message.data)
+    this.layoutWorker.postMessage(message.data)
   }
 
   /**
@@ -459,6 +463,8 @@ export class TimelineNodes extends Container {
     this.edgeRecords.forEach(edgeRecord => edgeRecord.edge.destroy())
     this.removeChildren()
     this.unWatchers.forEach(unwatch => unwatch())
+    this.layoutWorker.terminate()
+    this.layoutWorker.onmessage = null
 
     if (!this.isSubNodes) {
       destroyNodeTextureCache()
