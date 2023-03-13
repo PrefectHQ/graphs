@@ -45,7 +45,6 @@ export class TimelineEdge extends Container {
   }: TimelineEdgeProps) {
     super()
 
-    graphState.cull.add(this)
 
     this.sourceNode = sourceNode
     this.targetNode = targetNode
@@ -60,7 +59,19 @@ export class TimelineEdge extends Container {
     this.drawArrow()
     this.addChild(this.arrow)
 
+    this.initCulling()
     this.initWatchers()
+  }
+
+  private initCulling(): void {
+    const { cull } = this.graphState
+
+    // cull edge on next tick to avoid prematurely culling out of view
+    setTimeout(() => {
+      cull.add(this.edge)
+    }, 0)
+
+    cull.add(this.arrow)
   }
 
   private initWatchers(): void {
@@ -241,7 +252,9 @@ export class TimelineEdge extends Container {
   }
 
   public destroy(): void {
-    this.graphState.cull.remove(this)
+    const { cull } = this.graphState
+    cull.remove(this.edge)
+    cull.remove(this.arrow)
     this.unWatchers.forEach((unwatch) => unwatch())
     super.destroy.call(this)
   }

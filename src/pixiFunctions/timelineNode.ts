@@ -235,7 +235,6 @@ export class TimelineNode extends Container {
     box.on('click', () => {
       this.emit(nodeClickEvents.nodeDetails, this.nodeData.id)
     })
-    this.graphState.cull.add(box)
   }
 
   private drawBox(): void {
@@ -748,7 +747,6 @@ export class TimelineNode extends Container {
 
   public destroy(): void {
     const { cull } = this.graphState
-    cull.remove(this.box)
     if (this.label) {
       cull.remove(this.label)
     }
