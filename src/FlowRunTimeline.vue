@@ -295,12 +295,13 @@
   function initCulling(): void {
     viewport.on('frame-end', () => {
       if (viewport.dirty) {
-        cull.cull(pixiApp.renderer.screen)
+        cullScreen()
 
         viewport.dirty = false
       }
     })
   }
+
   function pauseCulling(): void {
     /*
      * Use to pause culling when you need to calculate bounds, otherwise
@@ -310,6 +311,9 @@
     cull.uncull()
   }
   function resumeCulling(): void {
+    cullScreen()
+  }
+  function cullScreen(): void {
     cull.cull(pixiApp.renderer.screen)
   }
 
@@ -318,6 +322,7 @@
       pixiApp,
       viewport,
       cull,
+      cullScreen,
       timeScaleProps,
       styleOptions,
       styleNode,

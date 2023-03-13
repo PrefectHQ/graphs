@@ -57,6 +57,7 @@ export type GraphState = {
   pixiApp: Application,
   viewport: Viewport,
   cull: Cull,
+  cullScreen: () => void,
   timeScaleProps: InitTimelineScaleProps,
   styleOptions: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,

@@ -586,6 +586,8 @@ export class TimelineNode extends Container {
       y: yPos,
       duration: nodeAnimationDurations.move,
       ease: 'power1.out',
+    }).then(() => {
+      this.graphState.cullScreen()
     })
   }
 
