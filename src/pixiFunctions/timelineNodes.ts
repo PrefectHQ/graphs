@@ -187,7 +187,7 @@ export class TimelineNodes extends Container {
     })
 
     if (isInitialRender) {
-      // this.addChild(this.edgeContainer)
+      this.addChild(this.edgeContainer)
       this.addChild(this.nodeContainer)
 
       if (!this.isSubNodes) {
@@ -231,7 +231,7 @@ export class TimelineNodes extends Container {
 
     this.registerEmits(node)
     this.nodeRecords.set(nodeData.id, node)
-    // this.addNodeEdges(nodeData)
+    this.addNodeEdges(nodeData)
 
     this.nodeContainer.addChild(node)
 
@@ -415,19 +415,6 @@ export class TimelineNodes extends Container {
   /**
    * Utilities
    */
-  private readonly temporarilyHideEdges = {
-    start: (): void => {
-      this.edgeRecords.forEach((edgeRecord) => {
-        edgeRecord.edge.visible = false
-      })
-    },
-    finish: (): void => {
-      this.edgeRecords.forEach((edgeRecord) => {
-        edgeRecord.edge.update()
-        edgeRecord.edge.visible = true
-      })
-    },
-  }
 
   private registerEmits(el: TimelineNode | TimelineNodes): void {
     el.on(nodeClickEvents.nodeDetails, (id) => {

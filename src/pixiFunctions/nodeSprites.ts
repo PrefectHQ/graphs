@@ -1,5 +1,7 @@
 import { Application, Graphics, Texture } from 'pixi.js'
 
+export const simpleFillTextureSize = 10
+
 type BoxTextures = Record<'cap' | 'body', Texture>
 type BorderRectTextures = Record<'corner' | 'edge', Texture>
 type RoundedBorderRectCacheKey = {
@@ -76,8 +78,8 @@ export function getSimpleFillTexture({
     square.drawRect(
       0,
       0,
-      10,
-      10,
+      simpleFillTextureSize,
+      simpleFillTextureSize,
     )
     square.endFill()
 
