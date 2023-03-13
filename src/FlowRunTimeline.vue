@@ -69,7 +69,7 @@
   const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
   const suppressMotion = computed(() => {
     const prefersReducedMotion: boolean = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    return props.graphData.length >= 300 || prefersReducedMotion
+    return props.graphData.length >= 400 || prefersReducedMotion
   })
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
@@ -170,13 +170,36 @@
     minimumStartDate = min
     maximumEndDate.value = max
     initialOverallTimeSpan = span
-    overallGraphWidth = stage.value!.clientWidth * 2
+
+    overallGraphWidth = getOverallGraphWidth()
 
     timeScaleProps = {
       minimumStartTime: minimumStartDate.getTime(),
       overallGraphWidth,
       initialOverallTimeSpan,
     }
+  }
+
+  function getOverallGraphWidth(): number {
+    const {
+      spacingNodeYPadding,
+      textLineHeightDefault,
+      spacingNodeMargin,
+      spacingSubNodesOutlineOffset,
+    } = styleOptions.value
+
+    const dataSize = props.graphData.length
+    const apxNodeHeight =
+      textLineHeightDefault
+      + spacingNodeYPadding * 2
+      + spacingNodeMargin
+      + spacingSubNodesOutlineOffset * 2
+    const aspectRatio = stage.value!.clientWidth / stage.value!.clientHeight
+    const apxNodesHeight = apxNodeHeight * dataSize
+    const apxNodesWidth = apxNodesHeight * aspectRatio
+    const multiple = dataSize >= 120 ? dataSize / 100 : 1.2
+
+    return apxNodesWidth * multiple
   }
 
   function initFonts(): void {

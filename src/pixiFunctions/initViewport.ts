@@ -27,7 +27,6 @@ export async function initViewport(stage: HTMLElement, appRef: Application): Pro
     .pinch()
     .clampZoom({
       minWidth: width / 2,
-      maxWidth: width * 40,
     })
     .decelerate({
       friction: 0.9,
