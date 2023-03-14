@@ -137,6 +137,10 @@ export class TimelineNodes extends Container {
 
       this.renderLayout()
 
+      if (this.isSelectionPathHighlighted) {
+        this.highlightSelectedNodePath()
+      }
+
       if (data.centerViewportAfter && !this.isSubNodes) {
         // allow time for nodes to move to their new positions
         setTimeout(() => {
