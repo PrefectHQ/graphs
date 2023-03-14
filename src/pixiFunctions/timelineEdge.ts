@@ -45,7 +45,6 @@ export class TimelineEdge extends Container {
   }: TimelineEdgeProps) {
     super()
 
-
     this.sourceNode = sourceNode
     this.targetNode = targetNode
     this.graphState = graphState
@@ -64,6 +63,7 @@ export class TimelineEdge extends Container {
   }
 
   private initCulling(): void {
+    // Note: edges are not culled because problems arise when expanding/contracting subNodes.
     const { cull } = this.graphState
 
     cull.add(this.arrow)
