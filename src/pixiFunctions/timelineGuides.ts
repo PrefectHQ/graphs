@@ -128,9 +128,9 @@ export class TimelineGuides extends Container {
 
     while (lastGuidePoint.getTime() < maxGuidePlacement) {
       const guide = new TimelineGuide({
+        appRef: this.appRef,
         labelText: this.labelFormatter(lastGuidePoint),
         styles: this.styleOptions,
-        appHeight: this.appRef.screen.height,
         cull: this.cull,
       })
       guide.position.set(this.getGuidePosition(lastGuidePoint), 0)
