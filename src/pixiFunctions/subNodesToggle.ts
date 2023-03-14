@@ -1,5 +1,6 @@
 import gsap from 'gsap'
 import { Container, Sprite } from 'pixi.js'
+import { watch, WatchStopHandle } from 'vue'
 import { GraphState } from '@/models'
 import {
   getArrowTexture,
@@ -31,13 +32,16 @@ export class SubNodesToggle extends Container {
   private readonly floating
   private readonly inverseTextOnFill
 
-  private readonly textColor: number
+  private isExpanded = false
+  private textColor: number
 
   private readonly toggleBox = new Container()
   private readonly hoverShade = new Container()
-  private readonly toggleArrow: Sprite
-  private readonly toggleBorder: RoundedBorderRect
-  private readonly divider: Sprite
+  private toggleArrow: Sprite | undefined
+  private toggleBorder: RoundedBorderRect | undefined
+  private divider: Sprite | undefined
+
+  private readonly unWatchers: WatchStopHandle[] = []
 
   public constructor({
     graphState,
@@ -62,15 +66,7 @@ export class SubNodesToggle extends Container {
 
     this.textColor = this.getTextColor()
 
-    this.initToggleBox()
-    this.drawHoverShade()
-    this.hoverShade.alpha = 0
-    this.divider = this.drawDivider()
-    this.addChild(this.divider)
-    this.toggleArrow = this.drawToggleArrow()
-    this.addChild(this.toggleArrow)
-    this.toggleBorder = this.drawToggleBorder()
-    this.addChild(this.toggleBorder)
+    this.initShapes()
 
     this.on('pointerover', () => {
       this.hover()
@@ -79,11 +75,24 @@ export class SubNodesToggle extends Container {
       this.unHover()
     })
 
-    this.initViewportWatcher()
+    this.initWatchers()
   }
 
-  private initViewportWatcher(): void {
-    const { viewport } = this.graphState
+  private initWatchers(): void {
+    const { viewport, styleOptions, styleNode } = this.graphState
+
+    this.unWatchers.push(
+      watch([styleOptions, styleNode], () => {
+        this.toggleBox.removeChildren()
+        this.hoverShade.removeChildren()
+        this.toggleArrow?.destroy()
+        this.toggleBorder?.destroy()
+        this.divider?.destroy()
+
+        this.textColor = this.getTextColor()
+        this.initShapes()
+      }, { deep: true }),
+    )
 
     viewport.on('frame-end', () => {
       if (viewport.scale.x < 0.2) {
@@ -94,13 +103,13 @@ export class SubNodesToggle extends Container {
     })
   }
 
-  private getTextColor(): number {
-    const { floating, inverseTextOnFill } = this
-    const { colorTextDefault, colorTextInverse } = this.graphState.styleOptions.value
-
-    const colorOnFill = inverseTextOnFill ? colorTextInverse : colorTextDefault
-
-    return floating ? colorOnFill : colorTextDefault
+  private initShapes(): void {
+    this.initToggleBox()
+    this.initHoverShade()
+    this.hoverShade.alpha = 0
+    this.initDivider()
+    this.initToggleArrow()
+    this.initToggleBorder()
   }
 
   private initToggleBox(): void {
@@ -140,7 +149,7 @@ export class SubNodesToggle extends Container {
     this.addChild(toggleBox)
   }
 
-  private drawHoverShade(): void {
+  private initHoverShade(): void {
     const {
       hoverShade,
       nonFloatingHoverBg,
@@ -186,7 +195,7 @@ export class SubNodesToggle extends Container {
     this.addChild(hoverShade)
   }
 
-  private drawDivider(): Sprite {
+  private initDivider(): void {
     const { size, textColor, floating } = this
     const { pixiApp } = this.graphState
 
@@ -195,20 +204,20 @@ export class SubNodesToggle extends Container {
       fill: textColor,
     })
 
-    const divider = new Sprite(fillTexture)
-    divider.width = 1
-    divider.height = size
-    divider.x = size
+    this.divider = new Sprite(fillTexture)
+    this.divider.width = 1
+    this.divider.height = size
+    this.divider.x = size
 
     if (floating) {
-      divider.alpha = 0
+      this.divider.alpha = 0
     }
 
-    return divider
+    this.addChild(this.divider)
   }
 
-  private drawToggleArrow(): Sprite {
-    const { size, textColor } = this
+  private initToggleArrow(): void {
+    const { size, textColor, isExpanded } = this
     const { pixiApp } = this.graphState
 
     const arrowTexture = getArrowTexture({
@@ -218,15 +227,15 @@ export class SubNodesToggle extends Container {
       edgeLength: 8,
     })
 
-    const arrowSprite = new Sprite(arrowTexture)
-    arrowSprite.transform.rotation = Math.PI / 2
-    arrowSprite.anchor.set(0.5, 0.5)
-    arrowSprite.position.set(size / 2, size / 2)
+    this.toggleArrow = new Sprite(arrowTexture)
+    this.toggleArrow.transform.rotation = isExpanded ? Math.PI / 2 * -1 : Math.PI / 2
+    this.toggleArrow.anchor.set(0.5, 0.5)
+    this.toggleArrow.position.set(size / 2, size / 2)
 
-    return arrowSprite
+    this.addChild(this.toggleArrow)
   }
 
-  private drawToggleBorder(): RoundedBorderRect {
+  private initToggleBorder(): void {
     const { size, floating } = this
     const { pixiApp, styleOptions } = this.graphState
     const {
@@ -235,7 +244,7 @@ export class SubNodesToggle extends Container {
       spacingButtonBorderWidth,
     } = styleOptions.value
 
-    const border = new RoundedBorderRect({
+    this.toggleBorder = new RoundedBorderRect({
       pixiApp,
       width: size,
       height: size,
@@ -245,10 +254,33 @@ export class SubNodesToggle extends Container {
     })
 
     if (!floating) {
-      border.alpha = 0
+      this.toggleBorder.alpha = 0
     }
 
-    return border
+    this.addChild(this.toggleBorder)
+  }
+
+  private setToggleArrowRotation(rotation: number): void {
+    const { suppressMotion } = this.graphState
+
+    if (!this.toggleArrow) {
+      return
+    }
+
+    gsap.to(this.toggleArrow, {
+      rotation,
+      duration: suppressMotion.value ? 0 : 0.2,
+      ease: 'power2.inOut',
+    })
+  }
+
+  private getTextColor(): number {
+    const { floating, inverseTextOnFill } = this
+    const { colorTextDefault, colorTextInverse } = this.graphState.styleOptions.value
+
+    const colorOnFill = inverseTextOnFill ? colorTextInverse : colorTextDefault
+
+    return floating ? colorTextDefault : colorOnFill
   }
 
   private hover(): void {
@@ -259,21 +291,13 @@ export class SubNodesToggle extends Container {
     this.hoverShade.alpha = 0
   }
 
-  private setToggleArrowRotation(rotation: number): void {
-    const { suppressMotion } = this.graphState
-
-    gsap.to(this.toggleArrow, {
-      rotation,
-      duration: suppressMotion.value ? 0 : 0.2,
-      ease: 'power2.inOut',
-    })
-  }
-
   public setExpanded(): void {
+    this.isExpanded = true
     this.setToggleArrowRotation(Math.PI / 2 * -1)
   }
 
   public setCollapsed(): void {
+    this.isExpanded = false
     this.setToggleArrowRotation(Math.PI / 2)
   }
 

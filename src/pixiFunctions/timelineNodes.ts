@@ -198,13 +198,13 @@ export class TimelineNodes extends Container {
 
   private updateLayoutRows(position: number = 0): void {
     const { layout } = this
-    const { spacingNodeMargin } = this.graphState.styleOptions.value
+    const { spacingNodeMargin, spacingNodeSelectionMargin } = this.graphState.styleOptions.value
     const maxRows = Math.max(...Object.values(layout.value).map(node => node.position))
     let newLayoutRows: NodeLayoutRow[] = []
 
     for (let i = position; i <= maxRows; i++) {
       const yPos = newLayoutRows[i - 1]
-        ? newLayoutRows[i - 1].yPos + newLayoutRows[i - 1].height + spacingNodeMargin
+        ? newLayoutRows[i - 1].yPos + newLayoutRows[i - 1].height - spacingNodeSelectionMargin * 2 + spacingNodeMargin
         : 0
       const nodesInRow = Object.keys(layout.value).filter(nodeId => layout.value[nodeId].position === i)
       const height = Math.max(...nodesInRow.map(nodeId => this.nodeRecords.get(nodeId)?.height ?? 0))

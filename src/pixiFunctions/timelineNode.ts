@@ -622,7 +622,7 @@ export class TimelineNode extends Container {
     const {
       spacingSubNodesOutlineOffset,
       alphaSubNodesOutlineDimmed,
-      spacingNodeLabelMargin,
+      spacingNodeMargin,
     } = this.graphState.styleOptions.value
 
     if (isSubNodesExpanded) {
@@ -637,7 +637,7 @@ export class TimelineNode extends Container {
       ? nodeWidth + spacingSubNodesOutlineOffset * 2
       : nodeWidth - spacingSubNodesOutlineOffset * 2
     const height = isSubNodesExpanded
-      ? nodeHeight + subNodesContent!.height + spacingNodeLabelMargin
+      ? nodeHeight + subNodesContent!.height + spacingNodeMargin
       : nodeHeight
 
     subNodesOutline.resize(width, height)
@@ -753,6 +753,10 @@ export class TimelineNode extends Container {
     cull.remove(this.box)
     if (this.label) {
       cull.remove(this.label)
+    }
+
+    if (this.isSelected) {
+      this.emit(nodeClickEvents.nodeDetails, null)
     }
 
     this.destroySubNodesContent()

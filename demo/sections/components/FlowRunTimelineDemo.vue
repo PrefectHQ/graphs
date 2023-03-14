@@ -243,8 +243,8 @@
         colorTextSubdued = '--foreground-300',
         colorGuideLine = '--foreground-50',
         colorEdge = '--foreground',
-        colorButtonBg = '--background-600',
-        colorButtonBorder = '--white'
+        colorButtonBg = '--background',
+        colorButtonBorder = '--background-500'
 
     if (colorThemeValue.value == 'dark') {
       colorTextDefault = '--white'
