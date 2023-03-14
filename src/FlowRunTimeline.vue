@@ -69,7 +69,7 @@
   const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
   const suppressMotion = computed(() => {
     const prefersReducedMotion: boolean = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    return props.graphData.length >= 400 || prefersReducedMotion
+    return props.graphData.length > 500 || prefersReducedMotion
   })
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
