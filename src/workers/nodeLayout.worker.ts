@@ -50,12 +50,12 @@ onmessage = async ({
   if (timeScaleProps) {
     const {
       minimumStartTime,
-      overallGraphWidth,
+      graphXDomain,
       initialOverallTimeSpan,
     } = timeScaleProps
     timelineScale = createTimelineScale({
       minimumStartTime,
-      overallGraphWidth,
+      graphXDomain,
       initialOverallTimeSpan,
     })
   }

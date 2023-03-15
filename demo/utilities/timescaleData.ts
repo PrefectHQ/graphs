@@ -1,6 +1,6 @@
-/* eslint-disable camelcase */
-import { randomDate } from '@/../demo/utilities/randomDate'
-import { randomStarName } from '@/../demo/utilities/randomStarName'
+/* eslint-disable no-relative-import-paths/no-relative-import-paths */
+import { randomDate } from './randomDate'
+import { randomStarName } from './randomStarName'
 import { random, floor } from '@/utilities/math'
 
 export type TimelineNodeState =

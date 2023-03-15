@@ -28,18 +28,17 @@ export const nodeClickEvents = {
   nodeDetails: 'nodeDetailsClick',
   subNodesToggle: 'subNodesToggleClick',
 }
-
 export const nodeResizeEvent = 'nodeResize'
-
 export const nodeAnimationDurations = {
   fadeIn: 0.25,
   move: 0.5,
 }
-
 // The name giving to the box container, this is used by
 // edges to determine their positions
 export const timelineNodeBoxName = 'box'
 
+// At which scale do node details become too hard to see and don't need to be drawn.
+const nodeElementScaleCullingThreshold = 0.2
 const nodeBoxSpriteNames = {
   startCap: 'startCap',
   endCap: 'endCap',
@@ -171,7 +170,7 @@ export class TimelineNode extends Container {
     )
 
     viewport.on('frame-end', () => {
-      if (viewport.scale.x < 0.2) {
+      if (viewport.scale.x < nodeElementScaleCullingThreshold) {
         if (this.label) {
           this.label.visible = false
         }

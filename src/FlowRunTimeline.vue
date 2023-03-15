@@ -44,6 +44,10 @@
     getDateBounds,
     parseThemeOptions
   } from '@/utilities'
+
+  // at which point the data is too large to animate smoothly
+  const animationThreshold = 500
+
   const props = defineProps<{
     graphData: TimelineNodeData[],
     isRunning?: boolean,
@@ -69,7 +73,7 @@
   const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
   const suppressMotion = computed(() => {
     const prefersReducedMotion: boolean = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    return props.graphData.length > 500 || prefersReducedMotion
+    return props.graphData.length > animationThreshold || prefersReducedMotion
   })
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
@@ -92,7 +96,7 @@
   let minimumStartDate: Date
   const maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
-  let overallGraphWidth: number
+  let graphXDomain: number
   let timelineScale: TimelineScale
 
   let guides: TimelineGuides
@@ -171,16 +175,16 @@
     maximumEndDate.value = max
     initialOverallTimeSpan = span
 
-    overallGraphWidth = getOverallGraphWidth()
+    graphXDomain = determineGraphXDomain()
 
     timeScaleProps = {
       minimumStartTime: minimumStartDate.getTime(),
-      overallGraphWidth,
+      graphXDomain,
       initialOverallTimeSpan,
     }
   }
 
-  function getOverallGraphWidth(): number {
+  function determineGraphXDomain(): number {
     const {
       spacingNodeYPadding,
       textLineHeightDefault,
@@ -189,11 +193,15 @@
     } = styleOptions.value
 
     const dataSize = props.graphData.length
+
+    // this nodeHeight measurement is apx because, while it attempts to match the actual node height,
+    // we're not measuring an actual node here. e.g. the outlineOffset may not be adding to the
+    // height twice when collapsed. but it's close enough for our purposes.
     const apxNodeHeight =
       textLineHeightDefault
       + spacingNodeYPadding * 2
-      + spacingNodeMargin
       + spacingSubNodesOutlineOffset * 2
+      + spacingNodeMargin
     const aspectRatio = stage.value!.clientWidth / stage.value!.clientHeight
     const apxNodesHeight = apxNodeHeight * dataSize
     const apxNodesWidth = apxNodesHeight * aspectRatio

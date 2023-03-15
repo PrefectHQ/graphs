@@ -16,7 +16,7 @@ export type TimelineNodeData = {
 
 export type InitTimelineScaleProps = {
   minimumStartTime: number,
-  overallGraphWidth: number,
+  graphXDomain: number,
   initialOverallTimeSpan: number,
 }
 

@@ -15,11 +15,24 @@ const hoverShadePieces = {
   rightCap: 'rightCap',
 }
 
+const toggleAnimationDuration = 0.2
+// At which scale does the toggle become too hard to see and doesn't need to be drawn.
+const toggleScaleCullingThreshold = 0.2
+
 type SubNodesToggleProps = {
   graphState: GraphState,
   size: number,
+  /**
+   * Background color when the toggle is not floating (rendered on top of a node).
+   */
   nonFloatingHoverBg: number,
+  /**
+   * nonFloatingHoverBg alpha value when the toggle is not floating (rendered on top of a node).
+   */
   nonFloatingHoverAlpha: number,
+  /**
+   * The toggle may be "floating", when a node is too narrow and the toggle is rendered outside of it.
+   */
   floating?: boolean,
   inverseTextOnFill?: boolean,
 }
@@ -95,7 +108,7 @@ export class SubNodesToggle extends Container {
     )
 
     viewport.on('frame-end', () => {
-      if (viewport.scale.x < 0.2) {
+      if (viewport.scale.x < toggleScaleCullingThreshold) {
         this.visible = false
       } else {
         this.visible = true
@@ -269,7 +282,7 @@ export class SubNodesToggle extends Container {
 
     gsap.to(this.toggleArrow, {
       rotation,
-      duration: suppressMotion.value ? 0 : 0.2,
+      duration: suppressMotion.value ? 0 : toggleAnimationDuration,
       ease: 'power2.inOut',
     })
   }
