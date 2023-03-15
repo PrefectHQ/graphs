@@ -67,7 +67,7 @@ function hslToHex(hue: number, saturation: number, lightness: number): string {
   const alpha = saturation * min(lightness, 1 - lightness) / 100
 
   const hexValue = (num: number): string => {
-    const kar = num + hue as number / 30 % 12
+    const kar = (num + hue / 30) % 12
     const color = lightness - alpha * max(min(kar - 3, 9 - kar, 1), -1)
     return round(255 * color).toString(16).padStart(2, '0')
   }
