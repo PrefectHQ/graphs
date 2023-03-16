@@ -1,28 +1,34 @@
-import { IBitmapTextStyle, TextStyle } from 'pixi.js'
+import { Cull } from '@pixi-essentials/cull'
+import type { Viewport } from 'pixi-viewport'
+import type { Application, IBitmapTextStyle, TextStyle } from 'pixi.js'
+import type { ComputedRef } from 'vue'
 import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilities'
 
-export type TimelineNodeData = {
+export type GraphTimelineNode = {
   id: string,
   label: string,
   start: Date,
   end: Date | null,
-  upstreamDependencies?: string[],
   state: string,
+  upstreamDependencies?: string[],
+  subFlowRunId?: string,
 }
 
 export type InitTimelineScaleProps = {
   minimumStartTime: number,
-  overallGraphWidth: number,
+  graphXDomain: number,
   initialOverallTimeSpan: number,
 }
 
 export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
 
+export type ExpandedSubNodes = Map<string, GraphTimelineNode[]>
+
 export type NodeShoveDirection = 1 | -1
 export type NodeLayoutWorkerProps = {
   data: {
     layoutSetting?: TimelineNodesLayoutOptions,
-    graphData: string,
+    graphData?: string,
     apxCharacterWidth?: number,
     spacingMinimumNodeEdgeGap?: number,
     timeScaleProps?: InitTimelineScaleProps,
@@ -36,11 +42,31 @@ export type NodeLayoutItem = {
   endX: number,
 }
 export type NodesLayout = Record<string, NodeLayoutItem>
+
+export type NodeLayoutRow = { yPos: number, height: number }
+
+export type NodeLayoutWorkerResponseData = {
+  layout: NodesLayout,
+  centerViewportAfter?: boolean,
+}
 export type NodeLayoutWorkerResponse = {
-  data: {
-    layout: NodesLayout,
-    centerViewportAfter: boolean,
-  },
+  data: NodeLayoutWorkerResponseData,
+}
+
+export type GraphState = {
+  pixiApp: Application,
+  viewport: Viewport,
+  cull: Cull,
+  cullScreen: () => void,
+  timeScaleProps: InitTimelineScaleProps,
+  styleOptions: ComputedRef<ParsedThemeStyles>,
+  styleNode: ComputedRef<NodeThemeFn>,
+  layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
+  hideEdges: ComputedRef<boolean>,
+  selectedNodeId: ComputedRef<string | null>,
+  expandedSubNodes: ComputedRef<ExpandedSubNodes>,
+  suppressMotion: ComputedRef<boolean>,
+  centerViewport: (options?: CenterViewportOptions) => void,
 }
 
 export type DateToX = (date: Date) => number
@@ -79,12 +105,17 @@ type NodeThemeOptions = {
   fill: string,
   // If your fill is a dark color, set inverse to true. Unless using dark mode text colors.
   inverseTextOnFill: boolean,
+  // for the SubNode toggle buttons
+  onFillSubNodeToggleHoverBg: string,
+  onFillSubNodeToggleHoverBgAlpha: number,
 }
-export type NodeThemeFn = (node: TimelineNodeData) => NodeThemeOptions
+export type NodeThemeFn = (node: GraphTimelineNode) => NodeThemeOptions
 export const nodeThemeFnDefault: NodeThemeFn = () => {
   return {
     fill: 'black',
     inverseTextOnFill: true,
+    onFillSubNodeToggleHoverBg: 'black',
+    onFillSubNodeToggleHoverBgAlpha: 0.4,
   }
 }
 
@@ -101,6 +132,9 @@ export type ThemeStyleOverrides = {
   colorTextInverse?: Color,
   colorTextSubdued?: Color,
   colorNodeSelection?: Color,
+  colorButtonBg?: Color,
+  colorButtonBgHover?: Color,
+  colorButtonBorder?: Color,
   colorEdge?: Color,
   colorGuideLine?: Color,
   colorPlayheadBg?: Color,
@@ -109,6 +143,7 @@ export type ThemeStyleOverrides = {
   textSizeSmall?: Sizing,
   textLineHeightDefault?: Sizing,
   textLineHeightSmall?: Sizing,
+  spacingButtonBorderWidth?: Sizing,
   spacingViewportPaddingDefault?: Sizing,
   spacingNodeXPadding?: Sizing,
   spacingNodeYPadding?: Sizing,
@@ -118,12 +153,16 @@ export type ThemeStyleOverrides = {
   spacingNodeEdgeLength?: Sizing,
   spacingNodeSelectionMargin?: Sizing,
   spacingNodeSelectionWidth?: Sizing,
+  spacingSubNodesOutlineBorderWidth?: Sizing,
+  spacingSubNodesOutlineOffset?: Sizing,
   spacingEdgeWidth?: Sizing,
   spacingGuideLabelPadding?: Sizing,
   spacingPlayheadWidth?: Sizing,
   spacingPlayheadGlowPadding?: Sizing,
   borderRadiusNode?: Sizing,
+  borderRadiusButton?: Sizing,
   alphaNodeDimmed?: number,
+  alphaSubNodesOutlineDimmed?: number,
 }
 
 export type ParsedThemeStyles = {
@@ -131,6 +170,9 @@ export type ParsedThemeStyles = {
   colorTextInverse: number,
   colorTextSubdued: number,
   colorNodeSelection: number,
+  colorButtonBg: number,
+  colorButtonBgHover: number,
+  colorButtonBorder: number,
   colorEdge: number,
   colorGuideLine: number,
   colorPlayheadBg: number,
@@ -139,6 +181,7 @@ export type ParsedThemeStyles = {
   textSizeSmall: number,
   textLineHeightDefault: number,
   textLineHeightSmall: number,
+  spacingButtonBorderWidth: number,
   spacingViewportPaddingDefault: number,
   spacingNodeXPadding: number,
   spacingNodeYPadding: number,
@@ -148,12 +191,16 @@ export type ParsedThemeStyles = {
   spacingNodeEdgeLength: number,
   spacingNodeSelectionMargin: number,
   spacingNodeSelectionWidth: number,
+  spacingSubNodesOutlineBorderWidth: number,
+  spacingSubNodesOutlineOffset: number,
   spacingEdgeWidth: number,
   spacingGuideLabelPadding: number,
   spacingPlayheadWidth: number,
   spacingPlayheadGlowPadding: number,
   borderRadiusNode: number,
+  borderRadiusButton: number,
   alphaNodeDimmed: number,
+  alphaSubNodesOutlineDimmed: number,
 }
 
 export type TimelineThemeOptions = {

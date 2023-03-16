@@ -17,14 +17,17 @@
     watch
   } from 'vue'
   import {
-    TimelineNodeData,
+    GraphTimelineNode,
     nodeThemeFnDefault,
     TimelineThemeOptions,
     FormatDateFns,
     formatDateFnsDefault,
     TimelineScale,
     TimelineNodesLayoutOptions,
-    CenterViewportOptions
+    CenterViewportOptions,
+    ExpandedSubNodes,
+    InitTimelineScaleProps,
+    GraphState
   } from '@/models'
   import {
     initBitmapFonts,
@@ -35,21 +38,25 @@
     TimelineNodes,
     TimelinePlayhead,
     initTimelineScale,
-    nodeContainerName
+    nodeClickEvents
   } from '@/pixiFunctions'
   import {
     getDateBounds,
     parseThemeOptions
   } from '@/utilities'
 
+  // at which point the data is too large to animate smoothly
+  const animationThreshold = 500
+
   const props = defineProps<{
-    graphData: TimelineNodeData[],
+    graphData: GraphTimelineNode[],
     isRunning?: boolean,
     theme?: TimelineThemeOptions,
     formatDateFns?: Partial<FormatDateFns>,
     selectedNodeId?: string | null,
     layout?: TimelineNodesLayoutOptions,
     hideEdges?: boolean,
+    expandedSubNodes?: ExpandedSubNodes,
   }>()
 
   defineExpose({
@@ -59,7 +66,15 @@
 
   const stage = ref<HTMLDivElement>()
   const styleNode = computed(() => props.theme?.node ?? nodeThemeFnDefault)
-  const styles = computed(() => parseThemeOptions(props.theme?.defaults))
+  const styleOptions = computed(() => parseThemeOptions(props.theme?.defaults))
+  const selectedNodeId = computed(() => props.selectedNodeId ?? null)
+  const layoutSetting = computed(() => props.layout ?? 'nearestParent')
+  const hideEdges = computed(() => props.hideEdges ?? false)
+  const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
+  const suppressMotion = computed(() => {
+    const prefersReducedMotion: boolean = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    return props.graphData.length > animationThreshold || prefersReducedMotion
+  })
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
     ...formatDateFnsDefault,
@@ -76,22 +91,23 @@
   let pixiApp: Application
   let viewport: Viewport
   const cull = new Cull()
-  // flag cullDirty when new nodes are added to the viewport after init
-  let cullDirty = false
 
+  let timeScaleProps: InitTimelineScaleProps
   let minimumStartDate: Date
   const maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
-  let overallGraphWidth: number
+  let graphXDomain: number
   let timelineScale: TimelineScale
 
   let guides: TimelineGuides
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: (() => void) | null = null
+  const nodesContentContainerName = 'rootNodesContainer'
   let nodesContainer: TimelineNodes
 
   const emit = defineEmits<{
-    (event: 'click', value: string | null): void,
+    (event: 'selection', value: string | null): void,
+    (event: 'subFlowToggle', value: string): void,
   }>()
 
   onMounted(async () => {
@@ -99,7 +115,8 @@
       console.error('Stage reference not found in initPixiApp')
       return
     }
-    initTimeScale()
+    initTimeScaleProps()
+    timelineScale = initTimelineScale(timeScaleProps)
 
     pixiApp = initPixiApp(stage.value)
     pixiApp.stage.sortableChildren = true
@@ -140,7 +157,7 @@
       })
   }
 
-  function initTimeScale(): void {
+  function initTimeScaleProps(): void {
     const minimumTimeSpan = 1000 * 60
 
     const dates = props.graphData.filter(node => node.end).map(({ start, end }) => ({ start, end }))
@@ -157,19 +174,46 @@
     minimumStartDate = min
     maximumEndDate.value = max
     initialOverallTimeSpan = span
-    overallGraphWidth = stage.value!.clientWidth * 2
 
-    timelineScale = initTimelineScale({
+    graphXDomain = determineGraphXDomain()
+
+    timeScaleProps = {
       minimumStartTime: minimumStartDate.getTime(),
-      overallGraphWidth,
+      graphXDomain,
       initialOverallTimeSpan,
-    })
+    }
+  }
+
+  function determineGraphXDomain(): number {
+    const {
+      spacingNodeYPadding,
+      textLineHeightDefault,
+      spacingNodeMargin,
+      spacingSubNodesOutlineOffset,
+    } = styleOptions.value
+
+    const dataSize = props.graphData.length
+
+    // this nodeHeight measurement is apx because, while it attempts to match the actual node height,
+    // we're not measuring an actual node here. e.g. the outlineOffset may not be adding to the
+    // height twice when collapsed. but it's close enough for our purposes.
+    const apxNodeHeight =
+      textLineHeightDefault
+      + spacingNodeYPadding * 2
+      + spacingSubNodesOutlineOffset * 2
+      + spacingNodeMargin
+    const aspectRatio = stage.value!.clientWidth / stage.value!.clientHeight
+    const apxNodesHeight = apxNodeHeight * dataSize
+    const apxNodesWidth = apxNodesHeight * aspectRatio
+    const multiple = dataSize >= 120 ? dataSize / 100 : 1.2
+
+    return apxNodesWidth * multiple
   }
 
   function initFonts(): void {
-    initBitmapFonts(styles.value)
+    initBitmapFonts(styleOptions.value)
 
-    watch(styles, (newValue) => {
+    watch(styleOptions, (newValue) => {
       updateBitmapFonts(newValue)
     })
   }
@@ -182,8 +226,9 @@
     playhead = new TimelinePlayhead({
       viewportRef: viewport,
       appRef: pixiApp,
+      cull,
       formatDateFns,
-      styles,
+      styleOptions,
     })
     playhead.zIndex = zIndex.playhead
 
@@ -206,7 +251,7 @@
         if (
           !viewport.moving
           && playheadStartedVisible
-          && playhead.position.x > pixiApp.screen.width - styles.value.spacingViewportPaddingDefault
+          && playhead.position.x > pixiApp.screen.width - styleOptions.value.spacingViewportPaddingDefault
         ) {
           const originalLeft = timelineScale.xToDate(viewport.left)
           viewport.zoomPercent(-0.1, true)
@@ -238,10 +283,11 @@
     guides = new TimelineGuides({
       viewportRef: viewport,
       appRef: pixiApp,
+      cull,
       minimumStartDate,
       maximumEndDate,
       isRunning: props.isRunning ?? false,
-      styles,
+      styleOptions,
       formatDateFns,
     })
 
@@ -255,17 +301,15 @@
   }
 
   function initCulling(): void {
-    cull.addAll(viewport.children)
-
     viewport.on('frame-end', () => {
-      if (viewport.dirty || cullDirty) {
-        cull.cull(pixiApp.renderer.screen)
+      if (viewport.dirty) {
+        cullScreen()
 
         viewport.dirty = false
-        cullDirty = false
       }
     })
   }
+
   function pauseCulling(): void {
     /*
      * Use to pause culling when you need to calculate bounds, otherwise
@@ -275,24 +319,33 @@
     cull.uncull()
   }
   function resumeCulling(): void {
+    cullScreen()
+  }
+  function cullScreen(): void {
     cull.cull(pixiApp.renderer.screen)
   }
 
   function initContent(): void {
-    nodesContainer = new TimelineNodes({
-      appRef: pixiApp,
-      viewportRef: viewport,
-      graphData: props.graphData,
-      styles,
+    const graphState: GraphState = {
+      pixiApp,
+      viewport,
+      cull,
+      cullScreen,
+      timeScaleProps,
+      styleOptions,
       styleNode,
-      layoutSetting: props.layout ?? 'nearestParent',
-      hideEdges: props.hideEdges ?? false,
-      timeScaleProps: {
-        minimumStartTime: minimumStartDate.getTime(),
-        overallGraphWidth,
-        initialOverallTimeSpan,
-      },
+      layoutSetting,
+      hideEdges,
+      selectedNodeId,
+      expandedSubNodes,
+      suppressMotion,
       centerViewport,
+    }
+
+    nodesContainer = new TimelineNodes({
+      nodeContentContainerName: nodesContentContainerName,
+      graphData: props.graphData,
+      graphState,
     })
     viewport.addChild(nodesContainer)
 
@@ -304,9 +357,14 @@
       })
     }
 
-    nodesContainer.on('node-click', (clickedNodeId) => {
+    nodesContainer.on(nodeClickEvents.nodeDetails, (clickedNodeId) => {
       if (!isViewportDragging.value) {
-        emit('click', clickedNodeId)
+        emit('selection', clickedNodeId)
+      }
+    })
+    nodesContainer.on(nodeClickEvents.subNodesToggle, (clickedNodeId) => {
+      if (!isViewportDragging.value) {
+        emit('subFlowToggle', clickedNodeId)
       }
     })
 
@@ -315,21 +373,12 @@
       // If totally new data is added, it all gets appended way down the viewport Y axis.
       // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
       nodesContainer.update(newValue)
-      cullDirty = true
-    })
-    watch(() => props.selectedNodeId, (newValue) => {
-      nodesContainer.updateSelection(newValue)
-    })
-    watch(() => props.hideEdges, (newValue) => {
-      nodesContainer.updateHideEdges(newValue ?? false)
-    })
-    watch(() => props.layout, (newValue) => {
-      nodesContainer.updateLayoutSetting(newValue ?? 'nearestParent')
+      viewport.dirty = true
     })
   }
 
   function centerViewport({ skipAnimation }: CenterViewportOptions = {}): void {
-    const { spacingViewportPaddingDefault } = styles.value
+    const { spacingViewportPaddingDefault } = styleOptions.value
     const defaultAnimationDuration = 500
 
     pauseCulling()
@@ -338,7 +387,7 @@
       y: contentY,
       width,
       height,
-    } = nodesContainer.getChildByName(nodeContainerName).getLocalBounds()
+    } = nodesContainer.getChildByName(nodesContentContainerName).getLocalBounds()
     resumeCulling()
 
     const scale = viewport.findFit(
@@ -352,7 +401,7 @@
         y: contentY + height / 2,
       },
       scale: scale > 1 ? 1 : scale,
-      time: skipAnimation ? 0 : defaultAnimationDuration,
+      time: skipAnimation || suppressMotion.value ? 0 : defaultAnimationDuration,
       ease: 'easeInOutQuad',
       removeOnInterrupt: true,
     })

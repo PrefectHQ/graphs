@@ -1,5 +1,47 @@
 <template>
   <main class="flow-run-timeline-demo">
+    <div class="flex h-full">
+      <div class="flow-run-timeline-demo__graph-container">
+        <FlowRunTimeline
+          v-if="data"
+          ref="graph"
+          :key="componentKey"
+          :graph-data="data"
+          :is-running="isRunning"
+          :theme="theme"
+          :layout="layout"
+          :hide-edges="hideEdges"
+          class="flow-run-timeline-demo-demo__graph"
+          :selected-node-id="selectedNodeId"
+          :expanded-sub-nodes="expandedSubFlows"
+          @selection="selectNode"
+          @sub-flow-toggle="toggleSubFlow"
+        />
+      </div>
+
+      <div v-if="selectedNodeId" class="flow-run-timeline-demo__selection-panel" :class="classes">
+        <p-label>
+          Selected Node
+          <p-text-input v-model="selectedNodeId" />
+        </p-label>
+      </div>
+    </div>
+    <div class="flow-run-timeline-demo__header-row">
+      <p-label>
+        Layout
+        <p-select
+          v-model="layout"
+          :options="layoutOptions"
+        />
+      </p-label>
+      <div class="flow-run-timeline-demo__checkbox-wrapper">
+        <p-checkbox v-model="hideEdges" label="Hide Edges" />
+      </div>
+      <p-button secondary @click="centerViewport">
+        Recenter
+      </p-button>
+    </div>
+    <hr>
     <div class="flow-run-timeline-demo__header">
       <div class="flow-run-timeline-demo__header-row">
         <p-label>
@@ -16,6 +58,11 @@
           Fan Multiplier
           <p-number-input v-model="fanMultiplier" step="0.1" min="1" max="2" />
         </p-label>
+
+        <p-label>
+          Sub Flow Potential
+          <p-number-input v-model="subFlowOccurrences" step="1" min="0" max="100" append="%" />
+        </p-label>
       </div>
 
       <div class="flow-run-timeline-demo__header-row">
@@ -24,51 +71,14 @@
           <p-date-range-input v-model:start-date="start" v-model:end-date="end" />
         </p-label>
         <div class="flow-run-timeline-demo__checkbox-wrapper">
+          <p-checkbox v-model="slowFeedData" label="Slow Feed Data" />
+        </div>
+        <div class="flow-run-timeline-demo__checkbox-wrapper">
           <p-checkbox v-model="zeroTimeGap" label="Zero Time Gap" />
         </div>
         <div class="flow-run-timeline-demo__checkbox-wrapper">
           <p-checkbox v-model="isRunning" label="Show Running" />
         </div>
-      </div>
-    </div>
-    <hr>
-    <div class="flow-run-timeline-demo__header-row">
-      <p-label>
-        Layout
-        <p-select
-          v-model="layout"
-          :options="layoutOptions"
-        />
-      </p-label>
-      <div class="flow-run-timeline-demo__checkbox-wrapper">
-        <p-checkbox v-model="hideEdges" label="Hide Edges" />
-      </div>
-      <p-button secondary @click="centerViewport">
-        Recenter
-      </p-button>
-    </div>
-    <div class="flex h-full">
-      <div class="flow-run-timeline-demo__graph-container">
-        <FlowRunTimeline
-          v-if="data"
-          ref="graph"
-          :key="componentKey"
-          :graph-data="data"
-          :is-running="isRunning"
-          :theme="theme"
-          :layout="layout"
-          :hide-edges="hideEdges"
-          class="flow-run-timeline-demo-demo__graph"
-          :selected-node-id="selectedNodeId"
-          @click="selectNode"
-        />
-      </div>
-
-      <div v-if="selectedNodeId" class="flow-run-timeline-demo__selection-panel" :class="classes">
-        <p-label>
-          Selected Node
-          <p-text-input v-model="selectedNodeId" />
-        </p-label>
       </div>
     </div>
   </main>
@@ -89,14 +99,17 @@
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
   const selectedNodeId = ref<string | null>(null)
+  const expandedSubFlows = ref<Map<string, TimescaleItem[]>>(new Map())
   const hideEdges = ref(false)
 
   const size = ref(15)
   const fanMultiplier = ref(1.5)
+  const subFlowOccurrences = ref(20)
   const shape = ref<Shape>('fanOut')
   const start = ref<Date>(previous)
   const end = ref<Date>(now)
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
+  const slowFeedData = ref(false)
   const zeroTimeGap = ref(true)
   const layoutOptions: TimelineNodesLayoutOptions[] = ['waterfall', 'nearestParent']
   const layout: Ref<TimelineNodesLayoutOptions> = ref('nearestParent')
@@ -106,6 +119,7 @@
       size: size.value,
       shape: shape.value,
       fanMultiplier: fanMultiplier.value,
+      subFlowOccurrence: subFlowOccurrences.value / 100,
       start: start.value,
       end: end.value,
       zeroTimeGap: zeroTimeGap.value,
@@ -114,9 +128,31 @@
 
   const data = ref<TimescaleItem[]>([])
 
+  const slowlySetData = (graphData: TimescaleItem[], count: number = 1): void => {
+    const newData = graphData.filter((item, index) => index <= count)
+
+    if (count === 1) {
+      data.value = newData
+      slowlySetData(graphData, count + 1)
+      return
+    }
+
+    setTimeout(() => {
+      data.value = newData
+      if (count < graphData.length) {
+        slowlySetData(graphData, count + 1)
+      }
+    }, 1000)
+  }
+
   watchEffect(() => {
-    // set data and sort by startTime
-    data.value = generateTimescaleData(dataOptions.value)
+    const generatedData = generateTimescaleData(dataOptions.value)
+    if (slowFeedData.value) {
+      slowlySetData(generatedData)
+    } else {
+      data.value = generateTimescaleData(dataOptions.value)
+    }
+
 
     if (isRunning.value) {
       const lastItem = data.value[data.value.length - 1]
@@ -128,6 +164,8 @@
     // but not completely change. This allows it to animate changes in nodes as the data updates.
     // So for demo purposes, when we get new data, we rerender the graph from scratch.
     componentKey.value += 1
+    selectedNodeId.value = null
+    expandedSubFlows.value = new Map()
   })
 
   const selectNode = (value: string | null): void => {
@@ -136,6 +174,46 @@
     } else {
       selectedNodeId.value = value
     }
+  }
+
+  const toggleSubFlow = (value: string): void => {
+    const isValueVisible = expandedSubFlows.value.has(value)
+
+    if (isValueVisible) {
+      expandedSubFlows.value.delete(value)
+      return
+    }
+
+    expandedSubFlows.value.set(value, [])
+
+    // timeout simulates the delay while requesting subflow data.
+    setTimeout(() => {
+      if (expandedSubFlows.value.has(value)) {
+        let nodeData = data.value.find(item => item.id === value)
+        if (!nodeData) {
+          expandedSubFlows.value.forEach((subFlowData) => {
+            const match = subFlowData.find(item => item.id === value)
+            if (match) {
+              nodeData = match
+            }
+          })
+        }
+
+        if (!nodeData) {
+          throw new Error('Could not find node data')
+        }
+
+        const subFlowDataOptions = {
+          ...dataOptions.value,
+          size: Math.floor(Math.random() * 5) + 1,
+          start: new Date(nodeData.start),
+          end: nodeData.end ? new Date(nodeData.end) : new Date(),
+        }
+        const subFlowData = generateTimescaleData(subFlowDataOptions)
+
+        expandedSubFlows.value.set(value, subFlowData)
+      }
+    }, 50)
   }
 
   const centerViewport = (): void => {
@@ -164,7 +242,9 @@
         colorTextInverse = '--white',
         colorTextSubdued = '--foreground-300',
         colorGuideLine = '--foreground-50',
-        colorEdge = '--foreground'
+        colorEdge = '--foreground',
+        colorButtonBg = '--background',
+        colorButtonBorder = '--background-500'
 
     if (colorThemeValue.value == 'dark') {
       colorTextDefault = '--white'
@@ -172,6 +252,8 @@
       colorTextSubdued = '--foreground-200'
       colorGuideLine = '--foreground-50'
       colorEdge = '--white'
+      colorButtonBg = '--background'
+      colorButtonBorder = '--foreground-600'
     }
 
     const [defaultH, defaultS, defaultL] = computedStyle.getPropertyValue(colorTextDefault).trim().split(' ')
@@ -179,6 +261,8 @@
     const [subduedH, subduedS, subduedL] = computedStyle.getPropertyValue(colorTextSubdued).trim().split(' ')
     const [guideLineH, guideLineS, guideLineL] = computedStyle.getPropertyValue(colorGuideLine).trim().split(' ')
     const [edgeH, edgeS, edgeL] = computedStyle.getPropertyValue(colorEdge).trim().split(' ')
+    const [btnBgH, btnBgS, btnBgL] = computedStyle.getPropertyValue(colorButtonBg).trim().split(' ')
+    const [btnBorderH, btnBorderS, btnBorderL] = computedStyle.getPropertyValue(colorButtonBorder).trim().split(' ')
 
     return {
       colorTextDefault: `hsl(${defaultH}, ${defaultS}, ${defaultL})`,
@@ -186,14 +270,19 @@
       colorTextSubdued: `hsl(${subduedH}, ${subduedS}, ${subduedL})`,
       colorGuideLine: `hsl(${guideLineH}, ${guideLineS}, ${guideLineL})`,
       colorEdge: `hsl(${edgeH}, ${edgeS}, ${edgeL})`,
+      colorButtonBg: `hsl(${btnBgH}, ${btnBgS}, ${btnBgL})`,
+      colorButtonBgHover: `hsl(${btnBgH}, ${btnBgS}, calc(${btnBgL} + 5%))`,
+      colorButtonBorder: `hsl(${btnBorderH}, ${btnBorderS}, ${btnBorderL})`,
     }
   })
 
-  const theme = computed<TimelineThemeOptions>(() => {
+  const theme = computed<TimelineThemeOptions>((): TimelineThemeOptions => {
     return {
       node: (node) => {
         return {
           fill: stateColors[node.state],
+          onFillSubNodeToggleHoverBg: '#000000',
+          onFillSubNodeToggleHoverBgAlpha: 0.4,
           inverseTextOnFill: true,
         }
       },
@@ -211,6 +300,12 @@
   relative
 }
 
+.flow-run-timeline-demo hr { @apply
+  border-0
+  border-t
+  border-foreground-50
+}
+
 .flow-run-timeline-demo__header { @apply
   items-center
   text-sm
@@ -218,19 +313,14 @@
   text-foreground-600
 }
 
-.flow-run-timeline-demo__{ @apply
-  !rounded-t-none
-}
-
 .flow-run-timeline-demo__header-row { @apply
   flex
   gap-4
   items-end
-  mb-4
 }
 
-.flow-run-timeline-demo__header-row:last-of-type { @apply
-  mb-0
+.flow-run-timeline-demo__header-row + .flow-run-timeline-demo__header-row { @apply
+  mt-4
 }
 
 .flow-run-timeline-demo__checkbox-wrapper { @apply

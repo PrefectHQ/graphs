@@ -1,11 +1,12 @@
 import {
-  TimelineNodeData,
+  GraphTimelineNode,
   TimelineNodesLayoutOptions,
   NodeLayoutWorkerProps,
   NodeShoveDirection,
   NodesLayout,
   TimelineScale,
-  NodeLayoutItem
+  NodeLayoutItem,
+  NodeLayoutWorkerResponseData
 } from '@/models'
 import { createTimelineScale } from '@/pixiFunctions/timelineScale'
 
@@ -16,7 +17,7 @@ let timelineScale: TimelineScale | undefined
 let currentApxCharacterWidth = 14
 let minimumNodeEdgeGap = 0
 let currentLayoutSetting: TimelineNodesLayoutOptions = 'waterfall'
-let graphDataStore: TimelineNodeData[] = []
+let graphDataStore: GraphTimelineNode[] = []
 
 const layout: NodesLayout = {}
 
@@ -30,9 +31,8 @@ onmessage = async ({
     centerViewportAfter,
   },
 }: NodeLayoutWorkerProps) => {
-  if (!graphData) {
-    console.warn('nodeLayout worker: called without graphData, exiting.')
-    return
+  for (const item in layout) {
+    delete layout[item]
   }
 
   if (spacingMinimumNodeEdgeGap) {
@@ -40,10 +40,6 @@ onmessage = async ({
   }
 
   if (layoutSetting) {
-    // if the layout changes, clear the layout so it's recalculated
-    for (const item in layout) {
-      delete layout[item]
-    }
     currentLayoutSetting = layoutSetting
   }
 
@@ -51,25 +47,31 @@ onmessage = async ({
     currentApxCharacterWidth = apxCharacterWidth
   }
 
-  if (!timelineScale && timeScaleProps) {
+  if (timeScaleProps) {
     const {
       minimumStartTime,
-      overallGraphWidth,
+      graphXDomain,
       initialOverallTimeSpan,
     } = timeScaleProps
     timelineScale = createTimelineScale({
       minimumStartTime,
-      overallGraphWidth,
+      graphXDomain,
       initialOverallTimeSpan,
     })
   }
 
-  const newData = JSON.parse(graphData) as TimelineNodeData[]
+  if (graphData) {
+    const newData = JSON.parse(graphData) as GraphTimelineNode[]
 
-  if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
-    graphDataStore = newData
-    await calculateNodeLayout()
-    postMessage({ layout, centerViewportAfter })
+    if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
+      graphDataStore = newData
+      await calculateNodeLayout()
+      const response: NodeLayoutWorkerResponseData = {
+        layout,
+        centerViewportAfter,
+      }
+      postMessage(response)
+    }
   }
 }
 
@@ -81,6 +83,8 @@ async function calculateNodeLayout(): Promise<void> {
   if (currentLayoutSetting === 'nearestParent') {
     await generateNearestParentLayout()
   }
+
+  purgeNegativePositions()
 }
 
 function generateWaterfallLayout(): void {
@@ -100,11 +104,6 @@ async function generateNearestParentLayout(): Promise<void> {
     const apxLabelWidth = nodeData.label.length * currentApxCharacterWidth
     const endX = endAsPx + apxLabelWidth
 
-    if (nodeData.id in layout) {
-      layout[nodeData.id].endX = endX
-      continue
-    }
-
     const startX = nodeData.id in layout
       ? layout[nodeData.id].startX
       : timelineScale!.dateToX(new Date(nodeData.start))
@@ -119,7 +118,7 @@ async function generateNearestParentLayout(): Promise<void> {
   }
 }
 
-async function getNearestParentPosition(nodeData: TimelineNodeData, nodeStartX: number): Promise<number> {
+async function getNearestParentPosition(nodeData: GraphTimelineNode, nodeStartX: number): Promise<number> {
   // if one dependency
   if (nodeData.upstreamDependencies && nodeData.upstreamDependencies.length === 1) {
     if (nodeData.upstreamDependencies[0] in layout) {
@@ -433,4 +432,19 @@ function getLayoutItemUpAndDownwardConnections(id: string): [number, number] {
     console.warn('nodeLayout.worker.ts: Parent node not found on layout data', id)
     return counts
   }, [0, 0]) ?? [0, 0]
+}
+
+function purgeNegativePositions(): void {
+  const lowestPosition = Object.values(layout).reduce((lowest, layoutItem) => {
+    if (layoutItem.position < lowest) {
+      return layoutItem.position
+    }
+    return lowest
+  }, 0)
+
+  if (lowestPosition < 0) {
+    Object.values(layout).forEach(layoutItem => {
+      layoutItem.position += Math.abs(lowestPosition)
+    })
+  }
 }

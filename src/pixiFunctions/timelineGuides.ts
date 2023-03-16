@@ -1,3 +1,4 @@
+import { Cull } from '@pixi-essentials/cull'
 import type { Viewport } from 'pixi-viewport'
 import { Application, Container } from 'pixi.js'
 import { ComputedRef, Ref, watch, WatchStopHandle } from 'vue'
@@ -23,20 +24,22 @@ const timelineGuidesRenderPadding = 4000
 type TimelineGuidesProps = {
   viewportRef: Viewport,
   appRef: Application,
+  cull: Cull,
   minimumStartDate: Date,
   maximumEndDate: Ref<Date | undefined>,
   isRunning: boolean,
-  styles: ComputedRef<ParsedThemeStyles>,
+  styleOptions: ComputedRef<ParsedThemeStyles>,
   formatDateFns: ComputedRef<FormatDateFns>,
 }
 
 export class TimelineGuides extends Container {
   private readonly viewportRef
   private readonly appRef
+  private readonly cull
   private readonly minimumStartDate
   private readonly maximumEndDate
   private readonly isRunning
-  private readonly styles
+  private readonly styleOptions
   private readonly formatDateFns
 
   private readonly unwatch: WatchStopHandle
@@ -49,20 +52,22 @@ export class TimelineGuides extends Container {
   public constructor({
     viewportRef,
     appRef,
+    cull,
     minimumStartDate,
     maximumEndDate,
     isRunning,
-    styles,
+    styleOptions,
     formatDateFns,
   }: TimelineGuidesProps) {
     super()
 
     this.viewportRef = viewportRef
     this.appRef = appRef
+    this.cull = cull
     this.minimumStartDate = minimumStartDate
     this.maximumEndDate = maximumEndDate
     this.isRunning = isRunning
-    this.styles = styles
+    this.styleOptions = styleOptions
     this.formatDateFns = formatDateFns
 
     this.updateIdealGuideCount()
@@ -70,7 +75,7 @@ export class TimelineGuides extends Container {
 
     this.createGuides()
 
-    this.unwatch = watch(styles, () => {
+    this.unwatch = watch(styleOptions, () => {
       this.removeChildren()
       this.guides.clear()
       this.createGuides()
@@ -123,9 +128,10 @@ export class TimelineGuides extends Container {
 
     while (lastGuidePoint.getTime() < maxGuidePlacement) {
       const guide = new TimelineGuide({
+        appRef: this.appRef,
         labelText: this.labelFormatter(lastGuidePoint),
-        styles: this.styles,
-        appHeight: this.appRef.screen.height,
+        styles: this.styleOptions,
+        cull: this.cull,
       })
       guide.position.set(this.getGuidePosition(lastGuidePoint), 0)
 

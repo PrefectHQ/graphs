@@ -1,53 +1,60 @@
-import { BitmapText, Container, Graphics } from 'pixi.js'
+import { Cull } from '@pixi-essentials/cull'
+import { Application, BitmapText, Container, Sprite } from 'pixi.js'
 import { ComputedRef } from 'vue'
 import { ParsedThemeStyles } from '@/models'
 import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
+import { getSimpleFillTexture } from '@/pixiFunctions/nodeSprites'
 
 type TimelineGuideProps = {
+  appRef: Application,
   labelText: string | null,
   styles: ComputedRef<ParsedThemeStyles>,
-  appHeight: number,
+  cull: Cull,
 }
 
 export class TimelineGuide extends Container {
+  private readonly appRef
   private readonly labelText
   private readonly styles
-  private appHeight
+  private readonly cull
 
-  private readonly guideLine = new Graphics()
+  private guideLine: Sprite | undefined
   private label: BitmapText | undefined
 
   public constructor({
+    appRef,
     labelText,
     styles,
-    appHeight,
+    cull,
   }: TimelineGuideProps) {
     super()
 
+    cull.add(this)
+
+    this.appRef = appRef
     this.labelText = labelText
     this.styles = styles
-    this.appHeight = appHeight
+    this.cull = cull
 
-    this.drawGuideLine()
-    this.addChild(this.guideLine)
-
+    this.initGuideLine()
     this.drawLabel()
 
     this.interactive = false
   }
 
-  private drawGuideLine(): void {
+  private initGuideLine(): void {
+    const { appRef } = this
     const { colorGuideLine } = this.styles.value
 
-    this.guideLine.clear()
-    this.guideLine.beginFill(colorGuideLine)
-    this.guideLine.drawRect(
-      0,
-      0,
-      1,
-      this.appHeight,
-    )
-    this.guideLine.endFill()
+    const texture = getSimpleFillTexture({
+      pixiApp: appRef,
+      fill: colorGuideLine,
+    })
+
+    this.guideLine = new Sprite(texture)
+    this.guideLine.width = 1
+    this.guideLine.height = appRef.screen.height
+    this.addChild(this.guideLine)
   }
 
   private async drawLabel(): Promise<void> {
@@ -66,7 +73,12 @@ export class TimelineGuide extends Container {
   }
 
   public updateHeight(appHeight: number): void {
-    this.appHeight = appHeight
-    this.drawGuideLine()
+    this.guideLine!.height = appHeight
+  }
+
+  public destroy(): void {
+    this.cull.remove(this)
+
+    super.destroy()
   }
 }

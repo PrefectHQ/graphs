@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+/* eslint-disable no-relative-import-paths/no-relative-import-paths */
 import { randomDate } from './randomDate'
 import { randomStarName } from './randomStarName'
 import { random, floor } from '@/utilities/math'
@@ -20,6 +20,7 @@ export type DataOptions = {
   shape?: Shape,
   size?: number,
   fanMultiplier?: number,
+  subFlowOccurrence?: number,
   zeroTimeGap?: boolean,
 }
 
@@ -30,6 +31,7 @@ type TimescaleItem = {
   end: Date | null,
   upstreamDependencies: string[],
   state: TimelineNodeState,
+  subFlowRunId?: string,
 }
 
 type AssignStartAndEndDates = {
@@ -60,21 +62,21 @@ const maxDate = (nodes: TimescaleItem[], property: keyof TimescaleItem, start: D
 const assignStartAndEndDates = ({ start, end, size, nodes, zeroTimeGap }: AssignStartAndEndDates): (node: TimescaleItem) => void => {
   const minIncrement = (end.getTime() - start.getTime()) / size
 
-
   return (node: TimescaleItem) => {
     const upstreamDependencies = node.upstreamDependencies
       .map(id => nodes.find(nodeItem => nodeItem.id == id)) as TimescaleItem[]
 
     const minStart = maxDate(upstreamDependencies, 'end', start)
-    const maxStart = new Date(minStart.getTime() + minIncrement * 2)
+    const maxStart = new Date(minStart.getTime() + minIncrement / 2)
     const _start = zeroTimeGap ? minStart : randomDate(minStart, maxStart)
 
     const minEnd = new Date(_start.getTime() + minIncrement)
-    const maxEnd = new Date(minEnd.getTime() + minIncrement * 2)
-    const _end = randomDate(minEnd, maxEnd)
+    const maxEnd = new Date(minEnd.getTime() + minIncrement * 1.25)
+    const randomEnd = randomDate(minEnd, maxEnd)
+    const _end = randomEnd.getTime() > end.getTime() ? end : randomEnd
 
     node.start = _start
-    node.end = _end
+    node.end = _end.getTime() > end.getTime() ? end : _end
   }
 }
 
@@ -104,6 +106,8 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
 
   // Create initial nodes
   while (nodes.length < size) {
+    const isSubFlow = options?.subFlowOccurrence ? random() < options.subFlowOccurrence : false
+
     const target: TimescaleItem = {
       id: crypto.randomUUID(),
       upstreamDependencies: [],
@@ -112,6 +116,11 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
       start: new Date(),
       end: null,
     }
+
+    if (isSubFlow) {
+      target.subFlowRunId = crypto.randomUUID()
+    }
+
     const proxy = new Proxy(target, {})
     nodes.push(proxy)
   }

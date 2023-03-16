@@ -1,9 +1,19 @@
 import { Application, Graphics, Texture } from 'pixi.js'
 
-type BoxTextures = Record<'cap' | 'body', Texture>
+export const simpleFillTextureSize = 10
 
+type BoxTextures = Record<'cap' | 'body', Texture>
+type BorderRectTextures = Record<'corner' | 'edge', Texture>
+type RoundedBorderRectCacheKey = {
+  borderRadius: number,
+  borderColor: number,
+  borderWidth: number,
+}
+
+let simpleFillTextureCache: Map<number, Texture> | undefined
 let nodeBoxTextureCache: Map<number, BoxTextures> | undefined
-let edgeArrowTextureCache: Map<number, Texture> | undefined
+let arrowTextureCache: Map<number, Texture> | undefined
+let roundedBorderRectCache: Map<RoundedBorderRectCacheKey, BorderRectTextures> | undefined
 
 const textureSampleSettings = {
   multisample: 2,
@@ -11,11 +21,20 @@ const textureSampleSettings = {
 }
 
 export function initNodeTextureCache(): void {
+  simpleFillTextureCache = new Map()
   nodeBoxTextureCache = new Map()
-  edgeArrowTextureCache = new Map()
+  arrowTextureCache = new Map()
+  roundedBorderRectCache = new Map()
 }
 
 export function destroyNodeTextureCache(): void {
+  if (simpleFillTextureCache) {
+    simpleFillTextureCache.forEach((texture) => {
+      texture.destroy()
+    })
+    simpleFillTextureCache.clear()
+    simpleFillTextureCache = undefined
+  }
   if (nodeBoxTextureCache) {
     nodeBoxTextureCache.forEach(({ cap, body }) => {
       cap.destroy()
@@ -24,24 +43,62 @@ export function destroyNodeTextureCache(): void {
     nodeBoxTextureCache.clear()
     nodeBoxTextureCache = undefined
   }
-  if (edgeArrowTextureCache) {
-    edgeArrowTextureCache.forEach((texture) => {
+  if (arrowTextureCache) {
+    arrowTextureCache.forEach((texture) => {
       texture.destroy()
     })
-    edgeArrowTextureCache.clear()
-    edgeArrowTextureCache = undefined
+    arrowTextureCache.clear()
+    arrowTextureCache = undefined
+  }
+  if (roundedBorderRectCache) {
+    roundedBorderRectCache.forEach(({ corner, edge }) => {
+      corner.destroy()
+      edge.destroy()
+    })
+    roundedBorderRectCache.clear()
+    roundedBorderRectCache = undefined
   }
 }
 
+type SimpleFillTextureProps = {
+  pixiApp: Application,
+  fill: number,
+}
+export function getSimpleFillTexture({
+  pixiApp,
+  fill,
+}: SimpleFillTextureProps): Texture {
+  if (!simpleFillTextureCache) {
+    initNodeTextureCache()
+  }
+
+  if (!simpleFillTextureCache?.has(fill)) {
+    const square = new Graphics()
+    square.beginFill(fill)
+    square.drawRect(
+      0,
+      0,
+      simpleFillTextureSize,
+      simpleFillTextureSize,
+    )
+    square.endFill()
+
+    const texture = pixiApp.renderer.generateTexture(square)
+    simpleFillTextureCache!.set(fill, texture)
+  }
+
+  return simpleFillTextureCache!.get(fill)!
+}
+
 type GetNodeBoxTexturesProps = {
-  appRef: Application,
+  pixiApp: Application,
   fill: number,
   borderRadius: number,
   boxCapWidth: number,
   height: number,
 }
 export function getNodeBoxTextures({
-  appRef,
+  pixiApp,
   fill,
   borderRadius,
   boxCapWidth,
@@ -71,18 +128,13 @@ export function getNodeBoxTextures({
     boxCap.lineTo(boxCapWidth, 0)
     boxCap.endFill()
 
-    const boxBody = new Graphics()
-    boxBody.beginFill(fill)
-    boxBody.drawRect(
-      0,
-      0,
-      1,
-      height,
-    )
-    boxBody.endFill()
+    const boxBody = getSimpleFillTexture({
+      pixiApp,
+      fill,
+    })
 
-    const cap = appRef.renderer.generateTexture(boxCap, textureSampleSettings)
-    const body = appRef.renderer.generateTexture(boxBody)
+    const cap = pixiApp.renderer.generateTexture(boxCap, textureSampleSettings)
+    const body = boxBody
 
     nodeBoxTextureCache!.set(fill, {
       cap,
@@ -93,33 +145,77 @@ export function getNodeBoxTextures({
   return nodeBoxTextureCache!.get(fill)!
 }
 
-type GetEdgeArrowTextureProps = {
-  appRef: Application,
+type GetArrowTextureProps = {
+  pixiApp: Application,
   strokeColor: number,
   edgeWidth: number,
   edgeLength: number,
 }
-export function getEdgeArrowTexture({
-  appRef,
+export function getArrowTexture({
+  pixiApp,
   strokeColor,
   edgeWidth,
   edgeLength,
-}: GetEdgeArrowTextureProps): Texture {
-  if (!edgeArrowTextureCache) {
+}: GetArrowTextureProps): Texture {
+  if (!arrowTextureCache) {
     initNodeTextureCache()
   }
 
-  if (!edgeArrowTextureCache?.has(strokeColor)) {
+  if (!arrowTextureCache?.has(strokeColor)) {
     const arrow = new Graphics()
     arrow.lineStyle(edgeWidth, strokeColor, 1, 0.5)
     arrow.moveTo(-edgeLength, -edgeLength)
     arrow.lineTo(0, 0)
     arrow.lineTo(-edgeLength, edgeLength)
 
-    const arrowTexture = appRef.renderer.generateTexture(arrow, textureSampleSettings)
+    const arrowTexture = pixiApp.renderer.generateTexture(arrow, textureSampleSettings)
 
-    edgeArrowTextureCache!.set(strokeColor, arrowTexture)
+    arrowTextureCache!.set(strokeColor, arrowTexture)
   }
 
-  return edgeArrowTextureCache!.get(strokeColor)!
+  return arrowTextureCache!.get(strokeColor)!
+}
+
+type GetRoundedBorderRectTexturesProps = {
+  pixiApp: Application,
+  borderRadius: number,
+  borderColor: number,
+  borderWidth: number,
+}
+export function getRoundedBorderRectTextures({
+  pixiApp,
+  borderRadius,
+  borderColor,
+  borderWidth,
+}: GetRoundedBorderRectTexturesProps): BorderRectTextures {
+  if (!roundedBorderRectCache) {
+    initNodeTextureCache()
+  }
+
+  const cacheKey = { borderRadius, borderColor, borderWidth }
+
+  if (!roundedBorderRectCache?.has(cacheKey)) {
+    const corner = new Graphics()
+    corner.lineStyle(borderWidth, borderColor)
+    corner.moveTo(0, borderRadius)
+    corner.bezierCurveTo(
+      0, borderRadius,
+      0, 0,
+      borderRadius, 0,
+    )
+
+    const edge = getSimpleFillTexture({
+      pixiApp,
+      fill: borderColor,
+    })
+
+    const cornerTexture = pixiApp.renderer.generateTexture(corner, textureSampleSettings)
+
+    roundedBorderRectCache!.set(cacheKey, {
+      corner: cornerTexture,
+      edge,
+    })
+  }
+
+  return roundedBorderRectCache!.get(cacheKey)!
 }

@@ -14,18 +14,18 @@ export let timelineScale: {
 // it can't return the cached timelineScale
 export const createTimelineScale = ({
   minimumStartTime,
-  overallGraphWidth,
+  graphXDomain,
   initialOverallTimeSpan,
 }: InitTimelineScaleProps): TimelineScale => {
   const newTimelineScale = {
     dateToX: createDateToXScale(
       minimumStartTime,
-      overallGraphWidth,
+      graphXDomain,
       initialOverallTimeSpan,
     ),
     xToDate: createXToDateScale(
       minimumStartTime,
-      overallGraphWidth,
+      graphXDomain,
       initialOverallTimeSpan,
     ),
   }
@@ -35,12 +35,12 @@ export const createTimelineScale = ({
 
 export const initTimelineScale = ({
   minimumStartTime,
-  overallGraphWidth,
+  graphXDomain,
   initialOverallTimeSpan,
 }: InitTimelineScaleProps): TimelineScale => {
   timelineScale = createTimelineScale({
     minimumStartTime,
-    overallGraphWidth,
+    graphXDomain,
     initialOverallTimeSpan,
   })
   return timelineScale
