@@ -514,8 +514,6 @@ export class TimelineNode extends Container {
   }
 
   public async collapseSubNodes(): Promise<void> {
-    this.isSubNodesExpanded = false
-
     this.subNodesToggle?.setCollapsed()
 
     this.destroySubNodesContent()
@@ -732,11 +730,14 @@ export class TimelineNode extends Container {
     const { nodeWidth, isSubNodesExpanded } = this
     const { spacingSubNodesOutlineOffset } = this.graphState.styleOptions.value
 
-    const minimumWidth = this.boxCapWidth * 2
-    const width = nodeWidth - spacingSubNodesOutlineOffset * 2
-    const collapsedWidth = width >= minimumWidth ? width : minimumWidth
+    if (isSubNodesExpanded) {
+      return nodeWidth + spacingSubNodesOutlineOffset * 2
+    }
 
-    return isSubNodesExpanded ? width : collapsedWidth
+    const minimumWidth = this.boxCapWidth * 2
+    const actualCollapsedWidth = nodeWidth - spacingSubNodesOutlineOffset * 2
+
+    return actualCollapsedWidth >= minimumWidth ? actualCollapsedWidth : minimumWidth
   }
 
   private getLabelText(): string {
