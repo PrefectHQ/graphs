@@ -39,12 +39,12 @@
 
 <script lang="ts" setup>
   import { withDefaults } from 'vue'
-  import { TimescaleItem } from '@/demo/utilities/timescaleData'
+  import { GraphTimelineNode } from '@/models'
   import { secondsToApproximateString } from '@/utilities/time'
 
   withDefaults(defineProps<{
-    data?: TimescaleItem[],
-  }>(),  {
+    data?: GraphTimelineNode[],
+  }>(), {
     data: () => [],
   })
 
@@ -71,7 +71,7 @@
     },
   ]
 
-  const getDuration = (row: TimescaleItem): string => {
+  const getDuration = (row: GraphTimelineNode): string => {
     const start = row.start.getTime()
     const end = row.end?.getTime()
 
