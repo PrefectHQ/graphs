@@ -421,8 +421,8 @@ export class TimelineNodes extends Container {
    */
 
   private registerEmits(el: TimelineNode | TimelineNodes): void {
-    el.on(nodeClickEvents.nodeDetails, (id) => {
-      this.emit(nodeClickEvents.nodeDetails, id)
+    el.on(nodeClickEvents.nodeDetails, (nodeSelectionValue) => {
+      this.emit(nodeClickEvents.nodeDetails, nodeSelectionValue)
     })
     el.on(nodeClickEvents.subNodesToggle, (id) => {
       this.emit(nodeClickEvents.subNodesToggle, id)

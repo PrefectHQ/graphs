@@ -27,7 +27,8 @@
     CenterViewportOptions,
     ExpandedSubNodes,
     InitTimelineScaleProps,
-    GraphState
+    GraphState,
+    NodeSelectionEvent
   } from '@/models'
   import {
     initBitmapFonts,
@@ -56,7 +57,13 @@
     selectedNodeId?: string | null,
     layout?: TimelineNodesLayoutOptions,
     hideEdges?: boolean,
+    subNodeLabels?: Map<string, string>,
     expandedSubNodes?: ExpandedSubNodes,
+  }>()
+
+  const emit = defineEmits<{
+    (event: 'selection', value: NodeSelectionEvent | null): void,
+    (event: 'subFlowToggle', value: string): void,
   }>()
 
   defineExpose({
@@ -70,6 +77,7 @@
   const selectedNodeId = computed(() => props.selectedNodeId ?? null)
   const layoutSetting = computed(() => props.layout ?? 'nearestParent')
   const hideEdges = computed(() => props.hideEdges ?? false)
+  const subNodeLabels = computed(() => props.subNodeLabels ?? new Map())
   const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
   const suppressMotion = computed(() => {
     const prefersReducedMotion: boolean = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -104,11 +112,6 @@
   let playheadTicker: (() => void) | null = null
   const nodesContentContainerName = 'rootNodesContainer'
   let nodesContainer: TimelineNodes
-
-  const emit = defineEmits<{
-    (event: 'selection', value: string | null): void,
-    (event: 'subFlowToggle', value: string): void,
-  }>()
 
   onMounted(async () => {
     if (!stage.value) {
@@ -336,6 +339,7 @@
       styleNode,
       layoutSetting,
       hideEdges,
+      subNodeLabels,
       selectedNodeId,
       expandedSubNodes,
       suppressMotion,
@@ -357,14 +361,14 @@
       })
     }
 
-    nodesContainer.on(nodeClickEvents.nodeDetails, (clickedNodeId) => {
+    nodesContainer.on(nodeClickEvents.nodeDetails, (nodeSelectionValue) => {
       if (!isViewportDragging.value) {
-        emit('selection', clickedNodeId)
+        emit('selection', nodeSelectionValue)
       }
     })
-    nodesContainer.on(nodeClickEvents.subNodesToggle, (clickedNodeId) => {
+    nodesContainer.on(nodeClickEvents.subNodesToggle, (subNodesId) => {
       if (!isViewportDragging.value) {
-        emit('subFlowToggle', clickedNodeId)
+        emit('subFlowToggle', subNodesId)
       }
     })
 

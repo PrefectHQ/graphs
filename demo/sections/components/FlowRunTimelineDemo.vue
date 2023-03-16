@@ -87,9 +87,16 @@
 <script lang="ts" setup>
   import { useColorTheme } from '@prefecthq/prefect-design'
   import { ref, watchEffect, computed, Ref } from 'vue'
-  import { generateTimescaleData, Shape, TimescaleItem } from '../../utilities/timescaleData'
+  import { generateTimescaleData, Shape } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
-  import { TimelineThemeOptions, TimelineNodesLayoutOptions, ThemeStyleOverrides } from '@/models'
+  import {
+    TimelineThemeOptions,
+    TimelineNodesLayoutOptions,
+    ThemeStyleOverrides,
+    ExpandedSubNodes,
+    GraphTimelineNode,
+    NodeSelectionEvent
+  } from '@/models'
 
   const { value: colorThemeValue } = useColorTheme()
 
@@ -99,7 +106,7 @@
   const now = new Date()
   const previous = new Date(now.getTime() - 1000 * 200)
   const selectedNodeId = ref<string | null>(null)
-  const expandedSubFlows = ref<Map<string, TimescaleItem[]>>(new Map())
+  const expandedSubFlows = ref<ExpandedSubNodes>(new Map())
   const hideEdges = ref(false)
 
   const size = ref(15)
@@ -126,9 +133,9 @@
     }
   })
 
-  const data = ref<TimescaleItem[]>([])
+  const data = ref<GraphTimelineNode[]>([])
 
-  const slowlySetData = (graphData: TimescaleItem[], count: number = 1): void => {
+  const slowlySetData = (graphData: GraphTimelineNode[], count: number = 1): void => {
     const newData = graphData.filter((item, index) => index <= count)
 
     if (count === 1) {
@@ -168,11 +175,11 @@
     expandedSubFlows.value = new Map()
   })
 
-  const selectNode = (value: string | null): void => {
-    if (selectedNodeId.value === value) {
+  const selectNode = (event: NodeSelectionEvent | null): void => {
+    if (selectedNodeId.value === event?.id) {
       selectedNodeId.value = null
     } else {
-      selectedNodeId.value = value
+      selectedNodeId.value = event?.id ?? null
     }
   }
 
@@ -184,7 +191,9 @@
       return
     }
 
-    expandedSubFlows.value.set(value, [])
+    expandedSubFlows.value.set(value, {
+      data: [],
+    })
 
     // timeout simulates the delay while requesting subflow data.
     setTimeout(() => {
@@ -192,7 +201,9 @@
         let nodeData = data.value.find(item => item.id === value)
         if (!nodeData) {
           expandedSubFlows.value.forEach((subFlowData) => {
-            const match = subFlowData.find(item => item.id === value)
+            const match = 'value' in subFlowData.data
+              ? subFlowData.data.value.find(item => item.id === value)
+              : subFlowData.data.find(item => item.id === value)
             if (match) {
               nodeData = match
             }
@@ -211,7 +222,9 @@
         }
         const subFlowData = generateTimescaleData(subFlowDataOptions)
 
-        expandedSubFlows.value.set(value, subFlowData)
+        expandedSubFlows.value.set(value, {
+          data: subFlowData,
+        })
       }
     }, 50)
   }

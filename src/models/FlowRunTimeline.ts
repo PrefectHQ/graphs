@@ -22,7 +22,16 @@ export type InitTimelineScaleProps = {
 
 export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
 
-export type ExpandedSubNodes = Map<string, GraphTimelineNode[]>
+export type NodeSelectionEventTypes = 'task' | 'subFlow'
+export type NodeSelectionEvent = {
+  id: string,
+  type: NodeSelectionEventTypes,
+}
+
+export type ExpandedSubNodes<T extends Record<string, unknown> = Record<string, unknown>> = Map<string, {
+  data: GraphTimelineNode[] | ComputedRef<GraphTimelineNode[]>,
+  // user may define anything else to be used externally
+} & T>
 
 export type NodeShoveDirection = 1 | -1
 export type NodeLayoutWorkerProps = {
@@ -63,6 +72,7 @@ export type GraphState = {
   styleNode: ComputedRef<NodeThemeFn>,
   layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
   hideEdges: ComputedRef<boolean>,
+  subNodeLabels: ComputedRef<Map<string, string>>,
   selectedNodeId: ComputedRef<string | null>,
   expandedSubNodes: ComputedRef<ExpandedSubNodes>,
   suppressMotion: ComputedRef<boolean>,
@@ -134,7 +144,7 @@ export type ThemeStyleOverrides = {
   colorNodeSelection?: Color,
   colorButtonBg?: Color,
   colorButtonBgHover?: Color,
-  colorButtonBorder?: Color,
+  colorButtonBorder?: Color | null,
   colorEdge?: Color,
   colorGuideLine?: Color,
   colorPlayheadBg?: Color,
@@ -172,7 +182,7 @@ export type ParsedThemeStyles = {
   colorNodeSelection: number,
   colorButtonBg: number,
   colorButtonBgHover: number,
-  colorButtonBorder: number,
+  colorButtonBorder: number | null,
   colorEdge: number,
   colorGuideLine: number,
   colorPlayheadBg: number,
