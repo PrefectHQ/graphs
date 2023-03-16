@@ -31,7 +31,7 @@ type TimescaleItem = {
   end: Date | null,
   upstreamDependencies: string[],
   state: TimelineNodeState,
-  subFlowId?: string,
+  subFlowRunId?: string,
 }
 
 type AssignStartAndEndDates = {
@@ -118,7 +118,7 @@ const generateTimescaleData = (options?: DataOptions): TimescaleItem[] => {
     }
 
     if (isSubFlow) {
-      target.subFlowId = crypto.randomUUID()
+      target.subFlowRunId = crypto.randomUUID()
     }
 
     const proxy = new Proxy(target, {})

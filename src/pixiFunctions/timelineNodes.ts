@@ -2,7 +2,7 @@ import { Container, TextMetrics } from 'pixi.js'
 import { watch, WatchStopHandle, ref } from 'vue'
 import {
   NodeLayoutWorkerResponse,
-  TimelineNodeData,
+  GraphTimelineNode,
   NodeLayoutWorkerProps,
   GraphState,
   NodesLayout,
@@ -26,7 +26,7 @@ export const timelineUpdateEvent = 'timelineUpdateEvent'
 type TimelineNodesProps = {
   nodeContentContainerName?: string,
   isSubNodes?: boolean,
-  graphData: TimelineNodeData[],
+  graphData: GraphTimelineNode[],
   graphState: GraphState,
 }
 
@@ -224,7 +224,7 @@ export class TimelineNodes extends Container {
     this.layoutRows.value = newLayoutRows
   }
 
-  private createNode(nodeData: TimelineNodeData): void {
+  private createNode(nodeData: GraphTimelineNode): void {
     const { graphState, layout, layoutRows } = this
     const node = new TimelineNode({
       nodeData,
@@ -244,7 +244,7 @@ export class TimelineNodes extends Container {
     })
   }
 
-  private addNodeEdges(nodeData: TimelineNodeData): void {
+  private addNodeEdges(nodeData: GraphTimelineNode): void {
     if (!nodeData.upstreamDependencies) {
       return
     }
@@ -281,7 +281,7 @@ export class TimelineNodes extends Container {
   /**
    * Update Functions
    */
-  public update(newData?: TimelineNodeData[]): void {
+  public update(newData?: GraphTimelineNode[]): void {
     if (newData) {
       this.graphData = newData
       const message: NodeLayoutWorkerProps = {

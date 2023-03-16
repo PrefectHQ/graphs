@@ -1,5 +1,5 @@
 import {
-  TimelineNodeData,
+  GraphTimelineNode,
   TimelineNodesLayoutOptions,
   NodeLayoutWorkerProps,
   NodeShoveDirection,
@@ -17,7 +17,7 @@ let timelineScale: TimelineScale | undefined
 let currentApxCharacterWidth = 14
 let minimumNodeEdgeGap = 0
 let currentLayoutSetting: TimelineNodesLayoutOptions = 'waterfall'
-let graphDataStore: TimelineNodeData[] = []
+let graphDataStore: GraphTimelineNode[] = []
 
 const layout: NodesLayout = {}
 
@@ -61,7 +61,7 @@ onmessage = async ({
   }
 
   if (graphData) {
-    const newData = JSON.parse(graphData) as TimelineNodeData[]
+    const newData = JSON.parse(graphData) as GraphTimelineNode[]
 
     if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
       graphDataStore = newData
@@ -118,7 +118,7 @@ async function generateNearestParentLayout(): Promise<void> {
   }
 }
 
-async function getNearestParentPosition(nodeData: TimelineNodeData, nodeStartX: number): Promise<number> {
+async function getNearestParentPosition(nodeData: GraphTimelineNode, nodeStartX: number): Promise<number> {
   // if one dependency
   if (nodeData.upstreamDependencies && nodeData.upstreamDependencies.length === 1) {
     if (nodeData.upstreamDependencies[0] in layout) {

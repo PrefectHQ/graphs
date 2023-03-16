@@ -17,7 +17,7 @@
     watch
   } from 'vue'
   import {
-    TimelineNodeData,
+    GraphTimelineNode,
     nodeThemeFnDefault,
     TimelineThemeOptions,
     FormatDateFns,
@@ -49,7 +49,7 @@
   const animationThreshold = 500
 
   const props = defineProps<{
-    graphData: TimelineNodeData[],
+    graphData: GraphTimelineNode[],
     isRunning?: boolean,
     theme?: TimelineThemeOptions,
     formatDateFns?: Partial<FormatDateFns>,

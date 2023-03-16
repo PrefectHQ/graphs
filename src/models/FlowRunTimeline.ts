@@ -4,14 +4,14 @@ import type { Application, IBitmapTextStyle, TextStyle } from 'pixi.js'
 import type { ComputedRef } from 'vue'
 import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilities'
 
-export type TimelineNodeData = {
+export type GraphTimelineNode = {
   id: string,
   label: string,
   start: Date,
   end: Date | null,
   state: string,
   upstreamDependencies?: string[],
-  subFlowId?: string,
+  subFlowRunId?: string,
 }
 
 export type InitTimelineScaleProps = {
@@ -22,7 +22,7 @@ export type InitTimelineScaleProps = {
 
 export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
 
-export type ExpandedSubNodes = Map<string, TimelineNodeData[]>
+export type ExpandedSubNodes = Map<string, GraphTimelineNode[]>
 
 export type NodeShoveDirection = 1 | -1
 export type NodeLayoutWorkerProps = {
@@ -109,7 +109,7 @@ type NodeThemeOptions = {
   onFillSubNodeToggleHoverBg: string,
   onFillSubNodeToggleHoverBgAlpha: number,
 }
-export type NodeThemeFn = (node: TimelineNodeData) => NodeThemeOptions
+export type NodeThemeFn = (node: GraphTimelineNode) => NodeThemeOptions
 export const nodeThemeFnDefault: NodeThemeFn = () => {
   return {
     fill: 'black',

@@ -8,7 +8,7 @@ import {
 } from 'pixi.js'
 import { Ref, watch, WatchStopHandle } from 'vue'
 import {
-  TimelineNodeData,
+  GraphTimelineNode,
   GraphState,
   NodeLayoutRow,
   NodesLayout
@@ -51,7 +51,7 @@ type TimelineNodeUpdatePositionProps = {
 }
 
 type TimelineNodeProps = {
-  nodeData: TimelineNodeData,
+  nodeData: GraphTimelineNode,
   graphState: GraphState,
   layout: Ref<NodesLayout>,
   layoutRows: Ref<NodeLayoutRow[]>,
@@ -107,7 +107,7 @@ export class TimelineNode extends Container {
     this.layoutRows = layoutRows
 
     this.currentState = nodeData.state
-    this.hasSubNodes = nodeData.subFlowId !== undefined
+    this.hasSubNodes = nodeData.subFlowRunId !== undefined
     this.boxCapWidth = graphState.styleOptions.value.borderRadiusNode
     this.nodeWidth = this.getNodeWidth()
     this.nodeHeight = this.getNodeHeight()
