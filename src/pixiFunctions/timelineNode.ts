@@ -42,11 +42,6 @@ export const timelineNodeBoxName = 'box'
 
 // At which scale do node details become too hard to see and don't need to be drawn.
 const nodeElementScaleCullingThreshold = 0.2
-const nodeBoxSpriteNames = {
-  startCap: 'startCap',
-  endCap: 'endCap',
-  body: 'body',
-}
 
 type TimelineNodeUpdatePositionProps = {
   skipAnimation?: boolean,
@@ -76,6 +71,9 @@ export class TimelineNode extends Container {
   private readonly nodeHeight
   private readonly boxCapWidth: number = 0
   private readonly box = new Container()
+  private leftBoxCap: Sprite | undefined
+  private rightBoxCap: Sprite | undefined
+  private boxBody: Sprite | undefined
 
   private subNodesToggle: SubNodesToggle | undefined
   private subNodesToggleWidth = 0
@@ -269,6 +267,9 @@ export class TimelineNode extends Container {
     const hexadecimalFill = colorToHex(fill)
     const isRunningNode = !this.nodeData.end
 
+    this.leftBoxCap?.destroy()
+    this.boxBody?.destroy()
+    this.rightBoxCap?.destroy()
     this.box.removeChildren()
 
     const { cap, body } = getNodeBoxTextures({
@@ -279,25 +280,22 @@ export class TimelineNode extends Container {
       height: nodeHeight,
     })
 
-    const startCapSprite = new Sprite(cap)
-    startCapSprite.name = nodeBoxSpriteNames.startCap
+    this.leftBoxCap = new Sprite(cap)
 
-    const bodySprite = new Sprite(body)
-    bodySprite.name = nodeBoxSpriteNames.body
-    bodySprite.width = this.getBoxBodyWidth()
-    bodySprite.height = nodeHeight
-    bodySprite.position.set(boxCapWidth, 0)
+    this.boxBody = new Sprite(body)
+    this.boxBody.width = this.getBoxBodyWidth()
+    this.boxBody.height = nodeHeight
+    this.boxBody.position.set(boxCapWidth, 0)
 
-    box.addChild(startCapSprite)
-    box.addChild(bodySprite)
+    box.addChild(this.leftBoxCap)
+    box.addChild(this.boxBody)
 
     if (!isRunningNode) {
-      const endCapSprite = new Sprite(cap)
-      endCapSprite.name = nodeBoxSpriteNames.endCap
-      endCapSprite.scale.x = -1
-      endCapSprite.position.x = nodeWidth
+      this.rightBoxCap = new Sprite(cap)
+      this.rightBoxCap.scale.x = -1
+      this.rightBoxCap.position.x = nodeWidth
 
-      box.addChild(endCapSprite)
+      box.addChild(this.rightBoxCap)
     }
   }
 
@@ -610,19 +608,8 @@ export class TimelineNode extends Container {
   }
 
   private updateBoxWidth(): void {
-    this.box.children.forEach((child) => {
-      const childName = child.name
-      switch (childName) {
-        case nodeBoxSpriteNames.body:
-          child.scale.x = this.getBoxBodyWidth()
-          break
-        case nodeBoxSpriteNames.endCap:
-          child.position.set(this.nodeWidth, this.nodeHeight)
-          break
-        default:
-          break
-      }
-    })
+    this.boxBody!.width = this.getBoxBodyWidth()
+    this.rightBoxCap?.position.set(this.nodeWidth, this.nodeHeight)
   }
 
   private async updateSubNodesOutlineSize(skipAnimation?: boolean): Promise<void> {
@@ -735,6 +722,7 @@ export class TimelineNode extends Container {
   private getBoxBodyWidth(): number {
     const { nodeData, nodeWidth, boxCapWidth } = this
     const isRunningNode = !nodeData.end
+
     return isRunningNode
       ? nodeWidth - boxCapWidth
       : nodeWidth - boxCapWidth * 2
@@ -826,6 +814,9 @@ export class TimelineNode extends Container {
     this.destroySubNodesContent()
 
     this.subNodesOutline?.destroy()
+    this.leftBoxCap?.destroy()
+    this.rightBoxCap?.destroy()
+    this.boxBody?.destroy()
     this.box.destroy()
     this.subNodesToggle?.destroy()
     this.label?.destroy()
