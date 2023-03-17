@@ -242,12 +242,12 @@
   }
 
   function initPlayheadTicker(): void {
-    if (playheadTicker) {
+    if (playheadTicker || !playhead) {
       return
     }
 
     playheadTicker = () => {
-      if (isRunning.value && playhead) {
+      if (isRunning.value && playhead && !playhead.destroyed) {
         const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
         playhead.updatePosition()
@@ -261,8 +261,6 @@
           viewport.zoomPercent(-0.1, true)
           viewport.left = timelineScale.dateToX(new Date(originalLeft))
         }
-      } else if (!playhead?.destroyed) {
-        playhead?.destroy()
       }
     }
 

@@ -146,9 +146,7 @@ export class TimelineNode extends Container {
 
     unWatchers.push(
       watch(layoutRows, () => {
-        if (this.positionInitialized) {
-          this.updatePosition()
-        }
+        this.updatePosition()
       }),
       watch([styleOptions, styleNode], () => {
         this.drawBox()
@@ -549,7 +547,6 @@ export class TimelineNode extends Container {
     let hasNewState = false
     let hasNewLabelText = false
 
-
     if (hasUpdatedData) {
       hasNewState = this.currentState !== this.nodeData.state
       this.currentState = this.nodeData.state
@@ -593,6 +590,10 @@ export class TimelineNode extends Container {
   }
 
   private updatePosition(options?: TimelineNodeUpdatePositionProps): void {
+    if (!this.positionInitialized) {
+      return
+    }
+
     const {
       skipAnimation,
       includeXPos,
@@ -663,24 +664,24 @@ export class TimelineNode extends Container {
 
     await new Promise((resolve) => {
       const duration = skipAnimation || suppressMotion.value ? 0 : roundedBorderRectAnimationDuration
+      const xPos = isSubNodesExpanded ? -spacingSubNodesOutlineOffset : spacingSubNodesOutlineOffset
+      const yPos = isSubNodesExpanded ? -spacingSubNodesOutlineOffset : spacingSubNodesOutlineOffset
+      const alpha = isSubNodesExpanded ? 1 : alphaSubNodesOutlineDimmed
 
-      if (isSubNodesExpanded) {
-        gsap.to(subNodesOutline, {
-          x: -spacingSubNodesOutlineOffset,
-          y: -spacingSubNodesOutlineOffset,
-          alpha: 1,
-          duration,
-          ease: roundedBorderRectAnimationEase,
-        }).then(() => resolve(null))
-      } else {
-        gsap.to(subNodesOutline, {
-          x: spacingSubNodesOutlineOffset,
-          y: spacingSubNodesOutlineOffset,
-          alpha: alphaSubNodesOutlineDimmed,
-          duration,
-          ease: roundedBorderRectAnimationEase,
-        }).then(() => resolve(null))
+      if (skipAnimation || suppressMotion.value) {
+        subNodesOutline.position.set(xPos, yPos)
+        subNodesOutline.alpha = alpha
+        resolve(null)
+        return
       }
+
+      gsap.to(subNodesOutline, {
+        x: xPos,
+        y: yPos,
+        alpha,
+        duration,
+        ease: roundedBorderRectAnimationEase,
+      }).then(() => resolve(null))
     })
   }
 
@@ -843,7 +844,12 @@ export class TimelineNode extends Container {
   private destroyRunningNodeTicker(): void {
     if (this.runningNodeTicker) {
       this.graphState.pixiApp.ticker.remove(this.runningNodeTicker)
+      this.runningNodeTicker = null
     }
+  }
+
+  private killTweens(): void {
+    gsap.killTweensOf([this, this.subNodesOutline])
   }
 
   public destroy(): void {
@@ -852,6 +858,8 @@ export class TimelineNode extends Container {
     if (this.label) {
       cull.remove(this.label)
     }
+
+    this.killTweens()
 
     if (this.isSelected) {
       this.emit(nodeClickEvents.nodeDetails, null)
