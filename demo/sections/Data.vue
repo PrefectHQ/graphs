@@ -34,8 +34,9 @@
 
 <script lang="ts" setup>
   import { ref, watchEffect, computed } from 'vue'
-  import { generateTimescaleData, Shape, TimescaleItem } from '../utilities/timescaleData'
-  import TimescaleTable from './components/TimescaleTable.vue'
+  import { generateTimescaleData, Shape } from '../utilities/timescaleData'
+  import TimescaleTable from '@/../demo/sections/components/TimescaleTable.vue'
+  import { GraphTimelineNode } from '@/models'
 
   const size = ref(50)
   const fanMultiplier = ref(1.5)
@@ -54,7 +55,7 @@
     }
   })
 
-  const data = ref<TimescaleItem[]>([])
+  const data = ref<GraphTimelineNode[]>([])
 
   watchEffect(() => {
     data.value = generateTimescaleData(dataOptions.value)

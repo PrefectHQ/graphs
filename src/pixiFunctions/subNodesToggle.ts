@@ -1,13 +1,14 @@
 import gsap from 'gsap'
 import { Container, Sprite } from 'pixi.js'
 import { watch, WatchStopHandle } from 'vue'
-import { GraphState } from '@/models'
+import { GraphState, GraphTimelineNode } from '@/models'
 import {
   getArrowTexture,
   getNodeBoxTextures,
   getSimpleFillTexture,
   RoundedBorderRect
 } from '@/pixiFunctions'
+import { colorToHex } from '@/utilities'
 
 const hoverShadePieces = {
   leftCap: 'leftCap',
@@ -21,29 +22,16 @@ const toggleScaleCullingThreshold = 0.2
 
 type SubNodesToggleProps = {
   graphState: GraphState,
+  nodeData: GraphTimelineNode,
   size: number,
-  /**
-   * Background color when the toggle is not floating (rendered on top of a node).
-   */
-  nonFloatingHoverBg: number,
-  /**
-   * nonFloatingHoverBg alpha value when the toggle is not floating (rendered on top of a node).
-   */
-  nonFloatingHoverAlpha: number,
-  /**
-   * The toggle may be "floating", when a node is too narrow and the toggle is rendered outside of it.
-   */
   floating?: boolean,
-  inverseTextOnFill?: boolean,
 }
 
 export class SubNodesToggle extends Container {
   private readonly graphState
+  private readonly nodeData
   private readonly size
-  private readonly nonFloatingHoverBg
-  private readonly nonFloatingHoverAlpha
   private readonly floating
-  private readonly inverseTextOnFill
 
   private isExpanded = false
   private textColor: number
@@ -58,11 +46,9 @@ export class SubNodesToggle extends Container {
 
   public constructor({
     graphState,
+    nodeData,
     size,
-    nonFloatingHoverBg,
-    nonFloatingHoverAlpha,
     floating,
-    inverseTextOnFill,
   }: SubNodesToggleProps) {
     super()
 
@@ -71,11 +57,9 @@ export class SubNodesToggle extends Container {
     graphState.cull.add(this)
 
     this.graphState = graphState
+    this.nodeData = nodeData
     this.size = size
-    this.nonFloatingHoverBg = nonFloatingHoverBg
-    this.nonFloatingHoverAlpha = nonFloatingHoverAlpha
     this.floating = floating
-    this.inverseTextOnFill = inverseTextOnFill
 
     this.textColor = this.getTextColor()
 
@@ -165,12 +149,18 @@ export class SubNodesToggle extends Container {
   private initHoverShade(): void {
     const {
       hoverShade,
-      nonFloatingHoverBg,
-      nonFloatingHoverAlpha,
       size,
       floating,
     } = this
-    const { borderRadiusButton, colorButtonBgHover } = this.graphState.styleOptions.value
+    const {
+      borderRadiusButton,
+      colorButtonBgHover,
+    } = this.graphState.styleOptions.value
+    const {
+      onFillSubNodeToggleHoverBg,
+      onFillSubNodeToggleHoverBgAlpha,
+    } = this.graphState.styleNode.value(this.nodeData)
+    const nonFloatingHoverBg = colorToHex(onFillSubNodeToggleHoverBg)
 
     hoverShade.removeChildren()
 
@@ -184,7 +174,7 @@ export class SubNodesToggle extends Container {
 
     const leftCap = new Sprite(cap)
     leftCap.name = hoverShadePieces.leftCap
-    leftCap.alpha = floating ? 1 : nonFloatingHoverAlpha
+    leftCap.alpha = floating ? 1 : onFillSubNodeToggleHoverBgAlpha
 
     const bodySprite = new Sprite(body)
     bodySprite.name = hoverShadePieces.body
@@ -193,7 +183,7 @@ export class SubNodesToggle extends Container {
       ? size - borderRadiusButton * 2
       : size - borderRadiusButton
     bodySprite.height = size
-    bodySprite.alpha = floating ? 1 : nonFloatingHoverAlpha
+    bodySprite.alpha = floating ? 1 : onFillSubNodeToggleHoverBgAlpha
 
     const rightCap = new Sprite(cap)
     rightCap.name = hoverShadePieces.rightCap
@@ -250,15 +240,18 @@ export class SubNodesToggle extends Container {
 
   private initToggleBorder(): void {
     const { size, floating } = this
-    const { pixiApp, styleOptions } = this.graphState
     const {
       colorButtonBorder,
       borderRadiusButton,
       spacingButtonBorderWidth,
-    } = styleOptions.value
+    } = this.graphState.styleOptions.value
+
+    if (!colorButtonBorder) {
+      return
+    }
 
     this.toggleBorder = new RoundedBorderRect({
-      pixiApp,
+      graphState: this.graphState,
       width: size,
       height: size,
       borderRadius: borderRadiusButton,
@@ -288,12 +281,13 @@ export class SubNodesToggle extends Container {
   }
 
   private getTextColor(): number {
-    const { floating, inverseTextOnFill } = this
-    const { colorTextDefault, colorTextInverse } = this.graphState.styleOptions.value
+    const { styleOptions, styleNode } = this.graphState
+    const { colorTextDefault, colorTextInverse } = styleOptions.value
+    const { inverseTextOnFill } = styleNode.value(this.nodeData)
 
     const colorOnFill = inverseTextOnFill ? colorTextInverse : colorTextDefault
 
-    return floating ? colorTextDefault : colorOnFill
+    return this.floating ? colorTextDefault : colorOnFill
   }
 
   private hover(): void {

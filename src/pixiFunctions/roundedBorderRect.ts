@@ -1,14 +1,10 @@
-import { Application, Container, Sprite } from 'pixi.js'
+import gsap from 'gsap'
+import { Container, Sprite } from 'pixi.js'
+import { GraphState } from '@/models'
 import { getRoundedBorderRectTextures } from '@/pixiFunctions'
 
-type RoundedBorderRectProps = {
-  pixiApp: Application,
-  width: number,
-  height: number,
-  borderRadius: number,
-  borderColor: number,
-  borderWidth: number,
-}
+export const roundedBorderRectAnimationDuration = 0.2
+export const roundedBorderRectAnimationEase = 'power2.out'
 
 const rectElements = {
   topLeft: 'topLeft',
@@ -21,8 +17,23 @@ const rectElements = {
   leftEdge: 'leftEdge',
 }
 
+type RoundedBorderRectResizeProps = {
+  width: number,
+  height: number,
+  animate?: boolean,
+}
+
+type RoundedBorderRectProps = {
+  graphState: GraphState,
+  width: number,
+  height: number,
+  borderRadius: number,
+  borderColor: number,
+  borderWidth: number,
+}
+
 export class RoundedBorderRect extends Container {
-  private readonly pixiApp
+  private readonly graphState
   private rectWidth
   private rectHeight
   private readonly borderRadius
@@ -30,7 +41,7 @@ export class RoundedBorderRect extends Container {
   private readonly borderWidth
 
   public constructor({
-    pixiApp,
+    graphState,
     width,
     height,
     borderRadius,
@@ -39,10 +50,10 @@ export class RoundedBorderRect extends Container {
   }: RoundedBorderRectProps) {
     super()
 
+    this.graphState = graphState
     this.rectWidth = width
     this.rectHeight = height
 
-    this.pixiApp = pixiApp
     this.borderRadius = borderRadius
     this.borderColor = borderColor
     this.borderWidth = borderWidth
@@ -51,7 +62,8 @@ export class RoundedBorderRect extends Container {
   }
 
   private initRect(): void {
-    const { pixiApp, borderRadius, borderColor, borderWidth } = this
+    const { borderRadius, borderColor, borderWidth } = this
+    const { pixiApp } = this.graphState
 
     const { corner, edge } = getRoundedBorderRectTextures({
       pixiApp,
@@ -112,10 +124,14 @@ export class RoundedBorderRect extends Container {
     this.addChild(bottomEdge)
     this.addChild(leftEdge)
 
-    this.resize(this.rectWidth, this.rectHeight)
+    this.resize({ width: this.rectWidth, height: this.rectHeight })
   }
 
-  public resize(width: number, height: number): void {
+  public resize({
+    width,
+    height,
+    animate,
+  }: RoundedBorderRectResizeProps): void {
     this.scale.x = 1
     this.rectWidth = width
     this.rectHeight = height
@@ -134,19 +150,44 @@ export class RoundedBorderRect extends Container {
     const bottomEdge = this.getChildByName(rectElements.bottomEdge) as Sprite
     const leftEdge = this.getChildByName(rectElements.leftEdge) as Sprite
 
-    topRight.position.set(adaptedWidth, 0)
-    bottomRight.position.set(adaptedWidth, this.rectHeight)
-    bottomLeft.position.set(0, this.rectHeight)
-
-    topEdge.width = adaptedWidth - minRadiusWidth
-    rightEdge.height = this.rectHeight - minRadiusWidth
-    rightEdge.position.x = adaptedWidth - this.borderWidth
-    bottomEdge.width = adaptedWidth - minRadiusWidth
-    bottomEdge.position.y = this.rectHeight - this.borderWidth
-    leftEdge.height = this.rectHeight - minRadiusWidth
-
     if (width < minRadiusWidth) {
       this.scale.x = width / minRadiusWidth
     }
+
+    if (!animate || this.graphState.suppressMotion.value) {
+      topRight.position.x = adaptedWidth
+      bottomRight.position.set(adaptedWidth, this.rectHeight)
+      bottomLeft.position.y = this.rectHeight
+
+      topEdge.width = adaptedWidth - minRadiusWidth
+      rightEdge.height = this.rectHeight - minRadiusWidth
+      rightEdge.position.x = adaptedWidth - this.borderWidth
+      bottomEdge.width = adaptedWidth - minRadiusWidth
+      bottomEdge.position.y = this.rectHeight - this.borderWidth
+      leftEdge.height = this.rectHeight - minRadiusWidth
+      return
+    }
+
+    const animationOptions = {
+      duration: roundedBorderRectAnimationDuration,
+      ease: roundedBorderRectAnimationEase,
+    }
+
+    gsap.to(topRight, { x: adaptedWidth, ...animationOptions })
+    gsap.to(bottomRight, { x: adaptedWidth, y: this.rectHeight, ...animationOptions })
+    gsap.to(bottomLeft, { y: this.rectHeight, ...animationOptions })
+
+    gsap.to(topEdge, { width: adaptedWidth - minRadiusWidth, ...animationOptions })
+    gsap.to(rightEdge, {
+      height: this.rectHeight - minRadiusWidth,
+      x: adaptedWidth - this.borderWidth,
+      ...animationOptions,
+    })
+    gsap.to(bottomEdge, {
+      width: adaptedWidth - minRadiusWidth,
+      y: this.rectHeight - this.borderWidth,
+      ...animationOptions,
+    })
+    gsap.to(leftEdge, { height: this.rectHeight - minRadiusWidth, ...animationOptions })
   }
 }
