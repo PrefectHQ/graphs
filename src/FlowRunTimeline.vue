@@ -76,6 +76,7 @@
   const styleOptions = computed(() => parseThemeOptions(props.theme?.defaults))
   const selectedNodeId = computed(() => props.selectedNodeId ?? null)
   const layoutSetting = computed(() => props.layout ?? 'nearestParent')
+  const isRunning = computed(() => props.isRunning ?? false)
   const hideEdges = computed(() => props.hideEdges ?? false)
   const subNodeLabels = computed(() => props.subNodeLabels ?? new Map())
   const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
@@ -165,7 +166,7 @@
 
     const dates = props.graphData.filter(node => node.end).map(({ start, end }) => ({ start, end }))
 
-    if (props.isRunning === true) {
+    if (isRunning.value) {
       dates.push({
         start: new Date(),
         end: new Date(),
@@ -222,7 +223,7 @@
   }
 
   function initPlayhead(): void {
-    if (!props.isRunning) {
+    if (!isRunning.value) {
       return
     }
 
@@ -246,7 +247,7 @@
     }
 
     playheadTicker = () => {
-      if (props.isRunning && playhead) {
+      if (isRunning.value && playhead) {
         const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
         playhead.updatePosition()
@@ -268,7 +269,7 @@
     pixiApp.ticker.add(playheadTicker)
   }
 
-  watch(() => props.isRunning, (newVal) => {
+  watch(isRunning, (newVal) => {
     if (!loading.value) {
       if (newVal && (!playhead || playhead.destroyed)) {
         initPlayhead()
@@ -289,7 +290,7 @@
       cull,
       minimumStartDate,
       maximumEndDate,
-      isRunning: props.isRunning ?? false,
+      isRunning: isRunning.value,
       styleOptions,
       formatDateFns,
     })
@@ -338,6 +339,7 @@
       styleOptions,
       styleNode,
       layoutSetting,
+      isRunning,
       hideEdges,
       subNodeLabels,
       selectedNodeId,
@@ -352,14 +354,6 @@
       graphState,
     })
     viewport.addChild(nodesContainer)
-
-    if (props.isRunning) {
-      pixiApp.ticker.add(() => {
-        if (props.isRunning) {
-          nodesContainer.update()
-        }
-      })
-    }
 
     nodesContainer.on(nodeClickEvents.nodeDetails, (nodeSelectionValue) => {
       if (!isViewportDragging.value) {

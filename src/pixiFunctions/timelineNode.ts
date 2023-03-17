@@ -63,12 +63,15 @@ export class TimelineNode extends Container {
 
   private currentState: string
   private readonly hasSubNodes: boolean = false
+  private isRunningNode: boolean = false
+  private runningNodeTicker: (() => void) | null = null
   private readonly unWatchers: WatchStopHandle[] = []
 
   // the position must be initialized before it will update itself.
   public positionInitialized = false
   private nodeWidth
   private readonly nodeHeight
+
   private readonly boxCapWidth: number = 0
   private readonly box = new Container()
   private leftBoxCap: Sprite | undefined
@@ -77,7 +80,7 @@ export class TimelineNode extends Container {
 
   private subNodesToggle: SubNodesToggle | undefined
   private subNodesToggleWidth = 0
-  private isSubNodesToggleInBox: boolean = true
+  private isSubNodesToggleFloating: boolean = false
 
   private label: BitmapText | undefined
   private apxLabelWidth = 0
@@ -109,6 +112,8 @@ export class TimelineNode extends Container {
 
     this.currentState = nodeData.state
     this.hasSubNodes = nodeData.subFlowRunId !== undefined
+    this.isRunningNode = graphState.isRunning.value && !nodeData.end
+
     this.boxCapWidth = graphState.styleOptions.value.borderRadiusNode
     this.nodeWidth = this.getNodeWidth()
     this.nodeHeight = this.getNodeHeight()
@@ -123,8 +128,14 @@ export class TimelineNode extends Container {
   }
 
   private initWatchers(): void {
-    const { layoutRows } = this
     const {
+      layoutRows,
+      unWatchers,
+      hasSubNodes,
+      isRunningNode,
+    } = this
+    const {
+      pixiApp,
       styleOptions,
       styleNode,
       selectedNodeId,
@@ -133,7 +144,7 @@ export class TimelineNode extends Container {
       viewport,
     } = this.graphState
 
-    this.unWatchers.push(
+    unWatchers.push(
       watch(layoutRows, () => {
         if (this.positionInitialized) {
           this.updatePosition()
@@ -174,14 +185,22 @@ export class TimelineNode extends Container {
       }, { deep: true }),
     )
 
-    if (this.hasSubNodes) {
-      this.unWatchers.push(
+    if (hasSubNodes) {
+      unWatchers.push(
         watch(subNodeLabels, () => {
           if (this.getLabelText() !== this.label?.text) {
             this.drawLabel(true)
           }
         }, { deep: true }),
       )
+    }
+
+    if (isRunningNode) {
+      this.runningNodeTicker = () => {
+        this.update()
+      }
+
+      pixiApp.ticker.add(this.runningNodeTicker)
     }
 
     viewport.on('frame-end', () => {
@@ -261,11 +280,10 @@ export class TimelineNode extends Container {
 
   private drawBox(): void {
     const { pixiApp, styleOptions, styleNode } = this.graphState
-    const { nodeWidth, nodeHeight, box, boxCapWidth } = this
+    const { isRunningNode, nodeWidth, nodeHeight, box, boxCapWidth } = this
     const { borderRadiusNode } = styleOptions.value
     const { fill } = styleNode.value(this.nodeData)
     const hexadecimalFill = colorToHex(fill)
-    const isRunningNode = !this.nodeData.end
 
     this.leftBoxCap?.destroy()
     this.boxBody?.destroy()
@@ -308,17 +326,17 @@ export class TimelineNode extends Container {
     const { spacingNodeLabelMargin, borderRadiusNode } = this.graphState.styleOptions.value
 
     this.subNodesToggleWidth = nodeHeight
-    this.isSubNodesToggleInBox = nodeWidth > this.subNodesToggleWidth + borderRadiusNode
+    this.isSubNodesToggleFloating = this.subNodesToggleWidth + borderRadiusNode > nodeWidth
 
     this.subNodesToggle = new SubNodesToggle({
       graphState,
       nodeData,
-      floating: !this.isSubNodesToggleInBox,
+      floating: this.isSubNodesToggleFloating,
       size: this.subNodesToggleWidth,
     })
-    this.subNodesToggle.position.x = this.isSubNodesToggleInBox
-      ? 0
-      : nodeWidth + spacingNodeLabelMargin
+    this.subNodesToggle.position.x = this.isSubNodesToggleFloating
+      ? nodeWidth + spacingNodeLabelMargin
+      : 0
 
     this.subNodesToggle.on('click', () => {
       this.emit(nodeClickEvents.subNodesToggle, this.nodeData.id)
@@ -539,6 +557,11 @@ export class TimelineNode extends Container {
       hasNewLabelText = this.label?.text !== this.nodeData.label
     }
 
+    if (this.isRunningNode && this.nodeData.end) {
+      this.isRunningNode = false
+      this.destroyRunningNodeTicker()
+    }
+
     const nodeWidth = this.getNodeWidth()
 
     if (hasNewState) {
@@ -555,9 +578,8 @@ export class TimelineNode extends Container {
 
       this.updateBoxWidth()
       this.updateSelectedRingSize()
-      if (this.subNodesOutline) {
-        this.updateSubNodesOutlineSize(true)
-      }
+      this.updateSubNodesOutlineSize(true)
+      this.updateSubNodesTogglePosition()
 
       // 2px tolerance avoids the label bouncing in/out of the box
       const isLabelInBoxChanged = this.isLabelInBox !== this.checkIsLabelInBox(2)
@@ -671,7 +693,7 @@ export class TimelineNode extends Container {
       graphState,
       nodeWidth,
       hasSubNodes,
-      isSubNodesToggleInBox,
+      isSubNodesToggleFloating,
       subNodesToggleWidth,
     } = this
     const {
@@ -680,11 +702,11 @@ export class TimelineNode extends Container {
       spacingNodeYPadding,
     } = graphState.styleOptions.value
 
-    const floatingLabelPosition = (): number => hasSubNodes && !isSubNodesToggleInBox
+    const floatingLabelPosition = (): number => hasSubNodes && isSubNodesToggleFloating
       ? nodeWidth + spacingNodeLabelMargin + subNodesToggleWidth + spacingNodeXPadding
       : nodeWidth + spacingNodeLabelMargin
 
-    const inBoxLabelPosition = (): number => hasSubNodes && isSubNodesToggleInBox
+    const inBoxLabelPosition = (): number => hasSubNodes && !isSubNodesToggleFloating
       ? subNodesToggleWidth + spacingNodeXPadding
       : spacingNodeXPadding
 
@@ -698,12 +720,30 @@ export class TimelineNode extends Container {
     this.selectedRing!.resize({ width, height })
   }
 
+  private updateSubNodesTogglePosition(): void {
+    if (!this.subNodesToggle) {
+      return
+    }
+
+    const { nodeWidth } = this
+    const { borderRadiusNode, spacingNodeLabelMargin } = this.graphState.styleOptions.value
+
+    this.isSubNodesToggleFloating = this.subNodesToggleWidth + borderRadiusNode > nodeWidth
+    this.subNodesToggle.updateFloatingState(this.isSubNodesToggleFloating)
+
+    this.subNodesToggle.position.x = this.isSubNodesToggleFloating
+      ? nodeWidth + spacingNodeLabelMargin
+      : 0
+  }
+
   /**
    * Utilities
    */
   private getNodeWidth(): number {
-    const minimumWidth = this.boxCapWidth * 2
-    const actualWidth = timelineScale.dateToX(this.nodeData.end ?? new Date()) - timelineScale.dateToX(this.nodeData.start)
+    const { isRunningNode, boxCapWidth, nodeData } = this
+
+    const minimumWidth = isRunningNode ? boxCapWidth : boxCapWidth * 2
+    const actualWidth = timelineScale.dateToX(nodeData.end ?? new Date()) - timelineScale.dateToX(nodeData.start)
 
     return actualWidth > minimumWidth ? actualWidth : minimumWidth
   }
@@ -718,8 +758,7 @@ export class TimelineNode extends Container {
   }
 
   private getBoxBodyWidth(): number {
-    const { nodeData, nodeWidth, boxCapWidth } = this
-    const isRunningNode = !nodeData.end
+    const { isRunningNode, nodeWidth, boxCapWidth } = this
 
     return isRunningNode
       ? nodeWidth - boxCapWidth
@@ -754,9 +793,9 @@ export class TimelineNode extends Container {
   }
 
   private checkIsLabelInBox(tolerance: number = 0): boolean {
-    const { hasSubNodes, isSubNodesToggleInBox, subNodesToggle } = this
+    const { hasSubNodes, isSubNodesToggleFloating, subNodesToggle } = this
 
-    return hasSubNodes && isSubNodesToggleInBox
+    return hasSubNodes && !isSubNodesToggleFloating
       ? this.apxLabelWidth + tolerance < this.nodeWidth - subNodesToggle!.width
       : this.apxLabelWidth + tolerance < this.nodeWidth
   }
@@ -801,6 +840,12 @@ export class TimelineNode extends Container {
     this.subNodesContent?.destroy()
   }
 
+  private destroyRunningNodeTicker(): void {
+    if (this.runningNodeTicker) {
+      this.graphState.pixiApp.ticker.remove(this.runningNodeTicker)
+    }
+  }
+
   public destroy(): void {
     const { cull } = this.graphState
     cull.remove(this.box)
@@ -812,6 +857,7 @@ export class TimelineNode extends Container {
       this.emit(nodeClickEvents.nodeDetails, null)
     }
 
+    this.destroyRunningNodeTicker()
     this.destroySubNodesContent()
 
     this.subNodesOutline?.destroy()
