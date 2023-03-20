@@ -176,10 +176,16 @@ export class TimelineNodes extends Container {
     const newlyCreatedNodes: string[] = []
 
     Object.keys(layout.value).forEach((nodeId) => {
+      const newNodeData = this.getNodeData(nodeId)
+
+      if (!newNodeData) {
+        return
+      }
+
       if (this.nodeRecords.has(nodeId)) {
-        this.nodeRecords.get(nodeId)!.update(true)
+        this.nodeRecords.get(nodeId)!.update(newNodeData)
       } else {
-        this.createNode(this.graphData.find(node => node.id === nodeId)!)
+        this.createNode(newNodeData)
         newlyCreatedNodes.push(nodeId)
       }
     })
@@ -281,9 +287,10 @@ export class TimelineNodes extends Container {
   /**
    * Update Functions
    */
-  public update(newData?: GraphTimelineNode[]): void {
-    if (newData) {
-      this.graphData = newData
+  public update(newData: GraphTimelineNode[]): void {
+    this.graphData = newData
+
+    if (newData.length !== this.nodeRecords.size) {
       const message: NodeLayoutWorkerProps = {
         data: {
           graphData: JSON.stringify(this.graphData),
@@ -293,7 +300,14 @@ export class TimelineNodes extends Container {
       return
     }
 
-    this.nodeRecords.forEach(nodeItem => nodeItem.update())
+    this.nodeRecords.forEach((nodeItem, nodeId) => {
+      const newNodeData = this.getNodeData(nodeId)
+      if (newNodeData) {
+        nodeItem.update(newNodeData)
+      }
+    })
+
+    this.emit(timelineUpdateEvent)
   }
 
   public updateHideEdges(): void {
@@ -431,6 +445,10 @@ export class TimelineNodes extends Container {
 
   private emitNullSelection(): void {
     this.emit(nodeClickEvents.nodeDetails, null)
+  }
+
+  private getNodeData(nodeId: string): GraphTimelineNode | undefined {
+    return this.graphData.find(node => node.id === nodeId)
   }
 
   public getEarliestNodeStart(): Date | null {

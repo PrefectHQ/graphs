@@ -56,7 +56,7 @@ type TimelineNodeProps = {
 }
 
 export class TimelineNode extends Container {
-  public readonly nodeData
+  public nodeData
   private readonly graphState
   private readonly layout
   private readonly layoutRows
@@ -87,6 +87,7 @@ export class TimelineNode extends Container {
   private isLabelInBox = true
 
   private isSubNodesExpanded = false
+  private readonly subNodesOutlineContainer = new Container()
   private subNodesOutline: RoundedBorderRect | undefined
   private subNodesContent: TimelineNodes | undefined
   private subNodesHeight = 0
@@ -110,15 +111,17 @@ export class TimelineNode extends Container {
     this.layout = layout
     this.layoutRows = layoutRows
 
-    this.currentState = nodeData.state
+    this.currentState = nodeData.state.toString()
     this.hasSubNodes = nodeData.subFlowRunId !== undefined
-    this.isRunningNode = graphState.isRunning.value && !nodeData.end
+    this.updateIsRunningNode()
 
     this.boxCapWidth = graphState.styleOptions.value.borderRadiusNode
     this.nodeWidth = this.getNodeWidth()
     this.nodeHeight = this.getNodeHeight()
 
-    this.initSubNodesOutline()
+    this.addChild(this.subNodesOutlineContainer)
+    this.drawSubNodesOutline()
+
     this.initBox()
     this.initSubNodesToggle()
     this.drawLabel()
@@ -225,7 +228,7 @@ export class TimelineNode extends Container {
     this.updatePosition({ skipAnimation: true, includeXPos: true })
   }
 
-  private initSubNodesOutline(): void {
+  private drawSubNodesOutline(): void {
     if (!this.hasSubNodes) {
       return
     }
@@ -259,7 +262,7 @@ export class TimelineNode extends Container {
     )
     this.subNodesOutline.alpha = alphaSubNodesOutlineDimmed
 
-    this.addChild(this.subNodesOutline)
+    this.subNodesOutlineContainer.addChild(this.subNodesOutline)
   }
 
   private initBox(): void {
@@ -543,13 +546,17 @@ export class TimelineNode extends Container {
   /**
    * Update Functions
    */
-  public update(hasUpdatedData?: boolean): void {
+  public update(newData?: GraphTimelineNode): void {
     let hasNewState = false
     let hasNewLabelText = false
 
-    if (hasUpdatedData) {
+    if (newData) {
+      this.nodeData = newData
+
       hasNewState = this.currentState !== this.nodeData.state
-      this.currentState = this.nodeData.state
+      this.currentState = this.nodeData.state.toString()
+
+      this.updateIsRunningNode()
 
       hasNewLabelText = this.label?.text !== this.nodeData.label
     }
@@ -563,7 +570,7 @@ export class TimelineNode extends Container {
 
     if (hasNewState) {
       this.drawBox()
-      this.initSubNodesOutline()
+      this.drawSubNodesOutline()
     }
 
     if (hasNewLabelText) {
@@ -628,9 +635,13 @@ export class TimelineNode extends Container {
     })
   }
 
+  private updateIsRunningNode(): void {
+    this.isRunningNode = this.graphState.isRunning.value && !this.nodeData.end
+  }
+
   private updateBoxWidth(): void {
     this.boxBody!.width = this.getBoxBodyWidth()
-    this.rightBoxCap?.position.set(this.nodeWidth, this.nodeHeight)
+    this.rightBoxCap?.position.set(this.nodeWidth, 0)
   }
 
   private async updateSubNodesOutlineSize(skipAnimation?: boolean): Promise<void> {

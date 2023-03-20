@@ -364,11 +364,11 @@
       }
     })
 
-    watch(() => props.graphData, (newValue) => {
+    watch(() => props.graphData, () => {
       // This accommodates updated nodeData or newly added nodes.
       // If totally new data is added, it all gets appended way down the viewport Y axis.
       // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
-      nodesContainer.update(newValue)
+      nodesContainer.update(props.graphData)
       viewport.dirty = true
     })
   }
