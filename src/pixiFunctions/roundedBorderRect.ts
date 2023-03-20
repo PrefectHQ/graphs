@@ -6,17 +6,6 @@ import { getRoundedBorderRectTextures } from '@/pixiFunctions'
 export const roundedBorderRectAnimationDuration = 0.2
 export const roundedBorderRectAnimationEase = 'power2.out'
 
-const rectElements = {
-  topLeft: 'topLeft',
-  topRight: 'topRight',
-  bottomRight: 'bottomRight',
-  bottomLeft: 'bottomLeft',
-  topEdge: 'topEdge',
-  rightEdge: 'rightEdge',
-  bottomEdge: 'bottomEdge',
-  leftEdge: 'leftEdge',
-}
-
 type RoundedBorderRectResizeProps = {
   width: number,
   height: number,
@@ -39,6 +28,15 @@ export class RoundedBorderRect extends Container {
   private readonly borderRadius
   private readonly borderColor
   private readonly borderWidth
+
+  private topLeft: Sprite | undefined
+  private topRight: Sprite | undefined
+  private bottomRight: Sprite | undefined
+  private bottomLeft: Sprite | undefined
+  private topEdge: Sprite | undefined
+  private rightEdge: Sprite | undefined
+  private bottomEdge: Sprite | undefined
+  private leftEdge: Sprite | undefined
 
   public constructor({
     graphState,
@@ -72,57 +70,49 @@ export class RoundedBorderRect extends Container {
       borderWidth,
     })
 
-    const topLeft = new Sprite(corner)
-    topLeft.name = rectElements.topLeft
+    this.topLeft = new Sprite(corner)
 
-    const topRight = new Sprite(corner)
-    topRight.position.set(this.rectWidth, 0)
-    topRight.rotation = Math.PI / 2
-    topRight.name = rectElements.topRight
+    this.topRight = new Sprite(corner)
+    this.topRight.position.set(this.rectWidth, 0)
+    this.topRight.rotation = Math.PI / 2
 
-    const bottomRight = new Sprite(corner)
-    bottomRight.position.set(this.rectWidth, this.rectHeight)
-    bottomRight.rotation = Math.PI
-    bottomRight.name = rectElements.bottomRight
+    this.bottomRight = new Sprite(corner)
+    this.bottomRight.position.set(this.rectWidth, this.rectHeight)
+    this.bottomRight.rotation = Math.PI
 
-    const bottomLeft = new Sprite(corner)
-    bottomLeft.position.set(0, this.rectHeight)
-    bottomLeft.rotation = Math.PI * 1.5
-    bottomLeft.name = rectElements.bottomLeft
+    this.bottomLeft = new Sprite(corner)
+    this.bottomLeft.position.set(0, this.rectHeight)
+    this.bottomLeft.rotation = Math.PI * 1.5
 
-    const topEdge = new Sprite(edge)
-    topEdge.position.set(this.borderRadius, 0)
-    topEdge.width = this.rectWidth - this.borderRadius * 2
-    topEdge.height = borderWidth
-    topEdge.name = rectElements.topEdge
+    this.topEdge = new Sprite(edge)
+    this.topEdge.position.set(this.borderRadius, 0)
+    this.topEdge.width = this.rectWidth - this.borderRadius * 2
+    this.topEdge.height = borderWidth
 
-    const rightEdge = new Sprite(edge)
-    rightEdge.position.set(this.rectWidth - this.borderWidth, this.borderRadius)
-    rightEdge.height = this.rectHeight - this.borderRadius * 2
-    rightEdge.width = borderWidth
-    rightEdge.name = rectElements.rightEdge
+    this.rightEdge = new Sprite(edge)
+    this.rightEdge.position.set(this.rectWidth - this.borderWidth, this.borderRadius)
+    this.rightEdge.height = this.rectHeight - this.borderRadius * 2
+    this.rightEdge.width = borderWidth
 
-    const bottomEdge = new Sprite(edge)
-    bottomEdge.position.set(this.borderRadius, this.rectHeight - this.borderWidth)
-    bottomEdge.width = this.rectWidth - this.borderRadius * 2
-    bottomEdge.height = borderWidth
-    bottomEdge.name = rectElements.bottomEdge
+    this.bottomEdge = new Sprite(edge)
+    this.bottomEdge.position.set(this.borderRadius, this.rectHeight - this.borderWidth)
+    this.bottomEdge.width = this.rectWidth - this.borderRadius * 2
+    this.bottomEdge.height = borderWidth
 
-    const leftEdge = new Sprite(edge)
-    leftEdge.position.set(0, this.borderRadius)
-    leftEdge.height = this.rectHeight - this.borderRadius * 2
-    leftEdge.width = borderWidth
-    leftEdge.name = rectElements.leftEdge
+    this.leftEdge = new Sprite(edge)
+    this.leftEdge.position.set(0, this.borderRadius)
+    this.leftEdge.height = this.rectHeight - this.borderRadius * 2
+    this.leftEdge.width = borderWidth
 
-    this.addChild(topLeft)
-    this.addChild(topRight)
-    this.addChild(bottomRight)
-    this.addChild(bottomLeft)
+    this.addChild(this.topLeft)
+    this.addChild(this.topRight)
+    this.addChild(this.bottomRight)
+    this.addChild(this.bottomLeft)
 
-    this.addChild(topEdge)
-    this.addChild(rightEdge)
-    this.addChild(bottomEdge)
-    this.addChild(leftEdge)
+    this.addChild(this.topEdge)
+    this.addChild(this.rightEdge)
+    this.addChild(this.bottomEdge)
+    this.addChild(this.leftEdge)
 
     this.resize({ width: this.rectWidth, height: this.rectHeight })
   }
@@ -132,6 +122,15 @@ export class RoundedBorderRect extends Container {
     height,
     animate,
   }: RoundedBorderRectResizeProps): void {
+    const {
+      topRight,
+      bottomRight,
+      bottomLeft,
+      topEdge,
+      rightEdge,
+      bottomEdge,
+      leftEdge,
+    } = this
     this.scale.x = 1
     this.rectWidth = width
     this.rectHeight = height
@@ -141,30 +140,21 @@ export class RoundedBorderRect extends Container {
 
     const adaptedWidth = isWidthTooSmall ? minRadiusWidth : width
 
-    const topRight = this.getChildByName(rectElements.topRight) as Sprite
-    const bottomRight = this.getChildByName(rectElements.bottomRight) as Sprite
-    const bottomLeft = this.getChildByName(rectElements.bottomLeft) as Sprite
-
-    const topEdge = this.getChildByName(rectElements.topEdge) as Sprite
-    const rightEdge = this.getChildByName(rectElements.rightEdge) as Sprite
-    const bottomEdge = this.getChildByName(rectElements.bottomEdge) as Sprite
-    const leftEdge = this.getChildByName(rectElements.leftEdge) as Sprite
-
     if (width < minRadiusWidth) {
       this.scale.x = width / minRadiusWidth
     }
 
     if (!animate || this.graphState.suppressMotion.value) {
-      topRight.position.x = adaptedWidth
-      bottomRight.position.set(adaptedWidth, this.rectHeight)
-      bottomLeft.position.y = this.rectHeight
+      topRight!.position.x = adaptedWidth
+      bottomRight!.position.set(adaptedWidth, this.rectHeight)
+      bottomLeft!.position.y = this.rectHeight
 
-      topEdge.width = adaptedWidth - minRadiusWidth
-      rightEdge.height = this.rectHeight - minRadiusWidth
-      rightEdge.position.x = adaptedWidth - this.borderWidth
-      bottomEdge.width = adaptedWidth - minRadiusWidth
-      bottomEdge.position.y = this.rectHeight - this.borderWidth
-      leftEdge.height = this.rectHeight - minRadiusWidth
+      topEdge!.width = adaptedWidth - minRadiusWidth
+      rightEdge!.height = this.rectHeight - minRadiusWidth
+      rightEdge!.position.x = adaptedWidth - this.borderWidth
+      bottomEdge!.width = adaptedWidth - minRadiusWidth
+      bottomEdge!.position.y = this.rectHeight - this.borderWidth
+      leftEdge!.height = this.rectHeight - minRadiusWidth
       return
     }
 
@@ -173,21 +163,47 @@ export class RoundedBorderRect extends Container {
       ease: roundedBorderRectAnimationEase,
     }
 
-    gsap.to(topRight, { x: adaptedWidth, ...animationOptions })
-    gsap.to(bottomRight, { x: adaptedWidth, y: this.rectHeight, ...animationOptions })
-    gsap.to(bottomLeft, { y: this.rectHeight, ...animationOptions })
+    gsap.to(topRight!, { x: adaptedWidth, ...animationOptions })
+    gsap.to(bottomRight!, { x: adaptedWidth, y: this.rectHeight, ...animationOptions })
+    gsap.to(bottomLeft!, { y: this.rectHeight, ...animationOptions })
 
-    gsap.to(topEdge, { width: adaptedWidth - minRadiusWidth, ...animationOptions })
-    gsap.to(rightEdge, {
+    gsap.to(topEdge!, { width: adaptedWidth - minRadiusWidth, ...animationOptions })
+    gsap.to(rightEdge!, {
       height: this.rectHeight - minRadiusWidth,
       x: adaptedWidth - this.borderWidth,
       ...animationOptions,
     })
-    gsap.to(bottomEdge, {
+    gsap.to(bottomEdge!, {
       width: adaptedWidth - minRadiusWidth,
       y: this.rectHeight - this.borderWidth,
       ...animationOptions,
     })
-    gsap.to(leftEdge, { height: this.rectHeight - minRadiusWidth, ...animationOptions })
+    gsap.to(leftEdge!, { height: this.rectHeight - minRadiusWidth, ...animationOptions })
+  }
+
+  private killTweens(): void {
+    const {
+      topRight,
+      bottomRight,
+      bottomLeft,
+      topEdge,
+      rightEdge,
+      bottomEdge,
+      leftEdge,
+    } = this
+    gsap.killTweensOf([
+      topRight,
+      bottomRight,
+      bottomLeft,
+      topEdge,
+      rightEdge,
+      bottomEdge,
+      leftEdge,
+    ])
+  }
+
+  public destroy(): void {
+    this.killTweens()
+    super.destroy.call(this)
   }
 }

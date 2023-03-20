@@ -76,6 +76,7 @@
   const styleOptions = computed(() => parseThemeOptions(props.theme?.defaults))
   const selectedNodeId = computed(() => props.selectedNodeId ?? null)
   const layoutSetting = computed(() => props.layout ?? 'nearestParent')
+  const isRunning = computed(() => props.isRunning ?? false)
   const hideEdges = computed(() => props.hideEdges ?? false)
   const subNodeLabels = computed(() => props.subNodeLabels ?? new Map())
   const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
@@ -165,7 +166,7 @@
 
     const dates = props.graphData.filter(node => node.end).map(({ start, end }) => ({ start, end }))
 
-    if (props.isRunning === true) {
+    if (isRunning.value) {
       dates.push({
         start: new Date(),
         end: new Date(),
@@ -222,7 +223,7 @@
   }
 
   function initPlayhead(): void {
-    if (!props.isRunning) {
+    if (!isRunning.value) {
       return
     }
 
@@ -241,12 +242,12 @@
   }
 
   function initPlayheadTicker(): void {
-    if (playheadTicker) {
+    if (playheadTicker || !playhead) {
       return
     }
 
     playheadTicker = () => {
-      if (props.isRunning && playhead) {
+      if (isRunning.value && playhead && !playhead.destroyed) {
         const playheadStartedVisible = playhead.position.x > 0 && playhead.position.x < pixiApp.screen.width
         maximumEndDate.value = new Date()
         playhead.updatePosition()
@@ -260,15 +261,13 @@
           viewport.zoomPercent(-0.1, true)
           viewport.left = timelineScale.dateToX(new Date(originalLeft))
         }
-      } else if (!playhead?.destroyed) {
-        playhead?.destroy()
       }
     }
 
     pixiApp.ticker.add(playheadTicker)
   }
 
-  watch(() => props.isRunning, (newVal) => {
+  watch(isRunning, (newVal) => {
     if (!loading.value) {
       if (newVal && (!playhead || playhead.destroyed)) {
         initPlayhead()
@@ -289,7 +288,7 @@
       cull,
       minimumStartDate,
       maximumEndDate,
-      isRunning: props.isRunning ?? false,
+      isRunning: isRunning.value,
       styleOptions,
       formatDateFns,
     })
@@ -338,6 +337,7 @@
       styleOptions,
       styleNode,
       layoutSetting,
+      isRunning,
       hideEdges,
       subNodeLabels,
       selectedNodeId,
@@ -353,14 +353,6 @@
     })
     viewport.addChild(nodesContainer)
 
-    if (props.isRunning) {
-      pixiApp.ticker.add(() => {
-        if (props.isRunning) {
-          nodesContainer.update()
-        }
-      })
-    }
-
     nodesContainer.on(nodeClickEvents.nodeDetails, (nodeSelectionValue) => {
       if (!isViewportDragging.value) {
         emit('selection', nodeSelectionValue)
@@ -372,11 +364,11 @@
       }
     })
 
-    watch(() => props.graphData, (newValue) => {
+    watch(() => props.graphData, () => {
       // This accommodates updated nodeData or newly added nodes.
       // If totally new data is added, it all gets appended way down the viewport Y axis.
       // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
-      nodesContainer.update(newValue)
+      nodesContainer.update(props.graphData)
       viewport.dirty = true
     })
   }

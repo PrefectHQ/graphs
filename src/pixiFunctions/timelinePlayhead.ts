@@ -103,7 +103,7 @@ export class TimelinePlayhead extends Container {
   }
 
   private getTimeLabelY(): number {
-    const { spacingGuideLabelPadding } = this.styles.value
+    const { spacingGuideLabelPadding } = this.styleOptions.value
     return this.appRef.screen.height - (this.label!.height + spacingGuideLabelPadding)
   }
 

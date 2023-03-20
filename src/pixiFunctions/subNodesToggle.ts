@@ -31,8 +31,8 @@ export class SubNodesToggle extends Container {
   private readonly graphState
   private readonly nodeData
   private readonly size
-  private readonly floating
 
+  private isFloating
   private isExpanded = false
   private textColor: number
 
@@ -59,10 +59,12 @@ export class SubNodesToggle extends Container {
     this.graphState = graphState
     this.nodeData = nodeData
     this.size = size
-    this.floating = floating
+    this.isFloating = floating
 
     this.textColor = this.getTextColor()
 
+    this.addChild(this.toggleBox)
+    this.addChild(this.hoverShade)
     this.initShapes()
 
     this.on('pointerover', () => {
@@ -80,14 +82,7 @@ export class SubNodesToggle extends Container {
 
     this.unWatchers.push(
       watch([styleOptions, styleNode], () => {
-        this.toggleBox.removeChildren()
-        this.hoverShade.removeChildren()
-        this.toggleArrow?.destroy()
-        this.toggleBorder?.destroy()
-        this.divider?.destroy()
-
-        this.textColor = this.getTextColor()
-        this.initShapes()
+        this.redraw()
       }, { deep: true }),
     )
 
@@ -101,16 +96,21 @@ export class SubNodesToggle extends Container {
   }
 
   private initShapes(): void {
-    this.initToggleBox()
-    this.initHoverShade()
-    this.hoverShade.alpha = 0
-    this.initDivider()
-    this.initToggleArrow()
-    this.initToggleBorder()
+    this.drawToggleBox()
+    this.drawHoverShade()
+    this.drawDivider()
+    this.drawToggleArrow()
+    this.drawToggleBorder()
   }
 
-  private initToggleBox(): void {
-    const { size, toggleBox, floating } = this
+  private drawToggleBox(): void {
+    this.toggleBox.removeChildren()
+
+    if (!this.isFloating) {
+      return
+    }
+
+    const { size, toggleBox } = this
     const { pixiApp, styleOptions } = this.graphState
 
     const { colorButtonBg, borderRadiusButton } = styleOptions.value
@@ -137,20 +137,13 @@ export class SubNodesToggle extends Container {
     toggleBox.addChild(bgLeftCap)
     toggleBox.addChild(bgBody)
     toggleBox.addChild(bgRightCap)
-
-    if (!floating) {
-      // box is transparent rather than hidden so that it still defines the clickable area.
-      toggleBox.alpha = 0
-    }
-
-    this.addChild(toggleBox)
   }
 
-  private initHoverShade(): void {
+  private drawHoverShade(): void {
     const {
       hoverShade,
       size,
-      floating,
+      isFloating,
     } = this
     const {
       borderRadiusButton,
@@ -166,7 +159,7 @@ export class SubNodesToggle extends Container {
 
     const { cap, body } = getNodeBoxTextures({
       pixiApp: this.graphState.pixiApp,
-      fill: floating ? colorButtonBgHover : nonFloatingHoverBg,
+      fill: isFloating ? colorButtonBgHover : nonFloatingHoverBg,
       borderRadius: borderRadiusButton,
       boxCapWidth: borderRadiusButton,
       height: size,
@@ -174,32 +167,38 @@ export class SubNodesToggle extends Container {
 
     const leftCap = new Sprite(cap)
     leftCap.name = hoverShadePieces.leftCap
-    leftCap.alpha = floating ? 1 : onFillSubNodeToggleHoverBgAlpha
+    leftCap.alpha = isFloating ? 1 : onFillSubNodeToggleHoverBgAlpha
 
     const bodySprite = new Sprite(body)
     bodySprite.name = hoverShadePieces.body
     bodySprite.x = borderRadiusButton
-    bodySprite.width = floating
+    bodySprite.width = isFloating
       ? size - borderRadiusButton * 2
       : size - borderRadiusButton
     bodySprite.height = size
-    bodySprite.alpha = floating ? 1 : onFillSubNodeToggleHoverBgAlpha
+    bodySprite.alpha = isFloating ? 1 : onFillSubNodeToggleHoverBgAlpha
 
     const rightCap = new Sprite(cap)
     rightCap.name = hoverShadePieces.rightCap
     rightCap.scale.x = -1
     rightCap.x = size
-    rightCap.alpha = floating ? 1 : 0
+    rightCap.alpha = isFloating ? 1 : 0
 
     hoverShade.addChild(leftCap)
     hoverShade.addChild(bodySprite)
     hoverShade.addChild(rightCap)
 
-    this.addChild(hoverShade)
+    hoverShade.alpha = 0
   }
 
-  private initDivider(): void {
-    const { size, textColor, floating } = this
+  private drawDivider(): void {
+    this.divider?.destroy()
+
+    if (this.isFloating) {
+      return
+    }
+
+    const { size, textColor } = this
     const { pixiApp } = this.graphState
 
     const fillTexture = getSimpleFillTexture({
@@ -212,16 +211,14 @@ export class SubNodesToggle extends Container {
     this.divider.height = size
     this.divider.x = size
 
-    if (floating) {
-      this.divider.alpha = 0
-    }
-
     this.addChild(this.divider)
   }
 
-  private initToggleArrow(): void {
+  private drawToggleArrow(): void {
     const { size, textColor, isExpanded } = this
     const { pixiApp } = this.graphState
+
+    this.toggleArrow?.destroy()
 
     const arrowTexture = getArrowTexture({
       pixiApp,
@@ -238,15 +235,17 @@ export class SubNodesToggle extends Container {
     this.addChild(this.toggleArrow)
   }
 
-  private initToggleBorder(): void {
-    const { size, floating } = this
+  private drawToggleBorder(): void {
+    this.toggleBorder?.destroy()
+
+    const { size, isFloating } = this
     const {
       colorButtonBorder,
       borderRadiusButton,
       spacingButtonBorderWidth,
     } = this.graphState.styleOptions.value
 
-    if (!colorButtonBorder) {
+    if (!colorButtonBorder || !isFloating) {
       return
     }
 
@@ -258,10 +257,6 @@ export class SubNodesToggle extends Container {
       borderWidth: spacingButtonBorderWidth,
       borderColor: colorButtonBorder,
     })
-
-    if (!floating) {
-      this.toggleBorder.alpha = 0
-    }
 
     this.addChild(this.toggleBorder)
   }
@@ -285,9 +280,16 @@ export class SubNodesToggle extends Container {
     const { colorTextDefault, colorTextInverse } = styleOptions.value
     const { inverseTextOnFill } = styleNode.value(this.nodeData)
 
-    const colorOnFill = inverseTextOnFill ? colorTextInverse : colorTextDefault
+    if (this.isFloating) {
+      return colorTextDefault
+    }
 
-    return this.floating ? colorTextDefault : colorOnFill
+    return inverseTextOnFill ? colorTextInverse : colorTextDefault
+  }
+
+  private redraw(): void {
+    this.textColor = this.getTextColor()
+    this.initShapes()
   }
 
   private hover(): void {
@@ -306,6 +308,15 @@ export class SubNodesToggle extends Container {
   public setCollapsed(): void {
     this.isExpanded = false
     this.setToggleArrowRotation(Math.PI / 2)
+  }
+
+  public updateFloatingState(value: boolean): void {
+    if (this.isFloating === value) {
+      return
+    }
+
+    this.isFloating = value
+    this.redraw()
   }
 
   public destroy(): void {
