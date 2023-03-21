@@ -845,7 +845,7 @@ export class TimelineNode extends Container {
 
     const nodeSelectionEvent: NodeSelectionEvent = {
       id: this.hasSubNodes ? subFlowRunId! : id,
-      type: this.hasSubNodes ? 'subFlow' : 'task',
+      type: this.hasSubNodes ? 'subFlowRun' : 'task',
     }
 
     this.emit(nodeClickEvents.nodeDetails, nodeSelectionEvent)
