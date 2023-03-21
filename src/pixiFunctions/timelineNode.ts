@@ -344,7 +344,7 @@ export class TimelineNode extends Container {
       : 0
 
     this.subNodesToggle.on('click', () => {
-      this.emit(nodeClickEvents.subNodesToggle, this.nodeData.subFlowRunId)
+      this.emitSubNodesToggle()
     })
 
     this.addChild(this.subNodesToggle)
@@ -484,7 +484,7 @@ export class TimelineNode extends Container {
       this.emit(nodeClickEvents.nodeDetails, nodeSelectionValue)
     })
     this.subNodesContent.on(nodeClickEvents.subNodesToggle, (id) => {
-      this.emit(nodeClickEvents.subNodesToggle, id)
+      this.emitSubNodesToggle(id)
     })
 
     this.updateSubNodesContentPosition()
@@ -851,6 +851,10 @@ export class TimelineNode extends Container {
     this.emit(nodeClickEvents.nodeDetails, nodeSelectionEvent)
   }
 
+  private emitSubNodesToggle(id?: string): void {
+    this.emit(nodeClickEvents.subNodesToggle, id ?? this.nodeData.subFlowRunId)
+  }
+
   private destroySubNodesContent(): void {
     if (this.subNodesContentTicker) {
       this.graphState.pixiApp.ticker.remove(this.subNodesContentTicker)
@@ -885,7 +889,7 @@ export class TimelineNode extends Container {
     }
 
     if (this.isSubNodesExpanded) {
-      this.emit(nodeClickEvents.subNodesToggle, this.nodeData.subFlowRunId)
+      this.emitSubNodesToggle()
     }
 
     this.destroyRunningNodeTicker()
