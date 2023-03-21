@@ -167,27 +167,31 @@ export class TimelineNode extends Container {
           this.deselect()
         }
       }),
-      watch(expandedSubNodes, () => {
-        if (this.isSubNodesExpanded) {
-          if (!expandedSubNodes.value.has(this.nodeData.id)) {
-            this.isSubNodesExpanded = false
-            this.collapseSubNodes()
-            return
-          }
-
-          const newData = expandedSubNodes.value.get(this.nodeData.id)!.data
-          this.subNodesContent?.update('value' in newData ? newData.value : newData)
-          return
-        }
-        if (expandedSubNodes.value.has(this.nodeData.id)) {
-          this.isSubNodesExpanded = true
-          this.expandSubNodes()
-        }
-      }, { deep: true }),
     )
 
     if (hasSubNodes) {
       unWatchers.push(
+        watch(expandedSubNodes, () => {
+          if (!this.nodeData.subFlowRunId) {
+            return
+          }
+
+          if (this.isSubNodesExpanded) {
+            if (!expandedSubNodes.value.has(this.nodeData.subFlowRunId)) {
+              this.isSubNodesExpanded = false
+              this.collapseSubNodes()
+              return
+            }
+
+            const newData = expandedSubNodes.value.get(this.nodeData.subFlowRunId)!.data
+            this.subNodesContent?.update('value' in newData ? newData.value : newData)
+            return
+          }
+          if (expandedSubNodes.value.has(this.nodeData.subFlowRunId)) {
+            this.isSubNodesExpanded = true
+            this.expandSubNodes()
+          }
+        }, { deep: true }),
         watch(subNodeLabels, () => {
           if (this.getLabelText() !== this.label?.text) {
             this.drawLabel(true)
@@ -340,7 +344,7 @@ export class TimelineNode extends Container {
       : 0
 
     this.subNodesToggle.on('click', () => {
-      this.emit(nodeClickEvents.subNodesToggle, this.nodeData.id)
+      this.emit(nodeClickEvents.subNodesToggle, this.nodeData.subFlowRunId)
     })
 
     this.addChild(this.subNodesToggle)
@@ -454,7 +458,11 @@ export class TimelineNode extends Container {
    * Subnodes
    */
   public expandSubNodes(): void {
-    const subNodeContent = this.graphState.expandedSubNodes.value.get(this.nodeData.id)
+    if (!this.nodeData.subFlowRunId) {
+      return
+    }
+
+    const subNodeContent = this.graphState.expandedSubNodes.value.get(this.nodeData.subFlowRunId)
 
     if (!this.hasSubNodes || !subNodeContent) {
       return
@@ -874,6 +882,10 @@ export class TimelineNode extends Container {
 
     if (this.isSelected) {
       this.emit(nodeClickEvents.nodeDetails, null)
+    }
+
+    if (this.isSubNodesExpanded) {
+      this.emit(nodeClickEvents.subNodesToggle, this.nodeData.subFlowRunId)
     }
 
     this.destroyRunningNodeTicker()

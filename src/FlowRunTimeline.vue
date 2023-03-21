@@ -63,7 +63,7 @@
 
   const emit = defineEmits<{
     (event: 'selection', value: NodeSelectionEvent | null): void,
-    (event: 'subFlowToggle', value: string): void,
+    (event: 'subNodeToggle', value: string): void,
   }>()
 
   defineExpose({
@@ -360,7 +360,7 @@
     })
     nodesContainer.on(nodeClickEvents.subNodesToggle, (subNodesId) => {
       if (!isViewportDragging.value) {
-        emit('subFlowToggle', subNodesId)
+        emit('subNodeToggle', subNodesId)
       }
     })
 
