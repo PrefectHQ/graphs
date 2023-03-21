@@ -22,7 +22,7 @@ export type InitTimelineScaleProps = {
 
 export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
 
-export type NodeSelectionEventTypes = 'task' | 'subFlow'
+export type NodeSelectionEventTypes = 'task' | 'subFlowRun'
 export type NodeSelectionEvent = {
   id: string,
   type: NodeSelectionEventTypes,

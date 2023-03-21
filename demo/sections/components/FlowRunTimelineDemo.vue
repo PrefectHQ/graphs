@@ -15,7 +15,7 @@
           :selected-node-id="selectedNodeId"
           :expanded-sub-nodes="expandedSubFlows"
           @selection="selectNode"
-          @sub-flow-toggle="toggleSubFlow"
+          @sub-node-toggle="toggleSubFlow"
         />
       </div>
 
@@ -86,7 +86,7 @@
 
 <script lang="ts" setup>
   import { useColorTheme } from '@prefecthq/prefect-design'
-  import { ref, watchEffect, computed, Ref } from 'vue'
+  import { ref, watchEffect, computed } from 'vue'
   import { generateTimescaleData, Shape } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
   import {
@@ -119,7 +119,7 @@
   const slowFeedData = ref(false)
   const zeroTimeGap = ref(true)
   const layoutOptions: TimelineNodesLayoutOptions[] = ['waterfall', 'nearestParent']
-  const layout: Ref<TimelineNodesLayoutOptions> = ref('nearestParent')
+  const layout = ref<TimelineNodesLayoutOptions>('nearestParent')
 
   const dataOptions = computed(() => {
     return {
@@ -198,12 +198,12 @@
     // timeout simulates the delay while requesting subflow data.
     setTimeout(() => {
       if (expandedSubFlows.value.has(value)) {
-        let nodeData = data.value.find(item => item.id === value)
+        let nodeData = data.value.find(item => item.subFlowRunId === value)
         if (!nodeData) {
           expandedSubFlows.value.forEach((subFlowData) => {
             const match = 'value' in subFlowData.data
-              ? subFlowData.data.value.find(item => item.id === value)
-              : subFlowData.data.find(item => item.id === value)
+              ? subFlowData.data.value.find(item => item.subFlowRunId === value)
+              : subFlowData.data.find(item => item.subFlowRunId === value)
             if (match) {
               nodeData = match
             }
