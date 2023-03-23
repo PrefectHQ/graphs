@@ -45,9 +45,8 @@ export class LoadingIndicator extends Container {
   }
 
   private initDimensions(): void {
-    const { spacingNodeMargin } = this.graphState.styleOptions.value
     const width = dotSize * 3 + dotsGap * 2
-    const height = yPadding * 2 + dotSize + spacingNodeMargin
+    const height = yPadding * 2 + dotSize
 
     this.dimensionsObject.width = width
     this.dimensionsObject.height = height

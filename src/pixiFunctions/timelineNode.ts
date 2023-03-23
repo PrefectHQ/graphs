@@ -552,8 +552,9 @@ export class TimelineNode extends Container {
     this.destroyNoSubNodesMessage()
 
     this.noSubNodesMessage = new BitmapText(noSubNodesMessageText, textStyles.nodeTextSubdued)
+    this.noSubNodesMessage.anchor.set(0.5, 0)
     this.noSubNodesMessage.position.set(
-      box.width / 2 - this.noSubNodesMessage.width / 2,
+      box.width / 2,
       box.y + box.height + styleOptions.value.spacingNodeMargin,
     )
 
@@ -935,10 +936,19 @@ export class TimelineNode extends Container {
   private getSubContentHeight(): number {
     const { spacingNodeMargin } = this.graphState.styleOptions.value
 
-    return this.subNodesContent?.height
-      ?? this.subNodesLoadingIndicator?.height
-      ?? (this.noSubNodesMessage && this.noSubNodesMessage!.height + spacingNodeMargin)
-      ?? 0
+    if (this.subNodesContent?.height) {
+      return this.subNodesContent.height
+    }
+
+    if (this.subNodesLoadingIndicator?.height) {
+      return this.subNodesLoadingIndicator.height + spacingNodeMargin
+    }
+
+    if (this.noSubNodesMessage?.height) {
+      return this.noSubNodesMessage.height + spacingNodeMargin
+    }
+
+    return 0
   }
 
   private emitSubNodesToggle(id?: string): void {
