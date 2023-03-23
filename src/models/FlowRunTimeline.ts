@@ -94,6 +94,7 @@ export type CenterViewportOptions = {
 export type TextStyles = {
   nodeTextDefault: Partial<IBitmapTextStyle>,
   nodeTextInverse: Partial<IBitmapTextStyle>,
+  nodeTextSubdued: Partial<IBitmapTextStyle>,
   nodeTextStyles: TextStyle,
   timeMarkerLabel: Partial<IBitmapTextStyle>,
   playheadTimerLabel: Partial<IBitmapTextStyle>,
