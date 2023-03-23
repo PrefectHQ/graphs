@@ -23,7 +23,8 @@ import {
   SubNodesToggle,
   timelineUpdateEvent,
   roundedBorderRectAnimationDuration,
-  roundedBorderRectAnimationEase
+  roundedBorderRectAnimationEase,
+  LoadingIndicator
 } from '@/pixiFunctions'
 import { colorToHex } from '@/utilities/style'
 
@@ -40,6 +41,7 @@ export const nodeAnimationDurations = {
 // edges to determine their positions
 export const timelineNodeBoxName = 'box'
 
+const noSubNodesMessageText = 'N/A'
 // At which scale do node details become too hard to see and don't need to be drawn.
 const nodeElementScaleCullingThreshold = 0.2
 
@@ -81,6 +83,9 @@ export class TimelineNode extends Container {
   private subNodesToggle: SubNodesToggle | undefined
   private subNodesToggleWidth = 0
   private isSubNodesToggleFloating: boolean = false
+  private isLoadingSubNodes: boolean = false
+  private subNodesLoadingIndicator: LoadingIndicator | null = null
+  private noSubNodesMessage: BitmapText | null = null
 
   private label: BitmapText | undefined
   private apxLabelWidth = 0
@@ -89,7 +94,7 @@ export class TimelineNode extends Container {
   private isSubNodesExpanded = false
   private readonly subNodesOutlineContainer = new Container()
   private subNodesOutline: RoundedBorderRect | undefined
-  private subNodesContent: TimelineNodes | undefined
+  private subNodesContent: TimelineNodes | null = null
   private subNodesHeight = 0
   private subNodesContentTicker: (() => void) | null = null
 
@@ -154,6 +159,10 @@ export class TimelineNode extends Container {
       watch([styleOptions, styleNode], () => {
         this.drawBox()
         this.drawLabel()
+
+        if (this.noSubNodesMessage) {
+          this.drawNoSubNodesMessage()
+        }
       }, { deep: true }),
       watch(selectedNodeId, () => {
         const isCurrentSelection = selectedNodeId.value === this.nodeData.id
@@ -176,20 +185,50 @@ export class TimelineNode extends Container {
             return
           }
 
+          if (!this.isSubNodesExpanded && expandedSubNodes.value.has(this.nodeData.subFlowRunId)) {
+            this.isSubNodesExpanded = true
+            this.subNodesToggle?.setExpanded()
+
+            const subNodesData = this.getSubNodesData()
+
+            if (subNodesData.length === 0 && !this.isLoadingSubNodes) {
+              this.isLoadingSubNodes = true
+              this.drawLoadingSubNodes()
+              return
+            }
+
+            this.expandSubNodes()
+            return
+          }
+
           if (this.isSubNodesExpanded) {
             if (!expandedSubNodes.value.has(this.nodeData.subFlowRunId)) {
+              this.subNodesToggle?.setCollapsed()
+
               this.isSubNodesExpanded = false
+              this.isLoadingSubNodes = false
+
               this.collapseSubNodes()
               return
             }
 
-            const newData = expandedSubNodes.value.get(this.nodeData.subFlowRunId)!.data
-            this.subNodesContent?.update('value' in newData ? newData.value : newData)
-            return
-          }
-          if (expandedSubNodes.value.has(this.nodeData.subFlowRunId)) {
-            this.isSubNodesExpanded = true
-            this.expandSubNodes()
+            const newData = this.getSubNodesData()
+
+            if (this.isLoadingSubNodes) {
+              this.isLoadingSubNodes = false
+              this.destroySubNodesLoadingIndicator()
+              if (newData.length === 0) {
+                this.drawNoSubNodesMessage()
+                return
+              }
+            }
+
+            if (!this.subNodesContent) {
+              this.expandSubNodes()
+              return
+            }
+
+            this.subNodesContent.update(newData)
           }
         }, { deep: true }),
         watch(subNodeLabels, () => {
@@ -225,11 +264,6 @@ export class TimelineNode extends Container {
         this.subNodesOutline.visible = true
       }
     })
-  }
-
-  public readonly initializePosition = (): void => {
-    this.positionInitialized = true
-    this.updatePosition({ skipAnimation: true, includeXPos: true })
   }
 
   private drawSubNodesOutline(): void {
@@ -457,7 +491,7 @@ export class TimelineNode extends Container {
   /**
    * Subnodes
    */
-  public expandSubNodes(): void {
+  private expandSubNodes(): void {
     if (!this.nodeData.subFlowRunId) {
       return
     }
@@ -469,8 +503,6 @@ export class TimelineNode extends Container {
     }
 
     const subNodesData = 'value' in subNodeContent.data ? subNodeContent.data.value : subNodeContent.data
-
-    this.subNodesToggle?.setExpanded()
 
     this.subNodesContent?.destroy()
 
@@ -495,7 +527,42 @@ export class TimelineNode extends Container {
     this.initSubNodesTicker()
   }
 
-  public updateSubNodesContentPosition(): void {
+  private drawLoadingSubNodes(): void {
+    const { graphState, box } = this
+    const { spacingNodeMargin } = graphState.styleOptions.value
+
+    this.destroySubNodesLoadingIndicator()
+
+    this.subNodesLoadingIndicator = new LoadingIndicator({ graphState })
+    this.subNodesLoadingIndicator.position.set(
+      box.width / 2 - this.subNodesLoadingIndicator.width / 2,
+      box.y + box.height + spacingNodeMargin,
+    )
+
+    this.addChild(this.subNodesLoadingIndicator)
+
+    this.initSubNodesTicker()
+  }
+
+  private async drawNoSubNodesMessage(): Promise<void> {
+    const { box } = this
+    const { styleOptions } = this.graphState
+    const textStyles = await getBitmapFonts(styleOptions.value)
+
+    this.destroyNoSubNodesMessage()
+
+    this.noSubNodesMessage = new BitmapText(noSubNodesMessageText, textStyles.nodeTextSubdued)
+    this.noSubNodesMessage.position.set(
+      box.width / 2 - this.noSubNodesMessage.width / 2,
+      box.y + box.height + styleOptions.value.spacingNodeMargin,
+    )
+
+    this.addChild(this.noSubNodesMessage)
+
+    this.initSubNodesTicker()
+  }
+
+  private updateSubNodesContentPosition(): void {
     const { subNodesContent, box } = this
     const { spacingNodeMargin } = this.graphState.styleOptions.value
 
@@ -517,20 +584,21 @@ export class TimelineNode extends Container {
   }
 
   private initSubNodesTicker(): void {
-    const { subNodesContent } = this
     const { pixiApp } = this.graphState
 
-    if (!subNodesContent) {
+    if (this.subNodesContentTicker) {
       return
     }
 
-    this.subNodesHeight = subNodesContent.height
+    this.subNodesHeight = 0
 
     this.subNodesContentTicker = () => {
-      if (this.subNodesContent?.height !== this.subNodesHeight) {
+      const newSubNodesHeight = this.getSubContentHeight()
+
+      if (newSubNodesHeight !== this.subNodesHeight) {
         this.updateSubNodesOutlineSize()
         this.updateSelectedRingSize()
-        this.subNodesHeight = subNodesContent.height
+        this.subNodesHeight = newSubNodesHeight
         this.emit(nodeResizeEvent)
       }
     }
@@ -540,9 +608,7 @@ export class TimelineNode extends Container {
     )
   }
 
-  public async collapseSubNodes(): Promise<void> {
-    this.subNodesToggle?.setCollapsed()
-
+  private async collapseSubNodes(): Promise<void> {
     this.destroySubNodesContent()
 
     this.updateSelectedRingSize()
@@ -659,7 +725,6 @@ export class TimelineNode extends Container {
 
     const {
       isSubNodesExpanded,
-      subNodesContent,
       subNodesOutline,
       nodeHeight,
     } = this
@@ -672,7 +737,7 @@ export class TimelineNode extends Container {
 
     const width = this.getOutlineWidth()
     const height = isSubNodesExpanded
-      ? nodeHeight + subNodesContent!.height + spacingNodeMargin
+      ? nodeHeight + this.getSubContentHeight() + spacingNodeMargin
       : nodeHeight
 
     subNodesOutline.resize({
@@ -759,6 +824,11 @@ export class TimelineNode extends Container {
   /**
    * Utilities
    */
+  public readonly initializePosition = (): void => {
+    this.positionInitialized = true
+    this.updatePosition({ skipAnimation: true, includeXPos: true })
+  }
+
   private getNodeWidth(): number {
     const { isRunningNode, boxCapWidth, nodeData } = this
 
@@ -851,6 +921,26 @@ export class TimelineNode extends Container {
     this.emit(nodeClickEvents.nodeDetails, nodeSelectionEvent)
   }
 
+  private readonly getSubNodesData = (): GraphTimelineNode[] => {
+    if (!this.nodeData.subFlowRunId) {
+      return []
+    }
+
+    const { expandedSubNodes } = this.graphState
+    const subNodesData = expandedSubNodes.value.get(this.nodeData.subFlowRunId)!.data
+
+    return 'value' in subNodesData ? subNodesData.value : subNodesData
+  }
+
+  private getSubContentHeight(): number {
+    const { spacingNodeMargin } = this.graphState.styleOptions.value
+
+    return this.subNodesContent?.height
+      ?? this.subNodesLoadingIndicator?.height
+      ?? (this.noSubNodesMessage && this.noSubNodesMessage!.height + spacingNodeMargin)
+      ?? 0
+  }
+
   private emitSubNodesToggle(id?: string): void {
     this.emit(nodeClickEvents.subNodesToggle, id ?? this.nodeData.subFlowRunId)
   }
@@ -861,7 +951,20 @@ export class TimelineNode extends Container {
       this.subNodesContentTicker = null
     }
 
+    this.destroyNoSubNodesMessage()
+    this.destroySubNodesLoadingIndicator()
     this.subNodesContent?.destroy()
+    this.subNodesContent = null
+  }
+
+  private destroySubNodesLoadingIndicator(): void {
+    this.subNodesLoadingIndicator?.destroy()
+    this.subNodesLoadingIndicator = null
+  }
+
+  private destroyNoSubNodesMessage(): void {
+    this.noSubNodesMessage?.destroy()
+    this.noSubNodesMessage = null
   }
 
   private destroyRunningNodeTicker(): void {

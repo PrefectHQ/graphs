@@ -109,9 +109,9 @@
   const expandedSubFlows = ref<ExpandedSubNodes>(new Map())
   const hideEdges = ref(false)
 
-  const size = ref(15)
+  const size = ref(10)
   const fanMultiplier = ref(1.5)
-  const subFlowOccurrences = ref(20)
+  const subFlowOccurrences = ref(80)
   const shape = ref<Shape>('fanOut')
   const start = ref<Date>(previous)
   const end = ref<Date>(now)
@@ -226,7 +226,7 @@
           data: subFlowData,
         })
       }
-    }, 50)
+    }, 400)
   }
 
   const centerViewport = (): void => {

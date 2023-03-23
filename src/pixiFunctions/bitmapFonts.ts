@@ -69,6 +69,18 @@ function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextS
   }
 
   BitmapFont.from(
+    'NodeTextSubdued',
+    {
+      ...nodeTextStyles,
+      fill: styles.colorTextSubdued,
+    }, options,
+  )
+  const nodeTextSubdued: Partial<IBitmapTextStyle> = {
+    fontName: 'NodeTextSubdued',
+    fontSize: styles.textSizeDefault,
+  }
+
+  BitmapFont.from(
     'TimeMarkerLabel',
     {
       ...timelineMarkerStyles,
@@ -95,6 +107,7 @@ function createBitmapFonts(fontFamily: string, styles: ParsedThemeStyles): TextS
   return {
     nodeTextDefault,
     nodeTextInverse,
+    nodeTextSubdued,
     nodeTextStyles,
     timeMarkerLabel,
     playheadTimerLabel,

@@ -206,30 +206,6 @@ export class TimelineNodes extends Container {
     }
   }
 
-  private updateLayoutRows(position: number = 0): void {
-    const { layout } = this
-    const { spacingNodeMargin, spacingNodeSelectionMargin } = this.graphState.styleOptions.value
-    const maxRows = Math.max(...Object.values(layout.value).map(node => node.position))
-    let newLayoutRows: NodeLayoutRow[] = []
-
-    for (let i = position; i <= maxRows; i++) {
-      const yPos = newLayoutRows[i - 1]
-        ? newLayoutRows[i - 1].yPos + newLayoutRows[i - 1].height - spacingNodeSelectionMargin * 2 + spacingNodeMargin
-        : 0
-      const nodesInRow = Object.keys(layout.value).filter(nodeId => layout.value[nodeId].position === i)
-      const height = Math.max(...nodesInRow.map(nodeId => this.nodeRecords.get(nodeId)?.height ?? 0))
-
-      newLayoutRows.push({ yPos, height })
-    }
-
-    if (position > 0) {
-      const combinedLayoutRows = this.layoutRows.value.slice(0, position).concat(newLayoutRows)
-      newLayoutRows = combinedLayoutRows
-    }
-
-    this.layoutRows.value = newLayoutRows
-  }
-
   private createNode(nodeData: GraphTimelineNode): void {
     const { graphState, layout, layoutRows } = this
     const node = new TimelineNode({
@@ -324,6 +300,30 @@ export class TimelineNodes extends Container {
     if (this.isSelectionPathHighlighted) {
       this.highlightSelectedNodePath()
     }
+  }
+
+  private updateLayoutRows(position: number = 0): void {
+    const { layout } = this
+    const { spacingNodeMargin, spacingNodeSelectionMargin } = this.graphState.styleOptions.value
+    const maxRows = Math.max(...Object.values(layout.value).map(node => node.position))
+    let newLayoutRows: NodeLayoutRow[] = []
+
+    for (let i = position; i <= maxRows; i++) {
+      const yPos = newLayoutRows[i - 1]
+        ? newLayoutRows[i - 1].yPos + newLayoutRows[i - 1].height - spacingNodeSelectionMargin * 2 + spacingNodeMargin
+        : 0
+      const nodesInRow = Object.keys(layout.value).filter(nodeId => layout.value[nodeId].position === i)
+      const height = Math.max(...nodesInRow.map(nodeId => this.nodeRecords.get(nodeId)?.height ?? 0))
+
+      newLayoutRows.push({ yPos, height })
+    }
+
+    if (position > 0) {
+      const combinedLayoutRows = this.layoutRows.value.slice(0, position).concat(newLayoutRows)
+      newLayoutRows = combinedLayoutRows
+    }
+
+    this.layoutRows.value = newLayoutRows
   }
 
   public updateLayoutSetting(): void {
