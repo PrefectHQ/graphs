@@ -308,12 +308,26 @@ export class TimelineNodes extends Container {
     const maxRows = Math.max(...Object.values(layout.value).map(node => node.position))
     let newLayoutRows: NodeLayoutRow[] = []
 
+    const rowHeights = Object.keys(layout.value).reduce((acc, nodeId) => {
+      const row = layout.value[nodeId].position
+      const currentRowHeight = acc.get(row) ?? 0
+      const height = this.nodeRecords.get(nodeId)?.height ?? 0
+
+      acc.set(row, Math.max(height, currentRowHeight))
+
+      return acc
+    }, new Map<number, number>())
+
     for (let i = position; i <= maxRows; i++) {
-      const yPos = newLayoutRows[i - 1]
-        ? newLayoutRows[i - 1].yPos + newLayoutRows[i - 1].height - spacingNodeSelectionMargin * 2 + spacingNodeMargin
-        : 0
-      const nodesInRow = Object.keys(layout.value).filter(nodeId => layout.value[nodeId].position === i)
-      const height = Math.max(...nodesInRow.map(nodeId => this.nodeRecords.get(nodeId)?.height ?? 0))
+      const previousRow = newLayoutRows[i - 1] as NodeLayoutRow | undefined
+      const height = rowHeights.get(i) ?? 0
+
+      if (previousRow === undefined) {
+        newLayoutRows.push({ yPos: 0, height })
+        continue
+      }
+
+      const yPos = previousRow.yPos + previousRow.height - spacingNodeSelectionMargin * 2 + spacingNodeMargin
 
       newLayoutRows.push({ yPos, height })
     }
