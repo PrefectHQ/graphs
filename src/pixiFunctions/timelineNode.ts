@@ -41,7 +41,7 @@ export const nodeAnimationDurations = {
 // edges to determine their positions
 export const timelineNodeBoxName = 'box'
 
-const noSubNodesMessageText = 'N/A'
+const noSubNodesMessageText = 'None'
 // At which scale do node details become too hard to see and don't need to be drawn.
 const nodeElementScaleCullingThreshold = 0.2
 
