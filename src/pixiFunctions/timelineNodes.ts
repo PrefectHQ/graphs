@@ -41,6 +41,7 @@ export class TimelineNodes extends Container {
 
   private readonly isSubNodes
   private graphData
+  private readonly graphDataLookup: Map<string, GraphTimelineNode> = new Map()
   private readonly graphState: GraphState
 
   private readonly nodeContainer = new Container()
@@ -68,6 +69,7 @@ export class TimelineNodes extends Container {
 
     this.isSubNodes = isSubNodes
     this.graphData = graphData
+    this.setGraphDataLookup()
     this.graphState = graphState
 
     this.initDeselectLayer()
@@ -265,6 +267,7 @@ export class TimelineNodes extends Container {
    */
   public update(newData: GraphTimelineNode[]): void {
     this.graphData = newData
+    this.setGraphDataLookup()
 
     if (newData.length !== this.nodeRecords.size) {
       const message: NodeLayoutWorkerProps = {
@@ -396,7 +399,7 @@ export class TimelineNodes extends Container {
   private getAllUpstreamEdges(nodeId: string): EdgeRecord[] {
     const connectedEdges: EdgeRecord[] = []
 
-    const nodeData = this.graphData.find(node => node.id === nodeId)
+    const nodeData = this.getNodeData(nodeId)
     nodeData?.upstreamDependencies?.forEach((upstreamId) => {
       const edge = this.edgeRecords.find(edgeRecord => {
         return edgeRecord.sourceId === upstreamId && edgeRecord.targetId === nodeId
@@ -448,6 +451,12 @@ export class TimelineNodes extends Container {
    * Utilities
    */
 
+  private setGraphDataLookup(): void {
+    this.graphData.forEach((node) => {
+      this.graphDataLookup.set(node.id, node)
+    })
+  }
+
   private registerEmits(el: TimelineNode | TimelineNodes): void {
     el.on(nodeClickEvents.nodeDetails, (nodeSelectionValue) => {
       this.emit(nodeClickEvents.nodeDetails, nodeSelectionValue)
@@ -462,7 +471,7 @@ export class TimelineNodes extends Container {
   }
 
   private getNodeData(nodeId: string): GraphTimelineNode | undefined {
-    return this.graphData.find(node => node.id === nodeId)
+    return this.graphDataLookup.get(nodeId)
   }
 
   public getEarliestNodeStart(): Date | null {
