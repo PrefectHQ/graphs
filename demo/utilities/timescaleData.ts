@@ -198,9 +198,6 @@ const generateTimescaleData = (options?: DataOptions): GraphTimelineNode[] => {
   // Assign start and end dates based on dependency tree
   nodes.forEach(assignStartAndEndDates({ start, end, size, nodes, zeroTimeGap }))
 
-  // Sort by start date
-  nodes.sort((nodeA, nodeB) => nodeA.start.getTime() - nodeB.start.getTime())
-
   return nodes
 }
 

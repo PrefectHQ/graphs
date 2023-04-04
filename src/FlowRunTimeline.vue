@@ -28,7 +28,8 @@
     ExpandedSubNodes,
     InitTimelineScaleProps,
     GraphState,
-    NodeSelectionEvent
+    NodeSelectionEvent,
+    hasStartAndEndDates
   } from '@/models'
   import {
     initBitmapFonts,
@@ -164,7 +165,9 @@
   function initTimeScaleProps(): void {
     const minimumTimeSpan = 1000 * 60
 
-    const dates = props.graphData.filter(node => node.end).map(({ start, end }) => ({ start, end }))
+    const dates = props.graphData
+      .filter(hasStartAndEndDates)
+      .map(({ start, end }) => ({ start, end }))
 
     if (isRunning.value) {
       dates.push({
