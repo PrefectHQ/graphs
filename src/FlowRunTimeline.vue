@@ -285,7 +285,6 @@
     guides = new TimelineGuides({
       viewportRef: viewport,
       appRef: pixiApp,
-      cull,
       minimumStartDate,
       maximumEndDate,
       isRunning: isRunning.value,
