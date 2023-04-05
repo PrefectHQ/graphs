@@ -217,7 +217,7 @@
         const subFlowDataOptions = {
           ...dataOptions.value,
           size: Math.floor(Math.random() * 5) + 1,
-          start: new Date(nodeData.start),
+          start: new Date(nodeData.start!),
           end: nodeData.end ? new Date(nodeData.end) : new Date(),
         }
         const subFlowData = generateTimescaleData(subFlowDataOptions)

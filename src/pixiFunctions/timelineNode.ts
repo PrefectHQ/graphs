@@ -672,7 +672,7 @@ export class TimelineNode extends Container {
   }
 
   private updatePosition(options?: TimelineNodeUpdatePositionProps): void {
-    if (!this.positionInitialized) {
+    if (!this.positionInitialized || !this.nodeData.start) {
       return
     }
 
@@ -832,6 +832,10 @@ export class TimelineNode extends Container {
 
   private getNodeWidth(): number {
     const { isRunningNode, boxCapWidth, nodeData } = this
+
+    if (!nodeData.start) {
+      return 0
+    }
 
     const minimumWidth = isRunningNode ? boxCapWidth : boxCapWidth * 2
     const actualWidth = timelineScale.dateToX(nodeData.end ?? new Date()) - timelineScale.dateToX(nodeData.start)

@@ -72,6 +72,10 @@
   ]
 
   const getDuration = (row: GraphTimelineNode): string => {
+    if (!row.start) {
+      return '--'
+    }
+
     const start = row.start.getTime()
     const end = row.end?.getTime()
 

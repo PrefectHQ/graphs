@@ -479,12 +479,13 @@ export class TimelineNodes extends Container {
       return null
     }
 
-    const earliestNodeStart = this.graphData.reduce((earliestDate: Date, nodeData) => {
-      if (nodeData.start.getTime() < earliestDate.getTime()) {
+    const earliestNodeStart = this.graphData.reduce((earliestDate, nodeData) => {
+      if (nodeData.start && nodeData.start.getTime() < earliestDate.getTime()) {
         return nodeData.start
       }
+
       return earliestDate
-    }, this.graphData[0].start)
+    }, new Date())
 
     return earliestNodeStart
   }

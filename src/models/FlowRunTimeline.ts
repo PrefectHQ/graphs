@@ -7,11 +7,18 @@ import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilitie
 export type GraphTimelineNode = {
   id: string,
   label: string,
-  start: Date,
+  start?: Date,
   end: Date | null,
   state: string,
   upstreamDependencies?: string[],
   subFlowRunId?: string,
+}
+
+export function hasStartAndEndDates(node: GraphTimelineNode): node is GraphTimelineNode & {
+  start: Date,
+  end: Date,
+} {
+  return !!node.start && !!node.end
 }
 
 export type InitTimelineScaleProps = {

@@ -64,7 +64,7 @@ onmessage = async ({
     const newData = JSON.parse(graphData) as GraphTimelineNode[]
 
     if (timelineScale && (layoutSetting || graphDataStore !== newData)) {
-      graphDataStore = newData
+      graphDataStore = prepareGraphData(newData)
       await calculateNodeLayout()
       const response: NodeLayoutWorkerResponseData = {
         layout,
@@ -73,6 +73,27 @@ onmessage = async ({
       postMessage(response)
     }
   }
+}
+
+function prepareGraphData(data: GraphTimelineNode[]): GraphTimelineNode[] {
+  return data
+    .filter(isRenderableTimelineNode)
+    .map(node => {
+      // during serialization, dates are converted to strings
+      // so we need to convert them back in this worker
+      node.start = new Date(node.start)
+      if (node.end) {
+        node.end = new Date(node.end)
+      }
+      return node
+    })
+    .sort((nodeA, nodeB) => {
+      return nodeA.start.getTime() - nodeB.start.getTime()
+    })
+}
+
+function isRenderableTimelineNode(value: GraphTimelineNode): value is GraphTimelineNode & { start: Date } {
+  return typeof value === 'object' && 'start' in value
 }
 
 async function calculateNodeLayout(): Promise<void> {
@@ -99,6 +120,10 @@ function generateWaterfallLayout(): void {
 
 async function generateNearestParentLayout(): Promise<void> {
   for await (const nodeData of graphDataStore) {
+    if (!nodeData.start) {
+      continue
+    }
+
     const endAsPx = timelineScale!.dateToX(nodeData.end ? new Date(nodeData.end) : new Date())
     // Accommodate the label width so they don't overlap
     const apxLabelWidth = nodeData.label.length * currentApxCharacterWidth
