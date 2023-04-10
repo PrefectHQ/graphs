@@ -115,6 +115,8 @@
   const nodesContentContainerName = 'rootNodesContainer'
   let nodesContainer: TimelineNodes
 
+  let graphState: GraphState | null = null
+
   onMounted(async () => {
     if (!stage.value) {
       console.error('Stage reference not found in initPixiApp')
@@ -131,6 +133,7 @@
     initViewportDragMonitor()
 
     initFonts()
+    initGraphState()
 
     initGuides()
     initContent()
@@ -225,6 +228,26 @@
     })
   }
 
+  function initGraphState(): void {
+    graphState = {
+      pixiApp,
+      viewport,
+      cull,
+      cullScreen,
+      timeScaleProps,
+      styleOptions,
+      styleNode,
+      layoutSetting,
+      isRunning,
+      hideEdges,
+      subNodeLabels,
+      selectedNodeId,
+      expandedSubNodes,
+      suppressMotion,
+      centerViewport,
+    }
+  }
+
   function initPlayhead(): void {
     if (!isRunning.value) {
       return
@@ -285,13 +308,13 @@
   })
 
   function initGuides(): void {
+    if (!graphState) {
+      return
+    }
+
     guides = new TimelineGuides({
-      viewportRef: viewport,
-      appRef: pixiApp,
-      minimumStartDate,
+      graphState,
       maximumEndDate,
-      isRunning: isRunning.value,
-      styleOptions,
       formatDateFns,
     })
 
@@ -330,22 +353,8 @@
   }
 
   function initContent(): void {
-    const graphState: GraphState = {
-      pixiApp,
-      viewport,
-      cull,
-      cullScreen,
-      timeScaleProps,
-      styleOptions,
-      styleNode,
-      layoutSetting,
-      isRunning,
-      hideEdges,
-      subNodeLabels,
-      selectedNodeId,
-      expandedSubNodes,
-      suppressMotion,
-      centerViewport,
+    if (!graphState) {
+      return
     }
 
     nodesContainer = new TimelineNodes({
