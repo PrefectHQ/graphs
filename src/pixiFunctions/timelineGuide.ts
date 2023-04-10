@@ -5,29 +5,29 @@ import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
 import { getSimpleFillTexture } from '@/pixiFunctions/nodeSprites'
 
 type TimelineGuideProps = {
-  appRef: Application,
+  pixiApp: Application,
   labelText: string | null,
-  styles: ComputedRef<ParsedThemeStyles>,
+  styleOptions: ComputedRef<ParsedThemeStyles>,
 }
 
 export class TimelineGuide extends Container {
-  private readonly appRef
+  private readonly pixiApp
   private readonly labelText
-  private readonly styles
+  private readonly styleOptions
 
   private guideLine: Sprite | undefined
   private label: BitmapText | undefined
 
   public constructor({
-    appRef,
+    pixiApp,
     labelText,
-    styles,
+    styleOptions,
   }: TimelineGuideProps) {
     super()
 
-    this.appRef = appRef
+    this.pixiApp = pixiApp
     this.labelText = labelText
-    this.styles = styles
+    this.styleOptions = styleOptions
 
     this.initGuideLine()
     this.drawLabel()
@@ -36,24 +36,24 @@ export class TimelineGuide extends Container {
   }
 
   private initGuideLine(): void {
-    const { appRef } = this
-    const { colorGuideLine } = this.styles.value
+    const { pixiApp } = this
+    const { colorGuideLine } = this.styleOptions.value
 
     const texture = getSimpleFillTexture({
-      pixiApp: appRef,
+      pixiApp: pixiApp,
       fill: colorGuideLine,
     })
 
     this.guideLine = new Sprite(texture)
     this.guideLine.width = 1
-    this.guideLine.height = appRef.screen.height
+    this.guideLine.height = pixiApp.screen.height
     this.addChild(this.guideLine)
   }
 
   private async drawLabel(): Promise<void> {
     if (this.labelText) {
-      const textStyles = await getBitmapFonts(this.styles.value)
-      const { spacingGuideLabelPadding } = this.styles.value
+      const textStyles = await getBitmapFonts(this.styleOptions.value)
+      const { spacingGuideLabelPadding } = this.styleOptions.value
 
       this.label?.destroy()
       this.label = new BitmapText(this.labelText, textStyles.timeMarkerLabel)

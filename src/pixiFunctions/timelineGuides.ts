@@ -1,10 +1,6 @@
-import type { Viewport } from 'pixi-viewport'
-import { Application, Container } from 'pixi.js'
+import { Container } from 'pixi.js'
 import { ComputedRef, Ref, watch, WatchStopHandle } from 'vue'
-import {
-  FormatDateFns,
-  ParsedThemeStyles
-} from '@/models'
+import { FormatDateFns, GraphState } from '@/models'
 import { TimelineGuide } from '@/pixiFunctions/timelineGuide'
 import { timelineScale } from '@/pixiFunctions/timelineScale'
 import {
@@ -20,26 +16,18 @@ const timelineGuidesMinGap = 260
 // how far left and right of the timeline to render guides
 const timelineGuidesRenderPadding = 4000
 
-type TimelineGuidesProps = {
-  viewportRef: Viewport,
-  appRef: Application,
-  minimumStartDate: Date,
+type TimelineGuideProps = {
+  graphState: GraphState,
   maximumEndDate: Ref<Date | undefined>,
-  isRunning: boolean,
-  styleOptions: ComputedRef<ParsedThemeStyles>,
   formatDateFns: ComputedRef<FormatDateFns>,
 }
 
 export class TimelineGuides extends Container {
-  private readonly viewportRef
-  private readonly appRef
-  private readonly minimumStartDate
+  private readonly graphState
   private readonly maximumEndDate
-  private readonly isRunning
-  private readonly styleOptions
   private readonly formatDateFns
 
-  private readonly unwatch: WatchStopHandle
+  private readonly unWatchers: WatchStopHandle[] = []
 
   private idealGuideCount = 10
   private currentTimeGap = 120
@@ -47,22 +35,14 @@ export class TimelineGuides extends Container {
   private readonly guides: Map<Date, TimelineGuide> = new Map()
 
   public constructor({
-    viewportRef,
-    appRef,
-    minimumStartDate,
+    graphState,
     maximumEndDate,
-    isRunning,
-    styleOptions,
     formatDateFns,
-  }: TimelineGuidesProps) {
+  }: TimelineGuideProps) {
     super()
 
-    this.viewportRef = viewportRef
-    this.appRef = appRef
-    this.minimumStartDate = minimumStartDate
+    this.graphState = graphState
     this.maximumEndDate = maximumEndDate
-    this.isRunning = isRunning
-    this.styleOptions = styleOptions
     this.formatDateFns = formatDateFns
 
     this.updateIdealGuideCount()
@@ -70,13 +50,21 @@ export class TimelineGuides extends Container {
 
     this.createGuides()
 
-    this.unwatch = watch(styleOptions, () => {
-      this.removeChildren()
-      this.guides.clear()
-      this.createGuides()
-    }, { deep: true })
+    this.initWatchers()
 
     this.interactive = false
+  }
+
+  private initWatchers(): void {
+    const { styleOptions } = this.graphState
+
+    this.unWatchers.push(
+      watch(styleOptions, () => {
+        this.removeChildren()
+        this.guides.clear()
+        this.createGuides()
+      }, { deep: true }),
+    )
   }
 
   public updateGuides(): void {
@@ -95,12 +83,16 @@ export class TimelineGuides extends Container {
   }
 
   private updateIdealGuideCount(): void {
-    this.idealGuideCount = Math.ceil(this.appRef.screen.width / timelineGuidesMinGap)
+    const { pixiApp } = this.graphState
+    this.idealGuideCount = Math.ceil(pixiApp.screen.width / timelineGuidesMinGap)
   }
 
   private updateCurrentTimeGap(): void {
-    const pxSpan = Math.ceil((this.viewportRef.right - this.viewportRef.left) / this.idealGuideCount)
-    const timeSpan = timelineScale.xToDate(pxSpan) - this.minimumStartDate.getTime()
+    const { viewport } = this.graphState
+    const { minimumStartTime } = this.graphState.timeScaleProps
+
+    const pxSpan = Math.ceil((viewport.right - viewport.left) / this.idealGuideCount)
+    const timeSpan = timelineScale.xToDate(pxSpan) - minimumStartTime
 
     const timeSpanSlot = timeSpanSlots.find(timeSlot => timeSlot.ceiling > timeSpan) ?? timeSpanSlots[0]
 
@@ -109,6 +101,8 @@ export class TimelineGuides extends Container {
   }
 
   private createGuides(): void {
+    const { pixiApp, styleOptions } = this.graphState
+
     let lastGuidePoint
     const maxGuidePlacement = timelineScale.xToDate(timelineScale.dateToX(this.maximumEndDate.value ?? new Date()) + timelineGuidesRenderPadding)
     let firstGuide = new Date(Math.ceil(timelineScale.xToDate(-timelineGuidesRenderPadding) / this.currentTimeGap) * this.currentTimeGap)
@@ -123,9 +117,9 @@ export class TimelineGuides extends Container {
 
     while (lastGuidePoint.getTime() < maxGuidePlacement) {
       const guide = new TimelineGuide({
-        appRef: this.appRef,
+        pixiApp,
         labelText: this.labelFormatter(lastGuidePoint),
-        styles: this.styleOptions,
+        styleOptions,
       })
       guide.position.set(this.getGuidePosition(lastGuidePoint), 0)
 
@@ -137,17 +131,21 @@ export class TimelineGuides extends Container {
   }
 
   private getGuidePosition(date: Date): number {
-    return timelineScale.dateToX(date) * this.viewportRef.scale._x + this.viewportRef.worldTransform.tx
+    const { viewport } = this.graphState
+
+    return timelineScale.dateToX(date) * viewport.scale._x + viewport.worldTransform.tx
   }
 
   private updateGuidePositions(): void {
+    const { pixiApp } = this.graphState
+
     this.guides.forEach((guideContainer, guideDate) => {
       const newXPosition = this.getGuidePosition(guideDate)
       if (newXPosition !== guideContainer.position.x) {
         guideContainer.position.set(this.getGuidePosition(guideDate), 0)
       }
-      if (guideContainer.height !== this.appRef.screen.height) {
-        guideContainer.updateHeight(this.appRef.screen.height)
+      if (guideContainer.height !== pixiApp.screen.height) {
+        guideContainer.updateHeight(pixiApp.screen.height)
       }
     })
   }
@@ -184,7 +182,10 @@ export class TimelineGuides extends Container {
   }
 
   private isGuideLengthOutdated(): boolean {
-    if (!this.isRunning) {
+    const { isRunning, viewport, timeScaleProps } = this.graphState
+    const { minimumStartTime } = timeScaleProps
+
+    if (!isRunning.value) {
       return false
     }
 
@@ -196,8 +197,8 @@ export class TimelineGuides extends Container {
 
     const lastGuidePositionFloor =
       this.getGuidePosition(this.maximumEndDate.value)
-      + timelineGuidesRenderPadding * this.viewportRef.scale._x
-      - timelineScale.dateToX(new Date(this.minimumStartDate.getTime() + this.currentTimeGap)) * this.viewportRef.scale._x
+      + timelineGuidesRenderPadding * viewport.scale._x
+      - timelineScale.dateToX(new Date(minimumStartTime + this.currentTimeGap)) * viewport.scale._x
 
     return lastGuide.x < lastGuidePositionFloor
   }
@@ -206,7 +207,7 @@ export class TimelineGuides extends Container {
     this.removeChildren()
     this.guides.forEach(guide => guide.destroy())
     this.guides.clear()
-    this.unwatch()
+    this.unWatchers.forEach(unwatch => unwatch())
     super.destroy.call(this)
   }
 }
