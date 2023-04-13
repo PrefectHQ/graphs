@@ -29,7 +29,8 @@
     InitTimelineScaleProps,
     GraphState,
     NodeSelectionEvent,
-    hasStartAndEndDates
+    hasStartAndEndDates,
+    TimelineVisibleDateRange
   } from '@/models'
   import {
     initBitmapFonts,
@@ -60,16 +61,27 @@
     hideEdges?: boolean,
     subNodeLabels?: Map<string, string>,
     expandedSubNodes?: ExpandedSubNodes,
+    visibleDateRange?: TimelineVisibleDateRange,
   }>()
 
   const emit = defineEmits<{
     (event: 'selection', value: NodeSelectionEvent | null): void,
     (event: 'subNodeToggle', value: string): void,
+    (event: 'update:visibleDateRange', value: TimelineVisibleDateRange | undefined): void,
   }>()
 
   defineExpose({
     centerViewport,
     moveViewportCenter,
+  })
+
+  const internalVisibleDateRange = computed<TimelineVisibleDateRange | undefined>({
+    get() {
+      return props.visibleDateRange
+    },
+    set(value) {
+      emit('update:visibleDateRange', value)
+    },
   })
 
   const stage = ref<HTMLDivElement>()
@@ -130,7 +142,7 @@
 
     viewport = await initViewport(stage.value, pixiApp)
     viewport.zIndex = zIndex.viewport
-    initViewportDragMonitor()
+    initViewportMonitor()
 
     initFonts()
     initGraphState()
@@ -156,14 +168,31 @@
     pixiApp.destroy(true)
   }
 
-  function initViewportDragMonitor(): void {
+  function initViewportMonitor(): void {
     viewport
       .on('drag-start', () => {
         isViewportDragging.value = true
       }).on('drag-end', () => {
         isViewportDragging.value = false
       })
+      .on('moved', () => {
+        internalVisibleDateRange.value = {
+          startDate: new Date(timelineScale.xToDate(viewport.left)),
+          endDate: new Date(timelineScale.xToDate(viewport.right)),
+          internalOrigin: true,
+        }
+      })
   }
+  watch(() => props.visibleDateRange, (newStartDate) => {
+    if (newStartDate && !newStartDate.internalOrigin) {
+      const newViewportLeft = timelineScale.dateToX(newStartDate.startDate)
+      const newViewportRight = timelineScale.dateToX(newStartDate.endDate)
+      const centerX = newViewportLeft + (newViewportRight - newViewportLeft) / 2
+
+      viewport.fitWidth(newViewportRight - newViewportLeft, true)
+      viewport.moveCenter(centerX, viewport.center.y)
+    }
+  })
 
   function initTimeScaleProps(): void {
     const minimumTimeSpan = 1000 * 60
