@@ -94,7 +94,7 @@ export type GraphState = {
 }
 
 export type DateToX = (date: Date) => number
-export type XToDate = (xPosition: number) => number
+export type XToDate = (xPosition: number) => Date
 export type TimelineScale = {
   dateToX: DateToX,
   xToDate: XToDate,

@@ -92,7 +92,7 @@ export class TimelineGuides extends Container {
     const { minimumStartTime } = this.graphState.timeScaleProps
 
     const pxSpan = Math.ceil((viewport.right - viewport.left) / this.idealGuideCount)
-    const timeSpan = timelineScale.xToDate(pxSpan) - minimumStartTime
+    const timeSpan = timelineScale.xToDate(pxSpan).getTime() - minimumStartTime
 
     const timeSpanSlot = timeSpanSlots.find(timeSlot => timeSlot.ceiling > timeSpan) ?? timeSpanSlots[0]
 
@@ -105,7 +105,7 @@ export class TimelineGuides extends Container {
 
     let lastGuidePoint
     const maxGuidePlacement = timelineScale.xToDate(timelineScale.dateToX(this.maximumEndDate.value ?? new Date()) + timelineGuidesRenderPadding)
-    let firstGuide = new Date(Math.ceil(timelineScale.xToDate(-timelineGuidesRenderPadding) / this.currentTimeGap) * this.currentTimeGap)
+    let firstGuide = new Date(Math.ceil(timelineScale.xToDate(-timelineGuidesRenderPadding).getTime() / this.currentTimeGap) * this.currentTimeGap)
 
     if (this.currentTimeGap > timeLengths.hour * 6) {
       firstGuide = roundDownToNearestDay(firstGuide)
@@ -115,7 +115,7 @@ export class TimelineGuides extends Container {
 
     lastGuidePoint = firstGuide
 
-    while (lastGuidePoint.getTime() < maxGuidePlacement) {
+    while (lastGuidePoint.getTime() < maxGuidePlacement.getTime()) {
       const guide = new TimelineGuide({
         pixiApp,
         labelText: this.labelFormatter(lastGuidePoint),

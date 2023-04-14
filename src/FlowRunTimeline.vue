@@ -142,7 +142,8 @@
 
     viewport = await initViewport(stage.value, pixiApp)
     viewport.zIndex = zIndex.viewport
-    initViewportMonitor()
+    initViewportDragMonitor()
+    initDateRangeModel()
 
     initFonts()
     initGraphState()
@@ -168,20 +169,24 @@
     pixiApp.destroy(true)
   }
 
-  function initViewportMonitor(): void {
+  function initViewportDragMonitor(): void {
     viewport
       .on('drag-start', () => {
         isViewportDragging.value = true
       }).on('drag-end', () => {
         isViewportDragging.value = false
       })
-      .on('moved', () => {
-        internalVisibleDateRange.value = {
-          startDate: new Date(timelineScale.xToDate(viewport.left)),
-          endDate: new Date(timelineScale.xToDate(viewport.right)),
-          internalOrigin: true,
-        }
-      })
+  }
+
+  function initDateRangeModel(): void {
+    // Fires continuously as the viewport is moved
+    viewport.on('moved', () => {
+      internalVisibleDateRange.value = {
+        startDate: timelineScale.xToDate(viewport.left),
+        endDate: timelineScale.xToDate(viewport.right),
+        internalOrigin: true,
+      }
+    })
   }
   watch(() => props.visibleDateRange, (newStartDate) => {
     if (newStartDate && !newStartDate.internalOrigin) {
@@ -314,7 +319,7 @@
         ) {
           const originalLeft = timelineScale.xToDate(viewport.left)
           viewport.zoomPercent(-0.1, true)
-          viewport.left = timelineScale.dateToX(new Date(originalLeft))
+          viewport.left = timelineScale.dateToX(originalLeft)
         }
       }
     }
