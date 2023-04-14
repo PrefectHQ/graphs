@@ -29,7 +29,8 @@
     InitTimelineScaleProps,
     GraphState,
     NodeSelectionEvent,
-    hasStartAndEndDates
+    hasStartAndEndDates,
+    TimelineVisibleDateRange
   } from '@/models'
   import {
     initBitmapFonts,
@@ -60,16 +61,27 @@
     hideEdges?: boolean,
     subNodeLabels?: Map<string, string>,
     expandedSubNodes?: ExpandedSubNodes,
+    visibleDateRange?: TimelineVisibleDateRange,
   }>()
 
   const emit = defineEmits<{
     (event: 'selection', value: NodeSelectionEvent | null): void,
     (event: 'subNodeToggle', value: string): void,
+    (event: 'update:visibleDateRange', value: TimelineVisibleDateRange | undefined): void,
   }>()
 
   defineExpose({
     centerViewport,
     moveViewportCenter,
+  })
+
+  const internalVisibleDateRange = computed<TimelineVisibleDateRange | undefined>({
+    get() {
+      return props.visibleDateRange
+    },
+    set(value) {
+      emit('update:visibleDateRange', value)
+    },
   })
 
   const stage = ref<HTMLDivElement>()
@@ -131,6 +143,7 @@
     viewport = await initViewport(stage.value, pixiApp)
     viewport.zIndex = zIndex.viewport
     initViewportDragMonitor()
+    initDateRangeModel()
 
     initFonts()
     initGraphState()
@@ -164,6 +177,27 @@
         isViewportDragging.value = false
       })
   }
+
+  function initDateRangeModel(): void {
+    // Fires continuously as the viewport is moved
+    viewport.on('moved', () => {
+      internalVisibleDateRange.value = {
+        startDate: timelineScale.xToDate(viewport.left),
+        endDate: timelineScale.xToDate(viewport.right),
+        internalOrigin: true,
+      }
+    })
+  }
+  watch(() => props.visibleDateRange, (newStartDate) => {
+    if (newStartDate && !newStartDate.internalOrigin) {
+      const newViewportLeft = timelineScale.dateToX(newStartDate.startDate)
+      const newViewportRight = timelineScale.dateToX(newStartDate.endDate)
+      const centerX = newViewportLeft + (newViewportRight - newViewportLeft) / 2
+
+      viewport.fitWidth(newViewportRight - newViewportLeft, true)
+      viewport.moveCenter(centerX, viewport.center.y)
+    }
+  })
 
   function initTimeScaleProps(): void {
     const minimumTimeSpan = 1000 * 60
@@ -285,7 +319,7 @@
         ) {
           const originalLeft = timelineScale.xToDate(viewport.left)
           viewport.zoomPercent(-0.1, true)
-          viewport.left = timelineScale.dateToX(new Date(originalLeft))
+          viewport.left = timelineScale.dateToX(originalLeft)
         }
       }
     }

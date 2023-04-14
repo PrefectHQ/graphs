@@ -27,6 +27,12 @@ export type InitTimelineScaleProps = {
   initialOverallTimeSpan: number,
 }
 
+export type TimelineVisibleDateRange = {
+  startDate: Date,
+  endDate: Date,
+  internalOrigin?: boolean,
+}
+
 export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
 
 export type NodeSelectionEventTypes = 'task' | 'subFlowRun'
@@ -88,7 +94,7 @@ export type GraphState = {
 }
 
 export type DateToX = (date: Date) => number
-export type XToDate = (xPosition: number) => number
+export type XToDate = (xPosition: number) => Date
 export type TimelineScale = {
   dateToX: DateToX,
   xToDate: XToDate,

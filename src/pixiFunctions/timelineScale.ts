@@ -53,7 +53,7 @@ function createDateToXScale(minStartTime: number, overallWidth: number, overallT
 }
 
 function createXToDateScale(minStartTime: number, overallWidth: number, overallTimeSpan: number): XToDate {
-  return function(xPosition: number): number {
-    return Math.ceil(minStartTime + xPosition * (overallTimeSpan / overallWidth))
+  return function(xPosition: number): Date {
+    return new Date(Math.ceil(minStartTime + xPosition * (overallTimeSpan / overallWidth)))
   }
 }
