@@ -178,14 +178,18 @@
       })
   }
 
+  function updateInternalVisibleDateRange(): void {
+    internalVisibleDateRange.value = {
+      startDate: timelineScale.xToDate(viewport.left),
+      endDate: timelineScale.xToDate(viewport.right),
+      internalOrigin: true,
+    }
+  }
+
   function initDateRangeModel(): void {
     // Fires continuously as the viewport is moved
     viewport.on('moved', () => {
-      internalVisibleDateRange.value = {
-        startDate: timelineScale.xToDate(viewport.left),
-        endDate: timelineScale.xToDate(viewport.right),
-        internalOrigin: true,
-      }
+      updateInternalVisibleDateRange()
     })
   }
   watch(() => props.visibleDateRange, (newStartDate) => {
@@ -445,6 +449,13 @@
       time: skipAnimation || suppressMotion.value ? 0 : defaultAnimationDuration,
       ease: 'easeInOutQuad',
       removeOnInterrupt: true,
+      callbackOnComplete: () => {
+        // instant animations fail to cause the 'move' event to fire
+        // so here we manually update visible interval
+        if (skipAnimation) {
+          updateInternalVisibleDateRange()
+        }
+      },
     })
   }
 
