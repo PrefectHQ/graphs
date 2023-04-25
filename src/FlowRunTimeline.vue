@@ -191,6 +191,9 @@
     viewport.on('moved', () => {
       updateInternalVisibleDateRange()
     })
+    viewport.on('resize', () => {
+      updateInternalVisibleDateRange()
+    })
   }
   watch(() => props.visibleDateRange, (newStartDate) => {
     if (newStartDate && !newStartDate.internalOrigin) {

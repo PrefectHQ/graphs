@@ -38,6 +38,11 @@ export async function initViewport(stage: HTMLElement, appRef: Application): Pro
   appRef.ticker.add(() => {
     if (viewport.screenWidth !== appRef.screen.width || viewport.screenHeight !== appRef.screen.height) {
       viewport.resize(appRef.screen.width, appRef.screen.height)
+
+      // the resize event must be called on next tick so the viewport has a chance to update
+      setTimeout(() => {
+        viewport.emit('resize')
+      }, 0)
     }
   }, null, UPDATE_PRIORITY.LOW)
 
