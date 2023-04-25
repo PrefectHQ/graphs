@@ -1,5 +1,6 @@
 import type { Viewport as ViewportType } from 'pixi-viewport'
 import { Application, UPDATE_PRIORITY } from 'pixi.js'
+import { nextTick } from 'vue'
 import { getPixiViewport } from '@/pixiFunctions/viewport'
 
 export async function initViewport(stage: HTMLElement, appRef: Application): Promise<ViewportType> {
@@ -40,9 +41,9 @@ export async function initViewport(stage: HTMLElement, appRef: Application): Pro
       viewport.resize(appRef.screen.width, appRef.screen.height)
 
       // the resize event must be called on next tick so the viewport has a chance to update
-      setTimeout(() => {
+      nextTick(() => {
         viewport.emit('resize')
-      }, 0)
+      })
     }
   }, null, UPDATE_PRIORITY.LOW)
 
