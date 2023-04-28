@@ -194,24 +194,23 @@
     viewport.on('resize', () => {
       updateInternalVisibleDateRange()
     })
-    watch([
-      () => props.visibleDateRange?.startDate,
-      () => props.visibleDateRange?.endDate,
-    ], () => {
-      if (internalVisibleDateRange.value) {
-        if (internalVisibleDateRange.value.internalOrigin) {
-          internalVisibleDateRange.value.internalOrigin = false
-          return
-        }
-
-        const newViewportLeft = timelineScale.dateToX(internalVisibleDateRange.value.startDate)
-        const newViewportRight = timelineScale.dateToX(internalVisibleDateRange.value.endDate)
-        const centerX = newViewportLeft + (newViewportRight - newViewportLeft) / 2
-
-        viewport.fitWidth(newViewportRight - newViewportLeft, true)
-        viewport.moveCenter(centerX, viewport.center.y)
+    watch(() => props.visibleDateRange, () => {
+      if (!internalVisibleDateRange.value) {
+        return
       }
-    })
+
+      if (internalVisibleDateRange.value.internalOrigin) {
+        internalVisibleDateRange.value.internalOrigin = false
+        return
+      }
+
+      const newViewportLeft = timelineScale.dateToX(internalVisibleDateRange.value.startDate)
+      const newViewportRight = timelineScale.dateToX(internalVisibleDateRange.value.endDate)
+      const centerX = newViewportLeft + (newViewportRight - newViewportLeft) / 2
+
+      viewport.fitWidth(newViewportRight - newViewportLeft, true)
+      viewport.moveCenter(centerX, viewport.center.y)
+    }, { deep: true })
   }
 
   function initTimeScaleProps(): void {
