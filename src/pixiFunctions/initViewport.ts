@@ -2,6 +2,7 @@ import type { Viewport as ViewportType } from 'pixi-viewport'
 import { Application, UPDATE_PRIORITY } from 'pixi.js'
 import { nextTick } from 'vue'
 import { getPixiViewport } from '@/pixiFunctions/viewport'
+import { zIndex } from '@/utilities'
 
 export async function initViewport(stage: HTMLElement, appRef: Application): Promise<ViewportType> {
   const Viewport = await getPixiViewport()
@@ -15,6 +16,8 @@ export async function initViewport(stage: HTMLElement, appRef: Application): Pro
     divWheel: stage,
     ticker: appRef.ticker,
   })
+
+  viewport.zIndex = zIndex.viewport
 
   viewport
     .drag({

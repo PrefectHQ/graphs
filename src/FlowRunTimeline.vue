@@ -103,11 +103,6 @@
     ...props.formatDateFns,
   }))
 
-  const zIndex = {
-    timelineGuides: 0,
-    viewport: 10,
-  }
-
   const loading = ref(true)
   let pixiApp: Application
   let viewport: Viewport
@@ -140,7 +135,6 @@
     pixiApp.stage.sortableChildren = true
 
     viewport = await initViewport(stage.value, pixiApp)
-    viewport.zIndex = zIndex.viewport
     initViewportDragMonitor()
     initDateRangeModel()
 
@@ -365,8 +359,6 @@
       maximumEndDate,
       formatDateFns,
     })
-
-    guides.zIndex = zIndex.timelineGuides
 
     pixiApp.stage.addChild(guides)
 
