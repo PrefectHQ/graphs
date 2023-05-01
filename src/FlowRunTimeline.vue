@@ -215,19 +215,7 @@
 
   function initTimeScaleProps(): void {
     const minimumTimeSpan = 1000 * 60
-
-    const dates = props.graphData
-      .filter(hasStartAndEndDates)
-      .map(({ start, end }) => ({ start, end }))
-
-    if (isRunning.value) {
-      dates.push({
-        start: new Date(),
-        end: new Date(),
-      })
-    }
-
-    const { min, max, span } = getDateBounds(dates, minimumTimeSpan)
+    const { min, max, span } = getDateBounds(props.graphData, minimumTimeSpan)
 
     minimumStartDate = min
     maximumEndDate.value = max

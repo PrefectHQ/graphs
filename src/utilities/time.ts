@@ -1,3 +1,5 @@
+import { GraphTimelineNode } from '..'
+
 export const intervals = {
   year: 31536000,
   day: 86400,
@@ -88,41 +90,38 @@ export function formatDate(date: Date): string {
 }
 
 export function getDateBounds(
-  datesArray: { start: Date, end: Date | null }[],
-  minimumTimeSpan?: number,
+  data: GraphTimelineNode[],
+  minimumTimeSpan: number = 0,
 ): { min: Date, max: Date, span: number } {
-  let min: Date | undefined
-  let max: Date | undefined
 
-  datesArray.forEach((dates) => {
-    if (
-      min === undefined
-        || min > dates.start
-        || isNaN(dates.start.getDate())
-    ) {
-      min = dates.start
+  const [minStartTime, maxStartTime] = data.reduce<[number | null, number | null]>(([min, max], { start, end }) => {
+    const startTime = start?.getTime() ?? null
+    const endTime = end?.getTime() ?? null
+
+    if (startTime && min) {
+      min = Math.min(min, startTime)
     }
 
-    if (
-      dates.end !== null
-      && (
-        max === undefined
-        || max < dates.end
-        || isNaN(dates.end.getDate())
-      )
-    ) {
-      max = dates.end
+    if (endTime && max) {
+      max = Math.max(max, endTime)
     }
-  })
 
-  min = min ?? new Date()
-  max = max ?? new Date(min.getTime() + (minimumTimeSpan ?? 0))
-  const timeSpan = max.getTime() - min.getTime()
+    return [min ?? startTime, max ?? endTime]
+  }, [null, null])
+
+  const min = minStartTime ? new Date(minStartTime) : new Date()
+  let max = maxStartTime ? new Date(maxStartTime) : new Date()
+  let span = max.getTime() - min.getTime()
+
+  if (span < minimumTimeSpan) {
+    max = new Date(min.getTime() + minimumTimeSpan)
+    span = minimumTimeSpan
+  }
 
   return {
     min,
     max,
-    span: minimumTimeSpan && timeSpan < minimumTimeSpan ? minimumTimeSpan : timeSpan,
+    span,
   }
 }
 
