@@ -106,7 +106,6 @@
   const zIndex = {
     timelineGuides: 0,
     viewport: 10,
-    playhead: 20,
   }
 
   const loading = ref(true)
@@ -302,13 +301,12 @@
     }
 
     playhead = new TimelinePlayhead({
-      viewportRef: viewport,
-      appRef: pixiApp,
+      pixiApp,
+      viewport,
       cull,
       formatDateFns,
       styleOptions,
     })
-    playhead.zIndex = zIndex.playhead
 
     pixiApp.stage.addChild(playhead)
 
@@ -341,17 +339,19 @@
     pixiApp.ticker.add(playheadTicker)
   }
 
-  watch(isRunning, (newVal) => {
-    if (!loading.value) {
-      if (newVal && (!playhead || playhead.destroyed)) {
-        initPlayhead()
-      }
+  watch(isRunning, running => {
+    if (loading.value) {
+      return
+    }
 
-      if (!newVal && playhead && playheadTicker) {
-        playhead.destroy()
-        pixiApp.ticker.remove(playheadTicker)
-        playheadTicker = null
-      }
+    if (playhead && playheadTicker) {
+      playhead.destroy()
+      pixiApp.ticker.remove(playheadTicker)
+      playheadTicker = null
+    }
+
+    if (running) {
+      initPlayhead()
     }
   })
 

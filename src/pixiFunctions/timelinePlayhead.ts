@@ -5,19 +5,20 @@ import { ComputedRef, watch, WatchStopHandle } from 'vue'
 import { FormatDateFns, ParsedThemeStyles } from '@/models'
 import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
 import { timelineScale } from '@/pixiFunctions/timelineScale'
+import { zIndex } from '@/utilities/zIndex'
 
 type TimelinePlayheadProps = {
-  viewportRef: Viewport,
-  appRef: Application,
+  viewport: Viewport,
+  pixiApp: Application,
   cull: Cull,
   formatDateFns: ComputedRef<FormatDateFns>,
   styleOptions: ComputedRef<ParsedThemeStyles>,
 }
 
 export class TimelinePlayhead extends Container {
-  private readonly viewportRef
-  private readonly appRef
-  private readonly cull
+  private readonly viewport: Viewport
+  private readonly pixiApp: Application
+  private readonly cull: Cull
   private readonly formatDateFns
   private readonly styleOptions: ComputedRef<ParsedThemeStyles>
 
@@ -27,8 +28,8 @@ export class TimelinePlayhead extends Container {
   private label: BitmapText | undefined
 
   public constructor({
-    viewportRef,
-    appRef,
+    viewport,
+    pixiApp,
     cull,
     formatDateFns,
     styleOptions,
@@ -37,11 +38,12 @@ export class TimelinePlayhead extends Container {
 
     cull.add(this)
 
-    this.viewportRef = viewportRef
-    this.appRef = appRef
+    this.viewport = viewport
+    this.pixiApp = pixiApp
     this.cull = cull
     this.formatDateFns = formatDateFns
     this.styleOptions = styleOptions
+    this.zIndex = zIndex.playhead
 
     this.drawPlayhead()
 
@@ -50,7 +52,7 @@ export class TimelinePlayhead extends Container {
     this.unwatch = watch(styleOptions, () => {
       this.playhead.clear()
       this.drawPlayhead()
-    }, { deep: true })
+    })
 
     this.interactive = false
   }
@@ -67,7 +69,7 @@ export class TimelinePlayhead extends Container {
       0,
       0,
       spacingPlayheadWidth + spacingPlayheadGlowPadding * 2,
-      this.appRef.screen.height,
+      this.pixiApp.screen.height,
     )
     this.playhead.endFill()
     this.playhead.beginFill(colorPlayheadBg)
@@ -75,7 +77,7 @@ export class TimelinePlayhead extends Container {
       spacingPlayheadGlowPadding,
       0,
       spacingPlayheadWidth,
-      this.appRef.screen.height,
+      this.pixiApp.screen.height,
     )
     this.playhead.endFill()
 
@@ -104,7 +106,7 @@ export class TimelinePlayhead extends Container {
 
   private getTimeLabelY(): number {
     const { spacingGuideLabelPadding } = this.styleOptions.value
-    return this.appRef.screen.height - (this.label!.height + spacingGuideLabelPadding)
+    return this.pixiApp.screen.height - (this.label!.height + spacingGuideLabelPadding)
   }
 
   public updatePosition(): void {
@@ -114,13 +116,13 @@ export class TimelinePlayhead extends Container {
     } = this.styleOptions.value
 
     this.position.x =
-      timelineScale.dateToX(new Date()) * this.viewportRef.scale._x
-      + this.viewportRef.worldTransform.tx
+      timelineScale.dateToX(new Date()) * this.viewport.scale._x
+      + this.viewport.worldTransform.tx
       - spacingPlayheadGlowPadding
       - spacingPlayheadWidth / 2
 
-    if (this.playhead.height !== this.appRef.screen.height) {
-      this.playhead.height = this.appRef.screen.height
+    if (this.playhead.height !== this.pixiApp.screen.height) {
+      this.playhead.height = this.pixiApp.screen.height
       this.label!.y = this.getTimeLabelY()
     }
   }
