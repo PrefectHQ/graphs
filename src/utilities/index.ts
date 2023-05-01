@@ -1,4 +1,5 @@
 export * from './map'
 export * from './math'
-export * from './time'
 export * from './style'
+export * from './time'
+export * from './zIndex'
