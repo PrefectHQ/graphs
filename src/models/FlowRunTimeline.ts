@@ -7,7 +7,7 @@ import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilitie
 export type GraphTimelineNode = {
   id: string,
   label: string,
-  start: Date | null | undefined,
+  start: Date | null,
   end: Date | null,
   state: string,
   upstreamDependencies?: string[],
