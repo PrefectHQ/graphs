@@ -37,7 +37,6 @@
     updateBitmapFonts,
     initPixiApp,
     initViewport,
-    TimelineGuides,
     TimelineNodes,
     TimelinePlayhead,
     initTimelineScale,
@@ -115,7 +114,7 @@
   let graphXDomain: number
   let timelineScale: TimelineScale
 
-  let guides: TimelineGuides
+  let guides: Guides
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: (() => void) | null = null
   const nodesContentContainerName = 'rootNodesContainer'
@@ -144,15 +143,14 @@
     initGuides()
     initContent()
     initPlayhead()
-    initNewGuides()
 
     initCulling()
 
     loading.value = false
   })
 
-  function initNewGuides(): void {
-    const guides = new Guides({ application: pixiApp, viewport, styles: styleOptions.value, formatters: formatDateFns.value })
+  function initGuides(): void {
+    guides = new Guides({ application: pixiApp, viewport, styles: styleOptions.value, formatters: formatDateFns.value })
 
     pixiApp.stage.addChild(guides)
   }
@@ -343,24 +341,6 @@
       initPlayhead()
     }
   })
-
-  function initGuides(): void {
-    if (!graphState) {
-      return
-    }
-
-    guides = new TimelineGuides({
-      graphState,
-      maximumEndDate,
-      formatDateFns,
-    })
-
-    pixiApp.stage.addChild(guides)
-
-    pixiApp.ticker.add(() => {
-      guides.updateGuides()
-    })
-  }
 
   function initCulling(): void {
     viewport.on('frame-end', () => {
