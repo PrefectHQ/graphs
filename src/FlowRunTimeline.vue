@@ -152,7 +152,7 @@
   })
 
   function initNewGuides(): void {
-    const guides = new Guides({ application: pixiApp, viewport })
+    const guides = new Guides({ application: pixiApp, viewport, styles: styleOptions.value })
 
     pixiApp.stage.addChild(guides)
   }

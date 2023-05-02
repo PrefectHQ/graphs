@@ -1,40 +1,48 @@
 import { Viewport } from 'pixi-viewport'
-import { Application, Container, Sprite } from 'pixi.js'
-import { getSimpleFillTexture, timelineScale } from '@/pixiFunctions'
+import { Application, BitmapText, Container, Sprite } from 'pixi.js'
+import { ParsedThemeStyles } from '@/models/FlowRunTimeline'
+import { getBitmapFonts, getSimpleFillTexture, timelineScale } from '@/pixiFunctions'
 import { colorToHex } from '@/utilities'
+
+export type GuideDateFormatter = (value: Date) => string
 
 export type GuidesArgs = {
   application: Application,
   viewport: Viewport,
-  date?: Date,
+  styles: ParsedThemeStyles,
 }
 
 export class Guide extends Container {
   private readonly application: Application
   private readonly viewport: Viewport
+  private readonly styles: ParsedThemeStyles
   private previousViewportLeft: number
   private previousViewportRight: number
 
+  private format: GuideDateFormatter | undefined
   private date: Date | undefined
   private line: Sprite | undefined
+  private label: BitmapText | undefined
 
   public constructor({
     application,
     viewport,
+    styles,
   }: GuidesArgs) {
     super()
 
     this.application = application
     this.viewport = viewport
+    this.styles = styles
     this.previousViewportLeft = this.viewport.left
     this.previousViewportRight = this.viewport.right
 
     this.application.ticker.add(this.tick)
 
-    this.visible = false
     this.interactive = false
 
     this.createLine()
+    this.createLabel()
   }
 
   public setDate(value: Date): void {
@@ -42,11 +50,17 @@ export class Guide extends Container {
 
     this.date = value
 
-    this.visible = true
-
     if (updated) {
       this.updatePosition()
+      this.updateLabel()
     }
+
+  }
+
+  public setFormat(value: GuideDateFormatter): void {
+    this.format = value
+
+    this.updateLabel()
   }
 
   public destroy(): void {
@@ -75,6 +89,7 @@ export class Guide extends Container {
   private createLine(): void {
     const texture = getSimpleFillTexture({
       pixiApp: this.application,
+      // update with styles
       fill: colorToHex('#ffffff'),
     })
 
@@ -84,9 +99,14 @@ export class Guide extends Container {
     this.addChild(this.line)
   }
 
-  private updatePosition(): void {
-    const x = this.getPositionX()
-    this.position.set(x, 0)
+  private async createLabel(): Promise<void> {
+    const fonts = await getBitmapFonts(this.styles)
+    this.label = new BitmapText('', fonts.timeMarkerLabel)
+    this.label.position.set(4, 4)
+
+    this.addChild(this.label)
+
+    this.updateLabel()
   }
 
   private getPositionX(): number {
@@ -95,5 +115,18 @@ export class Guide extends Container {
     }
 
     return timelineScale.dateToX(this.date) * this.viewport.scale._x + this.viewport.worldTransform.tx
+  }
+
+  private updatePosition(): void {
+    const x = this.getPositionX()
+    this.position.set(x, 0)
+  }
+
+  private updateLabel(): void {
+    if (!this.format || !this.date || !this.label) {
+      return
+    }
+
+    this.label.text = this.format(this.date)
   }
 }
