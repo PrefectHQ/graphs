@@ -7,6 +7,7 @@
 
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
+  import { max } from 'date-fns'
   import type { Viewport } from 'pixi-viewport'
   import { Application } from 'pixi.js'
   import {
@@ -29,7 +30,6 @@
     InitTimelineScaleProps,
     GraphState,
     NodeSelectionEvent,
-    hasStartAndEndDates,
     TimelineVisibleDateRange
   } from '@/models'
   import {
@@ -208,22 +208,10 @@
 
   function initTimeScaleProps(): void {
     const minimumTimeSpan = 1000 * 60
+    const { min: minDate, max: maxDate, span } = getDateBounds(props.graphData, minimumTimeSpan, isRunning.value)
 
-    const dates = props.graphData
-      .filter(hasStartAndEndDates)
-      .map(({ start, end }) => ({ start, end }))
-
-    if (isRunning.value) {
-      dates.push({
-        start: new Date(),
-        end: new Date(),
-      })
-    }
-
-    const { min, max, span } = getDateBounds(dates, minimumTimeSpan)
-
-    minimumStartDate = min
-    maximumEndDate.value = max
+    minimumStartDate = minDate
+    maximumEndDate.value = maxDate
     initialOverallTimeSpan = span
 
     graphXDomain = determineGraphXDomain()
