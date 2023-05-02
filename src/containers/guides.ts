@@ -20,7 +20,7 @@ type ViewportDates = {
 }
 
 const GUIDE_GAP_PIXELS = 260
-const VIEWPORT_BUFFER = 200
+const VIEWPORT_BUFFER = 100
 
 export class Guides extends Container {
   private readonly application: Application
