@@ -215,15 +215,11 @@
 
   function initTimeScaleProps(): void {
     const minimumTimeSpan = 1000 * 60
-    const { min: minDate, max: maxDate, span } = getDateBounds(props.graphData, minimumTimeSpan)
+    const { min: minDate, max: maxDate, span } = getDateBounds(props.graphData, minimumTimeSpan, isRunning.value)
 
     minimumStartDate = minDate
     maximumEndDate.value = maxDate
     initialOverallTimeSpan = span
-
-    if (isRunning.value) {
-      maximumEndDate.value = max([maxDate, new Date()])
-    }
 
     graphXDomain = determineGraphXDomain()
 

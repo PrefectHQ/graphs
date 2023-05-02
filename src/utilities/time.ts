@@ -92,9 +92,12 @@ export function formatDate(date: Date): string {
 export function getDateBounds(
   data: GraphTimelineNode[],
   minimumTimeSpan: number = 0,
+  isRunning: boolean = false,
 ): { min: Date, max: Date, span: number } {
 
-  const [minStartTime, maxStartTime] = data.reduce<[number | null, number | null]>(([min, max], { start, end }) => {
+  const defaultMaxEndTime = isRunning ? new Date().getTime() : null
+
+  const [minStartTime, maxEndTime] = data.reduce<[number | null, number | null]>(([min, max], { start, end }) => {
     const startTime = start?.getTime() ?? null
     const endTime = end?.getTime() ?? null
 
@@ -107,10 +110,10 @@ export function getDateBounds(
     }
 
     return [min ?? startTime, max ?? endTime]
-  }, [null, null])
+  }, [null, defaultMaxEndTime])
 
   const min = minStartTime ? new Date(minStartTime) : new Date()
-  let max = maxStartTime ? new Date(maxStartTime) : new Date()
+  let max = maxEndTime ? new Date(maxEndTime) : new Date()
   let span = max.getTime() - min.getTime()
 
   if (span < minimumTimeSpan) {
