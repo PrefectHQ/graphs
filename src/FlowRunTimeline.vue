@@ -12,7 +12,7 @@
   import {
     computed,
     onMounted,
-    onBeforeUnmount,
+    onUnmounted,
     ref,
     watch
   } from 'vue'
@@ -150,7 +150,7 @@
     loading.value = false
   })
 
-  onBeforeUnmount(() => {
+  onUnmounted(() => {
     cleanupApp()
   })
 
