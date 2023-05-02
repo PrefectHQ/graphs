@@ -153,9 +153,15 @@ export const labelFormats = {
   seconds: 'seconds',
   minutes: 'minutes',
   date: 'date',
+} as const
+
+export type TimeSpan = {
+  ceiling: number,
+  span: number,
+  labelFormat: typeof labelFormats[keyof typeof labelFormats],
 }
 
-export const timeSpanSlots = [
+export const timeSpanSlots: TimeSpan[] = [
   {
     ceiling: timeLengths.second * 4,
     span: timeLengths.second,
@@ -226,3 +232,7 @@ export const timeSpanSlots = [
     labelFormat: labelFormats.date,
   },
 ]
+
+export function getTimeSpanSlot(span: number): TimeSpan {
+  return timeSpanSlots.find(timeSlot => timeSlot.ceiling > span)!
+}

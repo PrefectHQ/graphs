@@ -16,6 +16,7 @@
     ref,
     watch
   } from 'vue'
+  import { Guides } from '@/containers/guides'
   import {
     GraphTimelineNode,
     nodeThemeFnDefault,
@@ -143,11 +144,18 @@
     initGuides()
     initContent()
     initPlayhead()
+    initNewGuides()
 
     initCulling()
 
     loading.value = false
   })
+
+  function initNewGuides(): void {
+    const guides = new Guides({ application: pixiApp, viewport })
+
+    pixiApp.stage.addChild(guides)
+  }
 
   onUnmounted(() => {
     cleanupApp()
