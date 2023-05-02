@@ -7,7 +7,6 @@
 
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
-  import { max } from 'date-fns'
   import type { Viewport } from 'pixi-viewport'
   import { Application } from 'pixi.js'
   import {
@@ -103,12 +102,6 @@
     ...props.formatDateFns,
   }))
 
-  const zIndex = {
-    timelineGuides: 0,
-    viewport: 10,
-    playhead: 20,
-  }
-
   const loading = ref(true)
   let pixiApp: Application
   let viewport: Viewport
@@ -141,7 +134,6 @@
     pixiApp.stage.sortableChildren = true
 
     viewport = await initViewport(stage.value, pixiApp)
-    viewport.zIndex = zIndex.viewport
     initViewportDragMonitor()
     initDateRangeModel()
 
@@ -290,13 +282,12 @@
     }
 
     playhead = new TimelinePlayhead({
-      viewportRef: viewport,
-      appRef: pixiApp,
+      pixiApp,
+      viewport,
       cull,
       formatDateFns,
       styleOptions,
     })
-    playhead.zIndex = zIndex.playhead
 
     pixiApp.stage.addChild(playhead)
 
@@ -329,17 +320,19 @@
     pixiApp.ticker.add(playheadTicker)
   }
 
-  watch(isRunning, (newVal) => {
-    if (!loading.value) {
-      if (newVal && (!playhead || playhead.destroyed)) {
-        initPlayhead()
-      }
+  watch(isRunning, running => {
+    if (loading.value) {
+      return
+    }
 
-      if (!newVal && playhead && playheadTicker) {
-        playhead.destroy()
-        pixiApp.ticker.remove(playheadTicker)
-        playheadTicker = null
-      }
+    if (playhead && playheadTicker) {
+      playhead.destroy()
+      pixiApp.ticker.remove(playheadTicker)
+      playheadTicker = null
+    }
+
+    if (running) {
+      initPlayhead()
     }
   })
 
@@ -353,8 +346,6 @@
       maximumEndDate,
       formatDateFns,
     })
-
-    guides.zIndex = zIndex.timelineGuides
 
     pixiApp.stage.addChild(guides)
 

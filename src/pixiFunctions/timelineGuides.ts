@@ -8,7 +8,8 @@ import {
   roundDownToNearestDay,
   roundDownToNearestEvenNumberedHour,
   timeLengths,
-  timeSpanSlots
+  timeSpanSlots,
+  zIndex
 } from '@/utilities'
 
 const timelineGuidesMinGap = 260
@@ -53,6 +54,8 @@ export class TimelineGuides extends Container {
     this.initWatchers()
 
     this.interactive = false
+
+    this.zIndex = zIndex.timelineGuides
   }
 
   private initWatchers(): void {
