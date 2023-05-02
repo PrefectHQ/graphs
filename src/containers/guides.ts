@@ -2,14 +2,15 @@ import { addMilliseconds } from 'date-fns'
 import { Viewport } from 'pixi-viewport'
 import { Application, Container } from 'pixi.js'
 import { Guide } from '@/containers/guide'
-import { ParsedThemeStyles } from '@/models/FlowRunTimeline'
+import { FormatDateFns, ParsedThemeStyles } from '@/models/FlowRunTimeline'
 import { timelineScale } from '@/pixiFunctions'
-import { TimeSpan, getTimeSpanSlot } from '@/utilities'
+import { TimeSpan, getLabelFormatter, getTimeSpanSlot } from '@/utilities'
 
 export type GuidesArgs = {
   application: Application,
   viewport: Viewport,
   styles: ParsedThemeStyles,
+  formatters: FormatDateFns,
 }
 
 type ViewportDates = {
@@ -23,6 +24,7 @@ const VIEWPORT_BUFFER = 200
 
 export class Guides extends Container {
   private readonly application: Application
+  private readonly formatters: FormatDateFns
   private readonly viewport: Viewport
   private readonly styles: ParsedThemeStyles
   private previousViewportLeft: number
@@ -31,12 +33,14 @@ export class Guides extends Container {
 
   public constructor({
     application,
+    formatters,
     viewport,
     styles,
   }: GuidesArgs) {
     super()
 
     this.application = application
+    this.formatters = formatters
     this.viewport = viewport
     this.styles = styles
 
@@ -119,8 +123,9 @@ export class Guides extends Container {
 
   private updateOrCreateGuide(index: number, date: Date): Guide {
     const { application, viewport, styles } = this
+    const { labelFormat } = this.getTimeSpan()
+    const format = getLabelFormatter(labelFormat, this.formatters)
     const existing = this.guides.at(index)
-    const format = (value: Date): string => value.toISOString()
     const guide = existing ?? new Guide({ application, viewport, styles })
 
     guide.setDate(date)

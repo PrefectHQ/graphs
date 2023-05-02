@@ -1,4 +1,5 @@
-import { GraphTimelineNode } from '..'
+import { FormatDateFns, GraphTimelineNode } from '..'
+import { GuideDateFormatter } from '@/containers/guide'
 
 export const intervals = {
   year: 31536000,
@@ -235,4 +236,23 @@ export const timeSpanSlots: TimeSpan[] = [
 
 export function getTimeSpanSlot(span: number): TimeSpan {
   return timeSpanSlots.find(timeSlot => timeSlot.ceiling > span)!
+}
+
+export function getLabelFormatter(labelFormat: string, formatters: FormatDateFns): GuideDateFormatter {
+  switch (labelFormat) {
+    case labelFormats.minutes:
+      return (value: Date) => formatByMinutesWithDates(value, formatters)
+    case labelFormats.date:
+      return formatters.date
+    default:
+      return formatters.timeBySeconds
+  }
+}
+
+function formatByMinutesWithDates(date: Date, formatters: FormatDateFns): string {
+  if (date.getHours() === 0 && date.getMinutes() === 0) {
+    return `${formatters.date(date)}\n${formatters.timeByMinutes(date)}`
+  }
+
+  return formatters.timeByMinutes(date)
 }
