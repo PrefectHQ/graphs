@@ -14,13 +14,6 @@ export type GraphTimelineNode = {
   subFlowRunId?: string,
 }
 
-export function hasStartAndEndDates(node: GraphTimelineNode): node is GraphTimelineNode & {
-  start: Date,
-  end: Date,
-} {
-  return !!node.start && !!node.end
-}
-
 export type InitTimelineScaleProps = {
   minimumStartTime: number,
   graphXDomain: number,
