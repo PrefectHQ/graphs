@@ -7,7 +7,6 @@
 
 <script lang="ts" setup>
   import { Cull } from '@pixi-essentials/cull'
-  import { max } from 'date-fns'
   import type { Viewport } from 'pixi-viewport'
   import { Application } from 'pixi.js'
   import {
