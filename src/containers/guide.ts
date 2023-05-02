@@ -2,7 +2,6 @@ import { Viewport } from 'pixi-viewport'
 import { Application, BitmapText, Container, Sprite } from 'pixi.js'
 import { ParsedThemeStyles } from '@/models/FlowRunTimeline'
 import { getBitmapFonts, getSimpleFillTexture, timelineScale } from '@/pixiFunctions'
-import { colorToHex } from '@/utilities'
 
 export type GuideDateFormatter = (value: Date) => string
 
@@ -89,8 +88,7 @@ export class Guide extends Container {
   private createLine(): void {
     const texture = getSimpleFillTexture({
       pixiApp: this.application,
-      // update with styles
-      fill: colorToHex('#ffffff'),
+      fill: this.styles.colorGuideLine,
     })
 
     this.line = new Sprite(texture)
