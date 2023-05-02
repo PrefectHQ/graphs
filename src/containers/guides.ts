@@ -72,15 +72,16 @@ export class Guides extends Container {
   }
 
   private getViewportDates(): ViewportDates {
-    const startDate = timelineScale.xToDate(this.viewport.left)
-    const endDate = timelineScale.xToDate(this.viewport.right)
+    const startDate = timelineScale.xToDate(this.viewport.left - VIEWPORT_BUFFER)
+    const endDate = timelineScale.xToDate(this.viewport.right + VIEWPORT_BUFFER)
     const span = endDate.getTime() - startDate.getTime()
 
     return { startDate, endDate, span }
   }
 
   private getTimeSpan(): TimeSpan {
-    const numberOfGuides = Math.ceil(this.application.screen.width / GUIDE_GAP_PIXELS)
+    const width = this.application.screen.width + VIEWPORT_BUFFER * 2
+    const numberOfGuides = Math.ceil(width / GUIDE_GAP_PIXELS)
     const { span } = this.getViewportDates()
     const guideSpan = Math.ceil(span / numberOfGuides)
 
