@@ -2,6 +2,7 @@ import { Viewport } from 'pixi-viewport'
 import { Application, BitmapText, Container, Sprite } from 'pixi.js'
 import { ParsedThemeStyles } from '@/models/FlowRunTimeline'
 import { getBitmapFonts, getSimpleFillTexture, timelineScale } from '@/pixiFunctions'
+import { ViewportUpdatedCheck, viewportUpdatedFactory } from '@/utilities/viewport'
 
 export type GuideDateFormatter = (value: Date) => string
 
@@ -15,9 +16,8 @@ export class Guide extends Container {
   private readonly application: Application
   private readonly viewport: Viewport
   private readonly styles: ParsedThemeStyles
-  private previousViewportLeft: number
-  private previousViewportRight: number
 
+  private readonly viewportUpdated: ViewportUpdatedCheck
   private format: GuideDateFormatter | undefined
   private date: Date | undefined
   private line: Sprite | undefined
@@ -33,8 +33,7 @@ export class Guide extends Container {
     this.application = application
     this.viewport = viewport
     this.styles = styles
-    this.previousViewportLeft = this.viewport.left
-    this.previousViewportRight = this.viewport.right
+    this.viewportUpdated = viewportUpdatedFactory(viewport)
 
     this.application.ticker.add(this.tick)
 
@@ -69,18 +68,9 @@ export class Guide extends Container {
   }
 
   private readonly tick = (): void => {
-    if (!this.date) {
+    if (!this.date || !this.viewportUpdated()) {
       return
     }
-
-    const { left, right } = this.viewport
-
-    if (this.previousViewportLeft === left && this.previousViewportRight === right) {
-      return
-    }
-
-    this.previousViewportLeft = left
-    this.previousViewportRight = right
 
     this.updatePosition()
   }

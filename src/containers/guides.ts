@@ -5,6 +5,7 @@ import { Guide } from '@/containers/guide'
 import { FormatDateFns, ParsedThemeStyles } from '@/models/FlowRunTimeline'
 import { timelineScale } from '@/pixiFunctions'
 import { TimeSpan, getLabelFormatter, getTimeSpanSlot } from '@/utilities'
+import { ViewportUpdatedCheck, viewportUpdatedFactory } from '@/utilities/viewport'
 
 export type GuidesArgs = {
   application: Application,
@@ -27,9 +28,8 @@ export class Guides extends Container {
   private readonly formatters: FormatDateFns
   private readonly viewport: Viewport
   private readonly styles: ParsedThemeStyles
-  private previousViewportLeft: number
-  private previousViewportRight: number
   private readonly guides: Guide[] = []
+  private readonly viewportUpdated: ViewportUpdatedCheck
 
   public constructor({
     application,
@@ -43,9 +43,7 @@ export class Guides extends Container {
     this.formatters = formatters
     this.viewport = viewport
     this.styles = styles
-
-    this.previousViewportLeft = this.viewport.left
-    this.previousViewportRight = this.viewport.right
+    this.viewportUpdated = viewportUpdatedFactory(viewport)
 
     this.application.ticker.add(this.tick)
 
@@ -59,14 +57,9 @@ export class Guides extends Container {
   }
 
   private readonly tick = (): void => {
-    const { left, right } = this.viewport
-
-    if (this.previousViewportLeft === left && this.previousViewportRight === right) {
+    if (!this.viewportUpdated()) {
       return
     }
-
-    this.previousViewportLeft = left
-    this.previousViewportRight = right
 
     this.updateGuides()
   }
