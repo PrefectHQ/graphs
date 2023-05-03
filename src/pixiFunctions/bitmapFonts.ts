@@ -161,7 +161,7 @@ export function updateBitmapFonts(styles: ParsedThemeStyles): void {
   }, 0)
 }
 
-export const getBitmapFonts = (styles: ParsedThemeStyles): Promise<TextStyles> | TextStyles => {
+export const getBitmapFonts = (styles: ParsedThemeStyles): Promise<TextStyles> => {
   if (!bitmapFontsCache) {
     bitmapFontsCache = loadBitmapFonts(styles)
   }

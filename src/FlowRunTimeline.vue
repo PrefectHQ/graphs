@@ -16,6 +16,7 @@
     ref,
     watch
   } from 'vue'
+  import { Guides } from '@/containers/guides'
   import {
     GraphTimelineNode,
     nodeThemeFnDefault,
@@ -36,7 +37,6 @@
     updateBitmapFonts,
     initPixiApp,
     initViewport,
-    TimelineGuides,
     TimelineNodes,
     TimelinePlayhead,
     initTimelineScale,
@@ -114,7 +114,7 @@
   let graphXDomain: number
   let timelineScale: TimelineScale
 
-  let guides: TimelineGuides
+  let guides: Guides
   let playhead: TimelinePlayhead | undefined
   let playheadTicker: (() => void) | null = null
   const nodesContentContainerName = 'rootNodesContainer'
@@ -148,6 +148,16 @@
 
     loading.value = false
   })
+
+  function initGuides(): void {
+    if (!graphState) {
+      return
+    }
+
+    guides = new Guides(graphState)
+
+    pixiApp.stage.addChild(guides)
+  }
 
   onUnmounted(() => {
     cleanupApp()
@@ -273,6 +283,7 @@
       expandedSubNodes,
       suppressMotion,
       centerViewport,
+      formatDateFns,
     }
   }
 
@@ -335,24 +346,6 @@
       initPlayhead()
     }
   })
-
-  function initGuides(): void {
-    if (!graphState) {
-      return
-    }
-
-    guides = new TimelineGuides({
-      graphState,
-      maximumEndDate,
-      formatDateFns,
-    })
-
-    pixiApp.stage.addChild(guides)
-
-    pixiApp.ticker.add(() => {
-      guides.updateGuides()
-    })
-  }
 
   function initCulling(): void {
     viewport.on('frame-end', () => {
