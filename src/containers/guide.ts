@@ -89,7 +89,9 @@ export class Guide extends Container {
   private async createLabel(): Promise<void> {
     const fonts = await getBitmapFonts(this.state.styleOptions.value)
     this.label = new BitmapText('', fonts.timeMarkerLabel)
-    this.label.position.set(4, 4)
+
+    const padding = this.state.styleOptions.value.spacingGuideLabelPadding
+    this.label.position.set(padding, padding)
 
     this.addChild(this.label)
 
