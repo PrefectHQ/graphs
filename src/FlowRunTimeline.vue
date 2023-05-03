@@ -150,7 +150,11 @@
   })
 
   function initGuides(): void {
-    guides = new Guides({ application: pixiApp, viewport, styles: styleOptions.value, formatters: formatDateFns.value })
+    if (!graphState) {
+      return
+    }
+
+    guides = new Guides(graphState)
 
     pixiApp.stage.addChild(guides)
   }
@@ -279,6 +283,7 @@
       expandedSubNodes,
       suppressMotion,
       centerViewport,
+      formatDateFns,
     }
   }
 

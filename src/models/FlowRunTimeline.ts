@@ -77,6 +77,7 @@ export type GraphState = {
   styleOptions: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
+  formatDateFns: ComputedRef<FormatDateFns>,
   isRunning: ComputedRef<boolean>,
   hideEdges: ComputedRef<boolean>,
   subNodeLabels: ComputedRef<Map<string, string>>,
