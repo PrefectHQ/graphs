@@ -14,7 +14,7 @@ export type GraphTimelineNode = {
   subFlowRunId?: string,
 }
 
-export type InitTimelineScaleProps = {
+export type TimeScaleArgs = {
   minimumStartTime: number,
   graphXDomain: number,
   initialOverallTimeSpan: number,
@@ -46,7 +46,7 @@ export type NodeLayoutWorkerProps = {
     graphData?: string,
     apxCharacterWidth?: number,
     spacingMinimumNodeEdgeGap?: number,
-    timeScaleProps?: InitTimelineScaleProps,
+    timeScaleProps?: TimeScaleArgs,
     centerViewportAfter?: boolean,
   },
 }
@@ -73,7 +73,8 @@ export type GraphState = {
   viewport: Viewport,
   cull: Cull,
   cullScreen: () => void,
-  timeScaleProps: InitTimelineScaleProps,
+  timeScale: TimeScale,
+  timeScaleProps: TimeScaleArgs,
   styleOptions: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
@@ -89,7 +90,7 @@ export type GraphState = {
 
 export type DateToX = (date: Date) => number
 export type XToDate = (xPosition: number) => Date
-export type TimelineScale = {
+export type TimeScale = {
   dateToX: DateToX,
   xToDate: XToDate,
 }

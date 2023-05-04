@@ -4,7 +4,6 @@ import { Application, Container } from 'pixi.js'
 import { watch } from 'vue'
 import { Guide, GuideDateFormatter } from '@/containers/guide'
 import { FormatDateFns, GraphState, ParsedThemeStyles } from '@/models/FlowRunTimeline'
-import { timelineScale } from '@/pixiFunctions'
 import { TimeSpan, getLabelFormatter, getTimeSpanSlot } from '@/utilities'
 import { ViewportUpdatedCheck, viewportUpdatedFactory } from '@/utilities/viewport'
 
@@ -61,8 +60,8 @@ export class Guides extends Container {
   }
 
   private getViewportDates(): ViewportDates {
-    const startDate = timelineScale.xToDate(this.state.viewport.left - VIEWPORT_BUFFER)
-    const endDate = timelineScale.xToDate(this.state.viewport.right + VIEWPORT_BUFFER)
+    const startDate = this.state.timeScale.xToDate(this.state.viewport.left - VIEWPORT_BUFFER)
+    const endDate = this.state.timeScale.xToDate(this.state.viewport.right + VIEWPORT_BUFFER)
     const span = endDate.getTime() - startDate.getTime()
 
     return { startDate, endDate, span }
