@@ -21,6 +21,7 @@ type ViewportDates = {
   span: number,
 }
 
+const MAX_GUIDES = 20
 const GUIDE_GAP_PIXELS = 260
 const VIEWPORT_BUFFER = 100
 
@@ -96,6 +97,11 @@ export class Guides extends Container {
     while (date.getTime() < endDate.getTime()) {
       dates.push(date)
       date = addMilliseconds(date, span)
+    }
+
+    while (dates.length > MAX_GUIDES) {
+      dates.shift()
+      dates.pop()
     }
 
     return dates
