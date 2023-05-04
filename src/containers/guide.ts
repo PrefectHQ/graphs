@@ -2,7 +2,7 @@ import { Viewport } from 'pixi-viewport'
 import { Application, BitmapText, Container, Sprite } from 'pixi.js'
 import { watch } from 'vue'
 import { GraphState, ParsedThemeStyles } from '@/models/FlowRunTimeline'
-import { getBitmapFonts, getSimpleFillTexture, timelineScale } from '@/pixiFunctions'
+import { getBitmapFonts, getSimpleFillTexture } from '@/pixiFunctions'
 import { ViewportUpdatedCheck, viewportUpdatedFactory } from '@/utilities/viewport'
 
 export type GuideDateFormatter = (value: Date) => string
@@ -105,7 +105,7 @@ export class Guide extends Container {
 
     const { viewport } = this.state
 
-    return timelineScale.dateToX(this.date) * viewport.scale._x + viewport.worldTransform.tx
+    return this.state.timeScale.dateToX(this.date) * viewport.scale._x + viewport.worldTransform.tx
   }
 
   private updatePosition(): void {

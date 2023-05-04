@@ -16,7 +16,6 @@ import {
 } from '@/models'
 import {
   getBitmapFonts,
-  timelineScale,
   getNodeBoxTextures,
   TimelineNodes,
   RoundedBorderRect,
@@ -59,7 +58,7 @@ type TimelineNodeProps = {
 
 export class TimelineNode extends Container {
   public nodeData
-  private readonly graphState
+  private readonly state
   private readonly layout
   private readonly layoutRows
 
@@ -112,7 +111,7 @@ export class TimelineNode extends Container {
     this.interactive = false
 
     this.nodeData = nodeData
-    this.graphState = graphState
+    this.state = graphState
     this.layout = layout
     this.layoutRows = layoutRows
 
@@ -150,7 +149,7 @@ export class TimelineNode extends Container {
       subNodeLabels,
       expandedSubNodes,
       viewport,
-    } = this.graphState
+    } = this.state
 
     unWatchers.push(
       watch(layoutRows, () => {
@@ -273,7 +272,7 @@ export class TimelineNode extends Container {
 
     this.subNodesOutline?.destroy()
 
-    const { nodeHeight, graphState } = this
+    const { nodeHeight, state: graphState } = this
     const { styleOptions, styleNode } = graphState
     const {
       borderRadiusNode,
@@ -314,11 +313,11 @@ export class TimelineNode extends Container {
     box.on('click', () => {
       this.emitSelection()
     })
-    this.graphState.cull.add(box)
+    this.state.cull.add(box)
   }
 
   private drawBox(): void {
-    const { pixiApp, styleOptions, styleNode } = this.graphState
+    const { pixiApp, styleOptions, styleNode } = this.state
     const { isRunningNode, nodeWidth, nodeHeight, box, boxCapWidth } = this
     const { borderRadiusNode } = styleOptions.value
     const { fill } = styleNode.value(this.nodeData)
@@ -361,8 +360,8 @@ export class TimelineNode extends Container {
       return
     }
 
-    const { graphState, nodeWidth, nodeHeight, nodeData } = this
-    const { spacingNodeLabelMargin, borderRadiusNode } = this.graphState.styleOptions.value
+    const { state: graphState, nodeWidth, nodeHeight, nodeData } = this
+    const { spacingNodeLabelMargin, borderRadiusNode } = this.state.styleOptions.value
 
     this.subNodesToggleWidth = nodeHeight
     this.isSubNodesToggleFloating = this.subNodesToggleWidth + borderRadiusNode > nodeWidth
@@ -386,7 +385,7 @@ export class TimelineNode extends Container {
 
   private async drawLabel(newLabelText?: boolean): Promise<void> {
     const { apxLabelWidth, nodeData } = this
-    const { styleOptions, styleNode, cull } = this.graphState
+    const { styleOptions, styleNode, cull } = this.state
 
     const textStyles = await getBitmapFonts(styleOptions.value)
     const { spacingNodeXPadding } = styleOptions.value
@@ -435,10 +434,10 @@ export class TimelineNode extends Container {
       colorNodeSelection,
       spacingNodeSelectionWidth,
       borderRadiusNode,
-    } = this.graphState.styleOptions.value
+    } = this.state.styleOptions.value
 
     this.selectedRing = new RoundedBorderRect({
-      graphState: this.graphState,
+      graphState: this.state,
       width,
       height,
       borderRadius: borderRadiusNode,
@@ -465,13 +464,13 @@ export class TimelineNode extends Container {
     this.isSelected = false
     this.selectedRing!.alpha = 0
 
-    if (!this.graphState.selectedNodeId.value) {
+    if (!this.state.selectedNodeId.value) {
       this.centerViewportToNodeAfterDelay()
     }
   }
 
   private centerViewportToNodeAfterDelay(): void {
-    const { viewport, suppressMotion } = this.graphState
+    const { viewport, suppressMotion } = this.state
     setTimeout(() => {
       const xPos = (this.worldTransform.tx - viewport.x) / viewport.scale.x + this.box.width / 2
       const yPos = (this.worldTransform.ty - viewport.y) / viewport.scale.y + this.box.height / 2
@@ -496,7 +495,7 @@ export class TimelineNode extends Container {
       return
     }
 
-    const subNodeContent = this.graphState.expandedSubNodes.value.get(this.nodeData.subFlowRunId)
+    const subNodeContent = this.state.expandedSubNodes.value.get(this.nodeData.subFlowRunId)
 
     if (!this.hasSubNodes || !subNodeContent) {
       return
@@ -509,7 +508,7 @@ export class TimelineNode extends Container {
     this.subNodesContent = new TimelineNodes({
       isSubNodes: true,
       graphData: subNodesData,
-      graphState: this.graphState,
+      graphState: this.state,
     })
 
     this.subNodesContent.on(nodeClickEvents.nodeDetails, (nodeSelectionValue) => {
@@ -528,7 +527,7 @@ export class TimelineNode extends Container {
   }
 
   private drawLoadingSubNodes(): void {
-    const { graphState, box } = this
+    const { state: graphState, box } = this
     const { spacingNodeMargin } = graphState.styleOptions.value
 
     this.destroySubNodesLoadingIndicator()
@@ -546,7 +545,7 @@ export class TimelineNode extends Container {
 
   private async drawNoSubNodesMessage(): Promise<void> {
     const { box } = this
-    const { styleOptions } = this.graphState
+    const { styleOptions } = this.state
     const textStyles = await getBitmapFonts(styleOptions.value)
 
     this.destroyNoSubNodesMessage()
@@ -565,7 +564,7 @@ export class TimelineNode extends Container {
 
   private updateSubNodesContentPosition(): void {
     const { subNodesContent, box } = this
-    const { spacingNodeMargin } = this.graphState.styleOptions.value
+    const { spacingNodeMargin } = this.state.styleOptions.value
 
     if (!subNodesContent) {
       return
@@ -574,7 +573,7 @@ export class TimelineNode extends Container {
     // The subNodes nodes are positioned relative to the global timeline, but we're drawing
     // the subNodes container relative to this node, so we need to offset the X to compensate.
     const earliestSubNodes = subNodesContent.getEarliestNodeStart()
-    const xPosNegativeOffset = earliestSubNodes ? -timelineScale.dateToX(earliestSubNodes) : 0
+    const xPosNegativeOffset = earliestSubNodes ? -this.state.timeScale.dateToX(earliestSubNodes) : 0
 
     const yPos = box.y + box.height + spacingNodeMargin
 
@@ -585,7 +584,7 @@ export class TimelineNode extends Container {
   }
 
   private initSubNodesTicker(): void {
-    const { pixiApp } = this.graphState
+    const { pixiApp } = this.state
 
     if (this.subNodesContentTicker) {
       return
@@ -680,7 +679,7 @@ export class TimelineNode extends Container {
       skipAnimation,
       includeXPos,
     } = options ?? {}
-    const { suppressMotion } = this.graphState
+    const { suppressMotion } = this.state
     const { id } = this.nodeData
     const { position } = this.layout.value[id]
 
@@ -689,7 +688,7 @@ export class TimelineNode extends Container {
     }
 
     const { yPos } = this.layoutRows.value[position]
-    const xPos = includeXPos ? timelineScale.dateToX(this.nodeData.start) : this.position.x
+    const xPos = includeXPos ? this.state.timeScale.dateToX(this.nodeData.start) : this.position.x
 
     if (this.position.y === yPos && this.position.x === xPos) {
       return
@@ -706,12 +705,12 @@ export class TimelineNode extends Container {
       duration: nodeAnimationDurations.move,
       ease: 'power1.out',
     }).then(() => {
-      this.graphState.cullScreen()
+      this.state.cullScreen()
     })
   }
 
   private updateIsRunningNode(): void {
-    this.isRunningNode = this.graphState.isRunning.value && !this.nodeData.end
+    this.isRunningNode = this.state.isRunning.value && !this.nodeData.end
   }
 
   private updateBoxWidth(): void {
@@ -733,8 +732,8 @@ export class TimelineNode extends Container {
       spacingSubNodesOutlineOffset,
       alphaSubNodesOutlineDimmed,
       spacingNodeMargin,
-    } = this.graphState.styleOptions.value
-    const { suppressMotion } = this.graphState
+    } = this.state.styleOptions.value
+    const { suppressMotion } = this.state
 
     const width = this.getOutlineWidth()
     const height = isSubNodesExpanded
@@ -776,7 +775,7 @@ export class TimelineNode extends Container {
     }
 
     const {
-      graphState,
+      state: graphState,
       nodeWidth,
       hasSubNodes,
       isSubNodesToggleFloating,
@@ -812,7 +811,7 @@ export class TimelineNode extends Container {
     }
 
     const { nodeWidth } = this
-    const { borderRadiusNode, spacingNodeLabelMargin } = this.graphState.styleOptions.value
+    const { borderRadiusNode, spacingNodeLabelMargin } = this.state.styleOptions.value
 
     this.isSubNodesToggleFloating = this.subNodesToggleWidth + borderRadiusNode > nodeWidth
     this.subNodesToggle.updateFloatingState(this.isSubNodesToggleFloating)
@@ -838,7 +837,7 @@ export class TimelineNode extends Container {
     }
 
     const minimumWidth = isRunningNode ? boxCapWidth : boxCapWidth * 2
-    const actualWidth = timelineScale.dateToX(nodeData.end ?? new Date()) - timelineScale.dateToX(nodeData.start)
+    const actualWidth = this.state.timeScale.dateToX(nodeData.end ?? new Date()) - this.state.timeScale.dateToX(nodeData.start)
 
     return actualWidth > minimumWidth ? actualWidth : minimumWidth
   }
@@ -847,7 +846,7 @@ export class TimelineNode extends Container {
     const {
       textLineHeightDefault,
       spacingNodeYPadding,
-    } = this.graphState.styleOptions.value
+    } = this.state.styleOptions.value
 
     return textLineHeightDefault + spacingNodeYPadding * 2
   }
@@ -862,7 +861,7 @@ export class TimelineNode extends Container {
 
   private getOutlineWidth(): number {
     const { nodeWidth, isSubNodesExpanded } = this
-    const { spacingSubNodesOutlineOffset } = this.graphState.styleOptions.value
+    const { spacingSubNodesOutlineOffset } = this.state.styleOptions.value
 
     if (isSubNodesExpanded) {
       return nodeWidth + spacingSubNodesOutlineOffset * 2
@@ -879,7 +878,7 @@ export class TimelineNode extends Container {
       return this.nodeData.label
     }
 
-    const { subNodeLabels } = this.graphState
+    const { subNodeLabels } = this.state
     const { subFlowRunId } = this.nodeData
 
     return subNodeLabels.value.has(subFlowRunId!)
@@ -902,7 +901,7 @@ export class TimelineNode extends Container {
       spacingNodeSelectionWidth,
       spacingSubNodesOutlineBorderWidth,
       spacingSubNodesOutlineOffset,
-    } = this.graphState.styleOptions.value
+    } = this.state.styleOptions.value
 
     // The margin compensates for RoundedBorderRect using an inset border
     const margin = spacingNodeSelectionMargin + spacingNodeSelectionWidth
@@ -931,14 +930,14 @@ export class TimelineNode extends Container {
       return []
     }
 
-    const { expandedSubNodes } = this.graphState
+    const { expandedSubNodes } = this.state
     const subNodesData = expandedSubNodes.value.get(this.nodeData.subFlowRunId)!.data
 
     return 'value' in subNodesData ? subNodesData.value : subNodesData
   }
 
   private getSubContentHeight(): number {
-    const { spacingNodeMargin } = this.graphState.styleOptions.value
+    const { spacingNodeMargin } = this.state.styleOptions.value
 
     if (this.subNodesContent?.height) {
       return this.subNodesContent.height
@@ -961,7 +960,7 @@ export class TimelineNode extends Container {
 
   private destroySubNodesContent(): void {
     if (this.subNodesContentTicker) {
-      this.graphState.pixiApp.ticker.remove(this.subNodesContentTicker)
+      this.state.pixiApp.ticker.remove(this.subNodesContentTicker)
       this.subNodesContentTicker = null
     }
 
@@ -983,7 +982,7 @@ export class TimelineNode extends Container {
 
   private destroyRunningNodeTicker(): void {
     if (this.runningNodeTicker) {
-      this.graphState.pixiApp.ticker.remove(this.runningNodeTicker)
+      this.state.pixiApp.ticker.remove(this.runningNodeTicker)
       this.runningNodeTicker = null
     }
   }
@@ -993,7 +992,7 @@ export class TimelineNode extends Container {
   }
 
   public destroy(): void {
-    const { cull } = this.graphState
+    const { cull } = this.state
     cull.remove(this.box)
     if (this.label) {
       cull.remove(this.label)

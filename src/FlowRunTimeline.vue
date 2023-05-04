@@ -23,11 +23,11 @@
     TimelineThemeOptions,
     FormatDateFns,
     formatDateFnsDefault,
-    TimelineScale,
+    TimeScale,
     TimelineNodesLayoutOptions,
     CenterViewportOptions,
     ExpandedSubNodes,
-    InitTimelineScaleProps,
+    TimeScaleArgs,
     GraphState,
     NodeSelectionEvent,
     TimelineVisibleDateRange
@@ -39,7 +39,7 @@
     initViewport,
     TimelineNodes,
     TimelinePlayhead,
-    initTimelineScale,
+    createTimeScale,
     nodeClickEvents
   } from '@/pixiFunctions'
   import {
@@ -107,12 +107,12 @@
   let viewport: Viewport
   const cull = new Cull()
 
-  let timeScaleProps: InitTimelineScaleProps
+  let timeScaleArgs: TimeScaleArgs
+  let timeScale: TimeScale
   let minimumStartDate: Date
   const maximumEndDate = ref<Date | undefined>()
   let initialOverallTimeSpan: number
   let graphXDomain: number
-  let timelineScale: TimelineScale
 
   let guides: Guides
   let playhead: TimelinePlayhead | undefined
@@ -127,8 +127,8 @@
       console.error('Stage reference not found in initPixiApp')
       return
     }
-    initTimeScaleProps()
-    timelineScale = initTimelineScale(timeScaleProps)
+    initTimeScaleArgs()
+    timeScale = createTimeScale(timeScaleArgs)
 
     pixiApp = initPixiApp(stage.value)
     pixiApp.stage.sortableChildren = true
@@ -182,8 +182,8 @@
 
   function updateInternalVisibleDateRange(): void {
     internalVisibleDateRange.value = {
-      startDate: timelineScale.xToDate(viewport.left),
-      endDate: timelineScale.xToDate(viewport.right),
+      startDate: timeScale.xToDate(viewport.left),
+      endDate: timeScale.xToDate(viewport.right),
       internalOrigin: true,
     }
   }
@@ -206,8 +206,8 @@
         return
       }
 
-      const newViewportLeft = timelineScale.dateToX(internalVisibleDateRange.value.startDate)
-      const newViewportRight = timelineScale.dateToX(internalVisibleDateRange.value.endDate)
+      const newViewportLeft = timeScale.dateToX(internalVisibleDateRange.value.startDate)
+      const newViewportRight = timeScale.dateToX(internalVisibleDateRange.value.endDate)
       const centerX = newViewportLeft + (newViewportRight - newViewportLeft) / 2
 
       viewport.fitWidth(newViewportRight - newViewportLeft, true)
@@ -215,7 +215,7 @@
     }, { deep: true })
   }
 
-  function initTimeScaleProps(): void {
+  function initTimeScaleArgs(): void {
     const minimumTimeSpan = 1000 * 60
     const { min: minDate, max: maxDate, span } = getDateBounds(props.graphData, minimumTimeSpan, isRunning.value)
 
@@ -225,7 +225,7 @@
 
     graphXDomain = determineGraphXDomain()
 
-    timeScaleProps = {
+    timeScaleArgs = {
       minimumStartTime: minimumStartDate.getTime(),
       graphXDomain,
       initialOverallTimeSpan,
@@ -272,7 +272,8 @@
       viewport,
       cull,
       cullScreen,
-      timeScaleProps,
+      timeScale,
+      timeScaleArgs,
       styleOptions,
       styleNode,
       layoutSetting,
@@ -288,17 +289,11 @@
   }
 
   function initPlayhead(): void {
-    if (!isRunning.value) {
+    if (!isRunning.value || !graphState) {
       return
     }
 
-    playhead = new TimelinePlayhead({
-      pixiApp,
-      viewport,
-      cull,
-      formatDateFns,
-      styleOptions,
-    })
+    playhead = new TimelinePlayhead(graphState)
 
     pixiApp.stage.addChild(playhead)
 
@@ -321,9 +316,9 @@
           && playheadStartedVisible
           && playhead.position.x > pixiApp.screen.width - styleOptions.value.spacingViewportPaddingDefault
         ) {
-          const originalLeft = timelineScale.xToDate(viewport.left)
+          const originalLeft = timeScale.xToDate(viewport.left)
           viewport.zoomPercent(-0.1, true)
-          viewport.left = timelineScale.dateToX(originalLeft)
+          viewport.left = timeScale.dateToX(originalLeft)
         }
       }
     }

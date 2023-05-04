@@ -1,55 +1,31 @@
-import { Cull } from '@pixi-essentials/cull'
-import type { Viewport } from 'pixi-viewport'
-import { Application, BitmapText, Container, Graphics } from 'pixi.js'
-import { ComputedRef, watch, WatchStopHandle } from 'vue'
-import { FormatDateFns, ParsedThemeStyles } from '@/models'
+import { BitmapText, Container, Graphics } from 'pixi.js'
+import { watch, WatchStopHandle } from 'vue'
+import { GraphState } from '@/models'
 import { getBitmapFonts } from '@/pixiFunctions/bitmapFonts'
-import { timelineScale } from '@/pixiFunctions/timelineScale'
 import { zIndex } from '@/utilities/zIndex'
 
-type TimelinePlayheadProps = {
-  viewport: Viewport,
-  pixiApp: Application,
-  cull: Cull,
-  formatDateFns: ComputedRef<FormatDateFns>,
-  styleOptions: ComputedRef<ParsedThemeStyles>,
-}
-
 export class TimelinePlayhead extends Container {
-  private readonly viewport: Viewport
-  private readonly pixiApp: Application
-  private readonly cull: Cull
-  private readonly formatDateFns
-  private readonly styleOptions: ComputedRef<ParsedThemeStyles>
+  private readonly state: GraphState
 
   private readonly unwatch: WatchStopHandle
 
   private readonly playhead = new Graphics()
   private label: BitmapText | undefined
 
-  public constructor({
-    viewport,
-    pixiApp,
-    cull,
-    formatDateFns,
-    styleOptions,
-  }: TimelinePlayheadProps) {
+  public constructor(state: GraphState) {
     super()
 
-    cull.add(this)
+    this.state = state
 
-    this.viewport = viewport
-    this.pixiApp = pixiApp
-    this.cull = cull
-    this.formatDateFns = formatDateFns
-    this.styleOptions = styleOptions
+    this.state.cull.add(this)
+
     this.zIndex = zIndex.playhead
 
     this.drawPlayhead()
 
     this.drawTimeLabel()
 
-    this.unwatch = watch(styleOptions, () => {
+    this.unwatch = watch(this.state.styleOptions, () => {
       this.playhead.clear()
       this.drawPlayhead()
     })
@@ -62,14 +38,14 @@ export class TimelinePlayhead extends Container {
       colorPlayheadBg,
       spacingPlayheadWidth,
       spacingPlayheadGlowPadding,
-    } = this.styleOptions.value
+    } = this.state.styleOptions.value
 
     this.playhead.beginFill(colorPlayheadBg, 0.1)
     this.playhead.drawRect(
       0,
       0,
       spacingPlayheadWidth + spacingPlayheadGlowPadding * 2,
-      this.pixiApp.screen.height,
+      this.state.pixiApp.screen.height,
     )
     this.playhead.endFill()
     this.playhead.beginFill(colorPlayheadBg)
@@ -77,7 +53,7 @@ export class TimelinePlayhead extends Container {
       spacingPlayheadGlowPadding,
       0,
       spacingPlayheadWidth,
-      this.pixiApp.screen.height,
+      this.state.pixiApp.screen.height,
     )
     this.playhead.endFill()
 
@@ -88,9 +64,9 @@ export class TimelinePlayhead extends Container {
     const {
       spacingGuideLabelPadding,
       spacingPlayheadGlowPadding,
-    } = this.styleOptions.value
-    const textStyles = await getBitmapFonts(this.styleOptions.value)
-    const { timeBySeconds } = this.formatDateFns.value
+    } = this.state.styleOptions.value
+    const textStyles = await getBitmapFonts(this.state.styleOptions.value)
+    const { timeBySeconds } = this.state.formatDateFns.value
     const startDate = timeBySeconds(new Date())
     this.label = new BitmapText(startDate, textStyles.playheadTimerLabel)
 
@@ -105,30 +81,30 @@ export class TimelinePlayhead extends Container {
   }
 
   private getTimeLabelY(): number {
-    const { spacingGuideLabelPadding } = this.styleOptions.value
-    return this.pixiApp.screen.height - (this.label!.height + spacingGuideLabelPadding)
+    const { spacingGuideLabelPadding } = this.state.styleOptions.value
+    return this.state.pixiApp.screen.height - (this.label!.height + spacingGuideLabelPadding)
   }
 
   public updatePosition(): void {
     const {
       spacingPlayheadWidth,
       spacingPlayheadGlowPadding,
-    } = this.styleOptions.value
+    } = this.state.styleOptions.value
 
     this.position.x =
-      timelineScale.dateToX(new Date()) * this.viewport.scale._x
-      + this.viewport.worldTransform.tx
+      this.state.timeScale.dateToX(new Date()) * this.state.viewport.scale._x
+      + this.state.viewport.worldTransform.tx
       - spacingPlayheadGlowPadding
       - spacingPlayheadWidth / 2
 
-    if (this.playhead.height !== this.pixiApp.screen.height) {
-      this.playhead.height = this.pixiApp.screen.height
+    if (this.playhead.height !== this.state.pixiApp.screen.height) {
+      this.playhead.height = this.state.pixiApp.screen.height
       this.label!.y = this.getTimeLabelY()
     }
   }
 
   public destroy(): void {
-    this.cull.remove(this)
+    this.state.cull.remove(this)
     this.unwatch()
     this.playhead.destroy()
     super.destroy.call(this)

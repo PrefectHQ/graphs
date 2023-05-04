@@ -4,15 +4,15 @@ import {
   NodeLayoutWorkerProps,
   NodeShoveDirection,
   NodesLayout,
-  TimelineScale,
+  TimeScale,
   NodeLayoutItem,
   NodeLayoutWorkerResponseData
 } from '@/models'
-import { createTimelineScale } from '@/pixiFunctions/timelineScale'
+import { createTimeScale } from '@/pixiFunctions/timeScale'
 
 const defaultPosition = 0
 
-let timelineScale: TimelineScale | undefined
+let timelineScale: TimeScale | undefined
 
 let currentApxCharacterWidth = 14
 let minimumNodeEdgeGap = 0
@@ -27,7 +27,7 @@ onmessage = async ({
     graphData,
     apxCharacterWidth,
     spacingMinimumNodeEdgeGap,
-    timeScaleProps,
+    timeScaleArgs,
     centerViewportAfter,
   },
 }: NodeLayoutWorkerProps) => {
@@ -47,13 +47,13 @@ onmessage = async ({
     currentApxCharacterWidth = apxCharacterWidth
   }
 
-  if (timeScaleProps) {
+  if (timeScaleArgs) {
     const {
       minimumStartTime,
       graphXDomain,
       initialOverallTimeSpan,
-    } = timeScaleProps
-    timelineScale = createTimelineScale({
+    } = timeScaleArgs
+    timelineScale = createTimeScale({
       minimumStartTime,
       graphXDomain,
       initialOverallTimeSpan,
