@@ -127,7 +127,7 @@
       console.error('Stage reference not found in initPixiApp')
       return
     }
-    initTimeScaleProps()
+    initTimeScaleArgs()
     timeScale = createTimeScale(timeScaleArgs)
 
     pixiApp = initPixiApp(stage.value)
@@ -215,7 +215,7 @@
     }, { deep: true })
   }
 
-  function initTimeScaleProps(): void {
+  function initTimeScaleArgs(): void {
     const minimumTimeSpan = 1000 * 60
     const { min: minDate, max: maxDate, span } = getDateBounds(props.graphData, minimumTimeSpan, isRunning.value)
 
@@ -273,7 +273,7 @@
       cull,
       cullScreen,
       timeScale,
-      timeScaleProps: timeScaleArgs,
+      timeScaleArgs,
       styleOptions,
       styleNode,
       layoutSetting,

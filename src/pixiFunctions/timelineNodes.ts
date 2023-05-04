@@ -113,7 +113,7 @@ export class TimelineNodes extends Container {
   private async initLayoutWorker(): Promise<void> {
     const {
       styleOptions,
-      timeScaleProps,
+      timeScaleArgs,
       layoutSetting,
       centerViewport,
       suppressMotion,
@@ -127,7 +127,7 @@ export class TimelineNodes extends Container {
     const layoutWorkerOptions: NodeLayoutWorkerProps = {
       data: {
         graphData: JSON.stringify(this.graphData),
-        timeScaleProps: timeScaleProps,
+        timeScaleArgs,
         spacingMinimumNodeEdgeGap,
         apxCharacterWidth,
         layoutSetting: layoutSetting.value,

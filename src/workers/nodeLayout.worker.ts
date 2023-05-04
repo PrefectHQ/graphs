@@ -27,7 +27,7 @@ onmessage = async ({
     graphData,
     apxCharacterWidth,
     spacingMinimumNodeEdgeGap,
-    timeScaleProps,
+    timeScaleArgs,
     centerViewportAfter,
   },
 }: NodeLayoutWorkerProps) => {
@@ -47,12 +47,12 @@ onmessage = async ({
     currentApxCharacterWidth = apxCharacterWidth
   }
 
-  if (timeScaleProps) {
+  if (timeScaleArgs) {
     const {
       minimumStartTime,
       graphXDomain,
       initialOverallTimeSpan,
-    } = timeScaleProps
+    } = timeScaleArgs
     timelineScale = createTimeScale({
       minimumStartTime,
       graphXDomain,

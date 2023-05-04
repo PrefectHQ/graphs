@@ -46,7 +46,7 @@ export type NodeLayoutWorkerProps = {
     graphData?: string,
     apxCharacterWidth?: number,
     spacingMinimumNodeEdgeGap?: number,
-    timeScaleProps?: TimeScaleArgs,
+    timeScaleArgs?: TimeScaleArgs,
     centerViewportAfter?: boolean,
   },
 }
@@ -74,7 +74,7 @@ export type GraphState = {
   cull: Cull,
   cullScreen: () => void,
   timeScale: TimeScale,
-  timeScaleProps: TimeScaleArgs,
+  timeScaleArgs: TimeScaleArgs,
   styleOptions: ComputedRef<ParsedThemeStyles>,
   styleNode: ComputedRef<NodeThemeFn>,
   layoutSetting: ComputedRef<TimelineNodesLayoutOptions>,
