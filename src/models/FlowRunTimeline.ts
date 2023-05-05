@@ -51,7 +51,7 @@ export type NodeLayoutWorkerProps = {
   },
 }
 export type NodeLayoutItem = {
-  position: number,
+  row: number,
   nextDependencyShove?: NodeShoveDirection,
   startX: number,
   endX: number,

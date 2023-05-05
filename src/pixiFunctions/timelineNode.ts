@@ -681,13 +681,13 @@ export class TimelineNode extends Container {
     } = options ?? {}
     const { suppressMotion } = this.state
     const { id } = this.nodeData
-    const { position } = this.layout.value[id]
+    const { row } = this.layout.value[id]
 
-    if (!this.layoutRows.value[position]) {
+    if (!this.layoutRows.value[row]) {
       return
     }
 
-    const { yPos } = this.layoutRows.value[position]
+    const { yPos } = this.layoutRows.value[row]
     const xPos = includeXPos ? this.state.timeScale.dateToX(this.nodeData.start) : this.position.x
 
     if (this.position.y === yPos && this.position.x === xPos) {
