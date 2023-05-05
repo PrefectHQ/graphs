@@ -118,8 +118,8 @@
   const shapeOptions: Shape[] = ['linear', 'fanOut', 'fanOutIn']
   const slowFeedData = ref(false)
   const zeroTimeGap = ref(true)
-  const layoutOptions: TimelineNodesLayoutOptions[] = ['waterfall', 'nearestParent']
-  const layout = ref<TimelineNodesLayoutOptions>('nearestParent')
+  const layoutOptions: TimelineNodesLayoutOptions[] = ['dag', 'waterfall', 'nearestParent']
+  const layout = ref<TimelineNodesLayoutOptions>('dag')
 
   const dataOptions = computed(() => {
     return {

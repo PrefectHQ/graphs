@@ -26,7 +26,7 @@ export type TimelineVisibleDateRange = {
   internalOrigin?: boolean,
 }
 
-export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent'
+export type TimelineNodesLayoutOptions = 'waterfall' | 'nearestParent' | 'dag'
 
 export type NodeSelectionEventTypes = 'task' | 'subFlowRun'
 export type NodeSelectionEvent = {
