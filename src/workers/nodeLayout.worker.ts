@@ -29,10 +29,6 @@ onmessage = async ({
     centerViewportAfter,
   },
 }: NodeLayoutWorkerProps) => {
-  for (const item in layout) {
-    delete layout[item]
-  }
-
   if (spacingMinimumNodeEdgeGap) {
     minimumNodeEdgeGap = spacingMinimumNodeEdgeGap
   }
