@@ -7,7 +7,6 @@ import {
   NodeLayoutWorkerResponseData
 } from '@/models'
 import { createTimeScale } from '@/pixiFunctions/timeScale'
-import { generateDagLayout } from '@/workers/layouts/dag'
 import { generateNearestParentLayout } from '@/workers/layouts/nearestNeighbor'
 import { generateWaterfallLayout } from '@/workers/layouts/waterfall'
 
@@ -98,15 +97,6 @@ async function calculateNodeLayout(): Promise<void> {
 
   if (currentLayoutSetting === 'nearestParent') {
     layout = await generateNearestParentLayout({
-      data: graphDataStore,
-      timeScale: timeScale!,
-      currentApxCharacterWidth,
-      minimumNodeEdgeGap,
-    })
-  }
-
-  if (currentLayoutSetting === 'dag') {
-    layout = await generateDagLayout({
       data: graphDataStore,
       timeScale: timeScale!,
       currentApxCharacterWidth,
