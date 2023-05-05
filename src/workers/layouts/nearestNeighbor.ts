@@ -50,17 +50,17 @@ export async function generateNearestParentLayout({
 
       const startX = timeScale.dateToX(new Date(nodeData.start))
 
-      const position = await getNearestParentPosition(nodeData, startX)
+      const row = await getNearestParentRow(nodeData, startX)
 
       layout[nodeData.id] = {
-        position,
+        row,
         startX,
         endX,
       }
     }
   }
 
-  async function getNearestParentPosition(nodeData: GraphTimelineNode, nodeStartX: number): Promise<number> {
+  async function getNearestParentRow(nodeData: GraphTimelineNode, nodeStartX: number): Promise<number> {
   // if one dependency
     if (nodeData.upstreamDependencies && nodeData.upstreamDependencies.length === 1) {
       if (nodeData.upstreamDependencies[0] in layout) {
@@ -77,7 +77,7 @@ export async function generateNearestParentLayout({
       const upstreamLayoutItems = nodeData.upstreamDependencies
         .map(id => layout[id])
         .filter((layoutItem: NodeLayoutItem | undefined): layoutItem is NodeLayoutItem => !!layoutItem)
-      const upstreamPositions = upstreamLayoutItems.map(layoutItem => layoutItem.position)
+      const upstreamPositions = upstreamLayoutItems.map(layoutItem => layoutItem.row)
       const upstreamPositionSum = upstreamPositions.reduce((sum, position) => sum + position, 0)
       const upstreamPositionAverage = upstreamPositionSum / upstreamPositions.length
 
@@ -138,7 +138,7 @@ export async function generateNearestParentLayout({
     }
 
     const {
-      position: upstreamNodePosition,
+      row: upstreamNodePosition,
       nextDependencyShove,
     } = upstreamLayoutItem
     if (isPositionTaken(nodeStartX, upstreamNodePosition)) {
@@ -166,7 +166,7 @@ export async function generateNearestParentLayout({
       const layoutItem = layout[nodeId]
       return isNodesOverlapping({
         firstNodeEndX: layoutItem.endX,
-        firstNodePosition: layoutItem.position,
+        firstNodePosition: layoutItem.row,
         lastNodeStartX: nodeStartX,
         lastNodePosition: position,
       })
@@ -183,13 +183,13 @@ export async function generateNearestParentLayout({
     for await (const overlapId of overlappingLayoutIds) {
     // push nodes and recursively shove as needed
       const layoutItem = layout[overlapId]
-      const newPosition = layoutItem.position + direction
+      const newPosition = layoutItem.row + direction
       await shove({
         direction,
         nodeStartX: layoutItem.startX,
         desiredPosition: newPosition,
       })
-      layoutItem.position = newPosition
+      layoutItem.row = newPosition
     }
   }
 
@@ -211,7 +211,7 @@ export async function generateNearestParentLayout({
 
       const isItemOverlapping = isNodesOverlapping({
         firstNodeEndX: layoutItem.endX,
-        firstNodePosition: layoutItem.position,
+        firstNodePosition: layoutItem.row,
         lastNodeStartX: nodeStartX,
         lastNodePosition: position,
       })
@@ -342,11 +342,11 @@ export async function generateNearestParentLayout({
       if (id in layout) {
         const dependencyLayoutItem = layout[dependencyId]
 
-        if (dependencyLayoutItem.position < layoutItem.position) {
+        if (dependencyLayoutItem.row < layoutItem.row) {
           counts[0] += 1
         }
 
-        if (dependencyLayoutItem.position > layoutItem.position) {
+        if (dependencyLayoutItem.row > layoutItem.row) {
           counts[1] += 1
         }
 

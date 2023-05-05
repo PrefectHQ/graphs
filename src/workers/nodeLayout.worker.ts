@@ -7,6 +7,7 @@ import {
   NodeLayoutWorkerResponseData
 } from '@/models'
 import { createTimeScale } from '@/pixiFunctions/timeScale'
+import { generateDagLayout } from '@/workers/layouts/dag'
 import { generateNearestParentLayout } from '@/workers/layouts/nearestNeighbor'
 import { generateWaterfallLayout } from '@/workers/layouts/waterfall'
 
@@ -104,20 +105,29 @@ async function calculateNodeLayout(): Promise<void> {
     })
   }
 
+  if (currentLayoutSetting === 'dag') {
+    layout = await generateDagLayout({
+      data: graphDataStore,
+      timeScale: timeScale!,
+      currentApxCharacterWidth,
+      minimumNodeEdgeGap,
+    })
+  }
+
   purgeNegativePositions()
 }
 
 function purgeNegativePositions(): void {
   const lowestPosition = Object.values(layout).reduce((lowest, layoutItem) => {
-    if (layoutItem.position < lowest) {
-      return layoutItem.position
+    if (layoutItem.row < lowest) {
+      return layoutItem.row
     }
     return lowest
   }, 0)
 
   if (lowestPosition < 0) {
     Object.values(layout).forEach(layoutItem => {
-      layoutItem.position += Math.abs(lowestPosition)
+      layoutItem.row += Math.abs(lowestPosition)
     })
   }
 }

@@ -5,7 +5,7 @@ export function generateWaterfallLayout(data: GraphTimelineNode[]): NodesLayout 
 
   data.forEach((nodeData, index) => {
     layout[nodeData.id] = {
-      position: index,
+      row: index,
       startX: 0,
       endX: 0,
     }
