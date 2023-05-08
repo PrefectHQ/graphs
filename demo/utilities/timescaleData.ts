@@ -145,13 +145,13 @@ const generateTimescaleData = (options?: DataOptions): TimelineData => {
     }
 
     let index = -1
-    for (const [, item] of nodes) {
+    nodes.forEach(item => {
       index++
 
       if (row == 0) {
         rows.push([item])
         incRow()
-        continue
+        return
       }
 
       const currRow = rows[row]
@@ -167,7 +167,7 @@ const generateTimescaleData = (options?: DataOptions): TimelineData => {
         if (currLen + 1 >= prevLen * fanMultiplier) {
           rows[row].push(item)
           incRow()
-          continue
+          return
         }
       }
 
@@ -176,14 +176,14 @@ const generateTimescaleData = (options?: DataOptions): TimelineData => {
           if ((currLen + 1) * fanMultiplier >= prevLen) {
             rows[row].push(item)
             incRow()
-            continue
+            return
           }
         }
 
         if (currLen + 1 >= prevLen * fanMultiplier) {
           rows[row].push(item)
           incRow()
-          continue
+          return
         }
 
       }
@@ -206,7 +206,7 @@ const generateTimescaleData = (options?: DataOptions): TimelineData => {
       if (random() > 0.95) addUpstreamDependency()
       /* eslint-enable curly */
 
-    }
+    })
   }
 
   // Assign start and end dates based on dependency tree
