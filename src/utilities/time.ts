@@ -105,10 +105,14 @@ export function getDateBounds(
 
     if (startTime && minStartTime) {
       minStartTime = Math.min(minStartTime, startTime)
+    } else {
+      minStartTime = startTime
     }
 
     if (endTime && maxEndTime) {
       maxEndTime = Math.max(maxEndTime, endTime)
+    } else {
+      maxEndTime = endTime
     }
   })
 
