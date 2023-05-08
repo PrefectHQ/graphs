@@ -133,8 +133,6 @@ export class TimelineNodes extends Container {
     this.layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
       this.layout.value = data.layout
 
-      console.log(data.layout)
-
       this.renderLayout()
 
       if (this.isSelectionPathHighlighted) {

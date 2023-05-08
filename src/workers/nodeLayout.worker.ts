@@ -60,7 +60,7 @@ onmessage = async ({
       layout,
       centerViewportAfter,
     }
-    console.log(layout)
+
     postMessage(response)
   }
 }
