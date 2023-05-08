@@ -38,15 +38,18 @@
 </template>
 
 <script lang="ts" setup>
-  import { withDefaults } from 'vue'
-  import { GraphTimelineNode } from '@/models'
+  import { computed, withDefaults } from 'vue'
+
+  import { TimelineData, TimelineItem } from '@/types/timeline'
   import { secondsToApproximateString } from '@/utilities/time'
 
-  withDefaults(defineProps<{
-    data?: GraphTimelineNode[],
+  const props = withDefaults(defineProps<{
+    data?: TimelineData,
   }>(), {
-    data: () => [],
+    data: () => new Map(),
   })
+
+  const data = computed(() => Array.from(props.data.values()))
 
   const columns = [
     {
@@ -71,7 +74,7 @@
     },
   ]
 
-  const getDuration = (row: GraphTimelineNode): string => {
+  const getDuration = (row: TimelineItem): string => {
     if (!row.start) {
       return '--'
     }
