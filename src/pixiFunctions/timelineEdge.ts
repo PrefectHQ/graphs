@@ -2,7 +2,7 @@ import { Container, Point, SimpleRope, Sprite, Texture } from 'pixi.js'
 import { watch, WatchStopHandle } from 'vue'
 import { GraphState } from '@/models'
 import {
-  TimelineItem,
+  TimelineNode,
   timelineNodeBoxName,
   getArrowTexture,
   getSimpleFillTexture,
@@ -13,8 +13,8 @@ const minimumBezier = 64
 const edgeFidelity = 20
 
 type TimelineEdgeProps = {
-  sourceNode: TimelineItem,
-  targetNode: TimelineItem,
+  sourceNode: TimelineNode,
+  targetNode: TimelineNode,
   state: GraphState,
 }
 
@@ -186,7 +186,7 @@ export class TimelineEdge extends Container {
     return this.sourceNode.x + this.sourceNode.getChildByName(timelineNodeBoxName).getLocalBounds().width
   }
 
-  private getNodeY(node: TimelineItem): number {
+  private getNodeY(node: TimelineNode): number {
     return node.y + node.getChildByName(timelineNodeBoxName).getLocalBounds().height / 2
   }
 
