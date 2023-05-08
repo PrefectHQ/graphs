@@ -2,17 +2,8 @@ import { Cull } from '@pixi-essentials/cull'
 import type { Viewport } from 'pixi-viewport'
 import type { Application, IBitmapTextStyle, TextStyle } from 'pixi.js'
 import type { ComputedRef } from 'vue'
+import { TimelineData, TimelineItem } from '@/types/timeline'
 import { formatDate, formatDateByMinutes, formatDateBySeconds } from '@/utilities'
-
-export type GraphTimelineNode = {
-  id: string,
-  label: string,
-  start: Date | null,
-  end: Date | null,
-  state: string,
-  upstreamDependencies?: string[],
-  subFlowRunId?: string,
-}
 
 export type TimeScaleArgs = {
   minimumStartTime: number,
@@ -35,20 +26,19 @@ export type NodeSelectionEvent = {
 }
 
 export type ExpandedSubNodes<T extends Record<string, unknown> = Record<string, unknown>> = Map<string, {
-  data: GraphTimelineNode[] | ComputedRef<GraphTimelineNode[]>,
+  data: TimelineData | ComputedRef<TimelineData>,
   // user may define anything else to be used externally
 } & T>
 
 export type NodeShoveDirection = 1 | -1
-export type NodeLayoutWorkerProps = {
-  data: {
-    layoutSetting?: TimelineNodesLayoutOptions,
-    graphData?: string,
-    apxCharacterWidth?: number,
-    spacingMinimumNodeEdgeGap?: number,
-    timeScaleArgs?: TimeScaleArgs,
-    centerViewportAfter?: boolean,
-  },
+
+export type NodeLayoutWorkerArgs = {
+  layoutSetting?: TimelineNodesLayoutOptions,
+  data?: TimelineData,
+  apxCharacterWidth?: number,
+  spacingMinimumNodeEdgeGap?: number,
+  timeScaleArgs?: TimeScaleArgs,
+  centerViewportAfter?: boolean,
 }
 export type NodeLayoutItem = {
   row: number,
@@ -129,7 +119,7 @@ type NodeThemeOptions = {
   onFillSubNodeToggleHoverBg: string,
   onFillSubNodeToggleHoverBgAlpha: number,
 }
-export type NodeThemeFn = (node: GraphTimelineNode) => NodeThemeOptions
+export type NodeThemeFn = (node: TimelineItem) => NodeThemeOptions
 export const nodeThemeFnDefault: NodeThemeFn = () => {
   return {
     fill: 'black',

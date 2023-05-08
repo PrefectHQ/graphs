@@ -20,11 +20,14 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
     "combobox",
+    "gsap",
     "heroicons",
     "pixi",
     "playhead",
     "prefecthq",
+    "subflow",
     "tailwindcss",
+    "unref",
     "vite",
     "vitejs"
   ],

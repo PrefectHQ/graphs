@@ -1,13 +1,14 @@
 import gsap from 'gsap'
 import { Container, Sprite } from 'pixi.js'
 import { watch, WatchStopHandle } from 'vue'
-import { GraphState, GraphTimelineNode } from '@/models'
+import { GraphState } from '@/models'
 import {
   getArrowTexture,
   getNodeBoxTextures,
   getSimpleFillTexture,
   RoundedBorderRect
 } from '@/pixiFunctions'
+import { TimelineItem } from '@/types/timeline'
 import { colorToHex } from '@/utilities'
 
 const hoverShadePieces = {
@@ -22,7 +23,7 @@ const toggleScaleCullingThreshold = 0.2
 
 type SubNodesToggleProps = {
   graphState: GraphState,
-  nodeData: GraphTimelineNode,
+  nodeData: TimelineItem,
   size: number,
   floating?: boolean,
 }

@@ -1,9 +1,10 @@
-import { GraphTimelineNode, NodeLayoutItem, NodeShoveDirection, NodesLayout, TimeScale } from '@/models'
+import { NodeLayoutItem, NodeShoveDirection, NodesLayout, TimeScale } from '@/models'
+import { TimelineData, TimelineItem } from '@/types/timeline'
 
 const DEFAULT_POSITION = 0
 
 type FactoryArgs = {
-  data: GraphTimelineNode[],
+  data: TimelineData,
   timeScale: TimeScale,
   currentApxCharacterWidth: number,
   minimumNodeEdgeGap: number,
@@ -38,21 +39,21 @@ export async function generateNearestParentLayout({
   const layout: NodesLayout = {}
 
   async function generate(): Promise<void> {
-    for await (const nodeData of data) {
-      if (!nodeData.start) {
+    for await (const [, item] of data) {
+      if (!item.start) {
         continue
       }
 
-      const endAsPx = timeScale.dateToX(nodeData.end ? new Date(nodeData.end) : new Date())
+      const endAsPx = timeScale.dateToX(item.end ?? new Date())
       // Accommodate the label width so they don't overlap
-      const apxLabelWidth = nodeData.label.length * currentApxCharacterWidth
+      const apxLabelWidth = item.label.length * currentApxCharacterWidth
       const endX = endAsPx + apxLabelWidth
 
-      const startX = timeScale.dateToX(new Date(nodeData.start))
+      const startX = timeScale.dateToX(new Date(item.start))
 
-      const row = await getNearestParentRow(nodeData, startX)
+      const row = await getNearestParentRow(item, startX)
 
-      layout[nodeData.id] = {
+      layout[item.id] = {
         row,
         startX,
         endX,
@@ -60,21 +61,21 @@ export async function generateNearestParentLayout({
     }
   }
 
-  async function getNearestParentRow(nodeData: GraphTimelineNode, nodeStartX: number): Promise<number> {
+  async function getNearestParentRow(nodeData: TimelineItem, nodeStartX: number): Promise<number> {
   // if one dependency
-    if (nodeData.upstreamDependencies && nodeData.upstreamDependencies.length === 1) {
-      if (nodeData.upstreamDependencies[0] in layout) {
-        const parent = layout[nodeData.upstreamDependencies[0]]
+    if (nodeData.upstream.length === 1) {
+      if (nodeData.upstream[0] in layout) {
+        const parent = layout[nodeData.upstream[0]]
         return await placeNearUpstreamNode(parent, nodeStartX)
       }
 
-      console.warn('timelineNodes layout worker: Parent node not found in layout', nodeData.upstreamDependencies[0])
+      console.warn('timelineNodes layout worker: Parent node not found in layout', nodeData.upstream[0])
       return DEFAULT_POSITION
     }
 
     // if more than one dependency – add to the middle of upstream dependencies
-    if (nodeData.upstreamDependencies && nodeData.upstreamDependencies.length > 0) {
-      const upstreamLayoutItems = nodeData.upstreamDependencies
+    if (nodeData.upstream.length > 0) {
+      const upstreamLayoutItems = nodeData.upstream
         .map(id => layout[id])
         .filter((layoutItem: NodeLayoutItem | undefined): layoutItem is NodeLayoutItem => !!layoutItem)
       const upstreamPositions = upstreamLayoutItems.map(layoutItem => layoutItem.row)
@@ -90,7 +91,7 @@ export async function generateNearestParentLayout({
         )!
 
         const upstreamDependenciesOverlapping = overlappingLayoutIds.filter(layoutId => {
-          return nodeData.upstreamDependencies?.includes(layoutId)
+          return nodeData.upstream.includes(layoutId)
         })
 
         if (upstreamDependenciesOverlapping.length > 0 || overlappingLayoutIds.length > 1) {
@@ -335,10 +336,10 @@ export async function generateNearestParentLayout({
   }
 
   function getLayoutItemUpAndDownwardConnections(id: string): [number, number] {
-    const connections = data.find(nodeData => nodeData.id === id)!
+    const connections = data.get(id)!
     const layoutItem = layout[id]
 
-    return connections.upstreamDependencies?.reduce((counts, dependencyId) => {
+    return connections.upstream.reduce((counts, dependencyId) => {
       if (id in layout) {
         const dependencyLayoutItem = layout[dependencyId]
 
@@ -355,7 +356,7 @@ export async function generateNearestParentLayout({
 
       console.warn('nodeLayout.worker.ts: Parent node not found on layout data', id)
       return counts
-    }, [0, 0]) ?? [0, 0]
+    }, [0, 0])
   }
 
   await generate()

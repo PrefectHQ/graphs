@@ -6,7 +6,7 @@
           v-if="data"
           ref="graph"
           :key="componentKey"
-          :graph-data="data"
+          :data="data"
           :is-running="isRunning"
           :theme="theme"
           :layout="layout"
@@ -86,7 +86,7 @@
 
 <script lang="ts" setup>
   import { useColorTheme } from '@prefecthq/prefect-design'
-  import { ref, watchEffect, computed } from 'vue'
+  import { ref, watchEffect, computed, unref } from 'vue'
   import { generateTimescaleData, Shape } from '../../utilities/timescaleData'
   import FlowRunTimeline from '@/FlowRunTimeline.vue'
   import {
@@ -94,9 +94,9 @@
     TimelineNodesLayoutOptions,
     ThemeStyleOverrides,
     ExpandedSubNodes,
-    GraphTimelineNode,
     NodeSelectionEvent
   } from '@/models'
+  import { TimelineData } from '@/types/timeline'
 
   const { value: colorThemeValue } = useColorTheme()
 
@@ -133,10 +133,18 @@
     }
   })
 
-  const data = ref<GraphTimelineNode[]>([])
+  const data = ref<TimelineData>(new Map())
 
-  const slowlySetData = (graphData: GraphTimelineNode[], count: number = 1): void => {
-    const newData = graphData.filter((item, index) => index <= count)
+  const slowlySetData = (graphData: TimelineData, count: number = 1): void => {
+    const newData: TimelineData = new Map()
+
+    for (const [id, item] of graphData) {
+      newData.set(id, item)
+
+      if (newData.size >= count) {
+        break
+      }
+    }
 
     if (count === 1) {
       data.value = newData
@@ -146,7 +154,8 @@
 
     setTimeout(() => {
       data.value = newData
-      if (count < graphData.length) {
+
+      if (count < graphData.size) {
         slowlySetData(graphData, count + 1)
       }
     }, 1000)
@@ -154,15 +163,16 @@
 
   watchEffect(() => {
     const generatedData = generateTimescaleData(dataOptions.value)
+
     if (slowFeedData.value) {
       slowlySetData(generatedData)
     } else {
       data.value = generateTimescaleData(dataOptions.value)
     }
 
-
     if (isRunning.value) {
-      const lastItem = data.value[data.value.length - 1]
+      const arr = Array.from(data.value.values())
+      const lastItem = arr.at(-1)!
       lastItem.end = null
       lastItem.state = 'running'
     }
@@ -192,18 +202,27 @@
     }
 
     expandedSubFlows.value.set(value, {
-      data: [],
+      data: new Map(),
     })
 
     // timeout simulates the delay while requesting subflow data.
     setTimeout(() => {
       if (expandedSubFlows.value.has(value)) {
-        let nodeData = data.value.find(item => item.subFlowRunId === value)
+        const values = Array.from(data.value.values())
+        let nodeData = values.find(item => item.subflowRunId === value)
+
         if (!nodeData) {
           expandedSubFlows.value.forEach((subFlowData) => {
-            const match = 'value' in subFlowData.data
-              ? subFlowData.data.value.find(item => item.subFlowRunId === value)
-              : subFlowData.data.find(item => item.subFlowRunId === value)
+            const data = unref(subFlowData.data)
+            let match
+
+            for (const [, item] of data) {
+              if (item.subflowRunId === value) {
+                match = item
+                break
+              }
+            }
+
             if (match) {
               nodeData = match
             }
@@ -217,8 +236,8 @@
         const subFlowDataOptions = {
           ...dataOptions.value,
           size: Math.floor(Math.random() * 5) + 1,
-          start: new Date(nodeData.start!),
-          end: nodeData.end ? new Date(nodeData.end) : new Date(),
+          start: nodeData.start!,
+          end: nodeData.end ?? new Date(),
         }
         const subFlowData = generateTimescaleData(subFlowDataOptions)
 

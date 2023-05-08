@@ -18,7 +18,6 @@
   } from 'vue'
   import { Guides } from '@/containers/guides'
   import {
-    GraphTimelineNode,
     nodeThemeFnDefault,
     TimelineThemeOptions,
     FormatDateFns,
@@ -42,6 +41,7 @@
     createTimeScale,
     nodeClickEvents
   } from '@/pixiFunctions'
+  import { TimelineData } from '@/types/timeline'
   import {
     getDateBounds,
     parseThemeOptions
@@ -51,7 +51,7 @@
   const animationThreshold = 500
 
   const props = defineProps<{
-    graphData: GraphTimelineNode[],
+    data: TimelineData,
     isRunning?: boolean,
     theme?: TimelineThemeOptions,
     formatDateFns?: Partial<FormatDateFns>,
@@ -94,7 +94,7 @@
   const expandedSubNodes = computed(() => props.expandedSubNodes ?? new Map())
   const suppressMotion = computed(() => {
     const prefersReducedMotion: boolean = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    return props.graphData.length > animationThreshold || prefersReducedMotion
+    return props.data.size > animationThreshold || prefersReducedMotion
   })
   const isViewportDragging = ref(false)
   const formatDateFns = computed(() => ({
@@ -217,7 +217,7 @@
 
   function initTimeScaleArgs(): void {
     const minimumTimeSpan = 1000 * 60
-    const { min: minDate, max: maxDate, span } = getDateBounds(props.graphData, minimumTimeSpan, isRunning.value)
+    const { min: minDate, max: maxDate, span } = getDateBounds(props.data, minimumTimeSpan, isRunning.value)
 
     minimumStartDate = minDate
     maximumEndDate.value = maxDate
@@ -240,7 +240,7 @@
       spacingSubNodesOutlineOffset,
     } = styleOptions.value
 
-    const dataSize = props.graphData.length
+    const dataSize = props.data.size
 
     // this nodeHeight measurement is apx because, while it attempts to match the actual node height,
     // we're not measuring an actual node here. e.g. the outlineOffset may not be adding to the
@@ -374,8 +374,8 @@
 
     nodesContainer = new TimelineNodes({
       nodeContentContainerName: nodesContentContainerName,
-      graphData: props.graphData,
-      graphState,
+      data: props.data,
+      state: graphState,
     })
     viewport.addChild(nodesContainer)
 
@@ -390,11 +390,11 @@
       }
     })
 
-    watch(() => props.graphData, () => {
+    watch(() => props.data, () => {
       // This accommodates updated nodeData or newly added nodes.
       // If totally new data is added, it all gets appended way down the viewport Y axis.
       // If nodes are deleted, they are not removed from the viewport (shouldn't happen).
-      nodesContainer.update(props.graphData)
+      nodesContainer.update(props.data)
       viewport.dirty = true
     })
   }
