@@ -456,10 +456,14 @@ export class TimelineNodes extends Container {
   }
 
   public getEarliestNodeStart(): Date | null {
-    let earliest: Date | null = null
+    if (this.data.size < 1) {
+      return null
+    }
+
+    let earliest: Date = new Date()
 
     this.data.forEach(({ start }) => {
-      if (start && earliest && start.getTime() < earliest.getTime()) {
+      if (start && start.getTime() < earliest.getTime()) {
         earliest = start
       }
     })
