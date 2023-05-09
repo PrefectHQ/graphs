@@ -18,7 +18,6 @@ export function initPixiApp(stage: HTMLElement): Application {
 
   pixiApp.ticker.add(() => {
     if (stage.clientWidth !== pixiApp.screen.width || stage.clientHeight !== pixiApp.screen.height) {
-      console.log('here', stage.clientWidth, stage.clientHeight)
       pixiApp.resizeTo = stage
     }
   }, null, UPDATE_PRIORITY.LOW)
