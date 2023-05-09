@@ -163,9 +163,9 @@ export class TimelineNode extends Container {
           this.drawNoSubNodesMessage()
         }
       }, { deep: true }),
-      watch(selectedNodeId, () => {
-        const isCurrentSelection = selectedNodeId.value === this.nodeData.id
-            || selectedNodeId.value === this.nodeData.subflowRunId
+      watch(selectedNodeId, selected => {
+        const nodeSelectionId = this.nodeData.subflowRunId ?? this.nodeData.id
+        const isCurrentSelection = selected && selected === nodeSelectionId
 
         if (isCurrentSelection) {
           this.select()
