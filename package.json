@@ -42,7 +42,7 @@
     "@prefecthq/eslint-config": "1.0.25",
     "@types/fontfaceobserver": "^2.1.0",
     "@types/node": "^20.1.7",
-    "@vitejs/plugin-vue": "4.0.0",
+    "@vitejs/plugin-vue": "4.2.3",
     "auto-changelog": "^2.4.0",
     "autoprefixer": "10.4.13",
     "eslint": "8.40.0",
