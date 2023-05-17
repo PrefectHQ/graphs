@@ -1,4 +1,4 @@
-import { Application, utils } from 'pixi.js'
+import { Application, UPDATE_PRIORITY, utils } from 'pixi.js'
 
 export function initPixiApp(stage: HTMLElement): Application {
   utils.skipHello()
@@ -8,7 +8,6 @@ export function initPixiApp(stage: HTMLElement): Application {
     resolution: window.devicePixelRatio || 2,
     autoDensity: true,
     antialias: true,
-    resizeTo: stage,
   })
 
   if (process.env.NODE_ENV === 'development') {
@@ -16,6 +15,12 @@ export function initPixiApp(stage: HTMLElement): Application {
   }
 
   stage.appendChild(pixiApp.view)
+
+  pixiApp.ticker.add(() => {
+    if (stage.clientWidth !== pixiApp.screen.width || stage.clientHeight !== pixiApp.screen.height) {
+      pixiApp.resizeTo = stage
+    }
+  }, null, UPDATE_PRIORITY.LOW)
 
   return pixiApp
 }
