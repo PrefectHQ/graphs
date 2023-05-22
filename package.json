@@ -66,6 +66,6 @@
     "fontfaceobserver": "^2.3.0",
     "gsap": "^3.11.4",
     "pixi-viewport": "^4.38.0",
-    "pixi.js": "^6.5.8"
+    "pixi.js": "^7.2.4"
   }
 }
