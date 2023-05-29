@@ -61,7 +61,7 @@
   },
   "dependencies": {
     "@pixi-essentials/cull": "^1.1.0",
-    "@prefecthq/vue-compositions": "1.0.0",
+    "@prefecthq/vue-compositions": "1.5.4",
     "date-fns": "2.29.3",
     "fontfaceobserver": "^2.3.0",
     "gsap": "^3.11.4",
