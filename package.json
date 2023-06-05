@@ -60,7 +60,7 @@
     "vue-router": "^4.0.12"
   },
   "dependencies": {
-    "@pixi-essentials/cull": "^1.1.0",
+    "@pixi-essentials/cull": "^2.0.0",
     "@prefecthq/vue-compositions": "1.5.6",
     "date-fns": "2.30.0",
     "fontfaceobserver": "^2.3.0",
