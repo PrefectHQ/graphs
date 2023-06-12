@@ -39,7 +39,7 @@
   "devDependencies": {
     "@fontsource/inconsolata": "^4.5.9",
     "@fontsource/inter": "4.5.14",
-    "@prefecthq/eslint-config": "1.0.25",
+    "@prefecthq/eslint-config": "1.0.27",
     "@types/fontfaceobserver": "^2.1.0",
     "@types/node": "^20.1.7",
     "@vitejs/plugin-vue": "4.2.3",
