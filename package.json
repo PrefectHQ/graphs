@@ -38,7 +38,7 @@
   "homepage": "https://github.com/PrefectHQ/graphs#readme",
   "devDependencies": {
     "@fontsource/inconsolata": "^4.5.9",
-    "@fontsource/inter": "4.5.14",
+    "@fontsource/inter": "5.0.3",
     "@prefecthq/eslint-config": "1.0.25",
     "@types/fontfaceobserver": "^2.1.0",
     "@types/node": "^20.1.7",
