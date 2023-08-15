@@ -1,7 +1,7 @@
 /* eslint-disable no-relative-import-paths/no-relative-import-paths */
 import { randomDate } from './randomDate'
 import { randomStarName } from './randomStarName'
-import { GraphTimelineNode } from '@/models'
+import { TimelineData, TimelineItem } from '@/types/timeline'
 import { random, floor } from '@/utilities/math'
 
 export type TimelineNodeState =
@@ -29,33 +29,40 @@ type AssignStartAndEndDates = {
   start: Date,
   end: Date,
   size: number,
-  nodes: GraphTimelineNode[],
+  nodes: TimelineData,
   zeroTimeGap?: boolean,
 }
 
 // This method assumes that at least 1 upstream dependency has been assigned an end date
-const maxDate = (nodes: GraphTimelineNode[], property: keyof GraphTimelineNode, start: Date): Date => {
-  return nodes.reduce((acc: Date, curr) => {
-    const date = curr[property]
+const maxDate = (data: TimelineData, property: keyof TimelineItem, start: Date): Date => {
+  let max: Date = start
 
-    if (!date) {
-      return acc
-    } else if (!(date instanceof Date)) {
-      throw new Error(`Property ${property} is not a Date`)
-    } else if (date > acc) {
-      return date
-    } else {
-      return acc
+  for (const [, item] of data) {
+    const propertyValue = item[property]
+
+    if (!propertyValue) {
+      continue
     }
-  }, start)
+
+    if (!(propertyValue instanceof Date)) {
+      throw new Error(`Property ${property} is not a Date`)
+    }
+
+    if (propertyValue.getTime() > max.getTime()) {
+      max = propertyValue
+    }
+  }
+
+  return max
 }
 
-const assignStartAndEndDates = ({ start, end, size, nodes, zeroTimeGap }: AssignStartAndEndDates): (node: GraphTimelineNode) => void => {
+const assignStartAndEndDates = ({ start, end, size, nodes, zeroTimeGap }: AssignStartAndEndDates): (node: TimelineItem) => void => {
   const minIncrement = (end.getTime() - start.getTime()) / size
 
-  return (node: GraphTimelineNode) => {
-    const upstreamDependencies = (node.upstreamDependencies ?? [])
-      .map(id => nodes.find(nodeItem => nodeItem.id == id)) as GraphTimelineNode[]
+  return (node: TimelineItem) => {
+    const upstreamDependencies: TimelineData = new Map()
+
+    node.upstream.forEach(id => upstreamDependencies.set(id, nodes.get(id)!))
 
     const minStart = maxDate(upstreamDependencies, 'end', start)
     const maxStart = new Date(minStart.getTime() + minIncrement / 2)
@@ -86,8 +93,8 @@ const randomState = (): TimelineNodeState => {
   return states[floor(random() * states.length)]
 }
 
-const generateTimescaleData = (options?: DataOptions): GraphTimelineNode[] => {
-  const nodes: GraphTimelineNode[] = []
+const generateTimescaleData = (options?: DataOptions): TimelineData => {
+  const nodes: TimelineData = new Map()
   const { size = 5, shape = 'linear', fanMultiplier = 1, start = randomDate(), zeroTimeGap = false } = options ?? {}
   let end = options?.end ?? new Date()
 
@@ -96,12 +103,14 @@ const generateTimescaleData = (options?: DataOptions): GraphTimelineNode[] => {
   }
 
   // Create initial nodes
-  while (nodes.length < size) {
+  while (nodes.size < size) {
     const isSubFlow = options?.subFlowOccurrence ? random() < options.subFlowOccurrence : false
 
-    const target: GraphTimelineNode = {
+    const target: TimelineItem = {
       id: crypto.randomUUID(),
-      upstreamDependencies: [],
+      upstream: [],
+      downstream: [],
+      subflowRunId: null,
       state: randomState(),
       label: randomStarName(),
       start: new Date(),
@@ -109,34 +118,40 @@ const generateTimescaleData = (options?: DataOptions): GraphTimelineNode[] => {
     }
 
     if (isSubFlow) {
-      target.subFlowRunId = crypto.randomUUID()
+      target.subflowRunId = crypto.randomUUID()
     }
 
-    const proxy = new Proxy(target, {})
-    nodes.push(proxy)
+    nodes.set(target.id, target)
   }
 
   // Create dependency tree
   if (shape == 'linear') {
-    for (let i = 1; i < nodes.length; ++i) {
-      nodes[i].upstreamDependencies = [nodes[i - 1].id]
+    const keys = Array.from(nodes.keys())
+
+    for (const [i, key] of keys.entries()) {
+      const item = nodes.get(key)!
+
+      item.upstream = [keys[i - 1]]
     }
   }
 
   if (shape == 'fanOut' || shape == 'fanOutIn') {
     let row = 0
-    const rows = []
+    const rows: TimelineItem[][] = []
 
     const incRow = (): void => {
       row++
       rows[row] = []
     }
 
-    for (let i = 0; i < nodes.length; ++i) {
+    let index = -1
+    nodes.forEach(item => {
+      index++
+
       if (row == 0) {
-        rows.push([nodes[i]])
+        rows.push([item])
         incRow()
-        continue
+        return
       }
 
       const currRow = rows[row]
@@ -146,41 +161,39 @@ const generateTimescaleData = (options?: DataOptions): GraphTimelineNode[] => {
 
       const upstreamNode = prevRow[floor(random() * prevLen)]
 
-      nodes[i].upstreamDependencies = [upstreamNode.id]
+      item.upstream = [upstreamNode.id]
 
       if (shape == 'fanOut') {
         if (currLen + 1 >= prevLen * fanMultiplier) {
-          rows[row].push(nodes[i])
+          rows[row].push(item)
           incRow()
-          continue
+          return
         }
       }
 
       if (shape == 'fanOutIn') {
-        if (i > nodes.length / 2) {
+        if (index > nodes.size / 2) {
           if ((currLen + 1) * fanMultiplier >= prevLen) {
-            rows[row].push(nodes[i])
+            rows[row].push(item)
             incRow()
-            continue
+            return
           }
         }
 
         if (currLen + 1 >= prevLen * fanMultiplier) {
-          rows[row].push(nodes[i])
+          rows[row].push(item)
           incRow()
-          continue
+          return
         }
 
       }
 
-      rows[row].push(nodes[i])
+      rows[row].push(item)
 
       const addUpstreamDependency = (): void => {
         const upstreamNode = prevRow[floor(random() * prevLen)]
-        if (!nodes[i].upstreamDependencies) {
-          nodes[i].upstreamDependencies = []
-        }
-        nodes[i].upstreamDependencies!.push(upstreamNode.id)
+
+        item.upstream!.push(upstreamNode.id)
       }
 
       /* eslint-disable curly */
@@ -192,7 +205,8 @@ const generateTimescaleData = (options?: DataOptions): GraphTimelineNode[] => {
       if (random() > 0.95) addUpstreamDependency()
       if (random() > 0.95) addUpstreamDependency()
       /* eslint-enable curly */
-    }
+
+    })
   }
 
   // Assign start and end dates based on dependency tree

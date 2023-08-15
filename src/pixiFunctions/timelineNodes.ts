@@ -1,9 +1,8 @@
 import { Container, TextMetrics } from 'pixi.js'
-import { watch, WatchStopHandle, ref } from 'vue'
+import { watch, WatchStopHandle, ref, toRaw } from 'vue'
 import {
   NodeLayoutWorkerResponse,
-  GraphTimelineNode,
-  NodeLayoutWorkerProps,
+  NodeLayoutWorkerArgs,
   GraphState,
   NodesLayout,
   NodeLayoutRow
@@ -18,6 +17,7 @@ import {
   nodeAnimationDurations,
   getBitmapFonts
 } from '@/pixiFunctions'
+import { TimelineData, TimelineItem } from '@/types/timeline'
 // eslint-disable-next-line import/default
 import LayoutWorker from '@/workers/nodeLayout.worker.ts?worker&inline'
 
@@ -26,8 +26,8 @@ export const timelineUpdateEvent = 'timelineUpdateEvent'
 type TimelineNodesProps = {
   nodeContentContainerName?: string,
   isSubNodes?: boolean,
-  graphData: GraphTimelineNode[],
-  graphState: GraphState,
+  data: TimelineData,
+  state: GraphState,
 }
 
 type EdgeRecord = {
@@ -40,9 +40,8 @@ export class TimelineNodes extends Container {
   private readonly layoutWorker: Worker = new LayoutWorker()
 
   private readonly isSubNodes
-  private graphData
-  private readonly graphDataLookup: Map<string, GraphTimelineNode> = new Map()
-  private readonly graphState: GraphState
+  private data: TimelineData
+  private readonly state: GraphState
 
   private readonly nodeContainer = new Container()
   public readonly nodeRecords: Map<string, TimelineNode> = new Map()
@@ -58,8 +57,8 @@ export class TimelineNodes extends Container {
   public constructor({
     nodeContentContainerName,
     isSubNodes,
-    graphData,
-    graphState,
+    data,
+    state,
   }: TimelineNodesProps) {
     super()
 
@@ -68,9 +67,8 @@ export class TimelineNodes extends Container {
     }
 
     this.isSubNodes = isSubNodes
-    this.graphData = graphData
-    this.setGraphDataLookup()
-    this.graphState = graphState
+    this.data = data
+    this.state = state
 
     this.initDeselectLayer()
     this.initLayoutWorker()
@@ -82,7 +80,7 @@ export class TimelineNodes extends Container {
       layoutSetting,
       hideEdges,
       selectedNodeId,
-    } = this.graphState
+    } = this.state
 
     this.unWatchers.push(
       watch(layoutSetting, () => {
@@ -117,21 +115,19 @@ export class TimelineNodes extends Container {
       layoutSetting,
       centerViewport,
       suppressMotion,
-    } = this.graphState
+    } = this.state
 
     const textStyles = await getBitmapFonts(styleOptions.value)
     const { spacingMinimumNodeEdgeGap } = styleOptions.value
 
     const apxCharacterWidth = TextMetrics.measureText('M', textStyles.nodeTextStyles).width
 
-    const layoutWorkerOptions: NodeLayoutWorkerProps = {
-      data: {
-        graphData: JSON.stringify(this.graphData),
-        timeScaleArgs,
-        spacingMinimumNodeEdgeGap,
-        apxCharacterWidth,
-        layoutSetting: layoutSetting.value,
-      },
+    const layoutWorkerOptions: NodeLayoutWorkerArgs = {
+      data: toRaw(this.data),
+      timeScaleArgs,
+      spacingMinimumNodeEdgeGap,
+      apxCharacterWidth,
+      layoutSetting: layoutSetting.value,
     }
 
     this.layoutWorker.onmessage = ({ data }: NodeLayoutWorkerResponse) => {
@@ -153,7 +149,7 @@ export class TimelineNodes extends Container {
       this.emit(timelineUpdateEvent)
     }
 
-    this.layoutWorker.postMessage(layoutWorkerOptions.data)
+    this.layoutWorker.postMessage(layoutWorkerOptions)
   }
 
   private initDeselectLayer(): void {
@@ -161,7 +157,7 @@ export class TimelineNodes extends Container {
       return
     }
 
-    const { pixiApp, viewport } = this.graphState
+    const { pixiApp, viewport } = this.state
 
     const deselectLayer = new DeselectLayer(pixiApp, viewport)
 
@@ -178,7 +174,7 @@ export class TimelineNodes extends Container {
     const newlyCreatedNodes: string[] = []
 
     Object.keys(layout.value).forEach((nodeId) => {
-      const newNodeData = this.getNodeData(nodeId)
+      const newNodeData = this.data.get(nodeId)
 
       if (!newNodeData) {
         return
@@ -203,16 +199,16 @@ export class TimelineNodes extends Container {
       this.addChild(this.nodeContainer)
 
       if (!this.isSubNodes) {
-        this.graphState.centerViewport({ skipAnimation: true })
+        this.state.centerViewport({ skipAnimation: true })
       }
     }
   }
 
-  private createNode(nodeData: GraphTimelineNode): void {
-    const { graphState, layout, layoutRows } = this
+  private createNode(nodeData: TimelineItem): void {
+    const { state: state, layout, layoutRows } = this
     const node = new TimelineNode({
       nodeData,
-      graphState,
+      state,
       layout,
       layoutRows,
     })
@@ -228,12 +224,8 @@ export class TimelineNodes extends Container {
     })
   }
 
-  private addNodeEdges(nodeData: GraphTimelineNode): void {
-    if (!nodeData.upstreamDependencies) {
-      return
-    }
-
-    nodeData.upstreamDependencies.forEach((upstreamDependency) => {
+  private addNodeEdges(nodeData: TimelineItem): void {
+    nodeData.upstream.forEach((upstreamDependency) => {
       const sourceNode = this.nodeRecords.get(upstreamDependency)
       const targetNode = this.nodeRecords.get(nodeData.id)
 
@@ -245,10 +237,10 @@ export class TimelineNodes extends Container {
       const edge = new TimelineEdge({
         sourceNode,
         targetNode,
-        graphState: this.graphState,
+        state: this.state,
       })
 
-      if (this.graphState.hideEdges.value) {
+      if (this.state.hideEdges.value) {
         edge.renderable = false
       }
 
@@ -265,22 +257,21 @@ export class TimelineNodes extends Container {
   /**
    * Update Functions
    */
-  public update(newData: GraphTimelineNode[]): void {
-    this.graphData = newData
-    this.setGraphDataLookup()
+  public update(newData: TimelineData): void {
+    this.data = newData
 
-    if (newData.length !== this.nodeRecords.size) {
-      const message: NodeLayoutWorkerProps = {
-        data: {
-          graphData: JSON.stringify(this.graphData),
-        },
+    if (newData.size !== this.nodeRecords.size) {
+      const message: NodeLayoutWorkerArgs = {
+        data: toRaw(this.data),
       }
-      this.layoutWorker.postMessage(message.data)
+
+      this.layoutWorker.postMessage(message)
       return
     }
 
     this.nodeRecords.forEach((nodeItem, nodeId) => {
-      const newNodeData = this.getNodeData(nodeId)
+      const newNodeData = this.data.get(nodeId)
+
       if (newNodeData) {
         nodeItem.update(newNodeData)
       }
@@ -290,7 +281,7 @@ export class TimelineNodes extends Container {
   }
 
   public updateHideEdges(): void {
-    const { hideEdges, viewport } = this.graphState
+    const { hideEdges, viewport } = this.state
 
     this.edgeRecords.forEach(({ edge }) => edge.renderable = !hideEdges.value)
 
@@ -307,7 +298,7 @@ export class TimelineNodes extends Container {
 
   private updateLayoutRows(position: number = 0): void {
     const { layout } = this
-    const { spacingNodeMargin, spacingNodeSelectionMargin } = this.graphState.styleOptions.value
+    const { spacingNodeMargin, spacingNodeSelectionMargin } = this.state.styleOptions.value
     const maxRows = Math.max(...Object.values(layout.value).map(node => node.row))
     let newLayoutRows: NodeLayoutRow[] = []
 
@@ -344,30 +335,29 @@ export class TimelineNodes extends Container {
   }
 
   public updateLayoutSetting(): void {
-    const { layoutSetting } = this.graphState
+    const { layoutSetting } = this.state
 
-    const message: NodeLayoutWorkerProps = {
-      data: {
-        graphData: JSON.stringify(this.graphData),
-        layoutSetting: layoutSetting.value,
-        centerViewportAfter: true,
-      },
+    const message: NodeLayoutWorkerArgs = {
+      data: toRaw(this.data),
+      layoutSetting: layoutSetting.value,
+      centerViewportAfter: true,
     }
-    this.layoutWorker.postMessage(message.data)
+
+    this.layoutWorker.postMessage(message)
   }
 
   /**
    * Node Selection
    */
   private highlightSelectedNodePath(): void {
-    const selectedNodeId = this.graphState.selectedNodeId.value
+    const selectedNodeId = this.state.selectedNodeId.value
     const selectedNode = selectedNodeId && this.nodeRecords.get(selectedNodeId)
 
     if (!selectedNodeId || !selectedNode) {
       return
     }
 
-    const { alphaNodeDimmed } = this.graphState.styleOptions.value
+    const { alphaNodeDimmed } = this.state.styleOptions.value
 
     const highlightedEdges = [
       ...this.getAllUpstreamEdges(selectedNodeId),
@@ -398,12 +388,13 @@ export class TimelineNodes extends Container {
 
   private getAllUpstreamEdges(nodeId: string): EdgeRecord[] {
     const connectedEdges: EdgeRecord[] = []
+    const nodeData = this.data.get(nodeId)
 
-    const nodeData = this.getNodeData(nodeId)
-    nodeData?.upstreamDependencies?.forEach((upstreamId) => {
+    nodeData?.upstream.forEach((upstreamId) => {
       const edge = this.edgeRecords.find(edgeRecord => {
         return edgeRecord.sourceId === upstreamId && edgeRecord.targetId === nodeId
       })
+
       if (edge) {
         connectedEdges.push(edge)
         const upstreamEdges = this.getAllUpstreamEdges(upstreamId)
@@ -417,8 +408,8 @@ export class TimelineNodes extends Container {
   private getAllDownstreamEdges(nodeId: string): EdgeRecord[] {
     const connectedEdges: EdgeRecord[] = []
 
-    this.graphData.forEach((nodeData) => {
-      if (nodeData.upstreamDependencies?.includes(nodeId)) {
+    this.data.forEach((nodeData) => {
+      if (nodeData.upstream.includes(nodeId)) {
         const edge = this.edgeRecords.find(edgeRecord => {
           return edgeRecord.targetId === nodeData.id && edgeRecord.sourceId === nodeId
         })
@@ -434,7 +425,7 @@ export class TimelineNodes extends Container {
   }
 
   private unHighlightSelectedNodePath(): void {
-    const { hideEdges } = this.graphState
+    const { hideEdges } = this.state
 
     this.edgeRecords.forEach(({ edge }) => {
       if (hideEdges.value) {
@@ -451,12 +442,6 @@ export class TimelineNodes extends Container {
    * Utilities
    */
 
-  private setGraphDataLookup(): void {
-    this.graphData.forEach((node) => {
-      this.graphDataLookup.set(node.id, node)
-    })
-  }
-
   private registerEmits(el: TimelineNode | TimelineNodes): void {
     el.on(nodeClickEvents.nodeDetails, (nodeSelectionValue) => {
       this.emit(nodeClickEvents.nodeDetails, nodeSelectionValue)
@@ -470,24 +455,20 @@ export class TimelineNodes extends Container {
     this.emit(nodeClickEvents.nodeDetails, null)
   }
 
-  private getNodeData(nodeId: string): GraphTimelineNode | undefined {
-    return this.graphDataLookup.get(nodeId)
-  }
-
   public getEarliestNodeStart(): Date | null {
-    if (this.graphData.length < 1) {
+    if (this.data.size < 1) {
       return null
     }
 
-    const earliestNodeStart = this.graphData.reduce((earliestDate, nodeData) => {
-      if (nodeData.start && nodeData.start.getTime() < earliestDate.getTime()) {
-        return nodeData.start
+    let earliest: Date = new Date()
+
+    this.data.forEach(({ start }) => {
+      if (start && start.getTime() < earliest.getTime()) {
+        earliest = start
       }
+    })
 
-      return earliestDate
-    }, new Date())
-
-    return earliestNodeStart
+    return earliest
   }
 
   public destroy(): void {

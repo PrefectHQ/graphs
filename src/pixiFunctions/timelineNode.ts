@@ -6,9 +6,8 @@ import {
   TextMetrics,
   UPDATE_PRIORITY
 } from 'pixi.js'
-import { Ref, watch, WatchStopHandle } from 'vue'
+import { Ref, unref, watch, WatchStopHandle } from 'vue'
 import {
-  GraphTimelineNode,
   GraphState,
   NodeLayoutRow,
   NodesLayout,
@@ -25,6 +24,7 @@ import {
   roundedBorderRectAnimationEase,
   LoadingIndicator
 } from '@/pixiFunctions'
+import { TimelineData, TimelineItem } from '@/types/timeline'
 import { colorToHex } from '@/utilities/style'
 
 export const nodeClickEvents = {
@@ -50,8 +50,8 @@ type TimelineNodeUpdatePositionProps = {
 }
 
 type TimelineNodeProps = {
-  nodeData: GraphTimelineNode,
-  graphState: GraphState,
+  nodeData: TimelineItem,
+  state: GraphState,
   layout: Ref<NodesLayout>,
   layoutRows: Ref<NodeLayoutRow[]>,
 }
@@ -102,7 +102,7 @@ export class TimelineNode extends Container {
 
   public constructor({
     nodeData,
-    graphState,
+    state,
     layout,
     layoutRows,
   }: TimelineNodeProps) {
@@ -111,15 +111,15 @@ export class TimelineNode extends Container {
     this.interactive = false
 
     this.nodeData = nodeData
-    this.state = graphState
+    this.state = state
     this.layout = layout
     this.layoutRows = layoutRows
 
     this.currentState = nodeData.state.toString()
-    this.hasSubNodes = nodeData.subFlowRunId !== undefined
+    this.hasSubNodes = nodeData.subflowRunId !== null
     this.updateIsRunningNode()
 
-    this.boxCapWidth = graphState.styleOptions.value.borderRadiusNode
+    this.boxCapWidth = state.styleOptions.value.borderRadiusNode
     this.nodeWidth = this.getNodeWidth()
     this.nodeHeight = this.getNodeHeight()
 
@@ -163,9 +163,9 @@ export class TimelineNode extends Container {
           this.drawNoSubNodesMessage()
         }
       }, { deep: true }),
-      watch(selectedNodeId, () => {
-        const isCurrentSelection = selectedNodeId.value === this.nodeData.id
-            || selectedNodeId.value === this.nodeData.subFlowRunId
+      watch(selectedNodeId, selected => {
+        const nodeSelectionId = this.nodeData.subflowRunId ?? this.nodeData.id
+        const isCurrentSelection = selected && selected === nodeSelectionId
 
         if (isCurrentSelection) {
           this.select()
@@ -180,17 +180,17 @@ export class TimelineNode extends Container {
     if (hasSubNodes) {
       unWatchers.push(
         watch(expandedSubNodes, () => {
-          if (!this.nodeData.subFlowRunId) {
+          if (!this.nodeData.subflowRunId) {
             return
           }
 
-          if (!this.isSubNodesExpanded && expandedSubNodes.value.has(this.nodeData.subFlowRunId)) {
+          if (!this.isSubNodesExpanded && expandedSubNodes.value.has(this.nodeData.subflowRunId)) {
             this.isSubNodesExpanded = true
             this.subNodesToggle?.setExpanded()
 
             const subNodesData = this.getSubNodesData()
 
-            if (subNodesData.length === 0 && !this.isLoadingSubNodes) {
+            if (subNodesData.size === 0 && !this.isLoadingSubNodes) {
               this.isLoadingSubNodes = true
               this.drawLoadingSubNodes()
               return
@@ -201,7 +201,7 @@ export class TimelineNode extends Container {
           }
 
           if (this.isSubNodesExpanded) {
-            if (!expandedSubNodes.value.has(this.nodeData.subFlowRunId)) {
+            if (!expandedSubNodes.value.has(this.nodeData.subflowRunId)) {
               this.subNodesToggle?.setCollapsed()
 
               this.isSubNodesExpanded = false
@@ -216,7 +216,7 @@ export class TimelineNode extends Container {
             if (this.isLoadingSubNodes) {
               this.isLoadingSubNodes = false
               this.destroySubNodesLoadingIndicator()
-              if (newData.length === 0) {
+              if (newData.size === 0) {
                 this.drawNoSubNodesMessage()
                 return
               }
@@ -491,24 +491,24 @@ export class TimelineNode extends Container {
    * Subnodes
    */
   private expandSubNodes(): void {
-    if (!this.nodeData.subFlowRunId) {
+    if (!this.nodeData.subflowRunId) {
       return
     }
 
-    const subNodeContent = this.state.expandedSubNodes.value.get(this.nodeData.subFlowRunId)
+    const subNodeContent = this.state.expandedSubNodes.value.get(this.nodeData.subflowRunId)
 
     if (!this.hasSubNodes || !subNodeContent) {
       return
     }
 
-    const subNodesData = 'value' in subNodeContent.data ? subNodeContent.data.value : subNodeContent.data
+    const subNodesData = unref(subNodeContent.data)
 
     this.subNodesContent?.destroy()
 
     this.subNodesContent = new TimelineNodes({
       isSubNodes: true,
-      graphData: subNodesData,
-      graphState: this.state,
+      data: subNodesData,
+      state: this.state,
     })
 
     this.subNodesContent.on(nodeClickEvents.nodeDetails, (nodeSelectionValue) => {
@@ -620,7 +620,7 @@ export class TimelineNode extends Container {
   /**
    * Update Functions
    */
-  public update(newData?: GraphTimelineNode): void {
+  public update(newData?: TimelineItem): void {
     let hasNewState = false
     let hasNewLabelText = false
 
@@ -879,10 +879,10 @@ export class TimelineNode extends Container {
     }
 
     const { subNodeLabels } = this.state
-    const { subFlowRunId } = this.nodeData
+    const { subflowRunId } = this.nodeData
 
-    return subNodeLabels.value.has(subFlowRunId!)
-      ? subNodeLabels.value.get(subFlowRunId!)!
+    return subNodeLabels.value.has(subflowRunId!)
+      ? subNodeLabels.value.get(subflowRunId!)!
       : this.nodeData.label
   }
 
@@ -915,23 +915,23 @@ export class TimelineNode extends Container {
   }
 
   private emitSelection(): void {
-    const { id, subFlowRunId } = this.nodeData
+    const { id, subflowRunId } = this.nodeData
 
     const nodeSelectionEvent: NodeSelectionEvent = {
-      id: this.hasSubNodes ? subFlowRunId! : id,
+      id: this.hasSubNodes ? subflowRunId! : id,
       type: this.hasSubNodes ? 'subFlowRun' : 'task',
     }
 
     this.emit(nodeClickEvents.nodeDetails, nodeSelectionEvent)
   }
 
-  private readonly getSubNodesData = (): GraphTimelineNode[] => {
-    if (!this.nodeData.subFlowRunId) {
-      return []
+  private readonly getSubNodesData = (): TimelineData => {
+    if (!this.nodeData.subflowRunId) {
+      return new Map()
     }
 
     const { expandedSubNodes } = this.state
-    const subNodesData = expandedSubNodes.value.get(this.nodeData.subFlowRunId)!.data
+    const subNodesData = expandedSubNodes.value.get(this.nodeData.subflowRunId)!.data
 
     return 'value' in subNodesData ? subNodesData.value : subNodesData
   }
@@ -955,7 +955,7 @@ export class TimelineNode extends Container {
   }
 
   private emitSubNodesToggle(id?: string): void {
-    this.emit(nodeClickEvents.subNodesToggle, id ?? this.nodeData.subFlowRunId)
+    this.emit(nodeClickEvents.subNodesToggle, id ?? this.nodeData.subflowRunId)
   }
 
   private destroySubNodesContent(): void {

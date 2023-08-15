@@ -1,5 +1,6 @@
-import { FormatDateFns, GraphTimelineNode } from '..'
 import { GuideDateFormatter } from '@/containers/guide'
+import { FormatDateFns } from '@/models/FlowRunTimeline'
+import { TimelineData } from '@/types/timeline'
 
 export const intervals = {
   year: 31536000,
@@ -91,28 +92,31 @@ export function formatDate(date: Date): string {
 }
 
 export function getDateBounds(
-  data: GraphTimelineNode[],
+  data: TimelineData,
   minimumTimeSpan: number = 0,
   isRunning: boolean = false,
 ): { min: Date, max: Date, span: number } {
+  let minStartTime: number | null = null
+  let maxEndTime: number | null = isRunning ? new Date().getTime() : null
 
-  const defaultMaxEndTime = isRunning ? new Date().getTime() : null
-
-  const [minStartTime, maxEndTime] = data.reduce<[number | null, number | null]>(([min, max], { start, end }) => {
+  data.forEach(({ start, end }) => {
     const startTime = start?.getTime() ?? null
     const endTime = end?.getTime() ?? null
 
-    if (startTime && min) {
-      min = Math.min(min, startTime)
+    if (startTime && minStartTime) {
+      minStartTime = Math.min(minStartTime, startTime)
+    } else {
+      minStartTime = startTime
     }
 
-    if (endTime && max) {
-      max = Math.max(max, endTime)
+    if (endTime && maxEndTime) {
+      maxEndTime = Math.max(maxEndTime, endTime)
+    } else {
+      maxEndTime = endTime
     }
+  })
 
-    return [min ?? startTime, max ?? endTime]
-  }, [null, defaultMaxEndTime])
-
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const min = minStartTime ? new Date(minStartTime) : new Date()
   let max = maxEndTime ? new Date(maxEndTime) : new Date()
   let span = max.getTime() - min.getTime()

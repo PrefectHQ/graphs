@@ -15,7 +15,7 @@ const edgeFidelity = 20
 type TimelineEdgeProps = {
   sourceNode: TimelineNode,
   targetNode: TimelineNode,
-  graphState: GraphState,
+  state: GraphState,
 }
 
 export class TimelineEdge extends Container {
@@ -41,13 +41,13 @@ export class TimelineEdge extends Container {
   public constructor({
     sourceNode,
     targetNode,
-    graphState,
+    state,
   }: TimelineEdgeProps) {
     super()
 
     this.sourceNode = sourceNode
     this.targetNode = targetNode
-    this.graphState = graphState
+    this.graphState = state
 
     this.assignBezierPositions()
 
