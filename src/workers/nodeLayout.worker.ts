@@ -14,7 +14,7 @@ let timeScale: TimeScale | undefined
 
 let currentApxCharacterWidth = 14
 let minimumNodeEdgeGap = 0
-let currentLayoutSetting: TimelineNodesLayoutOptions = 'waterfall'
+let currentLayoutSetting: TimelineNodesLayoutOptions | undefined
 let graphDataStore: TimelineData = new Map()
 
 let layout: NodesLayout = {}
@@ -53,7 +53,7 @@ onmessage = async ({
       initialOverallTimeSpan,
     })
   }
-  if (data && timeScale && layoutSetting) {
+  if (data && timeScale && currentLayoutSetting) {
     graphDataStore = data
     await calculateNodeLayout()
     const response: NodeLayoutWorkerResponseData = {
