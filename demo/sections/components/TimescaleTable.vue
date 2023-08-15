@@ -115,7 +115,6 @@
 }
 
 .timescale-table__label { @apply
-  text-foreground-600
   font-medium
   text-base
   truncate

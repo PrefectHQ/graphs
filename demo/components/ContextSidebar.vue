@@ -38,7 +38,7 @@
   import { PContextNavItem, PContextAccordionItem } from '@prefecthq/prefect-design'
   import { ref } from 'vue'
   import { RouteLocationRaw, RouteRecordRaw, useRouter } from 'vue-router'
-  import { ContextAccordionChildItem } from './contextAccordionChildItem'
+  import { ContextAccordionChildItem } from '@/../demo/components/contextAccordionChildItem'
   import { routeRecords } from '@/demo/router'
   import { mobileMenuOpen } from '@/demo/router/menu'
   import { routeRecordsFlat } from '@/demo/router/routeRecordsFlat'
@@ -104,10 +104,6 @@
 .context-sidebar__heading { @apply
   font-normal
   text-xl
-}
-
-.context-sidebar__search-box { @apply
-  text-foreground
 }
 
 .context-sidebar .p-context-accordion-item__title,

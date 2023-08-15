@@ -49,12 +49,9 @@ html, body {
 }
 
 .app { @apply
-  text-foreground
   h-screen
   flex
   flex-col
-  bg-background
-  dark:bg-background-400
 }
 
 .app__prefect-icon { @apply
