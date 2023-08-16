@@ -1,6 +1,8 @@
 <template>
   <div class="home">
-    <component :is="CirclesIcon" class="home__circles" />
+    <div class="home__circles-container">
+      <component :is="CirclesIcon" class="home__circles" />
+    </div>
     <p-icon class="home__logo-icon" icon="Prefect" />
     <div class="home__intro">
       <p class="home__title">
@@ -81,7 +83,7 @@
   z-10
 }
 
-.home__circles { @apply
+.home__circles-container { @apply
   -translate-x-1/2
   -translate-y-1/2
   absolute
@@ -91,5 +93,21 @@
   top-1/2
   select-none
   z-0
+}
+
+.home__circles {
+  animation-name: spin;
+  animation-duration: 60s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

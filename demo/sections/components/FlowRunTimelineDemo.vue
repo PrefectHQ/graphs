@@ -271,7 +271,7 @@
   const computedStyle = getComputedStyle(document.documentElement)
 
   const colorDefaults = computed<Partial<ThemeStyleOverrides>>(() => {
-    let colorTextDefault = computedStyle.getPropertyValue('--p-color-text-inverse').trim() as HEX,
+    let colorTextDefault = computedStyle.getPropertyValue('--p-color-text-default').trim() as HEX,
         colorTextInverse = computedStyle.getPropertyValue('--p-color-text-default').trim() as HEX
     const colorTextSubdued = computedStyle.getPropertyValue('--p-color-text-subdued').trim() as HEX,
           colorGuideLine = computedStyle.getPropertyValue('--p-color-divider').trim() as HEX,
