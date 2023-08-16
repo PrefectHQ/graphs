@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <component :is="CirclesIcon" class="home__circles" />
-    <p-icon class="home__logo-icon" icon="PrefectLight" />
+    <p-icon class="home__logo-icon" icon="Prefect" />
     <div class="home__intro">
       <p class="home__title">
         Prefect Graphs
