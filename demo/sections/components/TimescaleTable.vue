@@ -4,9 +4,8 @@
       <span />
     </template>
 
-    <template #label="{ row, value }">
+    <template #label="{ value }">
       <div class="timescale-table__label-column">
-        <div class="timescale-table__status" :style="{ backgroundColor: row.color }" />
         <div class="timescale-table__label" :title="value">
           {{ value }}
         </div>
@@ -26,7 +25,7 @@
     </template>
 
     <template #upstream="{ row }">
-      {{ row?.upstreamDependencies?.length?.toLocaleString() }}
+      {{ row?.upstream?.length?.toLocaleString() }}
     </template>
 
     <template #empty-state>
@@ -38,7 +37,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, withDefaults } from 'vue'
+  import { TableColumn } from '@prefecthq/prefect-design'
+  import { computed } from 'vue'
 
   import { TimelineData, TimelineItem } from '@/types/timeline'
   import { secondsToApproximateString } from '@/utilities/time'
@@ -51,7 +51,7 @@
 
   const data = computed(() => Array.from(props.data.values()))
 
-  const columns = [
+  const columns: TableColumn<TimelineItem>[] = [
     {
       label: 'Label',
       property: 'label',

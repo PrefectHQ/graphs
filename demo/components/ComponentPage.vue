@@ -41,7 +41,7 @@
     <div class="component-page__navigation">
       <template v-if="previousComponent">
         <p-link :to="routeRecordsFlat[previousComponent]" class="component-page__navigation-link">
-          <p-icon icon="ArrowNarrowLeftIcon" />
+          <p-icon icon="ChevronLeftIcon" />
           {{ previousComponent }}
         </p-link>
       </template>
@@ -52,7 +52,7 @@
       <template v-if="nextComponent">
         <p-link :to="routeRecordsFlat[nextComponent]" class="component-page__navigation-link">
           {{ nextComponent }}
-          <p-icon icon="ArrowNarrowRightIcon" />
+          <p-icon icon="ChevronLeftIcon" />
         </p-link>
       </template>
     </div>
