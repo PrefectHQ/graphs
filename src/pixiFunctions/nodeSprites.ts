@@ -15,6 +15,8 @@ let nodeBoxTextureCache: Map<number, BoxTextures> | undefined
 let arrowTextureCache: Map<number, Texture> | undefined
 let roundedBorderRectCache: Map<RoundedBorderRectCacheKey, BorderRectTextures> | undefined
 
+// 0x00000000 is hexadecimal black with an unsupported alpha channel, this value simply needs to be unique for sprite registration.
+const transparent = 0x00000000
 const textureSampleSettings = {
   multisample: 2,
   resolution: 4,
@@ -66,8 +68,10 @@ type SimpleFillTextureProps = {
 }
 export function getSimpleFillTexture({
   pixiApp,
-  fill,
+  fill: providedFill,
 }: SimpleFillTextureProps): Texture {
+  const fill = !providedFill ? transparent : providedFill
+
   if (!simpleFillTextureCache) {
     initNodeTextureCache()
   }
@@ -82,6 +86,10 @@ export function getSimpleFillTexture({
       simpleFillTextureSize,
     )
     square.endFill()
+
+    if (fill === transparent) {
+      square.alpha = 0
+    }
 
     const texture = pixiApp.renderer.generateTexture(square)
     simpleFillTextureCache!.set(fill, texture)
@@ -99,11 +107,13 @@ type GetNodeBoxTexturesProps = {
 }
 export function getNodeBoxTextures({
   pixiApp,
-  fill,
+  fill: providedFill,
   borderRadius,
   boxCapWidth,
   height,
 }: GetNodeBoxTexturesProps): BoxTextures {
+  const fill = !providedFill ? transparent : providedFill
+
   if (!nodeBoxTextureCache) {
     initNodeTextureCache()
   }
@@ -127,6 +137,10 @@ export function getNodeBoxTextures({
     )
     boxCap.lineTo(boxCapWidth, 0)
     boxCap.endFill()
+
+    if (fill === transparent) {
+      boxCap.alpha = 0
+    }
 
     const boxBody = getSimpleFillTexture({
       pixiApp,

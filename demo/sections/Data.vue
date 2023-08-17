@@ -1,5 +1,5 @@
 <template>
-  <p-layout-table sticky>
+  <p-layout-table>
     <template #header>
       <div class="data__table-header">
         <div class="data__table-header-row">

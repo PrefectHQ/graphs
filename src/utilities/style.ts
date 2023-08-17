@@ -34,8 +34,8 @@ export function parseThemeOptions(overrides?: ThemeStyleOverrides): ParsedThemeS
     spacingGuideLabelPadding: spacingToNumber(overrides?.spacingGuideLabelPadding ?? '4px'),
     spacingPlayheadGlowPadding: spacingToNumber(overrides?.spacingPlayheadGlowPadding ?? '8px'),
     spacingPlayheadWidth: spacingToNumber(overrides?.spacingPlayheadWidth ?? '2px'),
-    borderRadiusNode: spacingToNumber(overrides?.borderRadiusNode ?? '8px'),
-    borderRadiusButton: spacingToNumber(overrides?.borderRadiusButton ?? '8px'),
+    borderRadiusNode: spacingToNumber(overrides?.borderRadiusNode ?? '6px'),
+    borderRadiusButton: spacingToNumber(overrides?.borderRadiusButton ?? '6px'),
     alphaNodeDimmed: overrides?.alphaNodeDimmed ?? 0.2,
     alphaSubNodesOutlineDimmed: overrides?.alphaSubNodesOutlineDimmed ?? 0.7,
   }
