@@ -72,6 +72,7 @@ export class Guide extends Container {
     }
 
     this.updatePosition()
+    this.updateLineHeight()
   }
 
   private createLine(): void {
@@ -106,6 +107,14 @@ export class Guide extends Container {
     const { viewport } = this.state
 
     return this.state.timeScale.dateToX(this.date) * viewport.scale._x + viewport.worldTransform.tx
+  }
+
+  private updateLineHeight(): void {
+    if (!this.line) {
+      return
+    }
+
+    this.line.height = this.state.pixiApp.screen.height
   }
 
   private updatePosition(): void {
