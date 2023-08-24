@@ -129,7 +129,7 @@ export const nodeThemeFnDefault: NodeThemeFn = () => {
   }
 }
 
-type Sizing = `${string}px` | `${string}em` | `${string}rem`
+export type Sizing = `${string}px` | `${string}em` | `${string}rem`
 
 export type RGB = `rgb(${number}, ${number}, ${number})`
 export type RGBA = `rgba(${number}, ${number}, ${number}, ${number})`
