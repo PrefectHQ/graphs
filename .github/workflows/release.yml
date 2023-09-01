@@ -6,6 +6,7 @@ on:
       - package.json
     branches:
       - main
+      - v1
       
 jobs:
 
