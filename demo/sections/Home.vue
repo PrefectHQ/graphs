@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <component :is="CirclesIcon" class="home__circles" />
-    <p-icon class="home__logo-icon" icon="PrefectGradient" />
+    <p-icon class="home__logo-icon" icon="Prefect" />
     <div class="home__intro">
       <p class="home__title">
         Prefect Graphs
@@ -23,7 +23,7 @@
         </p-button>
       </a>
       <p-link :to="routeRecordsFlat[firstComponent]">
-        <p-button secondary icon="ArrowNarrowRightIcon">
+        <p-button secondary icon="ChevronRightIcon">
           Get Started
         </p-button>
       </p-link>

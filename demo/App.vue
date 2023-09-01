@@ -3,11 +3,11 @@
     <template v-if="!media.lg">
       <p-global-sidebar class="app__mobile-menu">
         <template #upper-links>
-          <p-icon icon="PrefectGradient" class="app__prefect-icon" />
+          <p-icon icon="Prefect" class="app__prefect-icon" />
           <span class="text-slate-200">Prefect</span>
         </template>
         <template #bottom-links>
-          <p-icon icon="MenuIcon" class="app__menu-icon" @click="toggle" />
+          <p-icon icon="Bars3Icon" class="app__menu-icon" @click="toggle" />
         </template>
       </p-global-sidebar>
     </template>
@@ -49,12 +49,9 @@ html, body {
 }
 
 .app { @apply
-  text-foreground
   h-screen
   flex
   flex-col
-  bg-background
-  dark:bg-background-400
 }
 
 .app__prefect-icon { @apply
@@ -63,7 +60,6 @@ html, body {
 }
 
 .app__menu-icon { @apply
-  text-slate-200
   w-6
   h-6
   cursor-pointer

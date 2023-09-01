@@ -11,7 +11,7 @@
           :theme="theme"
           :layout="layout"
           :hide-edges="hideEdges"
-          class="flow-run-timeline-demo-demo__graph"
+          class="flow-run-timeline-demo-demo__graph p-background"
           :selected-node-id="selectedNodeId"
           :expanded-sub-nodes="expandedSubFlows"
           @selection="selectNode"
@@ -95,7 +95,8 @@
     ThemeStyleOverrides,
     ExpandedSubNodes,
     GraphTimelineNode,
-    NodeSelectionEvent
+    NodeSelectionEvent,
+    HEX
   } from '@/models'
 
   const { value: colorThemeValue } = useColorTheme()
@@ -251,41 +252,29 @@
   const computedStyle = getComputedStyle(document.documentElement)
 
   const colorDefaults = computed<Partial<ThemeStyleOverrides>>(() => {
-    let colorTextDefault = '--foreground',
-        colorTextInverse = '--white',
-        colorTextSubdued = '--foreground-300',
-        colorGuideLine = '--foreground-50',
-        colorEdge = '--foreground',
-        colorButtonBg = '--background',
-        colorButtonBorder = '--background-500'
+    let colorTextDefault = computedStyle.getPropertyValue('--p-color-text-default').trim() as HEX,
+        colorTextInverse = computedStyle.getPropertyValue('--p-color-text-default').trim() as HEX
+    const colorTextSubdued = computedStyle.getPropertyValue('--p-color-text-subdued').trim() as HEX,
+          colorGuideLine = computedStyle.getPropertyValue('--p-color-divider').trim() as HEX,
+          colorEdge = computedStyle.getPropertyValue('--p-color-text-subdued').trim() as HEX,
+          colorButtonBg = computedStyle.getPropertyValue('--p-color-button-default-bg').trim() as HEX,
+          colorButtonBgHover = computedStyle.getPropertyValue('--p-color-button-default-bg-hover').trim() as HEX,
+          colorButtonBorder = computedStyle.getPropertyValue('--p-color-button-default-border').trim() as HEX
 
-    if (colorThemeValue.value == 'dark') {
-      colorTextDefault = '--white'
-      colorTextInverse = '--foreground-600'
-      colorTextSubdued = '--foreground-200'
-      colorGuideLine = '--foreground-50'
-      colorEdge = '--white'
-      colorButtonBg = '--background'
-      colorButtonBorder = '--foreground-600'
+    if (colorThemeValue.value === 'light') {
+      colorTextDefault = computedStyle.getPropertyValue('--p-color-text-default').trim() as HEX
+      colorTextInverse = computedStyle.getPropertyValue('--p-color-text-inverse').trim() as HEX
     }
 
-    const [defaultH, defaultS, defaultL] = computedStyle.getPropertyValue(colorTextDefault).trim().split(' ')
-    const [inverseH, inverseS, inverseL] = computedStyle.getPropertyValue(colorTextInverse).trim().split(' ')
-    const [subduedH, subduedS, subduedL] = computedStyle.getPropertyValue(colorTextSubdued).trim().split(' ')
-    const [guideLineH, guideLineS, guideLineL] = computedStyle.getPropertyValue(colorGuideLine).trim().split(' ')
-    const [edgeH, edgeS, edgeL] = computedStyle.getPropertyValue(colorEdge).trim().split(' ')
-    const [btnBgH, btnBgS, btnBgL] = computedStyle.getPropertyValue(colorButtonBg).trim().split(' ')
-    const [btnBorderH, btnBorderS, btnBorderL] = computedStyle.getPropertyValue(colorButtonBorder).trim().split(' ')
-
     return {
-      colorTextDefault: `hsl(${defaultH}, ${defaultS}, ${defaultL})`,
-      colorTextInverse: `hsl(${inverseH}, ${inverseS}, ${inverseL})`,
-      colorTextSubdued: `hsl(${subduedH}, ${subduedS}, ${subduedL})`,
-      colorGuideLine: `hsl(${guideLineH}, ${guideLineS}, ${guideLineL})`,
-      colorEdge: `hsl(${edgeH}, ${edgeS}, ${edgeL})`,
-      colorButtonBg: `hsl(${btnBgH}, ${btnBgS}, ${btnBgL})`,
-      colorButtonBgHover: `hsl(${btnBgH}, ${btnBgS}, calc(${btnBgL} + 5%))`,
-      colorButtonBorder: `hsl(${btnBorderH}, ${btnBorderS}, ${btnBorderL})`,
+      colorTextDefault,
+      colorTextInverse,
+      colorTextSubdued,
+      colorGuideLine,
+      colorEdge,
+      colorButtonBg,
+      colorButtonBgHover,
+      colorButtonBorder,
     }
   })
 
@@ -316,14 +305,13 @@
 .flow-run-timeline-demo hr { @apply
   border-0
   border-t
-  border-foreground-50
+  border-divider
 }
 
 .flow-run-timeline-demo__header { @apply
   items-center
   text-sm
   rounded-lg
-  text-foreground-600
 }
 
 .flow-run-timeline-demo__header-row { @apply
@@ -346,8 +334,6 @@
 }
 
 .flow-run-timeline-demo-demo__graph { @apply
-  bg-background-600
-  dark:bg-background
   rounded-xl
 }
 
@@ -363,7 +349,7 @@
 
 .flow-run-timeline-demo__selection-panel--open { @apply
   border
-  dark:border-background-600
+  dark:border-divider
   w-96
   ml-2
   px-4
