@@ -85,12 +85,12 @@ export class Guides extends Container {
   private getGuideDates(): Date[] {
     const { startDate, endDate } = this.getViewportDates()
     const { span } = this.getTimeSpan()
-    const dates = []
+    const dates: Date[] = []
 
     let date = this.getFirstGuideDate(startDate, span)
 
     if (date.getTime() >= endDate.getTime()) {
-      throw new Error('first guide date is equal or after the desired end date')
+      return dates
     }
 
     while (date.getTime() < endDate.getTime()) {
