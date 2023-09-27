@@ -37,10 +37,7 @@
   },
   "homepage": "https://github.com/PrefectHQ/graphs#readme",
   "devDependencies": {
-    "@fontsource/inconsolata": "^4.5.9",
-    "@fontsource/inter": "4.5.14",
     "@prefecthq/eslint-config": "1.0.31",
-    "@types/fontfaceobserver": "^2.1.0",
     "@types/node": "^20.1.7",
     "@vitejs/plugin-vue": "4.3.4",
     "auto-changelog": "^2.4.0",
@@ -61,11 +58,6 @@
     "vue-router": "^4.0.12"
   },
   "dependencies": {
-    "@pixi-essentials/cull": "^1.1.0",
-    "date-fns": "2.30.0",
-    "fontfaceobserver": "^2.3.0",
-    "gsap": "^3.11.4",
-    "pixi-viewport": "^4.38.0",
-    "pixi.js": "^6.5.8"
+    "date-fns": "2.30.0"
   }
 }

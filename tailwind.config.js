@@ -4,9 +4,9 @@ const prefectDesignPlugin = require('@prefecthq/prefect-design/dist/tailwindPlug
 
 module.exports = {
   content: [
-    './src/**/*.vue',
-    './demo/index.html',
-    './demo/**/*.vue',
+    './index.html',
+    './demo/**/*.{vue,js,ts,jsx,tsx}',
+    './src/**/*.{vue,js,ts,jsx,tsx}',
   ],
   plugins: [prefectDesignPlugin],
 }

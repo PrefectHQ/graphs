@@ -18,8 +18,5 @@
         "project": "./tsconfig.json"
       }
     }
-  },
-  "rules": {
-    "import/no-default-export": "error"
   }
 }

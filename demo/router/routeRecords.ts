@@ -1,4 +1,3 @@
-import { kebabCase } from '@prefecthq/prefect-design'
 import { RouteComponent, RouteRecordRaw } from 'vue-router'
 
 export type ImportComponent = RouteComponent | (() => Promise<RouteComponent>)
@@ -11,7 +10,7 @@ export function isSection(value: unknown): value is Section {
 export function convertSectionToRouteRecords(section: Section, isRoot = true): RouteRecordRaw[] {
   return Object.keys(section).map(name => {
     const componentOrSection = section[name]
-    const path = isRoot ? `/${kebabCase(name)}` : kebabCase(name)
+    const path = isRoot ? `/${name}` : name
     const record = { name, path }
 
     if (isSection(componentOrSection)) {

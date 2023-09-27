@@ -8,12 +8,7 @@ export const routeRecords: RouteRecordRaw[] = [
   {
     name: 'home',
     path: '/',
-    component: () => import('@/demo/sections/Home.vue'),
-  },
-  {
-    name: 'data',
-    path: '/data',
-    component: () => import('@/demo/sections/Data.vue'),
+    component: () => import('@/demo/sections/WelcomePage.vue'),
   },
   ...convertSectionToRouteRecords(sections),
 ] as RouteRecordRaw[]
