@@ -10,7 +10,8 @@
   "extends": ["@prefecthq"],
   "globals": {
     "defineProps": "readonly",
-    "defineEmits": "readonly"
+    "defineEmits": "readonly",
+    "globalThis": "readonly"
   },
   "settings": {
     "import/resolver": {

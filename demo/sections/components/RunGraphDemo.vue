@@ -1,6 +1,6 @@
 <template>
   <p-layout-default class="run-graph-demo">
-    <RunGraph :config="config" />
+    <RunGraph :config="config" class="run-graph-demo__graph" />
   </p-layout-default>
 </template>
 
@@ -15,3 +15,10 @@
     fetch: () => dummy,
   }
 </script>
+
+<style>
+.run-graph-demo__graph {
+  width: 100%;
+  height: 500px;
+}
+</style>
