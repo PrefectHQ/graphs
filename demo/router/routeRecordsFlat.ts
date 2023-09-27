@@ -1,4 +1,3 @@
-import { kebabCase } from '@prefecthq/prefect-design'
 import { RouteLocationNormalizedLoaded, RouteLocationRaw, RouteRecordName, RouteRecordRaw } from 'vue-router'
 import { routeRecords } from '.'
 
@@ -29,7 +28,7 @@ function flattenRouteRecord(record: RouteRecordRaw): RouteRecordsFlat | undefine
 }
 
 function getRouteRecordKey(route: { name?: RouteRecordName | null }): string {
-  return `p-${kebabCase(route.name?.toString() ?? '')}`
+  return `${route.name?.toString() ?? ''}`
 }
 
 export function getRouteRecordIndex(route: RouteLocationNormalizedLoaded): number {

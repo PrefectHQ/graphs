@@ -1,42 +1,29 @@
 <template>
-  <div class="app">
-    <template v-if="!media.lg">
-      <p-global-sidebar class="app__mobile-menu">
-        <template #upper-links>
-          <p-icon icon="Prefect" class="app__prefect-icon" />
-          <span class="text-slate-200">Prefect</span>
-        </template>
-        <template #bottom-links>
-          <p-icon icon="Bars3Icon" class="app__menu-icon" @click="toggle" />
-        </template>
-      </p-global-sidebar>
+  <div class="max-w-full min-h-full app">
+    <template v-if="mobileNav">
+      <AppNavigationBar layout="horizontal" class="app__sidebar" />
     </template>
-    <ContextSidebar v-if="showMenu" class="app__sidebar" />
 
-    <router-view v-slot="{ Component }" class="app__router-view">
-      <transition name="app__router-view-fade" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
+    <p-layout-resizable class="app__layout">
+      <template v-if="!mobileNav" #aside>
+        <AppNavigationBar class="app__sidebar" />
+      </template>
+
+      <suspense>
+        <router-view class="app__router-view" />
+      </suspense>
+    </p-layout-resizable>
   </div>
 </template>
 
 <script lang="ts" setup>
   import { media, useColorTheme } from '@prefecthq/prefect-design'
-  import { computed, watchEffect } from 'vue'
-  import ContextSidebar from '@/demo/components/ContextSidebar.vue'
-  import { mobileMenuOpen, toggle } from '@/demo/router/menu'
-
-  // Add PIXI to the global scope so that the chrome plugin can access it, when in demo mode
-  if (import.meta.env.MODE === 'demo') {
-    import('pixi.js').then(PIXI => Object.defineProperty(window, 'PIXI', { value: PIXI }))
-  }
-
-  const showMenu = computed(() => media.lg || mobileMenuOpen.value)
-
-  watchEffect(() => document.body.classList.toggle('body-scrolling-disabled', showMenu.value && !media.lg))
+  import { computed } from 'vue'
+  import AppNavigationBar from '@/demo/components/AppNavigationBar.vue'
 
   useColorTheme()
+
+  const mobileNav = computed(() => !media.lg)
 </script>
 
 <style>
@@ -44,14 +31,27 @@
   overflow-hidden
 }
 
-html, body {
-  overscroll-behavior-y: none;
+.app { @apply
+  grid
+  max-h-screen
 }
 
-.app { @apply
-  h-screen
-  flex
-  flex-col
+.app__layout {
+  --p-layout-resizable-aside-size: 256px;
+  --p-layout-resizable-aside-max-size: 50vw;
+  --p-layout-resizable-aside-min-size: 256px;
+}
+
+.app {
+  grid-template-columns: auto;
+  grid-template-rows: auto 1fr;
+}
+
+@screen lg {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+  }
 }
 
 .app__prefect-icon { @apply
@@ -59,37 +59,26 @@ html, body {
   h-6
 }
 
-.app__menu-icon { @apply
-  text-slate-200
-  w-6
-  h-6
-  cursor-pointer
+.app__sidebar { @apply
+  w-full
 }
 
 .app__router-view { @apply
-  w-full
-  mx-auto
-  py-10
-  px-6
-  lg:px-8
-  h-screen
+  relative
+  h-full
+  pb-4
   overflow-auto
+  w-full
+  z-0
 }
 
 .app__router-view-fade-enter-active,
 .app__router-view-fade-leave-active {
-  transition: opacity 0.15s ease;
+  transition: opacity 0.25s ease;
 }
 
 .app__router-view-fade-enter-from,
 .app__router-view-fade-leave-to {
   opacity: 0;
-}
-
-@screen lg {
-  .app {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-  }
 }
 </style>
