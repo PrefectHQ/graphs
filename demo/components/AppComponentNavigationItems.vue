@@ -6,9 +6,13 @@
 
 <script lang="ts" setup>
   import { PContextAccordionItem, PContextNavItem } from '@prefecthq/prefect-design'
-  import { ContextAccordionChildItem } from '@prefecthq/prefect-design/dist/types/src/types/contextAccordionChildItem'
   import { RouteLocationRaw, RouteRecordRaw } from 'vue-router'
   import { routeRecords } from '@/demo/router'
+
+  export type ContextAccordionChildItem = {
+    to: RouteLocationRaw,
+    title?: string,
+  }
 
   function getComponentForRecord(record: RouteRecordRaw): typeof PContextAccordionItem | typeof PContextNavItem {
     if (record.children) {
