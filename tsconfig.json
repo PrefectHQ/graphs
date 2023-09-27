@@ -29,7 +29,10 @@
     "sourceMap": true,
     "strict": true,
     "target": "esnext",
-    "types": ["vite-svg-loader", "vite/client"]
+    "types": [
+      "vite-svg-loader",
+      "vite/client"
+    ]
   },
   "include": [
     "src/**/*.ts",
