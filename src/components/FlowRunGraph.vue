@@ -5,7 +5,9 @@
 </template>
 
 <script lang="ts" setup>
+  import { FlowRunGraphConfig } from '@/models/FlowRunGraph'
+
   defineProps<{
-    flowRunId: string,
+    config: FlowRunGraphConfig,
   }>()
 </script>
