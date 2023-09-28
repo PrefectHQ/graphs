@@ -5,6 +5,7 @@
 <script lang="ts" setup>
   import { onMounted, ref } from 'vue'
   import { RunGraphConfig } from '@/models/RunGraph'
+  import { createApplication } from '@/objects/application'
   import { WorkerMessage, worker } from '@/workers/runGraph'
 
   defineProps<{
@@ -13,10 +14,12 @@
 
   const canvas = ref<HTMLCanvasElement>()
 
+  worker.onmessage = onMessage
+
   function onMessage({ data }: MessageEvent<WorkerMessage>): void {
     switch (data.type) {
-      case 'hello-world':
-        console.log(data.type)
+      case 'pong':
+        console.log('pong')
         return
       default:
         const exhaustive: never = data.type
@@ -31,15 +34,7 @@
 
     const view = canvas.value.transferControlToOffscreen()
 
-    worker.postMessage({
-      type: 'application',
-      options: {
-        view,
-        background: '#1099bb',
-      },
-    }, [view])
-
-    worker.onmessage = onMessage
+    createApplication(view)
 
     if (process.env.NODE_ENV === 'development') {
       (globalThis as any).__PIXI_STAGE__ = canvas.value

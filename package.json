@@ -58,7 +58,7 @@
     "vue-router": "^4.0.12"
   },
   "dependencies": {
-    "@pixi/webworker": "7.3.1",
-    "date-fns": "2.30.0"
+    "date-fns": "2.30.0",
+    "pixi.js": "^7.3.1"
   }
 }
