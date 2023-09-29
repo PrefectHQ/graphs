@@ -8,8 +8,6 @@ export function createViewport(): void {
   viewport = new Viewport({
     events: application.renderer.events,
     passiveWheel: false,
-    worldWidth: 100,
-    worldHeight: 100,
   })
 
   viewport
