@@ -3,9 +3,9 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref } from 'vue'
+  import { onMounted, onUnmounted, ref } from 'vue'
   import { RunGraphConfig } from '@/models/RunGraph'
-  import { start } from '@/objects'
+  import { start, stop } from '@/objects'
   import { WorkerMessage, worker } from '@/workers/runGraph'
 
   defineProps<{
@@ -34,4 +34,6 @@
 
     start(stage.value)
   })
+
+  onUnmounted(() => stop())
 </script>

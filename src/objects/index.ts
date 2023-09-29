@@ -1,4 +1,4 @@
-import { createApplication } from '@/objects/application'
+import { createApplication, application } from '@/objects/application'
 import { setStage } from '@/objects/stage'
 import { createViewport } from '@/objects/viewport'
 
@@ -11,4 +11,10 @@ export function start(stage: HTMLDivElement): void {
 
   createApplication()
   createViewport()
+}
+
+export function stop(): void {
+  application.destroy(true, {
+    children: true,
+  })
 }
