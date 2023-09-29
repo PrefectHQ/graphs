@@ -6,17 +6,17 @@
   import { onMounted, onUnmounted, ref, watch } from 'vue'
   import { RunGraphConfig } from '@/models/RunGraph'
   import { setScaleXZoom, start, stop } from '@/objects'
-  import { updateBox } from '@/objects/box'
   import { WorkerMessage, worker } from '@/workers/runGraph'
 
   const props = defineProps<{
     config: RunGraphConfig,
+    // this will be removed and handled internally to the component itself
+    // this is just a POC for the demo
     zoom: number,
   }>()
 
   watch(() => props.zoom, zoom => {
     setScaleXZoom(zoom)
-    updateBox()
   })
 
   const stage = ref<HTMLDivElement>()
