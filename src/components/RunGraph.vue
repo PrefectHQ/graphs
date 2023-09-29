@@ -1,18 +1,18 @@
 <template>
-  <canvas ref="canvas" />
+  <div ref="stage" />
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref } from 'vue'
+  import { onMounted, onUnmounted, ref } from 'vue'
   import { RunGraphConfig } from '@/models/RunGraph'
-  import { createApplication } from '@/objects/application'
+  import { start, stop } from '@/objects'
   import { WorkerMessage, worker } from '@/workers/runGraph'
 
   defineProps<{
     config: RunGraphConfig,
   }>()
 
-  const canvas = ref<HTMLCanvasElement>()
+  const stage = ref<HTMLDivElement>()
 
   worker.onmessage = onMessage
 
@@ -28,16 +28,12 @@
   }
 
   onMounted(() => {
-    if (!canvas.value) {
+    if (!stage.value) {
       throw new Error('Canvas does not exist')
     }
 
-    const view = canvas.value.transferControlToOffscreen()
-
-    createApplication(view)
-
-    if (process.env.NODE_ENV === 'development') {
-      (globalThis as any).__PIXI_STAGE__ = canvas.value
-    }
+    start(stage.value)
   })
+
+  onUnmounted(() => stop())
 </script>
