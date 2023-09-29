@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "date-fns": "2.30.0",
+    "pixi-viewport": "^5.0.2",
     "pixi.js": "^7.3.1"
   }
 }
