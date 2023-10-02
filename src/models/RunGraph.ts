@@ -1,7 +1,8 @@
+
 export type RunGraphData = {
   root_node_ids: string[],
-  start_date: Date,
-  end_date: Date | null,
+  start_time: Date,
+  end_time: Date | null,
   nodes: Map<string, RunGraphNode>,
 }
 
@@ -29,5 +30,5 @@ export function isRunGraphNodeType(value: unknown): value is RunGraphNodeKind {
 
 export type RunGraphConfig = {
   runId: string,
-  fetch: (flowRunId: string) => Promise<RunGraphData>,
+  fetch: (flowRunId: string) => RunGraphData | Promise<RunGraphData>,
 }

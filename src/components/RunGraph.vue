@@ -3,14 +3,21 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, onUnmounted, ref } from 'vue'
+  import { onMounted, onUnmounted, ref, watch } from 'vue'
   import { RunGraphConfig } from '@/models/RunGraph'
-  import { start, stop } from '@/objects'
+  import { setScaleXZoom, start, stop } from '@/objects'
   import { WorkerMessage, worker } from '@/workers/runGraph'
 
-  defineProps<{
+  const props = defineProps<{
     config: RunGraphConfig,
+    // this will be removed and handled internally to the component itself
+    // this is just a POC for the demo
+    zoom: number,
   }>()
+
+  watch(() => props.zoom, zoom => {
+    setScaleXZoom(zoom)
+  })
 
   const stage = ref<HTMLDivElement>()
 
@@ -29,7 +36,7 @@
 
   onMounted(() => {
     if (!stage.value) {
-      throw new Error('Canvas does not exist')
+      throw new Error('Stage does not exist')
     }
 
     start(stage.value)
