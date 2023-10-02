@@ -3,7 +3,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { onUnmounted, onMounted, ref } from 'vue'
+  import { onUnmounted, onMounted, ref, reactive } from 'vue'
+  import { useRunGraphData } from '@/compositions/useRunGraphData'
   import { RunGraphConfig } from '@/models/RunGraph'
   import { start, stop } from '@/objects'
   import { WorkerMessage, worker } from '@/workers/runGraph'
@@ -26,6 +27,9 @@
         throw new Error(`data.type does not have a handler associated with it: ${exhaustive}`)
     }
   }
+
+  const runIds = reactive<string[]>([props.config.runId])
+  const { data } = useRunGraphData(runIds, props.config.fetch)
 
   onMounted(() => {
     if (!stage.value) {
