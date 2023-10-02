@@ -4,7 +4,7 @@ import { Sprite, Texture } from 'pixi.js'
 import { emitter } from '@/objects/events'
 import { scaleX, scaleY } from '@/objects/scales'
 
-let sprite: Sprite
+let sprite: Sprite | null = null
 
 export function startBox(): void {
   emitter.on('viewportCreated', createBox)
@@ -18,6 +18,10 @@ export function createBox(viewport: Viewport): void {
 
 
 export function renderBox(): void {
+  if (!sprite) {
+    return
+  }
+
   const now = new Date()
   const x = scaleX(startOfHour(now))
   const y = scaleY(10)
