@@ -4,7 +4,7 @@ export let stage: HTMLDivElement | null = null
 
 const observer = new ResizeObserver(() => {
   if (stage) {
-    emitter.emit('stageResized', stage)
+    emitter.emit('stageUpdated', stage)
   }
 })
 

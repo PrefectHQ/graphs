@@ -7,27 +7,24 @@ export type ScaleX = typeof scaleX
 export let scaleY: ScaleLinear<number, number>
 export type ScaleY = typeof scaleY
 
-type ScaleRange = [start: number, end: number]
-type ScaleXDomain = [start: Date, end: Date]
-type ScaleYDomain = [start: number, end: number]
-
+export type ScaleRange = [start: number, end: number]
+export type ScaleXDomain = [start: Date, end: Date]
+export type ScaleYDomain = [start: number, end: number]
 
 export function startScales(): void {
   scaleX = scaleTime()
   scaleY = scaleLinear()
 
-  emitter.on('stageCreated', updateScaleRanges)
-  emitter.on('stageResized', updateScaleRanges)
+  emitter.on('stageUpdated', setScaleRanges)
 }
 
 type XScale = {
   domain?: ScaleXDomain,
   range?: ScaleRange,
-  silent?: boolean,
 }
 
 // this needs to be clamped to some min/max range
-export function setScaleX({ domain, range, silent }: XScale): void {
+export function setScaleX({ domain, range }: XScale): void {
   if (range) {
     scaleX.range(range)
   }
@@ -36,19 +33,18 @@ export function setScaleX({ domain, range, silent }: XScale): void {
     scaleX.domain(domain)
   }
 
-  if (!silent && (range || domain)) {
-    emitter.emit('scaleXUpdated', scaleX)
+  if (range || domain) {
+    emitter.emit('scaleUpdated', { scaleX, scaleY })
   }
 }
 
 type YScale = {
   domain?: ScaleYDomain,
   range?: ScaleRange,
-  silent?: boolean,
 }
 
 // this needs to be clamped to some min/max range
-export function setScaleY({ domain, range, silent }: YScale): void {
+export function setScaleY({ domain, range }: YScale): void {
   if (range) {
     scaleY.range(range)
   }
@@ -57,12 +53,12 @@ export function setScaleY({ domain, range, silent }: YScale): void {
     scaleY.domain(domain)
   }
 
-  if (!silent && (range || domain)) {
-    emitter.emit('scaleYUpdated', scaleY)
+  if (range || domain) {
+    emitter.emit('scaleUpdated', { scaleX, scaleY })
   }
 }
 
-export function updateScaleRanges(stage: HTMLDivElement): void {
+function setScaleRanges(stage: HTMLDivElement): void {
   setScaleY({ range: [0, stage.clientWidth] })
   setScaleX({ range: [0, stage.clientHeight] })
 }

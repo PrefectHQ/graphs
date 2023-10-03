@@ -4,11 +4,10 @@ import { Application } from 'pixi.js'
 import { ScaleX, ScaleY } from '@/objects/scales'
 
 type Events = {
-  scaleXUpdated: ScaleX,
-  scaleYUpdated: ScaleY,
+  scaleUpdated: { scaleX: ScaleX, scaleY: ScaleY },
   applicationCreated: Application,
+  stageUpdated: HTMLDivElement,
   stageCreated: HTMLDivElement,
-  stageResized: HTMLDivElement,
   viewportCreated: Viewport,
 }
 

@@ -5,6 +5,7 @@
 <script lang="ts" setup>
   import { onUnmounted, onMounted, ref, reactive } from 'vue'
   import { useRunGraphData } from '@/compositions/useRunGraphData'
+  import { useRunGraphDomain } from '@/compositions/useRunGraphDomain'
   import { RunGraphConfig } from '@/models/RunGraph'
   import { start, stop } from '@/objects'
   import { WorkerMessage, worker } from '@/workers/runGraph'
@@ -29,7 +30,9 @@
   }
 
   const runIds = reactive<string[]>([props.config.runId])
-  const { data } = useRunGraphData(runIds, props.config.fetch)
+
+  useRunGraphData(runIds, props.config.fetch)
+  useRunGraphDomain(() => props.config.runId, props.config.fetch)
 
   onMounted(() => {
     if (!stage.value) {
