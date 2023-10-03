@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { onUnmounted, onMounted, ref, reactive } from 'vue'
+  import { onBeforeUnmount, onMounted, ref, reactive } from 'vue'
   import { useRunGraphData } from '@/compositions/useRunGraphData'
   import { useRunGraphDomain } from '@/compositions/useRunGraphDomain'
   import { RunGraphConfig } from '@/models/RunGraph'
@@ -42,5 +42,7 @@
     start(stage.value)
   })
 
-  onUnmounted(() => stop())
+  onBeforeUnmount(() => {
+    stop()
+  })
 </script>
