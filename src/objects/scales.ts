@@ -1,27 +1,23 @@
-import { ScaleLinear, scaleLinear } from 'd3'
-import { application } from '@/objects/application'
+import { ScaleLinear, scaleLinear, scaleTime, ScaleTime } from 'd3'
 import { emitter } from '@/objects/events'
 
-export let scaleX: ScaleLinear<number, number>
-export let scaleY: ScaleLinear<number, number>
+export let scaleX: ScaleTime<number, number>
+export type ScaleX = typeof scaleX
 
-// these are the same for now but  ScaleXDomain will eventually be [Date, Date]
+export let scaleY: ScaleLinear<number, number>
+export type ScaleY = typeof scaleY
+
 type ScaleRange = [start: number, end: number]
-type ScaleXDomain = [start: number, end: number]
+type ScaleXDomain = [start: Date, end: Date]
 type ScaleYDomain = [start: number, end: number]
 
-export function createScales(): void {
-  createScaleX()
-  createScaleY()
-}
 
-export function createScaleX(): void {
-  const range: ScaleRange = [0, application.view.width]
-  const domain: ScaleXDomain = [0, 100]
+export function startScales(): void {
+  scaleX = scaleTime()
+  scaleY = scaleLinear()
 
-  scaleX = scaleLinear()
-
-  setScaleX({ range, domain, silent: true })
+  emitter.on('stageCreated', updateScaleRanges)
+  emitter.on('stageResized', updateScaleRanges)
 }
 
 type XScale = {
@@ -30,7 +26,7 @@ type XScale = {
   silent?: boolean,
 }
 
-// this needs to be clamped to some minimum range
+// this needs to be clamped to some min/max range
 export function setScaleX({ domain, range, silent }: XScale): void {
   if (range) {
     scaleX.range(range)
@@ -41,17 +37,8 @@ export function setScaleX({ domain, range, silent }: XScale): void {
   }
 
   if (!silent && (range || domain)) {
-    emitter.emit('scaleXUpdated')
+    emitter.emit('scaleXUpdated', scaleX)
   }
-}
-
-export function createScaleY(): void {
-  const range: ScaleRange = [0, application.view.height]
-  const domain: ScaleYDomain = [0, 100]
-
-  scaleY = scaleLinear()
-
-  setScaleY({ range, domain, silent: true })
 }
 
 type YScale = {
@@ -60,7 +47,7 @@ type YScale = {
   silent?: boolean,
 }
 
-// this needs to be clamped to some minimum range
+// this needs to be clamped to some min/max range
 export function setScaleY({ domain, range, silent }: YScale): void {
   if (range) {
     scaleY.range(range)
@@ -71,18 +58,11 @@ export function setScaleY({ domain, range, silent }: YScale): void {
   }
 
   if (!silent && (range || domain)) {
-    emitter.emit('scaleYUpdated')
+    emitter.emit('scaleYUpdated', scaleY)
   }
 }
 
-// proof of concept based on a static number
-// my guess is rather than accepting a static zoom
-// the multiplier would be accepted so a scroll event could pass a positive or negative value
-export function setScaleXZoom(zoom: number): void {
-  const multiplier = 0.2
-  const interval = application.view.width * multiplier
-  const rangeEnd = application.view.width + zoom * interval
-  const range: ScaleRange = [0, rangeEnd]
-
-  setScaleX({ range })
+export function updateScaleRanges(stage: HTMLDivElement): void {
+  setScaleY({ range: [0, stage.clientWidth] })
+  setScaleX({ range: [0, stage.clientHeight] })
 }

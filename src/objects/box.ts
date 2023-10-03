@@ -1,27 +1,34 @@
+import { endOfHour, startOfHour } from 'date-fns'
+import { Viewport } from 'pixi-viewport'
 import { Sprite, Texture } from 'pixi.js'
 import { emitter } from '@/objects/events'
 import { scaleX, scaleY } from '@/objects/scales'
-import { viewport } from '@/objects/viewport'
 
-let sprite: Sprite
+let sprite: Sprite | null = null
 
-// add a red box
-export function createBox(): void {
-  sprite = viewport.addChild(new Sprite(Texture.WHITE))
-  sprite.tint = 0xff0000
-
-  renderBox()
+export function startBox(): void {
+  emitter.on('viewportCreated', createBox)
+  emitter.on('scaleXUpdated', renderBox)
 }
 
+export function createBox(viewport: Viewport): void {
+  sprite = viewport.addChild(new Sprite(Texture.WHITE))
+  sprite.tint = 0xff0000
+}
+
+
 export function renderBox(): void {
-  const x = scaleX(10)
+  if (!sprite) {
+    return
+  }
+
+  const now = new Date()
+  const x = scaleX(startOfHour(now))
   const y = scaleY(10)
-  const width = scaleX(20) - x
+  const width = scaleX(endOfHour(now)) - x
   const height = scaleY(20) - y
 
   sprite.width = Math.max(width, 1)
   sprite.height = height
   sprite.position.set(x, y)
 }
-
-emitter.on('scaleXUpdated', () => renderBox())

@@ -1,8 +1,9 @@
-import { createApplication, application } from '@/objects/application'
-import { createBox } from '@/objects/box'
-import { createScales } from '@/objects/scales'
-import { setStage } from '@/objects/stage'
-import { createViewport } from '@/objects/viewport'
+import { startApplication, stopApplication } from '@/objects/application'
+import { startBox } from '@/objects/box'
+import { emitter } from '@/objects/events'
+import { startScales } from '@/objects/scales'
+import { startStage, stopStage } from '@/objects/stage'
+import { startViewport } from '@/objects/viewport'
 
 export * from './application'
 export * from './stage'
@@ -10,16 +11,17 @@ export * from './viewport'
 export * from './scales'
 
 export function start(stage: HTMLDivElement): void {
-  setStage(stage)
+  startApplication()
+  startViewport()
+  startScales()
+  startBox()
 
-  createApplication()
-  createViewport()
-  createScales()
-  createBox()
+  startStage(stage)
 }
 
 export function stop(): void {
-  application.destroy(true, {
-    children: true,
-  })
+  emitter.all.clear()
+
+  stopApplication()
+  stopStage()
 }

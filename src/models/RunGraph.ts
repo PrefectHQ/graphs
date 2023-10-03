@@ -28,7 +28,9 @@ export function isRunGraphNodeType(value: unknown): value is RunGraphNodeKind {
   return runGraphNodeKinds.includes(value as RunGraphNodeKind)
 }
 
+export type RunGraphFetch = (flowRunId: string) => RunGraphData | Promise<RunGraphData>
+
 export type RunGraphConfig = {
   runId: string,
-  fetch: (flowRunId: string) => RunGraphData | Promise<RunGraphData>,
+  fetch: RunGraphFetch,
 }

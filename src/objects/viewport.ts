@@ -1,10 +1,14 @@
 import { Viewport } from 'pixi-viewport'
-import { application } from '@/objects/application'
+import { Application } from 'pixi.js'
+import { emitter } from '@/objects/events'
 
 export let viewport: Viewport
 
-export function createViewport(): void {
+export function startViewport(): void {
+  emitter.on('applicationCreated', createViewport)
+}
 
+export function createViewport(application: Application): void {
   viewport = new Viewport({
     events: application.renderer.events,
     passiveWheel: false,
@@ -19,4 +23,6 @@ export function createViewport(): void {
     })
 
   application.stage.addChild(viewport)
+
+  emitter.emit('viewportCreated', viewport)
 }
