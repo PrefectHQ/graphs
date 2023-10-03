@@ -1,7 +1,7 @@
 import { SubscriptionOptions, UseSubscription, useSubscription } from '@prefecthq/vue-compositions'
 import { ComputedRef, MaybeRefOrGetter, computed, toValue, watch } from 'vue'
 import { RunGraphFetch } from '@/models/RunGraph'
-import { ScaleXDomain, setScaleX } from '@/objects/scales'
+import { ScaleXDomain, setScales } from '@/objects/scales'
 
 export type UseRunGraphDomain = {
   subscription: UseSubscription<RunGraphFetch>,
@@ -28,7 +28,7 @@ export function useRunGraphDomain(runId: MaybeRefOrGetter<string>, fetch: RunGra
       return
     }
 
-    setScaleX({ domain })
+    setScales({ x: { domain } })
   }, { immediate: true })
 
   return {

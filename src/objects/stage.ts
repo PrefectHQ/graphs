@@ -1,4 +1,4 @@
-import { emitter } from '@/objects/events'
+import { emitter, waitForEvent } from '@/objects/events'
 
 export let stage: HTMLDivElement | null = null
 
@@ -20,4 +20,15 @@ export function stopStage(): void {
   if (stage) {
     observer.unobserve(stage)
   }
+
+  stage = null
+}
+
+
+export async function waitForStage(): Promise<HTMLDivElement> {
+  if (stage) {
+    return await stage
+  }
+
+  return waitForEvent('stageCreated')
 }

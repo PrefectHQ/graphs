@@ -1,11 +1,18 @@
 import { Viewport } from 'pixi-viewport'
 import { Application } from 'pixi.js'
-import { emitter } from '@/objects/events'
+import { waitForApplication } from '@/objects/application'
+import { emitter, waitForEvent } from '@/objects/events'
 
-export let viewport: Viewport
+export let viewport: Viewport | null = null
 
-export function startViewport(): void {
-  emitter.on('applicationCreated', createViewport)
+export async function startViewport(): Promise<void> {
+  const application = await waitForApplication()
+
+  createViewport(application)
+}
+
+export function stopViewport(): void {
+  viewport = null
 }
 
 export function createViewport(application: Application): void {
@@ -25,4 +32,12 @@ export function createViewport(application: Application): void {
   application.stage.addChild(viewport)
 
   emitter.emit('viewportCreated', viewport)
+}
+
+export async function waitForViewport(): Promise<Viewport> {
+  if (viewport) {
+    return await viewport
+  }
+
+  return waitForEvent('viewportCreated')
 }
