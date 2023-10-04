@@ -39,7 +39,10 @@
       throw new Error('Stage does not exist')
     }
 
-    start(stage.value)
+    start({
+      stage: stage.value,
+      config: () => props.config,
+    })
   })
 
   onBeforeUnmount(() => {
