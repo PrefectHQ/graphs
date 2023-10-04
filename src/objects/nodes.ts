@@ -1,20 +1,20 @@
 import { UseSubscription, useSubscription } from '@prefecthq/vue-compositions'
-import { EffectScope, effectScope, watch } from 'vue'
+import { watch } from 'vue'
 import { RunGraphConfig, RunGraphFetch } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScales } from '@/objects/scales'
 import { waitForViewport } from '@/objects/viewport'
+import { effectScopeFactory } from '@/utilities/effectScope'
 
 let subscription: UseSubscription<RunGraphFetch> | null = null
-let scope: EffectScope | null = null
+
+const scope = effectScopeFactory()
 
 export async function startNodes(): Promise<void> {
   const viewport = await waitForViewport()
   const { scaleX, scaleY } = await waitForScales()
   const config = await waitForConfig()
-
-  scope = effectScope()
 
   startSubscription(config)
 
@@ -26,7 +26,7 @@ export function stopNodes(): void {
 }
 
 function startSubscription({ fetch, runId }: RunGraphConfig): void {
-  scope?.run(() => {
+  scope.run(() => {
     stopSubscription()
 
     // todo: need to account for an interval for running states
@@ -41,10 +41,6 @@ function startSubscription({ fetch, runId }: RunGraphConfig): void {
 }
 
 function stopSubscription(): void {
-  if (scope) {
-    scope.stop()
-  }
-
+  scope.stop()
   subscription = null
-  scope = null
 }
