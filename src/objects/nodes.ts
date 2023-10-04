@@ -1,30 +1,34 @@
-import { UseSubscription, useSubscription } from '@prefecthq/vue-compositions'
 import { Graphics } from 'pixi.js'
-import { watch } from 'vue'
-import { RunGraphConfig, RunGraphFetch, RunGraphNode } from '@/models/RunGraph'
+import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScales } from '@/objects/scales'
 import { waitForViewport } from '@/objects/viewport'
-import { effectScopeFactory } from '@/utilities/effectScope'
+import { graphDataFactory } from '@/utilities/graphDataFactory'
 
-let subscription: UseSubscription<RunGraphFetch> | null = null
-
-const scope = effectScopeFactory()
+const { fetch: getData, stop: stopData } = graphDataFactory()
 const nodes = new Map<string, Graphics>()
+
+// dummy offset for now
 let yOffset = 1
 
 export async function startNodes(): Promise<void> {
   const config = await waitForConfig()
 
-  startSubscription(config)
+  getGraphData(config.runId)
 
-  emitter.on('configUpdated', startSubscription)
+  emitter.on('configUpdated', config => getGraphData(config.runId))
 }
 
 export function stopNodes(): void {
-  stopSubscription()
   nodes.clear()
+  stopData()
+}
+
+function getGraphData(runId: string): void {
+  getData(runId, data => {
+    data.nodes.forEach(node => renderNode(node))
+  })
 }
 
 async function renderNode(node: RunGraphNode): Promise<void> {
@@ -56,24 +60,4 @@ async function createNode(nodeId: string): Promise<Graphics> {
   viewport.addChild(graphics)
 
   return graphics
-}
-
-function startSubscription({ fetch, runId }: RunGraphConfig): void {
-  scope.run(() => {
-    stopSubscription()
-
-    // todo: need to account for an interval for running states
-    // I think I can just pass in an empty but reactive set of options
-    // and then update with the correct interval once the initial response is received
-    subscription = useSubscription(fetch, [runId])
-
-    watch(() => subscription?.response, response => {
-      response?.nodes.forEach(node => renderNode(node))
-    }, { immediate: true })
-  })
-}
-
-function stopSubscription(): void {
-  scope.stop()
-  subscription = null
 }
