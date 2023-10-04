@@ -21,7 +21,7 @@ export async function startDomain(): Promise<void> {
 }
 
 export function stopDomain(): void {
-
+  domain = null
 }
 
 
