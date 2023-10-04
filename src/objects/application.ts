@@ -1,10 +1,13 @@
 import { Application } from 'pixi.js'
-import { emitter } from '@/objects/events'
+import { emitter, waitForEvent } from '@/objects/events'
+import { waitForStage } from '@/objects/stage'
 
 export let application: Application | null = null
 
-export function startApplication(): void {
-  emitter.on('stageCreated', createApplication)
+export async function startApplication(): Promise<void> {
+  const stage = await waitForStage()
+
+  createApplication(stage)
 }
 
 export function stopApplication(): void {
@@ -15,6 +18,8 @@ export function stopApplication(): void {
   application.destroy(true, {
     children: true,
   })
+
+  application = null
 }
 
 function createApplication(stage: HTMLDivElement): void {
@@ -32,4 +37,12 @@ function createApplication(stage: HTMLDivElement): void {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).__PIXI_APP__ = application
   }
+}
+
+export async function waitForApplication(): Promise<Application> {
+  if (application) {
+    return await application
+  }
+
+  return waitForEvent('applicationCreated')
 }

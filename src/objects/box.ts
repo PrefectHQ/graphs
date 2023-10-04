@@ -2,13 +2,23 @@ import { endOfHour, startOfHour } from 'date-fns'
 import { Viewport } from 'pixi-viewport'
 import { Sprite, Texture } from 'pixi.js'
 import { emitter } from '@/objects/events'
-import { scaleX, scaleY } from '@/objects/scales'
+import { Scales, waitForScales } from '@/objects/scales'
+import { waitForViewport } from '@/objects/viewport'
 
 let sprite: Sprite | null = null
 
-export function startBox(): void {
-  emitter.on('viewportCreated', createBox)
-  emitter.on('scaleXUpdated', renderBox)
+export async function startBox(): Promise<void> {
+  const viewport = await waitForViewport()
+  createBox(viewport)
+
+  const scales = await waitForScales()
+  renderBox(scales)
+
+  emitter.on('scalesUpdated', renderBox)
+}
+
+export function stopBox(): void {
+  sprite = null
 }
 
 export function createBox(viewport: Viewport): void {
@@ -16,8 +26,7 @@ export function createBox(viewport: Viewport): void {
   sprite.tint = 0xff0000
 }
 
-
-export function renderBox(): void {
+export function renderBox({ scaleX, scaleY }: Scales): void {
   if (!sprite) {
     return
   }
