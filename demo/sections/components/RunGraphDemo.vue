@@ -4,7 +4,6 @@
   </p-layout-default>
 </template>
 
-<!-- eslint-disable camelcase -->
 <script lang="ts" setup>
   import { parseISO, isValid } from 'date-fns'
   import RunGraph from '@/components/RunGraph.vue'
