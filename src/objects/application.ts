@@ -41,8 +41,8 @@ function createApplication(stage: HTMLDivElement): void {
 
 export async function waitForApplication(): Promise<Application> {
   if (application) {
-    return await application
+    return application
   }
 
-  return waitForEvent('applicationCreated')
+  return await waitForEvent('applicationCreated')
 }

@@ -15,14 +15,15 @@
 
   // const zoom = ref(0)
   const now = new Date()
-
+  const id = randomId()
   const dummy: RunGraphData = {
     start_time: startOfDay(now),
     end_time: endOfDay(now),
-    root_node_ids: [],
+    root_node_ids: [id],
     nodes: new Map([
       [
-        randomId(), {
+        id
+        , {
           start_time: startOfHour(now),
           end_time: endOfHour(now),
           kind: 'task-run',
@@ -30,7 +31,7 @@
           label: 'bar',
           child_ids: [],
           parent_ids: [],
-          id: randomId(),
+          id,
         },
       ],
     ]),

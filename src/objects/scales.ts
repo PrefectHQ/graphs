@@ -1,5 +1,7 @@
 import { ScaleLinear, scaleLinear, scaleTime, ScaleTime } from 'd3'
-import { emitter, waitForEvent } from '@/objects/events'
+import { RunGraphDomain, waitForDomain } from '@/objects/domain'
+import { emitter, EventKey, waitForEvent } from '@/objects/events'
+import { waitForStage } from '@/objects/stage'
 
 export type Scales = { scaleX: ScaleX, scaleY: ScaleY }
 export type ScaleX = ScaleTime<number, number>
@@ -18,8 +20,15 @@ export type ScaleRange = [start: number, end: number]
 export type ScaleXDomain = [start: Date, end: Date]
 export type ScaleYDomain = [start: number, end: number]
 
-export function startScales(): void {
-  emitter.on('stageUpdated', setScaleRanges)
+export async function startScales(): Promise<void> {
+  const stage = await waitForStage()
+  setScaleRangesFromStage(stage)
+
+  const domain = await waitForDomain()
+  setScaleDomain(domain)
+
+  emitter.on('domainUpdated', setScaleDomain)
+  emitter.on('stageUpdated', setScaleRangesFromStage)
 }
 
 export function stopScales(): void {
@@ -68,7 +77,7 @@ function setScaleY({ domain, range }: YScale): void {
 }
 
 export function setScales({ x, y }: { x?: XScale, y?: YScale }): void {
-  const isUpdate = initialized()
+  const event: EventKey = initialized() ? 'scalesUpdated' : 'scalesCreated'
 
   if (x) {
     setScaleX(x)
@@ -79,12 +88,7 @@ export function setScales({ x, y }: { x?: XScale, y?: YScale }): void {
   }
 
   if (initialized()) {
-    if (isUpdate) {
-      emitter.emit('scalesUpdated', { scaleX, scaleY })
-      return
-    }
-
-    emitter.emit('scalesCreated', { scaleX, scaleY })
+    emitter.emit(event, { scaleX, scaleY })
   }
 }
 
@@ -92,7 +96,7 @@ export function initialized(): boolean {
   return scaleXDomainInitialized && scaleXRangeInitialized && scaleYDomainInitialized && scaleYRangeInitialized
 }
 
-function setScaleRanges(stage: HTMLDivElement): void {
+function setScaleRangesFromStage(stage: HTMLDivElement): void {
   setScales({
     x: {
       range: [0, stage.clientWidth],
@@ -103,10 +107,14 @@ function setScaleRanges(stage: HTMLDivElement): void {
   })
 }
 
+function setScaleDomain(domain: RunGraphDomain): void {
+  setScales({ x: { domain } })
+}
+
 export async function waitForScales(): Promise<Scales> {
   if (initialized()) {
-    return await { scaleX, scaleY }
+    return { scaleX, scaleY }
   }
 
-  return waitForEvent('scalesCreated')
+  return await waitForEvent('scalesCreated')
 }
