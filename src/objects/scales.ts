@@ -1,5 +1,5 @@
 import { ScaleLinear, scaleLinear, scaleTime, ScaleTime } from 'd3'
-import { emitter, waitForEvent } from '@/objects/events'
+import { emitter, EventKey, waitForEvent } from '@/objects/events'
 
 export type Scales = { scaleX: ScaleX, scaleY: ScaleY }
 export type ScaleX = ScaleTime<number, number>
@@ -68,7 +68,7 @@ function setScaleY({ domain, range }: YScale): void {
 }
 
 export function setScales({ x, y }: { x?: XScale, y?: YScale }): void {
-  const isUpdate = initialized()
+  const event: EventKey = initialized() ? 'scalesUpdated' : 'scalesCreated'
 
   if (x) {
     setScaleX(x)
@@ -79,12 +79,7 @@ export function setScales({ x, y }: { x?: XScale, y?: YScale }): void {
   }
 
   if (initialized()) {
-    if (isUpdate) {
-      emitter.emit('scalesUpdated', { scaleX, scaleY })
-      return
-    }
-
-    emitter.emit('scalesCreated', { scaleX, scaleY })
+    emitter.emit(event, { scaleX, scaleY })
   }
 }
 
