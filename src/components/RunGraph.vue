@@ -3,8 +3,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { onBeforeUnmount, onMounted, ref, reactive } from 'vue'
-  import { useRunGraphData } from '@/compositions/useRunGraphData'
+  import { onBeforeUnmount, onMounted, ref } from 'vue'
   import { useRunGraphDomain } from '@/compositions/useRunGraphDomain'
   import { RunGraphConfig } from '@/models/RunGraph'
   import { start, stop } from '@/objects'
@@ -29,9 +28,6 @@
     }
   }
 
-  const runIds = reactive<string[]>([props.config.runId])
-
-  useRunGraphData(runIds, props.config.fetch)
   useRunGraphDomain(() => props.config.runId, props.config.fetch)
 
   onMounted(() => {
