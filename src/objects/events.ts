@@ -3,6 +3,7 @@ import { Viewport } from 'pixi-viewport'
 import { Application } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { RunGraphConfig } from '@/models/RunGraph'
+import { RunGraphDomain } from '@/objects/domain'
 import { Scales } from '@/objects/scales'
 
 type Events = {
@@ -15,6 +16,8 @@ type Events = {
   configCreated: RunGraphConfig,
   configUpdated: RunGraphConfig,
   scopeCreated: EffectScope,
+  domainCreated: RunGraphDomain,
+  domainUpdated: RunGraphDomain,
 }
 
 export type EventKey = keyof Events

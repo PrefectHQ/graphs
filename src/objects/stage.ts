@@ -24,7 +24,6 @@ export function stopStage(): void {
   stage = null
 }
 
-
 export async function waitForStage(): Promise<HTMLDivElement> {
   if (stage) {
     return await stage
