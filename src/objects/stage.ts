@@ -26,8 +26,8 @@ export function stopStage(): void {
 
 export async function waitForStage(): Promise<HTMLDivElement> {
   if (stage) {
-    return await stage
+    return stage
   }
 
-  return waitForEvent('stageCreated')
+  return await waitForEvent('stageCreated')
 }

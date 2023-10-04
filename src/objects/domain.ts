@@ -56,8 +56,8 @@ function stopSubscription(): void {
 
 export async function waitForDomain(): Promise<RunGraphDomain> {
   if (domain) {
-    return await domain
+    return domain
   }
 
-  return waitForEvent('domainCreated')
+  return await waitForEvent('domainCreated')
 }

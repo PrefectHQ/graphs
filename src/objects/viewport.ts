@@ -36,8 +36,8 @@ export function createViewport(application: Application): void {
 
 export async function waitForViewport(): Promise<Viewport> {
   if (viewport) {
-    return await viewport
+    return viewport
   }
 
-  return waitForEvent('viewportCreated')
+  return await waitForEvent('viewportCreated')
 }

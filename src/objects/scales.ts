@@ -113,8 +113,8 @@ function setScaleDomain(domain: RunGraphDomain): void {
 
 export async function waitForScales(): Promise<Scales> {
   if (initialized()) {
-    return await { scaleX, scaleY }
+    return { scaleX, scaleY }
   }
 
-  return waitForEvent('scalesCreated')
+  return await waitForEvent('scalesCreated')
 }

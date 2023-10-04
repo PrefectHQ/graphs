@@ -25,8 +25,8 @@ export function stopConfig(): void {
 
 export async function waitForConfig(): Promise<RunGraphConfig> {
   if (config) {
-    return await config
+    return config
   }
 
-  return waitForEvent('configCreated')
+  return await waitForEvent('configCreated')
 }

@@ -14,8 +14,8 @@ export function stopScope(): void {
 
 export async function waitForScope(): Promise<EffectScope> {
   if (scope) {
-    return await scope
+    return scope
   }
 
-  return waitForEvent('scopeCreated')
+  return await waitForEvent('scopeCreated')
 }
