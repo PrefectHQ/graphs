@@ -19,5 +19,8 @@
         "project": "./tsconfig.json"
       }
     }
+  },
+  "rules": {
+    "camelcase": "off"
   }
 }

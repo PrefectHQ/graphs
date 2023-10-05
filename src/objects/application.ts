@@ -26,6 +26,7 @@ function createApplication(stage: HTMLDivElement): void {
   application = new Application({
     background: '#1099bb',
     resizeTo: stage,
+    antialias: true,
   })
 
   stage.appendChild(application.view as HTMLCanvasElement)

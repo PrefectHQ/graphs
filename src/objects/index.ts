@@ -1,6 +1,5 @@
 import { RunGraphConfig } from '@/models/RunGraph'
 import { startApplication, stopApplication } from '@/objects/application'
-import { startBox, stopBox } from '@/objects/box'
 import { startConfig, stopConfig } from '@/objects/config'
 import { startDomain, stopDomain } from '@/objects/domain'
 import { emitter } from '@/objects/events'
@@ -24,7 +23,6 @@ export function start({ stage, config }: StartParameters): void {
   startApplication()
   startViewport()
   startScales()
-  startBox()
   startNodes()
   startScope()
   startDomain()
@@ -40,7 +38,6 @@ export function stop(): void {
   stopViewport()
   stopScales()
   stopStage()
-  stopBox()
   stopNodes()
   stopConfig()
   stopScope()

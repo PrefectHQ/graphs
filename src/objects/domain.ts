@@ -1,57 +1,37 @@
-import { UseSubscription, useSubscription } from '@prefecthq/vue-compositions'
-import { watch } from 'vue'
-import { RunGraphConfig, RunGraphFetch } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
-import { effectScopeFactory } from '@/utilities/effectScope'
+import { graphDataFactory } from '@/utilities/graphDataFactory'
 
-export type RunGraphDomain = [Date, Date]
+export type RunGraphDomain = [start: Date, end: Date]
 
-let subscription: UseSubscription<RunGraphFetch> | null = null
+const { fetch: getData, stop: stopData } = graphDataFactory()
+
 let domain: RunGraphDomain | null = null
-
-const scope = effectScopeFactory()
 
 export async function startDomain(): Promise<void> {
   const config = await waitForConfig()
 
-  startSubscription(config)
+  getGraphData(config.runId)
 
-  emitter.on('configUpdated', startSubscription)
+  emitter.on('configUpdated', config => getGraphData(config.runId))
 }
 
 export function stopDomain(): void {
   domain = null
+  stopData()
 }
 
+function getGraphData(runId: string): void {
+  getData(runId, ({ start_time, end_time }) => {
+    const event: EventKey = domain ? 'domainUpdated' : 'domainCreated'
 
-function startSubscription({ fetch, runId }: RunGraphConfig): void {
-  scope.run(() => {
-    stopSubscription()
+    const start = start_time
+    const end = end_time ?? new Date()
+    domain = [start, end]
 
-    // todo: need to account for an interval for running states
-    // I think I can just pass in an empty but reactive set of options
-    // and then update with the correct interval once the initial response is received
-    subscription = useSubscription(fetch, [runId])
+    emitter.emit(event, domain)
 
-    watch(() => subscription?.response, response => {
-      if (!response) {
-        return
-      }
-      const event: EventKey = domain ? 'domainUpdated' : 'domainCreated'
-
-      const start = response.start_time
-      const end = response.end_time ?? new Date()
-      domain = [start, end]
-
-      emitter.emit(event, domain)
-    }, { immediate: true })
   })
-}
-
-function stopSubscription(): void {
-  scope.stop()
-  subscription = null
 }
 
 export async function waitForDomain(): Promise<RunGraphDomain> {

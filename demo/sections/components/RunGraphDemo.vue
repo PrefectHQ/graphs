@@ -1,45 +1,35 @@
 <template>
   <p-layout-default class="run-graph-demo">
     <RunGraph :config="config" class="run-graph-demo__graph" />
-    <!-- <p-number-input v-model="zoom" /> -->
   </p-layout-default>
 </template>
 
-<!-- eslint-disable camelcase -->
 <script lang="ts" setup>
-  import { randomId } from '@prefecthq/prefect-design'
-  import { endOfHour, startOfHour, startOfDay, endOfDay } from 'date-fns'
-  // import { ref } from 'vue'
+  import { parseISO, isValid } from 'date-fns'
   import RunGraph from '@/components/RunGraph.vue'
+  import json from '@/demo/data/graph-small.json'
   import { RunGraphConfig, RunGraphData } from '@/models'
 
-  // const zoom = ref(0)
-  const now = new Date()
-  const id = randomId()
-  const dummy: RunGraphData = {
-    start_time: startOfDay(now),
-    end_time: endOfDay(now),
-    root_node_ids: [id],
-    nodes: new Map([
-      [
-        id
-        , {
-          start_time: startOfHour(now),
-          end_time: endOfHour(now),
-          kind: 'task-run',
-          state_name: 'Completed',
-          label: 'bar',
-          child_ids: [],
-          parent_ids: [],
-          id,
-        },
-      ],
-    ]),
+  // quick and dirty way to convert the iso strings into actual dates.
+  function reviver(key: string, value: any): any {
+    if (typeof value === 'string') {
+      const date = parseISO(value)
+
+      if (isValid(date)) {
+        return date
+      }
+    }
+
+    return value
   }
+
+  const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
+
+  data.nodes = new Map(data.nodes)
 
   const config: RunGraphConfig = {
     runId: 'foo',
-    fetch: () => dummy,
+    fetch: () => data,
   }
 </script>
 
