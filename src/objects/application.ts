@@ -24,7 +24,7 @@ export function stopApplication(): void {
 
 function createApplication(stage: HTMLDivElement): void {
   application = new Application({
-    background: '#1099bb',
+    backgroundAlpha: 0,
     resizeTo: stage,
     antialias: true,
   })

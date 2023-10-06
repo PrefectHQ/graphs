@@ -1,6 +1,6 @@
 <template>
   <p-layout-default class="run-graph-demo">
-    <RunGraph :config="config" class="run-graph-demo__graph" />
+    <RunGraph :config="config" class="run-graph-demo__graph p-background" />
   </p-layout-default>
 </template>
 
@@ -9,6 +9,7 @@
   import RunGraph from '@/components/RunGraph.vue'
   import json from '@/demo/data/graph-small.json'
   import { RunGraphConfig, RunGraphData } from '@/models'
+  import { StateType } from '@/models/states'
 
   // quick and dirty way to convert the iso strings into actual dates.
   function reviver(key: string, value: any): any {
@@ -27,9 +28,27 @@
 
   data.nodes = new Map(data.nodes)
 
+  // just hard coding the values here for now. these will come from ui-library
+  const stateTypeColors = {
+    completed: '#219D4B',
+    running: '#09439B',
+    scheduled: '#E08504',
+    pending: '#554B58',
+    failed: '#DE0529',
+    cancelled: '#333333',
+    cancelling: '#333333',
+    crashed: '#EA580C',
+    paused: '#554B58',
+  } satisfies Record<StateType, string>
+
   const config: RunGraphConfig = {
     runId: 'foo',
     fetch: () => data,
+    styles: {
+      node: node => ({
+        background: stateTypeColors[node.state_type],
+      }),
+    },
   }
 </script>
 
