@@ -7,6 +7,7 @@ import svgLoader from 'vite-svg-loader'
 // eslint-disable-next-line import/no-default-export
 export default defineConfig(({ mode }) => {
   const baseConfig = {
+    assetsInclude: ['**/*.fnt'],
     resolve: {
       alias: [
         {

@@ -1,1 +1,1 @@
-export { default as FlowRunGraph } from './FlowRunGraph.vue'
+export { default as RunGraph } from './RunGraph.vue'
