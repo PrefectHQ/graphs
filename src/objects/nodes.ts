@@ -32,8 +32,10 @@ function getGraphData(runId: string): void {
 }
 
 async function renderNode(node: RunGraphNode): Promise<void> {
+  const config = await waitForConfig()
   const { scaleX, scaleY } = await waitForScales()
   const graphics = nodes.get(node.id) ?? await createNode(node.id)
+  const { background } = config.styles.node(node)
 
   graphics.clear()
 
@@ -43,7 +45,7 @@ async function renderNode(node: RunGraphNode): Promise<void> {
   const width = scaleX(node.end_time ?? new Date()) - x
   const height = scaleY(offset + 10) - y
 
-  graphics.beginFill(0x3e494b)
+  graphics.beginFill(background)
   graphics.lineStyle(1, 0x0, 1, 2)
   graphics.drawRoundedRect(x, y, width, height, 8)
   graphics.endFill()
