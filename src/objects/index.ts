@@ -3,6 +3,7 @@ import { startApplication, stopApplication } from '@/objects/application'
 import { startConfig, stopConfig } from '@/objects/config'
 import { startDomain, stopDomain } from '@/objects/domain'
 import { emitter } from '@/objects/events'
+import { startFonts, stopFonts } from '@/objects/fonts'
 import { startNodes, stopNodes } from '@/objects/nodes'
 import { startScales, stopScales } from '@/objects/scales'
 import { startScope, stopScope } from '@/objects/scope'
@@ -26,6 +27,7 @@ export function start({ stage, config }: StartParameters): void {
   startNodes()
   startScope()
   startDomain()
+  startFonts()
 
   startStage(stage)
   startConfig(config)
@@ -42,4 +44,5 @@ export function stop(): void {
   stopConfig()
   stopScope()
   stopDomain()
+  stopFonts()
 }

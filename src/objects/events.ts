@@ -4,6 +4,7 @@ import { Application } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { RunGraphConfig } from '@/models/RunGraph'
 import { RunGraphDomain } from '@/objects/domain'
+import { Fonts } from '@/objects/fonts'
 import { Scales } from '@/objects/scales'
 
 type Events = {
@@ -18,6 +19,7 @@ type Events = {
   scopeCreated: EffectScope,
   domainCreated: RunGraphDomain,
   domainUpdated: RunGraphDomain,
+  fontsLoaded: Fonts,
 }
 
 export type EventKey = keyof Events

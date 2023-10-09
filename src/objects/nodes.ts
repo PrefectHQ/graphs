@@ -1,13 +1,20 @@
-import { Graphics } from 'pixi.js'
+import { BitmapText, Graphics } from 'pixi.js'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
+import { waitForFonts } from '@/objects/fonts'
 import { waitForScales } from '@/objects/scales'
 import { waitForViewport } from '@/objects/viewport'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
 
 const { fetch: getData, stop: stopData } = graphDataFactory()
-const nodes = new Map<string, Graphics>()
+
+type NodeSprites = {
+  graphics: Graphics,
+  label: BitmapText,
+}
+
+const nodes = new Map<string, NodeSprites>()
 
 // dummy offset for now
 let yOffset = 1
@@ -22,6 +29,7 @@ export async function startNodes(): Promise<void> {
 
 export function stopNodes(): void {
   nodes.clear()
+  yOffset = 1
   stopData()
 }
 
@@ -34,32 +42,47 @@ function getGraphData(runId: string): void {
 async function renderNode(node: RunGraphNode): Promise<void> {
   const config = await waitForConfig()
   const { scaleX, scaleY } = await waitForScales()
-  const graphics = nodes.get(node.id) ?? await createNode(node.id)
+  const { graphics, label } = nodes.get(node.id) ?? await createNode(node)
   const { background } = config.styles.node(node)
 
   graphics.clear()
 
   const offset = yOffset++
   const x = scaleX(node.start_time)
-  const y = scaleY(offset)
+  const y = scaleY(offset * 5)
   const width = scaleX(node.end_time ?? new Date()) - x
-  const height = scaleY(offset + 10) - y
+  const height = scaleY(offset * 5 + 4) - y
 
-  graphics.beginFill(background)
   graphics.lineStyle(1, 0x0, 1, 2)
-  graphics.drawRoundedRect(x, y, width, height, 8)
+  graphics.beginFill(background)
+  graphics.drawRoundedRect(0, 0, width, height, 4)
   graphics.endFill()
 
   graphics.width = Math.max(width, 1)
+
+  graphics.position.set(x, y)
+  label.position.set(x, y)
 }
 
-async function createNode(nodeId: string): Promise<Graphics> {
+async function createNode(node: RunGraphNode): Promise<NodeSprites> {
   const viewport = await waitForViewport()
+  const { inter } = await waitForFonts()
   const graphics = new Graphics()
 
-  nodes.set(nodeId, graphics)
+  const label = inter(node.label, {
+    fontSize: 12,
+  })
+
+  nodes.set(node.id, {
+    graphics,
+    label,
+  })
 
   viewport.addChild(graphics)
+  viewport.addChild(label)
 
-  return graphics
+  return {
+    graphics,
+    label,
+  }
 }
