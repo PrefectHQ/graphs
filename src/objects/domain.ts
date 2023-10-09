@@ -16,8 +16,8 @@ let domainY: ScaleYDomain | null = null
 let domain: RunGraphDomain | null = null
 
 export function startDomain(): void {
-  setDomainX()
-  setDomainY()
+  startDomainX()
+  startDomainY()
 }
 
 export function stopDomain(): void {
@@ -27,7 +27,7 @@ export function stopDomain(): void {
   stopData()
 }
 
-async function setDomainX(): Promise<void> {
+async function startDomainX(): Promise<void> {
   const config = await waitForConfig()
 
   getData(config.runId, ({ start_time, end_time }) => {
@@ -43,7 +43,7 @@ async function setDomainX(): Promise<void> {
   })
 }
 
-async function setDomainY(): Promise<void> {
+async function startDomainY(): Promise<void> {
   const stage = await waitForStage()
   const config = await waitForConfig()
   const start = 0
