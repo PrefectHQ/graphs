@@ -1,37 +1,77 @@
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
+import { ScaleXDomain, ScaleYDomain } from '@/objects/scales'
+import { waitForStage } from '@/objects/stage'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
 
-export type RunGraphDomain = [start: Date, end: Date]
+export type RunGraphDomain = {
+  x: ScaleXDomain,
+  y: ScaleYDomain,
+}
 
 const { fetch: getData, stop: stopData } = graphDataFactory()
 
+let domainX: ScaleXDomain | null = null
+let domainY: ScaleYDomain | null = null
 let domain: RunGraphDomain | null = null
 
-export async function startDomain(): Promise<void> {
-  const config = await waitForConfig()
-
-  getGraphData(config.runId)
-
-  emitter.on('configUpdated', config => getGraphData(config.runId))
+export function startDomain(): void {
+  setDomainX()
+  setDomainY()
 }
 
 export function stopDomain(): void {
+  domainX = null
+  domainY = null
   domain = null
   stopData()
 }
 
-function getGraphData(runId: string): void {
-  getData(runId, ({ start_time, end_time }) => {
-    const event: EventKey = domain ? 'domainUpdated' : 'domainCreated'
+async function setDomainX(): Promise<void> {
+  const config = await waitForConfig()
+
+  getData(config.runId, ({ start_time, end_time }) => {
+    if (domainX) {
+      return
+    }
 
     const start = start_time
     const end = end_time ?? new Date()
-    domain = [start, end]
+    const x: ScaleXDomain = [start, end]
+
+    setDomain({ x })
+  })
+}
+
+async function setDomainY(): Promise<void> {
+  const stage = await waitForStage()
+  const config = await waitForConfig()
+  const start = 0
+  const end = stage.clientHeight / config.styles.nodeHeight
+  const y: ScaleYDomain = [start, end]
+
+  setDomain({ y })
+}
+
+function setDomain({ x, y }: Partial<RunGraphDomain>): void {
+  const event: EventKey = domain ? 'domainUpdated' : 'domainCreated'
+
+  if (x) {
+    domainX = x
+  }
+
+  if (y) {
+    domainY = y
+  }
+
+  if (domainX && domainY) {
+    domain = {
+      x: domainX,
+      y: domainY,
+    }
 
     emitter.emit(event, domain)
-
-  })
+  }
 }
 
 export async function waitForDomain(): Promise<RunGraphDomain> {
