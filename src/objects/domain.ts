@@ -1,3 +1,4 @@
+import isEqual from 'lodash.isequal'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { ScaleXDomain, ScaleYDomain } from '@/objects/scales'
@@ -27,34 +28,13 @@ export function stopDomain(): void {
   stopData()
 }
 
-async function startDomainX(): Promise<void> {
-  const config = await waitForConfig()
+export function setDomain(value: Partial<RunGraphDomain>): void {
+  if (isEqual(domain, value)) {
+    return
+  }
 
-  getData(config.runId, ({ start_time, end_time }) => {
-    if (domainX) {
-      return
-    }
-
-    const start = start_time
-    const end = end_time ?? new Date()
-    const x: ScaleXDomain = [start, end]
-
-    setDomain({ x })
-  })
-}
-
-async function startDomainY(): Promise<void> {
-  const stage = await waitForStage()
-  const config = await waitForConfig()
-  const start = 0
-  const end = stage.clientHeight / config.styles.nodeHeight
-  const y: ScaleYDomain = [start, end]
-
-  setDomain({ y })
-}
-
-function setDomain({ x, y }: Partial<RunGraphDomain>): void {
   const event: EventKey = domain ? 'domainUpdated' : 'domainCreated'
+  const { x, y } = value
 
   if (x) {
     domainX = x
@@ -80,4 +60,30 @@ export async function waitForDomain(): Promise<RunGraphDomain> {
   }
 
   return await waitForEvent('domainCreated')
+}
+
+async function startDomainX(): Promise<void> {
+  const config = await waitForConfig()
+
+  getData(config.runId, ({ start_time, end_time }) => {
+    if (domainX) {
+      return
+    }
+
+    const start = start_time
+    const end = end_time ?? new Date()
+    const x: ScaleXDomain = [start, end]
+
+    setDomain({ x })
+  })
+}
+
+async function startDomainY(): Promise<void> {
+  const stage = await waitForStage()
+  const config = await waitForConfig()
+  const start = 0
+  const end = stage.clientHeight / config.styles.nodeHeight
+  const y: ScaleYDomain = [start, end]
+
+  setDomain({ y })
 }
