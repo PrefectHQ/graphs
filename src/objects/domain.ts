@@ -1,7 +1,9 @@
 import isEqual from 'lodash.isequal'
+import { watch } from 'vue'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { ScaleXDomain, ScaleYDomain } from '@/objects/scales'
+import { waitForScope } from '@/objects/scope'
 import { waitForStage } from '@/objects/stage'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
 
@@ -16,7 +18,14 @@ let domainX: ScaleXDomain | null = null
 let domainY: ScaleYDomain | null = null
 let domain: RunGraphDomain | null = null
 
-export function startDomain(): void {
+export function startDomain(domain: () => RunGraphDomain | undefined): void {
+  const value = domain()
+
+  if (value) {
+    setDomain(value)
+  }
+
+  watchDomain(domain)
   startDomainX()
   startDomainY()
 }
@@ -62,7 +71,23 @@ export async function waitForDomain(): Promise<RunGraphDomain> {
   return await waitForEvent('domainCreated')
 }
 
+async function watchDomain(domain: () => RunGraphDomain | undefined): Promise<void> {
+  const scope = await waitForScope()
+
+  scope.run(() => {
+    watch(domain, value => {
+      if (value) {
+        setDomain(value)
+      }
+    })
+  })
+}
+
 async function startDomainX(): Promise<void> {
+  if (domainX) {
+    return
+  }
+
   const config = await waitForConfig()
 
   getData(config.runId, ({ start_time, end_time }) => {
@@ -79,6 +104,10 @@ async function startDomainX(): Promise<void> {
 }
 
 async function startDomainY(): Promise<void> {
+  if (domainY) {
+    return
+  }
+
   const stage = await waitForStage()
   const config = await waitForConfig()
   const start = 0
