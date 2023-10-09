@@ -1,6 +1,5 @@
 import { ColorSource } from 'pixi.js'
 import { DeepRequired } from 'ts-essentials'
-import { RunGraph } from '..'
 import { StateType } from '@/models/states'
 
 export type RunGraphData = {
