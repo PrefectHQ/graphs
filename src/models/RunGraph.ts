@@ -1,4 +1,6 @@
 import { ColorSource } from 'pixi.js'
+import { DeepRequired } from 'ts-essentials'
+import { RunGraph } from '..'
 import { StateType } from '@/models/states'
 
 export type RunGraphData = {
@@ -36,15 +38,22 @@ export function isRunGraphNodeType(value: unknown): value is RunGraphNodeKind {
 export type RunGraphFetch = (runId: string) => RunGraphData | Promise<RunGraphData>
 
 export type RunGraphNodeStyles = {
-  background: ColorSource,
+  background?: ColorSource,
 }
 
 export type RunGraphStyles = {
-  node: (node: RunGraphNode) => RunGraphNodeStyles,
+  nodeHeight?: number,
+  node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }
 
 export type RunGraphConfig = {
   runId: string,
   fetch: RunGraphFetch,
-  styles: RunGraphStyles,
+  styles?: RunGraphStyles,
+}
+
+export type RequiredGraphConfig = DeepRequired<RunGraphConfig> & {
+  styles: {
+    node: (node: RunGraphNode) => Required<RunGraphNodeStyles>,
+  },
 }

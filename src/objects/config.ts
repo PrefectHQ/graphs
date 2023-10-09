@@ -1,9 +1,32 @@
 import { watch } from 'vue'
-import { RunGraphConfig } from '@/models/RunGraph'
+import { RequiredGraphConfig, RunGraphConfig } from '@/models/RunGraph'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForScope } from '@/objects/scope'
 
-let config: RunGraphConfig | null = null
+let config: RequiredGraphConfig | null = null
+
+const defaults = {
+  styles: {
+    nodeHeight: 20,
+    node: () => ({
+      background: '#ffffff',
+    }),
+  },
+} as const satisfies Omit<RequiredGraphConfig, 'runId' | 'fetch'>
+
+function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
+  return {
+    runId: config.runId,
+    fetch: config.fetch,
+    styles: {
+      nodeHeight: config.styles?.nodeHeight ?? defaults.styles.nodeHeight,
+      node: node => ({
+        ...defaults.styles.node(),
+        ...config.styles?.node?.(node),
+      }),
+    },
+  }
+}
 
 export async function startConfig(runConfig: () => RunGraphConfig): Promise<void> {
   const scope = await waitForScope()
@@ -12,7 +35,7 @@ export async function startConfig(runConfig: () => RunGraphConfig): Promise<void
     watch(runConfig, value => {
       const event: EventKey = config ? 'configUpdated' : 'configCreated'
 
-      config = value
+      config = withDefaults(value)
 
       emitter.emit(event, config)
     }, { immediate: true })
@@ -23,7 +46,7 @@ export function stopConfig(): void {
   config = null
 }
 
-export async function waitForConfig(): Promise<RunGraphConfig> {
+export async function waitForConfig(): Promise<RequiredGraphConfig> {
   if (config) {
     return config
   }
