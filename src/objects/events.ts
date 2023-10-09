@@ -2,7 +2,7 @@ import mitt from 'mitt'
 import { Viewport } from 'pixi-viewport'
 import { Application } from 'pixi.js'
 import { EffectScope } from 'vue'
-import { RunGraphConfig } from '@/models/RunGraph'
+import { RequiredGraphConfig } from '@/models/RunGraph'
 import { RunGraphDomain } from '@/objects/domain'
 import { Fonts } from '@/objects/fonts'
 import { Scales } from '@/objects/scales'
@@ -14,8 +14,8 @@ type Events = {
   stageCreated: HTMLDivElement,
   stageUpdated: HTMLDivElement,
   viewportCreated: Viewport,
-  configCreated: RunGraphConfig,
-  configUpdated: RunGraphConfig,
+  configCreated: RequiredGraphConfig,
+  configUpdated: RequiredGraphConfig,
   scopeCreated: EffectScope,
   domainCreated: RunGraphDomain,
   domainUpdated: RunGraphDomain,

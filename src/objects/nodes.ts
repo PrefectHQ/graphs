@@ -17,7 +17,7 @@ type NodeSprites = {
 const nodes = new Map<string, NodeSprites>()
 
 // dummy offset for now
-let yOffset = 1
+let yOffset = 0
 
 export async function startNodes(): Promise<void> {
   const config = await waitForConfig()
@@ -29,7 +29,7 @@ export async function startNodes(): Promise<void> {
 
 export function stopNodes(): void {
   nodes.clear()
-  yOffset = 1
+  yOffset = 0
   stopData()
 }
 
@@ -49,11 +49,11 @@ async function renderNode(node: RunGraphNode): Promise<void> {
 
   const offset = yOffset++
   const x = scaleX(node.start_time)
-  const y = scaleY(offset * 5)
+  const y = scaleY(offset)
   const width = scaleX(node.end_time ?? new Date()) - x
-  const height = scaleY(offset * 5 + 4) - y
+  const height = scaleY(offset + 1) - y
 
-  graphics.lineStyle(1, 0x0, 1, 2)
+  // graphics.lineStyle(1, 0x0, 1, 2)
   graphics.beginFill(background)
   graphics.drawRoundedRect(0, 0, width, height, 4)
   graphics.endFill()
