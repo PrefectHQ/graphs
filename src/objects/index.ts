@@ -4,7 +4,7 @@ import { startConfig, stopConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { startFonts, stopFonts } from '@/objects/fonts'
 import { startNodes, stopNodes } from '@/objects/nodes'
-import { startScales, stopScales } from '@/objects/scales'
+import { ScaleXDomain, startScales, stopScales } from '@/objects/scales'
 import { startScope, stopScope } from '@/objects/scope'
 import { startStage, stopStage } from '@/objects/stage'
 import { startViewport, stopViewport } from '@/objects/viewport'
@@ -17,12 +17,12 @@ export * from './scales'
 type StartParameters = {
   stage: HTMLDivElement,
   config: () => RunGraphConfig,
-  // domain: () => RunGraphDomain | undefined,
+  visibleDateRange: () => ScaleXDomain | undefined,
 }
 
-export function start({ stage, config }: StartParameters): void {
+export function start({ stage, config, visibleDateRange }: StartParameters): void {
   startApplication()
-  startViewport()
+  startViewport(visibleDateRange)
   startScales()
   startNodes()
   startScope()

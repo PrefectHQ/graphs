@@ -4,7 +4,7 @@ import { Application } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { RequiredGraphConfig } from '@/models/RunGraph'
 import { Fonts } from '@/objects/fonts'
-import { Scales } from '@/objects/scales'
+import { ScaleXDomain, Scales } from '@/objects/scales'
 
 type Events = {
   scalesCreated: Scales,
@@ -13,6 +13,7 @@ type Events = {
   stageCreated: HTMLDivElement,
   stageUpdated: HTMLDivElement,
   viewportCreated: Viewport,
+  viewportDateRangeUpdated: ScaleXDomain,
   configCreated: RequiredGraphConfig,
   configUpdated: RequiredGraphConfig,
   scopeCreated: EffectScope,
