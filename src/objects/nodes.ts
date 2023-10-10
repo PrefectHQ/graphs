@@ -97,6 +97,7 @@ async function renderNode(node: RunGraphNode): Promise<void> {
 }
 
 async function createNode(node: RunGraphNode): Promise<NodeSprites> {
+  const container = await waitForContainer()
   const { inter } = await waitForFonts()
   const graphics = new Graphics()
 
@@ -109,8 +110,8 @@ async function createNode(node: RunGraphNode): Promise<NodeSprites> {
     label,
   })
 
-  container!.addChild(graphics)
-  container!.addChild(label)
+  container.addChild(graphics)
+  container.addChild(label)
 
   return {
     graphics,
