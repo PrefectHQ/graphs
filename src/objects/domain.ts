@@ -38,12 +38,13 @@ export function stopDomain(): void {
 }
 
 export function setDomain(value: Partial<RunGraphDomain>): void {
-  if (isEqual(domain, value)) {
+  const { x = domainX, y = domainY } = value
+
+  if (isEqual(x, domainX) && isEqual(y, domainY)) {
     return
   }
 
   const event: EventKey = domain ? 'domainUpdated' : 'domainCreated'
-  const { x, y } = value
 
   if (x) {
     domainX = x
