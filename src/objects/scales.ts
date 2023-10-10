@@ -102,7 +102,7 @@ function setScaleY({ domain, range }: YScale): void {
 }
 
 function getEvent(): EventKey {
-  return initialized() ? 'scalesUpdated' : 'scalesUpdated'
+  return initialized() ? 'scalesUpdated' : 'scalesCreated'
 }
 
 export function initialized(): boolean {
