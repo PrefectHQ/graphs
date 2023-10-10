@@ -50,7 +50,7 @@
     "ts-essentials": "^9.4.1",
     "tsc-alias": "1.8.8",
     "typescript": "5.2.2",
-    "vite": "4.4.9",
+    "vite": "4.4.11",
     "vite-svg-loader": "^4.0.0",
     "vue-tsc": "1.8.18"
   },
