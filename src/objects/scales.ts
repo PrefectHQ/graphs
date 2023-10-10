@@ -1,5 +1,4 @@
 import { ScaleLinear, scaleLinear, scaleTime, ScaleTime } from 'd3'
-import { waitForConfig } from '@/objects/config'
 import { RunGraphDomain, waitForDomain } from '@/objects/domain'
 import { emitter, EventKey, waitForEvent } from '@/objects/events'
 import { waitForStage } from '@/objects/stage'
@@ -97,29 +96,22 @@ export function initialized(): boolean {
   return scaleXDomainInitialized && scaleXRangeInitialized && scaleYDomainInitialized && scaleYRangeInitialized
 }
 
-async function setScaleRangesFromStage(stage: HTMLDivElement): Promise<void> {
-  const domainY = await getDomainYFromStage(stage)
-
+function setScaleRangesFromStage(stage: HTMLDivElement): void {
   setScales({
     x: {
       range: [0, stage.clientWidth],
     },
     y: {
-      domain: domainY,
       range: [0, stage.clientHeight],
     },
   })
 }
 
-async function getDomainYFromStage(stage: HTMLDivElement): Promise<ScaleYDomain> {
-  const config = await waitForConfig()
-  const domainYEnd = stage.clientHeight / config.styles.nodeHeight
-
-  return [0, domainYEnd]
-}
-
-function setScaleDomain(domain: RunGraphDomain): void {
-  setScales({ x: { domain } })
+function setScaleDomain({ x: domainX, y: domainY }: RunGraphDomain): void {
+  setScales({
+    x: { domain: domainX },
+    y: { domain: domainY },
+  })
 }
 
 export async function waitForScales(): Promise<Scales> {

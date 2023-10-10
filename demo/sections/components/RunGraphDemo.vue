@@ -1,15 +1,18 @@
 <template>
   <p-layout-default class="run-graph-demo">
-    <RunGraph :config="config" class="run-graph-demo__graph p-background" />
+    <RunGraph v-model:domain="domain" :config="config" class="run-graph-demo__graph p-background" />
+    {{ domain }}
   </p-layout-default>
 </template>
 
 <script lang="ts" setup>
   import { parseISO, isValid } from 'date-fns'
+  import { ref } from 'vue'
   import RunGraph from '@/components/RunGraph.vue'
   import json from '@/demo/data/graph-small.json'
   import { RunGraphConfig, RunGraphData } from '@/models'
   import { StateType } from '@/models/states'
+  import { RunGraphDomain } from '@/objects/domain'
 
   // quick and dirty way to convert the iso strings into actual dates.
   function reviver(key: string, value: any): any {
@@ -25,6 +28,7 @@
   }
 
   const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
+  const domain = ref<RunGraphDomain>()
 
   data.nodes = new Map(data.nodes)
 
