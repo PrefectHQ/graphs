@@ -1,7 +1,7 @@
 import isEqual from 'lodash.isequal'
 import { Viewport } from 'pixi-viewport'
 import { watch } from 'vue'
-import { RunGraphProps } from '..'
+import { RunGraphProps } from '@/models/RunGraph'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { emitter, waitForEvent } from '@/objects/events'
@@ -23,10 +23,6 @@ export async function startViewport(props: RunGraphProps): Promise<void> {
     events: application.renderer.events,
     passiveWheel: false,
   })
-
-  console.log(centerViewport)
-
-  console.log(viewport)
 
   viewport
     .drag()
@@ -106,6 +102,8 @@ async function watchVisibleDateRange(props: RunGraphProps): Promise<void> {
 
 async function startViewportDateRange(): Promise<void> {
   const viewport = await waitForViewport()
+
+  updateViewportDateRange()
 
   viewport.on('moved', () => updateViewportDateRange())
 }
