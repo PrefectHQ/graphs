@@ -1,5 +1,5 @@
 import { watch } from 'vue'
-import { RequiredGraphConfig, RunGraphConfig } from '@/models/RunGraph'
+import { RequiredGraphConfig, RunGraphConfig, RunGraphProps } from '@/models/RunGraph'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForScope } from '@/objects/scope'
 
@@ -28,11 +28,11 @@ function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
   }
 }
 
-export async function startConfig(runConfig: () => RunGraphConfig): Promise<void> {
+export async function startConfig(props: RunGraphProps): Promise<void> {
   const scope = await waitForScope()
 
   scope.run(() => {
-    watch(runConfig, value => {
+    watch(() => props.config, value => {
       const event: EventKey = config ? 'configUpdated' : 'configCreated'
 
       config = withDefaults(value)

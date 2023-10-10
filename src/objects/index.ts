@@ -1,7 +1,6 @@
-import { RunGraphConfig } from '@/models/RunGraph'
+import { RunGraphProps } from '@/models/RunGraph'
 import { startApplication, stopApplication } from '@/objects/application'
 import { startConfig, stopConfig } from '@/objects/config'
-import { RunGraphDomain, startDomain, stopDomain } from '@/objects/domain'
 import { emitter } from '@/objects/events'
 import { startFonts, stopFonts } from '@/objects/fonts'
 import { startNodes, stopNodes } from '@/objects/nodes'
@@ -17,20 +16,18 @@ export * from './scales'
 
 type StartParameters = {
   stage: HTMLDivElement,
-  config: () => RunGraphConfig,
-  domain: () => RunGraphDomain | undefined,
+  props: RunGraphProps,
 }
 
-export function start({ stage, config, domain }: StartParameters): void {
+export function start({ stage, props }: StartParameters): void {
   startApplication()
-  startViewport()
+  startViewport(props)
   startScales()
   startNodes()
   startScope()
-  startDomain(domain)
   startFonts()
   startStage(stage)
-  startConfig(config)
+  startConfig(props)
 }
 
 export function stop(): void {
@@ -43,6 +40,5 @@ export function stop(): void {
   stopNodes()
   stopConfig()
   stopScope()
-  stopDomain()
   stopFonts()
 }

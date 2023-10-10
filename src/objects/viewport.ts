@@ -1,21 +1,18 @@
+import isEqual from 'lodash.isequal'
 import { Viewport } from 'pixi-viewport'
-import { Application } from 'pixi.js'
+import { watch } from 'vue'
+import { RunGraphProps } from '..'
 import { waitForApplication } from '@/objects/application'
 import { emitter, waitForEvent } from '@/objects/events'
+import { ScaleXDomain, waitForScales } from '@/objects/scales'
+import { waitForScope } from '@/objects/scope'
 
-export let viewport: Viewport | null = null
+let viewport: Viewport | null = null
+let viewportDateRange: ScaleXDomain | null = null
 
-export async function startViewport(): Promise<void> {
+export async function startViewport(props: RunGraphProps): Promise<void> {
   const application = await waitForApplication()
 
-  createViewport(application)
-}
-
-export function stopViewport(): void {
-  viewport = null
-}
-
-export function createViewport(application: Application): void {
   viewport = new Viewport({
     events: application.renderer.events,
     passiveWheel: false,
@@ -32,6 +29,14 @@ export function createViewport(application: Application): void {
   application.stage.addChild(viewport)
 
   emitter.emit('viewportCreated', viewport)
+
+  watchVisibleDateRange(props)
+  startViewportDateRange()
+}
+
+export function stopViewport(): void {
+  viewport = null
+  viewportDateRange = null
 }
 
 export async function waitForViewport(): Promise<Viewport> {
@@ -40,4 +45,38 @@ export async function waitForViewport(): Promise<Viewport> {
   }
 
   return await waitForEvent('viewportCreated')
+}
+
+export function setViewportDateRange(value: ScaleXDomain): void {
+  if (isEqual(viewportDateRange, value)) {
+    return
+  }
+
+  viewportDateRange = value
+
+  emitter.emit('viewportDateRangeUpdated', value)
+}
+
+async function watchVisibleDateRange(props: RunGraphProps): Promise<void> {
+  const scope = await waitForScope()
+
+  scope.run(() => {
+    watch(() => props.viewport, value => {
+      if (value) {
+        setViewportDateRange(value)
+      }
+    })
+  })
+}
+
+async function startViewportDateRange(): Promise<void> {
+  const viewport = await waitForViewport()
+  const { scaleX } = await waitForScales()
+
+  viewport.on('moved', event => {
+    const left = scaleX.invert(event.viewport.left)
+    const right = scaleX.invert(event.viewport.right)
+
+    setViewportDateRange([left, right])
+  })
 }

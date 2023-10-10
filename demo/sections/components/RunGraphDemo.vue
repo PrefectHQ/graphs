@@ -1,7 +1,7 @@
 <template>
   <p-layout-default class="run-graph-demo">
-    <RunGraph v-model:domain="domain" :config="config" class="run-graph-demo__graph p-background" />
-    {{ domain }}
+    <RunGraph v-model:viewport="visibleDateRange" :config="config" class="run-graph-demo__graph p-background" />
+    {{ visibleDateRange }}
   </p-layout-default>
 </template>
 
@@ -12,7 +12,7 @@
   import json from '@/demo/data/graph-small.json'
   import { RunGraphConfig, RunGraphData } from '@/models'
   import { StateType } from '@/models/states'
-  import { RunGraphDomain } from '@/objects/domain'
+  import { ScaleXDomain } from '@/objects'
 
   // quick and dirty way to convert the iso strings into actual dates.
   function reviver(key: string, value: any): any {
@@ -28,7 +28,7 @@
   }
 
   const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
-  const domain = ref<RunGraphDomain>()
+  const visibleDateRange = ref<ScaleXDomain>()
 
   data.nodes = new Map(data.nodes)
 

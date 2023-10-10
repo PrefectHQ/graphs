@@ -1,6 +1,12 @@
 import { ColorSource } from 'pixi.js'
 import { DeepRequired } from 'ts-essentials'
 import { StateType } from '@/models/states'
+import { ScaleXDomain } from '@/objects'
+
+export type RunGraphProps = {
+  config: RunGraphConfig,
+  viewport?: ScaleXDomain,
+}
 
 export type RunGraphData = {
   root_node_ids: string[],
