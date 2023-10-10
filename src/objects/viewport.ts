@@ -54,9 +54,15 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
   const container = await waitForContainer()
   const config = await waitForConfig()
 
+
   // when we get to culling we might need to turn it off for this measurement
   const { x, y, width, height } = container.getLocalBounds()
   const scale = viewport.findFit(width, height)
+
+  // if the container doesn't have a size we cannot do anything here
+  if (!width || !height) {
+    return
+  }
 
   viewport.animate({
     position: {

@@ -4,7 +4,7 @@ import { waitForConfig } from '@/objects/config'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForScales } from '@/objects/scales'
-import { waitForViewport } from '@/objects/viewport'
+import { centerViewport, waitForViewport } from '@/objects/viewport'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
 
 const { fetch: getData, stop: stopData } = graphDataFactory()
@@ -58,8 +58,16 @@ function stopContainer(): void {
 }
 
 function getGraphData(runId: string): void {
-  getData(runId, data => {
-    data.nodes.forEach(node => renderNode(node))
+  getData(runId, async data => {
+    const promises: Promise<void>[] = []
+
+    data.nodes.forEach(node => {
+      promises.push(renderNode(node))
+    })
+
+    // once we get to "running" runs we'll want to only do this on the first load
+    await Promise.all(promises)
+    centerViewport()
   })
 }
 
