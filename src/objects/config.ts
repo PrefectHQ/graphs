@@ -6,6 +6,7 @@ import { waitForScope } from '@/objects/scope'
 let config: RequiredGraphConfig | null = null
 
 const defaults = {
+  animationDuration: 200,
   styles: {
     nodeHeight: 20,
     node: () => ({
@@ -18,6 +19,7 @@ function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
   return {
     runId: config.runId,
     fetch: config.fetch,
+    animationDuration: config.animationDuration ?? defaults.animationDuration,
     styles: {
       nodeHeight: config.styles?.nodeHeight ?? defaults.styles.nodeHeight,
       node: node => ({

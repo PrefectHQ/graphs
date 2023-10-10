@@ -54,6 +54,7 @@ export type RunGraphStyles = {
 export type RunGraphConfig = {
   runId: string,
   fetch: RunGraphFetch,
+  animationDuration?: number,
   styles?: RunGraphStyles,
 }
 

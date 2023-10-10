@@ -1,7 +1,7 @@
-import { BitmapText, Graphics } from 'pixi.js'
+import { BitmapText, Container, Graphics } from 'pixi.js'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
-import { emitter } from '@/objects/events'
+import { emitter, waitForEvent } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForScales } from '@/objects/scales'
 import { waitForViewport } from '@/objects/viewport'
@@ -15,11 +15,13 @@ type NodeSprites = {
 }
 
 const nodes = new Map<string, NodeSprites>()
+let container: Container | null = null
 
 // dummy offset for now
 let yOffset = 0
 
 export async function startNodes(): Promise<void> {
+  await startContainer()
   const config = await waitForConfig()
 
   getGraphData(config.runId)
@@ -28,9 +30,31 @@ export async function startNodes(): Promise<void> {
 }
 
 export function stopNodes(): void {
+  stopContainer()
   nodes.clear()
   yOffset = 0
   stopData()
+}
+
+export async function waitForContainer(): Promise<Container> {
+  if (container) {
+    return container
+  }
+
+  return await waitForEvent('containerCreated')
+}
+
+async function startContainer(): Promise<void> {
+  const viewport = await waitForViewport()
+  container = new Container()
+
+  viewport.addChild(container)
+
+  emitter.emit('containerCreated', container)
+}
+
+function stopContainer(): void {
+  container = null
 }
 
 function getGraphData(runId: string): void {
@@ -65,7 +89,6 @@ async function renderNode(node: RunGraphNode): Promise<void> {
 }
 
 async function createNode(node: RunGraphNode): Promise<NodeSprites> {
-  const viewport = await waitForViewport()
   const { inter } = await waitForFonts()
   const graphics = new Graphics()
 
@@ -78,8 +101,8 @@ async function createNode(node: RunGraphNode): Promise<NodeSprites> {
     label,
   })
 
-  viewport.addChild(graphics)
-  viewport.addChild(label)
+  container!.addChild(graphics)
+  container!.addChild(label)
 
   return {
     graphics,

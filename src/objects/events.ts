@@ -1,6 +1,6 @@
 import mitt from 'mitt'
 import { Viewport } from 'pixi-viewport'
-import { Application } from 'pixi.js'
+import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { RequiredGraphConfig } from '@/models/RunGraph'
 import { Fonts } from '@/objects/fonts'
@@ -18,6 +18,7 @@ type Events = {
   configUpdated: RequiredGraphConfig,
   scopeCreated: EffectScope,
   fontsLoaded: Fonts,
+  containerCreated: Container,
 }
 
 export type EventKey = keyof Events
