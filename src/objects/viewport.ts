@@ -1,6 +1,7 @@
 import isEqual from 'lodash.isequal'
 import { Viewport } from 'pixi-viewport'
 import { watch } from 'vue'
+import { RunGraphProps } from '..'
 import { waitForApplication } from '@/objects/application'
 import { emitter, waitForEvent } from '@/objects/events'
 import { ScaleXDomain, waitForScales } from '@/objects/scales'
@@ -9,7 +10,7 @@ import { waitForScope } from '@/objects/scope'
 let viewport: Viewport | null = null
 let viewportDateRange: ScaleXDomain | null = null
 
-export async function startViewport(visibleDateRange: () => ScaleXDomain | undefined): Promise<void> {
+export async function startViewport(props: RunGraphProps): Promise<void> {
   const application = await waitForApplication()
 
   viewport = new Viewport({
@@ -29,7 +30,7 @@ export async function startViewport(visibleDateRange: () => ScaleXDomain | undef
 
   emitter.emit('viewportCreated', viewport)
 
-  watchVisibleDateRange(visibleDateRange)
+  watchVisibleDateRange(props)
   startViewportDateRange()
 }
 
@@ -56,11 +57,11 @@ export function setViewportDateRange(value: ScaleXDomain): void {
   emitter.emit('viewportDateRangeUpdated', value)
 }
 
-async function watchVisibleDateRange(visibleDateRange: () => ScaleXDomain | undefined): Promise<void> {
+async function watchVisibleDateRange(props: RunGraphProps): Promise<void> {
   const scope = await waitForScope()
 
   scope.run(() => {
-    watch(visibleDateRange, value => {
+    watch(() => props.viewport, value => {
       if (value) {
         setViewportDateRange(value)
       }

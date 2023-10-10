@@ -1,6 +1,6 @@
 <template>
   <p-layout-default class="run-graph-demo">
-    <RunGraph v-model:visible-date-range="visibleDateRange" :config="config" class="run-graph-demo__graph p-background" />
+    <RunGraph v-model:viewport="visibleDateRange" :config="config" class="run-graph-demo__graph p-background" />
     {{ visibleDateRange }}
   </p-layout-default>
 </template>

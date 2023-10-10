@@ -4,22 +4,21 @@
 
 <script lang="ts" setup>
   import { onBeforeUnmount, onMounted, ref } from 'vue'
-  import { RunGraphConfig } from '@/models/RunGraph'
+  import { RunGraphProps } from '@/models/RunGraph'
   import { ScaleXDomain, start, stop } from '@/objects'
   import { emitter } from '@/objects/events'
 
-  const props = defineProps<{
-    config: RunGraphConfig,
-    visibleDateRange?: ScaleXDomain,
-  }>()
+  // using the props object as a whole
+  // eslint-disable-next-line vue/no-unused-properties
+  const props = defineProps<RunGraphProps>()
 
   const emit = defineEmits<{
-    (event: 'update:visibleDateRange', value: ScaleXDomain): void,
+    (event: 'update:viewport', value: ScaleXDomain): void,
   }>()
 
   const stage = ref<HTMLDivElement>()
 
-  emitter.on('viewportDateRangeUpdated', range => emit('update:visibleDateRange', range))
+  emitter.on('viewportDateRangeUpdated', range => emit('update:viewport', range))
   // emitter.on('domainUpdated', domain => emit('update:domain', domain))
 
   // worker.onmessage = onMessage
@@ -42,8 +41,7 @@
 
     start({
       stage: stage.value,
-      config: () => props.config,
-      visibleDateRange: () => props.visibleDateRange,
+      props,
     })
   })
 
