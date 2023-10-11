@@ -1,5 +1,5 @@
 <template>
-  <div ref="stage" />
+  <div ref="stage" class="run-graph" />
 </template>
 
 <script lang="ts" setup>
@@ -49,3 +49,10 @@
     stop()
   })
 </script>
+
+<style>
+.run-graph > canvas {
+  width: 100%;
+  height: 100%;
+}
+</style>
