@@ -89,7 +89,7 @@ async function createNode(node: RunGraphNode): Promise<NodeSprites> {
 
   const box = await createNodeBox(node)
   const label = await createNodeLabel(node)
-  const container = new Container()
+  const container = createContainer()
 
   label.position = await getLabelPositionRelativeToBox(label, box)
 
@@ -111,6 +111,14 @@ async function updateNode(node: RunGraphNode, sprites: NodeSprites): Promise<voi
   const label = updateNodeLabel(node, sprites.label)
 
   label.position = await getLabelPositionRelativeToBox(label, box)
+}
+
+function createContainer(): Container {
+  const container = new Container()
+
+  container.eventMode = 'none'
+
+  return container
 }
 
 async function createNodeBox(node: RunGraphNode): Promise<Graphics> {
