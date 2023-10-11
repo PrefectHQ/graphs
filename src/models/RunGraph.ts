@@ -56,10 +56,12 @@ export type RunGraphConfig = {
   runId: string,
   fetch: RunGraphFetch,
   animationDuration?: number,
+  nodeRenderKey?: (node: RunGraphNode) => string,
   styles?: RunGraphStyles,
 }
 
 export type RequiredGraphConfig = DeepRequired<RunGraphConfig> & {
+  nodeRenderKey: (node: RunGraphNode) => string,
   styles: {
     node: (node: RunGraphNode) => Required<RunGraphNodeStyles>,
   },

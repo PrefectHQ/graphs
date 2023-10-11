@@ -7,8 +7,9 @@ let config: RequiredGraphConfig | null = null
 
 const defaults = {
   animationDuration: 200,
+  nodeRenderKey: (node) => `${node.kind},${node.start_time},${node.end_time},${node.state_type},${node.label}`,
   styles: {
-    nodeHeight: 20,
+    nodeHeight: 30,
     nodeMargin: 2,
     node: () => ({
       background: '#ffffff',
@@ -21,6 +22,7 @@ function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
     runId: config.runId,
     fetch: config.fetch,
     animationDuration: config.animationDuration ?? defaults.animationDuration,
+    nodeRenderKey: config.nodeRenderKey ?? defaults.nodeRenderKey,
     styles: {
       nodeHeight: config.styles?.nodeHeight ?? defaults.styles.nodeHeight,
       nodeMargin: config.styles?.nodeMargin ?? defaults.styles.nodeMargin,
