@@ -9,6 +9,7 @@ const defaults = {
   animationDuration: 200,
   styles: {
     nodeHeight: 20,
+    nodeMargin: 2,
     node: () => ({
       background: '#ffffff',
     }),
@@ -22,6 +23,7 @@ function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
     animationDuration: config.animationDuration ?? defaults.animationDuration,
     styles: {
       nodeHeight: config.styles?.nodeHeight ?? defaults.styles.nodeHeight,
+      nodeMargin: config.styles?.nodeMargin ?? defaults.styles.nodeMargin,
       node: node => ({
         ...defaults.styles.node(),
         ...config.styles?.node?.(node),

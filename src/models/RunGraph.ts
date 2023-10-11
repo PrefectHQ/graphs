@@ -48,6 +48,7 @@ export type RunGraphNodeStyles = {
 
 export type RunGraphStyles = {
   nodeHeight?: number,
+  nodeMargin?: number,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }
 
