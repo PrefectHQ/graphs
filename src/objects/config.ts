@@ -7,7 +7,7 @@ let config: RequiredGraphConfig | null = null
 
 const defaults = {
   animationDuration: 200,
-  nodeRenderKey: (node) => `${node.kind},${node.start_time},${node.end_time},${node.state_type},${node.label}`,
+  nodeRenderKey: (node) => `${node.id},${node.kind},${node.start_time},${node.end_time},${node.state_type},${node.label}`,
   styles: {
     nodeHeight: 30,
     nodeMargin: 2,
