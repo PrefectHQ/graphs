@@ -25,8 +25,8 @@ export type RunGraphNode = {
   state_type: StateType,
   start_time: Date,
   end_time: Date | null,
-  parent_ids: RunGraphEdge[],
-  child_ids: RunGraphEdge[],
+  parents: RunGraphEdge[],
+  children: RunGraphEdge[],
 }
 
 export type RunGraphEdge = {
