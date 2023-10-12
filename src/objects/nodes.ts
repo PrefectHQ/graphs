@@ -6,6 +6,7 @@ import { waitForFonts } from '@/objects/fonts'
 import { waitForNodesContainer } from '@/objects/nodesContainer'
 import { waitForScales } from '@/objects/scales'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
+import { WorkerMessage, worker } from '@/workers/runGraph'
 
 const { fetch: getData, stop: stopData } = graphDataFactory()
 
@@ -25,7 +26,34 @@ type NodePreLayout = {
   width: number,
 }
 
-const graphPreLayout = new Map<string, NodePreLayout>()
+export type GraphPreLayout = Map<string, NodePreLayout>
+
+const graphPreLayout: GraphPreLayout = new Map()
+
+type NodePostLayout = NodePreLayout & {
+  y: number,
+}
+
+export type GraphPostLayout = Map<string, NodePostLayout>
+
+const graphPostLayout: GraphPostLayout = new Map()
+
+worker.onmessage = onMessage
+
+function onMessage({ data }: MessageEvent<WorkerMessage>): void {
+  const { type } = data
+  switch (type) {
+    case 'pong':
+      console.log('pong')
+      return
+    case 'layout':
+      console.log(data)
+      return
+    default:
+      const exhaustive: never = type
+      throw new Error(`data.type does not have a handler associated with it: ${exhaustive}`)
+  }
+}
 
 export async function startNodes(): Promise<void> {
   const config = await waitForConfig()
@@ -41,6 +69,7 @@ export async function startNodes(): Promise<void> {
 export function stopNodes(): void {
   graphObjects.clear()
   graphPreLayout.clear()
+  graphPostLayout.clear()
   stopData()
 }
 
@@ -50,7 +79,7 @@ async function getGraphData(runId: string): Promise<void> {
   getData(runId, async data => {
     await drawNodes(data.nodes)
 
-    console.log(graphPreLayout)
+    worker.postMessage({ type: 'layout', layout: graphPreLayout })
     // todo: calculate layout in worker after the nodes are drawn
 
     graphObjects.forEach(({ container }) => {
