@@ -19,20 +19,6 @@
   const stage = ref<HTMLDivElement>()
 
   emitter.on('viewportDateRangeUpdated', range => emit('update:viewport', range))
-  // emitter.on('domainUpdated', domain => emit('update:domain', domain))
-
-  // worker.onmessage = onMessage
-
-  // function onMessage({ data }: MessageEvent<WorkerMessage>): void {
-  //   switch (data.type) {
-  //     case 'pong':
-  //       console.log('pong')
-  //       return
-  //     default:
-  //       const exhaustive: never = data.type
-  //       throw new Error(`data.type does not have a handler associated with it: ${exhaustive}`)
-  //   }
-  // }
 
   onMounted(() => {
     if (!stage.value) {

@@ -1,12 +1,13 @@
 import { BitmapText, Container, Graphics, IPointData } from 'pixi.js'
-import { RunGraphEdge, RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
+import { GraphPostLayout, GraphPreLayout, NodePreLayout } from '@/models/layout'
+import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForNodesContainer } from '@/objects/nodesContainer'
 import { waitForScales } from '@/objects/scales'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
-import { WorkerMessage, worker } from '@/workers/runGraph'
+import { WorkerMessage, getLayoutWorker } from '@/workers/runGraph'
 
 const { fetch: getData, stop: stopData } = graphDataFactory()
 
@@ -18,27 +19,10 @@ type NodeObjects = {
 }
 
 const graphObjects = new Map<string, NodeObjects>()
-
-type NodePreLayout = {
-  x: number,
-  parents: RunGraphEdge[],
-  children: RunGraphEdge[],
-  width: number,
-}
-
-export type GraphPreLayout = Map<string, NodePreLayout>
-
 const graphPreLayout: GraphPreLayout = new Map()
+let graphPostLayout: GraphPostLayout = new Map()
 
-type NodePostLayout = NodePreLayout & {
-  y: number,
-}
-
-export type GraphPostLayout = Map<string, NodePostLayout>
-
-const graphPostLayout: GraphPostLayout = new Map()
-
-worker.onmessage = onMessage
+const worker = getLayoutWorker(onMessage)
 
 function onMessage({ data }: MessageEvent<WorkerMessage>): void {
   const { type } = data
@@ -47,7 +31,7 @@ function onMessage({ data }: MessageEvent<WorkerMessage>): void {
       console.log('pong')
       return
     case 'layout':
-      console.log(data)
+      graphPostLayout = data.layout
       return
     default:
       const exhaustive: never = type

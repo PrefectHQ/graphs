@@ -1,4 +1,4 @@
-import { GraphPostLayout, GraphPreLayout } from '@/objects/nodes'
+import { GraphPostLayout, GraphPreLayout } from '@/models/layout'
 
 // eslint-disable-next-line import/default
 import RunGraphWorker from '@/workers/runGraph.worker?worker'
@@ -29,4 +29,10 @@ export interface IRunGraphWorker extends Omit<Worker, 'postMessage' | 'onmessage
   onmessage: ((this: Worker, ev: MessageEvent<WorkerMessage>) => void) | null,
 }
 
-export const worker = new RunGraphWorker() as IRunGraphWorker
+export function getLayoutWorker(onmessage: IRunGraphWorker['onmessage']): IRunGraphWorker {
+  const worker = new RunGraphWorker() as IRunGraphWorker
+
+  worker.onmessage = onmessage
+
+  return worker
+}

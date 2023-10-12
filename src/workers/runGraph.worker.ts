@@ -1,4 +1,4 @@
-import { GraphPostLayout, GraphPreLayout } from '@/objects/nodes'
+import { GraphPostLayout } from '@/models/layout'
 import { WorkerMessage, ClientMessage, ClientLayoutMessage } from '@/workers/runGraph'
 
 onmessage = onMessageHandler
