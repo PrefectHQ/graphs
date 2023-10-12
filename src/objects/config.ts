@@ -21,9 +21,9 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
 function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
   const value: RequiredGraphConfig = merge({}, defaults, config)
 
-  value.styles.node = thing => ({
-    ...defaults.styles.node(thing),
-    ...config.styles?.node?.(thing),
+  value.styles.node = node => ({
+    ...defaults.styles.node(node),
+    ...config.styles?.node?.(node),
   })
 
   return value
