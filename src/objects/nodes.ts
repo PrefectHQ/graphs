@@ -172,6 +172,7 @@ async function updateNodeBox(node: RunGraphNode, box: Graphics): Promise<Graphic
   const boxWidth = boxRight - boxLeft
   const boxHeight = config.styles.nodeHeight - config.styles.nodeMargin * 2
 
+  box.lineStyle(1, 0x0, 1, 2)
   box.beginFill(background)
   box.drawRoundedRect(0, 0, boxWidth, boxHeight, 4)
   box.endFill()
