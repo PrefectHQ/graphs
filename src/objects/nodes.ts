@@ -6,6 +6,7 @@ import { emitter } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForNodesContainer } from '@/objects/nodesContainer'
 import { waitForScales } from '@/objects/scales'
+import { centerViewport } from '@/objects/viewport'
 import { exhaustive } from '@/utilities/exhaustive'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
 import { WorkerLayoutMessage, WorkerMessage, getLayoutWorker } from '@/workers/runGraph'
@@ -36,7 +37,9 @@ function onMessage({ data }: MessageEvent<WorkerMessage>): void {
   }
 }
 
-function handleLayoutMessage({ layout }: WorkerLayoutMessage): void {
+async function handleLayoutMessage({ layout }: WorkerLayoutMessage): Promise<void> {
+  const config = await waitForConfig()
+
   layout.forEach((layout, nodeId) => {
     const objects = graphObjects.get(nodeId)
 
@@ -47,9 +50,11 @@ function handleLayoutMessage({ layout }: WorkerLayoutMessage): void {
 
     const { x, y } = layout
 
-    objects.container.position = { x, y }
+    objects.container.position = { x, y: config.styles.nodeHeight * y }
     objects.container.visible = true
   })
+
+  centerViewport()
 }
 
 export async function startNodes(): Promise<void> {
@@ -74,8 +79,6 @@ function getGraphData(runId: string): void {
     await drawNodes(data.nodes)
 
     worker.postMessage({ type: 'layout', layout: graphPreLayout })
-
-    // centerViewport()
   })
 }
 
