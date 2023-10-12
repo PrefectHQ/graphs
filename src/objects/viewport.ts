@@ -27,7 +27,9 @@ export async function startViewport(props: RunGraphProps): Promise<void> {
   viewport
     .drag()
     .pinch()
-    .wheel()
+    .wheel({
+      trackpadPinch: true,
+    })
     .decelerate({
       friction: 0.9,
     })
