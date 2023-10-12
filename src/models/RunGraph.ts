@@ -60,9 +60,4 @@ export type RunGraphConfig = {
   styles?: RunGraphStyles,
 }
 
-export type RequiredGraphConfig = DeepRequired<RunGraphConfig> & {
-  nodeRenderKey: (node: RunGraphNode) => string,
-  styles: {
-    node: (node: RunGraphNode) => Required<RunGraphNodeStyles>,
-  },
-}
+export type RequiredGraphConfig = DeepRequired<RunGraphConfig>
