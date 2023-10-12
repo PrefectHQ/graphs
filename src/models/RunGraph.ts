@@ -6,6 +6,7 @@ import { ScaleXDomain } from '@/objects'
 export type RunGraphProps = {
   config: RunGraphConfig,
   viewport?: ScaleXDomain,
+  fullscreen?: boolean | null,
 }
 
 export type RunGraphData = {

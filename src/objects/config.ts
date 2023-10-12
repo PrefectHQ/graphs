@@ -6,7 +6,7 @@ import { waitForScope } from '@/objects/scope'
 let config: RequiredGraphConfig | null = null
 
 const defaults = {
-  animationDuration: 200,
+  animationDuration: 500,
   nodeRenderKey: (node) => `${node.id},${node.kind},${node.start_time},${node.end_time},${node.state_type},${node.label}`,
   styles: {
     nodeHeight: 30,

@@ -37,6 +37,7 @@ export async function startViewport(props: RunGraphProps): Promise<void> {
   application.stage.addChild(viewport)
 
   emitter.emit('viewportCreated', viewport)
+  emitter.on('stageUpdated', resizeViewport)
 
   watchVisibleDateRange(props)
   startViewportDateRange()
@@ -122,4 +123,14 @@ async function updateViewportDateRange(): Promise<void> {
   const right = scaleX.invert(viewport.right)
 
   setViewportDateRange([left, right])
+}
+
+async function resizeViewport(): Promise<void> {
+  if (!viewport) {
+    return
+  }
+
+  const application = await waitForApplication()
+
+  viewport.resize(application.screen.width, application.screen.height)
 }
