@@ -5,7 +5,7 @@ import { RunGraphProps } from '@/models/RunGraph'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { emitter, waitForEvent } from '@/objects/events'
-import { waitForContainer } from '@/objects/nodes'
+import { waitForNodesContainer } from '@/objects/nodesContainer'
 import { ScaleXDomain, waitForScales } from '@/objects/scales'
 import { waitForScope } from '@/objects/scope'
 import { waitForStage } from '@/objects/stage'
@@ -51,9 +51,8 @@ type CenterViewportParameters = {
 
 export async function centerViewport({ animate }: CenterViewportParameters = {}): Promise<void> {
   const viewport = await waitForViewport()
-  const container = await waitForContainer()
+  const container = await waitForNodesContainer()
   const config = await waitForConfig()
-
 
   // when we get to culling we might need to turn it off for this measurement
   const { x, y, width, height } = container.getLocalBounds()

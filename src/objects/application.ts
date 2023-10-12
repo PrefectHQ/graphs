@@ -27,6 +27,7 @@ function createApplication(stage: HTMLDivElement): void {
     backgroundAlpha: 0,
     resizeTo: stage,
     antialias: true,
+    resolution: window.devicePixelRatio,
   })
 
   stage.appendChild(application.view as HTMLCanvasElement)
