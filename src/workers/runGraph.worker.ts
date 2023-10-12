@@ -1,4 +1,5 @@
 import { GraphPostLayout } from '@/models/layout'
+import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerMessage, ClientMessage, ClientLayoutMessage } from '@/workers/runGraph'
 
 onmessage = onMessageHandler
@@ -7,16 +8,11 @@ function onMessageHandler({ data }: MessageEvent<ClientMessage>): void {
   const { type } = data
 
   switch (type) {
-    case 'ping':
-      console.log('ping')
-      post({ type: 'pong' })
-      return
     case 'layout':
       handleLayoutMessage(data)
       return
     default:
-      const exhaustive: never = type
-      throw new Error(`data.type does not have a handler associated with it: ${exhaustive}`)
+      exhaustive(type)
   }
 }
 

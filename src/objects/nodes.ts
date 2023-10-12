@@ -1,13 +1,14 @@
 import { BitmapText, Container, Graphics, IPointData } from 'pixi.js'
-import { GraphPostLayout, GraphPreLayout, NodePreLayout } from '@/models/layout'
+import { GraphPreLayout, NodePreLayout } from '@/models/layout'
 import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForNodesContainer } from '@/objects/nodesContainer'
 import { waitForScales } from '@/objects/scales'
+import { exhaustive } from '@/utilities/exhaustive'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
-import { WorkerMessage, getLayoutWorker } from '@/workers/runGraph'
+import { WorkerLayoutMessage, WorkerMessage, getLayoutWorker } from '@/workers/runGraph'
 
 const { fetch: getData, stop: stopData } = graphDataFactory()
 
@@ -20,23 +21,35 @@ type NodeObjects = {
 
 const graphObjects = new Map<string, NodeObjects>()
 const graphPreLayout: GraphPreLayout = new Map()
-let graphPostLayout: GraphPostLayout = new Map()
 
 const worker = getLayoutWorker(onMessage)
 
 function onMessage({ data }: MessageEvent<WorkerMessage>): void {
   const { type } = data
+
   switch (type) {
-    case 'pong':
-      console.log('pong')
-      return
     case 'layout':
-      graphPostLayout = data.layout
+      handleLayoutMessage(data)
       return
     default:
-      const exhaustive: never = type
-      throw new Error(`data.type does not have a handler associated with it: ${exhaustive}`)
+      exhaustive(type)
   }
+}
+
+function handleLayoutMessage({ layout }: WorkerLayoutMessage): void {
+  layout.forEach((layout, nodeId) => {
+    const objects = graphObjects.get(nodeId)
+
+    if (!objects) {
+      console.warn(`Count not find ${nodeId} from layout in graph`)
+      return
+    }
+
+    const { x, y } = layout
+
+    objects.container.position = { x, y }
+    objects.container.visible = true
+  })
 }
 
 export async function startNodes(): Promise<void> {
@@ -53,27 +66,14 @@ export async function startNodes(): Promise<void> {
 export function stopNodes(): void {
   graphObjects.clear()
   graphPreLayout.clear()
-  graphPostLayout.clear()
   stopData()
 }
 
-async function getGraphData(runId: string): Promise<void> {
-  const nodesContainer = await waitForNodesContainer()
-
+function getGraphData(runId: string): void {
   getData(runId, async data => {
     await drawNodes(data.nodes)
 
     worker.postMessage({ type: 'layout', layout: graphPreLayout })
-    // todo: calculate layout in worker after the nodes are drawn
-
-    graphObjects.forEach(({ container }) => {
-
-      // this is just a wrong type IMO. there's no guarantee any pixi object has a parent
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!container.parent) {
-        nodesContainer.addChild(container)
-      }
-    })
 
     // centerViewport()
   })
@@ -91,6 +91,7 @@ async function drawNodes(nodes: RunGraphNodes): Promise<void> {
 
 async function drawNode(node: RunGraphNode): Promise<void> {
   const config = await waitForConfig()
+  const nodesContainer = await waitForNodesContainer()
   const nodeRenderKey = config.nodeRenderKey(node)
   const objects = graphObjects.get(node.id) ?? await createNode(node)
   const layout = await createNodePreLayout(node, objects)
@@ -101,6 +102,8 @@ async function drawNode(node: RunGraphNode): Promise<void> {
 
   graphObjects.set(node.id, objects)
   graphPreLayout.set(node.id, layout)
+
+  nodesContainer.addChild(objects.container)
 }
 
 async function createNode(node: RunGraphNode): Promise<NodeObjects> {
@@ -143,6 +146,7 @@ function createContainer(): Container {
   const container = new Container()
 
   container.eventMode = 'none'
+  container.visible = false
 
   return container
 }

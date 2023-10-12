@@ -3,20 +3,12 @@ import { GraphPostLayout, GraphPreLayout } from '@/models/layout'
 // eslint-disable-next-line import/default
 import RunGraphWorker from '@/workers/runGraph.worker?worker'
 
-export type ClientMessage = ClientApplicationInitializationMessage | ClientLayoutMessage
-export type WorkerMessage = WorkerHelloWorldMessage | WorkerLayoutMessage
-
-export type ClientApplicationInitializationMessage = {
-  type: 'ping',
-}
+export type ClientMessage = ClientLayoutMessage
+export type WorkerMessage = WorkerLayoutMessage
 
 export type ClientLayoutMessage = {
   type: 'layout',
   layout: GraphPreLayout,
-}
-
-export type WorkerHelloWorldMessage = {
-  type: 'pong',
 }
 
 export type WorkerLayoutMessage = {
