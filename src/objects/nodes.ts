@@ -1,22 +1,61 @@
 import { BitmapText, Container, Graphics, IPointData } from 'pixi.js'
+import { GraphPreLayout, NodePreLayout } from '@/models/layout'
 import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForNodesContainer } from '@/objects/nodesContainer'
 import { waitForScales } from '@/objects/scales'
+import { centerViewport } from '@/objects/viewport'
+import { exhaustive } from '@/utilities/exhaustive'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
+import { WorkerLayoutMessage, WorkerMessage, getLayoutWorker } from '@/workers/runGraph'
 
 const { fetch: getData, stop: stopData } = graphDataFactory()
 
-type NodeSprites = {
+type NodeObjects = {
   nodeRenderKey: string,
   container: Container,
   label: BitmapText,
   box: Graphics,
 }
 
-const nodeSprites = new Map<string, NodeSprites>()
+const graphObjects = new Map<string, NodeObjects>()
+const graphPreLayout: GraphPreLayout = new Map()
+
+const worker = getLayoutWorker(onMessage)
+
+function onMessage({ data }: MessageEvent<WorkerMessage>): void {
+  const { type } = data
+
+  switch (type) {
+    case 'layout':
+      handleLayoutMessage(data)
+      return
+    default:
+      exhaustive(type)
+  }
+}
+
+async function handleLayoutMessage({ layout }: WorkerLayoutMessage): Promise<void> {
+  const config = await waitForConfig()
+
+  layout.forEach((layout, nodeId) => {
+    const objects = graphObjects.get(nodeId)
+
+    if (!objects) {
+      console.warn(`Count not find ${nodeId} from layout in graph`)
+      return
+    }
+
+    const { x, y } = layout
+
+    objects.container.position = { x, y: config.styles.nodeHeight * y }
+    objects.container.visible = true
+  })
+
+  centerViewport()
+}
 
 export async function startNodes(): Promise<void> {
   const config = await waitForConfig()
@@ -30,28 +69,16 @@ export async function startNodes(): Promise<void> {
 }
 
 export function stopNodes(): void {
-  nodeSprites.clear()
+  graphObjects.clear()
+  graphPreLayout.clear()
   stopData()
 }
 
-async function getGraphData(runId: string): Promise<void> {
-  const nodesContainer = await waitForNodesContainer()
-
+function getGraphData(runId: string): void {
   getData(runId, async data => {
     await drawNodes(data.nodes)
 
-    // todo: calculate layout in worker after the nodes are drawn
-
-    nodeSprites.forEach(({ container }) => {
-
-      // this is just a wrong type IMO. there's no guarantee any pixi object has a parent
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!container.parent) {
-        nodesContainer.addChild(container)
-      }
-    })
-
-    // centerViewport()
+    worker.postMessage({ type: 'layout', layout: graphPreLayout })
   })
 }
 
@@ -67,18 +94,23 @@ async function drawNodes(nodes: RunGraphNodes): Promise<void> {
 
 async function drawNode(node: RunGraphNode): Promise<void> {
   const config = await waitForConfig()
+  const nodesContainer = await waitForNodesContainer()
   const nodeRenderKey = config.nodeRenderKey(node)
-  const sprites = nodeSprites.get(node.id) ?? await createNode(node)
+  const objects = graphObjects.get(node.id) ?? await createNode(node)
+  const layout = await createNodePreLayout(node, objects)
 
-  if (sprites.nodeRenderKey !== nodeRenderKey) {
-    await updateNode(node, sprites)
+  if (objects.nodeRenderKey !== nodeRenderKey) {
+    await updateNode(node, objects)
   }
 
-  nodeSprites.set(node.id, sprites)
+  graphObjects.set(node.id, objects)
+  graphPreLayout.set(node.id, layout)
+
+  nodesContainer.addChild(objects.container)
 }
 
-async function createNode(node: RunGraphNode): Promise<NodeSprites> {
-  const existing = nodeSprites.get(node.id)
+async function createNode(node: RunGraphNode): Promise<NodeObjects> {
+  const existing = graphObjects.get(node.id)
 
   if (existing) {
     return existing
@@ -96,7 +128,7 @@ async function createNode(node: RunGraphNode): Promise<NodeSprites> {
   container.addChild(box)
   container.addChild(label)
 
-  const sprites: NodeSprites = {
+  const sprites: NodeObjects = {
     nodeRenderKey,
     container,
     label,
@@ -106,9 +138,9 @@ async function createNode(node: RunGraphNode): Promise<NodeSprites> {
   return sprites
 }
 
-async function updateNode(node: RunGraphNode, sprites: NodeSprites): Promise<void> {
-  const box = await updateNodeBox(node, sprites.box)
-  const label = updateNodeLabel(node, sprites.label)
+async function updateNode(node: RunGraphNode, objects: NodeObjects): Promise<void> {
+  const box = await updateNodeBox(node, objects.box)
+  const label = updateNodeLabel(node, objects.label)
 
   label.position = await getLabelPositionRelativeToBox(label, box)
 }
@@ -117,6 +149,7 @@ function createContainer(): Container {
   const container = new Container()
 
   container.eventMode = 'none'
+  container.visible = false
 
   return container
 }
@@ -139,6 +172,7 @@ async function updateNodeBox(node: RunGraphNode, box: Graphics): Promise<Graphic
   const boxWidth = boxRight - boxLeft
   const boxHeight = config.styles.nodeHeight - config.styles.nodeMargin * 2
 
+  box.lineStyle(1, 0x0, 1, 2)
   box.beginFill(background)
   box.drawRoundedRect(0, 0, boxWidth, boxHeight, 4)
   box.endFill()
@@ -181,5 +215,20 @@ async function getLabelPositionRelativeToBox(label: BitmapText, box: Graphics): 
   return {
     x: box.width + margin,
     y,
+  }
+}
+
+async function createNodePreLayout(node: RunGraphNode, { container }: NodeObjects): Promise<NodePreLayout> {
+  const { scaleX } = await waitForScales()
+
+  const x = scaleX(node.start_time)
+  const { width } = container
+  const { parents, children } = node
+
+  return {
+    x,
+    width,
+    parents,
+    children,
   }
 }

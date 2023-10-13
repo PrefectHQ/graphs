@@ -1,5 +1,5 @@
 import { useSubscription } from '@prefecthq/vue-compositions'
-import { watch } from 'vue'
+import { toRaw, watch } from 'vue'
 import { RunGraphData } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { effectScopeFactory } from '@/utilities/effectScopeFactory'
@@ -27,7 +27,7 @@ export function graphDataFactory(): GraphDataFactory {
 
       watch(() => subscription.response, response => {
         if (response) {
-          callback(response)
+          callback(toRaw(response))
         }
       }, { immediate: true })
     })

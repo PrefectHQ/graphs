@@ -1,19 +1,38 @@
-import { WorkerMessage, ClientMessage } from '@/workers/runGraph'
+import { GraphPostLayout } from '@/models/layout'
+import { exhaustive } from '@/utilities/exhaustive'
+import { WorkerMessage, ClientMessage, ClientLayoutMessage } from '@/workers/runGraph'
 
 onmessage = onMessageHandler
 
 function onMessageHandler({ data }: MessageEvent<ClientMessage>): void {
-  switch (data.type) {
-    case 'ping':
-      console.log('ping')
-      post({ type: 'pong' })
+  const { type } = data
+
+  switch (type) {
+    case 'layout':
+      handleLayoutMessage(data)
       return
     default:
-      const exhaustive: never = data.type
-      throw new Error(`data.type does not have a handler associated with it: ${exhaustive}`)
+      exhaustive(type)
   }
 }
 
 function post(message: WorkerMessage): void {
   postMessage(message)
+}
+
+function handleLayoutMessage({ layout: preLayout }: ClientLayoutMessage): void {
+  let y = 0
+  const postLayout: GraphPostLayout = new Map()
+
+  preLayout.forEach((node, key) => {
+    postLayout.set(key, {
+      ...node,
+      y: y++,
+    })
+  })
+
+  post({
+    type: 'layout',
+    layout: postLayout,
+  })
 }

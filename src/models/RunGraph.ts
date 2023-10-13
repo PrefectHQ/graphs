@@ -26,8 +26,8 @@ export type RunGraphNode = {
   state_type: StateType,
   start_time: Date,
   end_time: Date | null,
-  parent_ids: RunGraphEdge[],
-  child_ids: RunGraphEdge[],
+  parents: RunGraphEdge[],
+  children: RunGraphEdge[],
 }
 
 export type RunGraphEdge = {
@@ -61,9 +61,4 @@ export type RunGraphConfig = {
   styles?: RunGraphStyles,
 }
 
-export type RequiredGraphConfig = DeepRequired<RunGraphConfig> & {
-  nodeRenderKey: (node: RunGraphNode) => string,
-  styles: {
-    node: (node: RunGraphNode) => Required<RunGraphNodeStyles>,
-  },
-}
+export type RequiredGraphConfig = DeepRequired<RunGraphConfig>
