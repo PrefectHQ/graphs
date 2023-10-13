@@ -1,5 +1,5 @@
 import { BitmapText, Container, Graphics, IPointData } from 'pixi.js'
-import { GraphPreLayout, NodePreLayout } from '@/models/layout'
+import { GraphPreLayout, NodePostLayout, NodePreLayout } from '@/models/layout'
 import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
@@ -7,6 +7,7 @@ import { waitForFonts } from '@/objects/fonts'
 import { waitForNodesContainer } from '@/objects/nodesContainer'
 import { waitForScales } from '@/objects/scales'
 import { centerViewport } from '@/objects/viewport'
+import { axisBumpFactory } from '@/utilities/axisBumpFactory'
 import { exhaustive } from '@/utilities/exhaustive'
 import { graphDataFactory } from '@/utilities/graphDataFactory'
 import { WorkerLayoutMessage, WorkerMessage, getLayoutWorker } from '@/workers/runGraph'
@@ -22,6 +23,10 @@ type NodeObjects = {
 
 const graphObjects = new Map<string, NodeObjects>()
 const graphPreLayout: GraphPreLayout = new Map()
+const bumps = axisBumpFactory()
+
+// fake bump just to prove this works
+bumps.set({ axis: 5, nodeId: 'foo', offset: 100 })
 
 const worker = getLayoutWorker(onMessage)
 
@@ -37,10 +42,8 @@ function onMessage({ data }: MessageEvent<WorkerMessage>): void {
   }
 }
 
-async function handleLayoutMessage({ layout }: WorkerLayoutMessage): Promise<void> {
-  const config = await waitForConfig()
-
-  layout.forEach((layout, nodeId) => {
+function handleLayoutMessage({ layout }: WorkerLayoutMessage): void {
+  layout.forEach(async (layout, nodeId) => {
     const objects = graphObjects.get(nodeId)
 
     if (!objects) {
@@ -48,9 +51,7 @@ async function handleLayoutMessage({ layout }: WorkerLayoutMessage): Promise<voi
       return
     }
 
-    const { x, y } = layout
-
-    objects.container.position = { x, y: config.styles.nodeHeight * y }
+    objects.container.position = await getActualPositionFromLayout(layout)
     objects.container.visible = true
   })
 
@@ -71,6 +72,7 @@ export async function startNodes(): Promise<void> {
 export function stopNodes(): void {
   graphObjects.clear()
   graphPreLayout.clear()
+  bumps.clear()
   stopData()
 }
 
@@ -230,5 +232,16 @@ async function createNodePreLayout(node: RunGraphNode, { container }: NodeObject
     width,
     parents,
     children,
+  }
+}
+
+async function getActualPositionFromLayout({ x, y }: NodePostLayout): Promise<IPointData> {
+  const config = await waitForConfig()
+  const yValue = y * config.styles.nodeHeight
+  const bump = bumps.bump(y)
+
+  return {
+    x,
+    y: yValue + bump,
   }
 }
