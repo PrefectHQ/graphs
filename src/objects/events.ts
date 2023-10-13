@@ -10,6 +10,7 @@ type Events = {
   scalesCreated: Scales,
   scalesUpdated: Scales,
   applicationCreated: Application,
+  applicationResized: Application,
   stageCreated: HTMLDivElement,
   stageUpdated: HTMLDivElement,
   viewportCreated: Viewport,

@@ -37,7 +37,7 @@ export async function startViewport(props: RunGraphProps): Promise<void> {
   application.stage.addChild(viewport)
 
   emitter.emit('viewportCreated', viewport)
-  emitter.on('stageUpdated', resizeViewport)
+  emitter.on('applicationResized', resizeViewport)
 
   watchVisibleDateRange(props)
   startViewportDateRange()
@@ -96,6 +96,26 @@ export function setViewportDateRange(value: ScaleXDomain): void {
   emitter.emit('viewportDateRangeUpdated', value)
 }
 
+type MoveViewportCenterOptions = {
+  xOffset: number,
+  yOffset: number,
+}
+
+export function moveViewportCenter({ xOffset, yOffset }: MoveViewportCenterOptions): void {
+  if (!viewport) {
+    return
+  }
+
+  const { x: xPos, y: yPos } = viewport.transform.position
+
+  viewport.setTransform(
+    xPos + xOffset,
+    yPos + yOffset,
+    viewport.transform.scale.x,
+    viewport.transform.scale.y,
+  )
+}
+
 async function watchVisibleDateRange(props: RunGraphProps): Promise<void> {
   const scope = await waitForScope()
 
@@ -126,11 +146,21 @@ async function updateViewportDateRange(): Promise<void> {
 }
 
 async function resizeViewport(): Promise<void> {
-  if (!viewport) {
-    return
-  }
-
   const application = await waitForApplication()
+  const viewport = await waitForViewport()
+  const stage = await waitForStage()
+
+  const originalWidth = viewport.screenWidth
+  const originalHeight = viewport.screenHeight
+  const newWidth = stage.clientWidth
+  const newHeight = stage.clientHeight
+  const xOffset = (newWidth - originalWidth) / 2
+  const yOffset = (newHeight - originalHeight) / 2
 
   viewport.resize(application.screen.width, application.screen.height)
+
+  moveViewportCenter({
+    xOffset,
+    yOffset,
+  })
 }

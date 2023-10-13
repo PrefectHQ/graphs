@@ -8,6 +8,8 @@ export async function startApplication(): Promise<void> {
   const stage = await waitForStage()
 
   createApplication(stage)
+
+  emitter.on('stageUpdated', resizeApplication)
 }
 
 export function stopApplication(): void {
@@ -47,4 +49,13 @@ export async function waitForApplication(): Promise<Application> {
   }
 
   return await waitForEvent('applicationCreated')
+}
+
+function resizeApplication(stage: HTMLDivElement): void {
+  if (!application) {
+    return
+  }
+
+  application.resizeTo = stage
+  emitter.emit('applicationResized', application)
 }
