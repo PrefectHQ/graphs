@@ -1,11 +1,11 @@
 import { ColorSource } from 'pixi.js'
 import { DeepRequired } from 'ts-essentials'
 import { StateType } from '@/models/states'
-import { ScaleXDomain } from '@/objects'
+import { ViewportDateRange } from '@/models/viewport'
 
 export type RunGraphProps = {
   config: RunGraphConfig,
-  viewport?: ScaleXDomain,
+  viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
 }
 
