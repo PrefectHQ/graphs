@@ -1,3 +1,6 @@
 export const DEFAULT_POLL_INTERVAL = 1000
 export const DEFAULT_NODES_CONTAINER_NAME = 'nodes-container'
 export const DEFAULT_NODE_CONTAINER_NAME = 'node-container'
+export const DEFAULT_TIME_COLUMN_SPAN_SECONDS = 1
+export const DEFAULT_TIME_COLUMN_SIZE_PIXELS = 20
+export const DEFAULT_LINEAR_COLUMN_SIZE_PIXELS = 200

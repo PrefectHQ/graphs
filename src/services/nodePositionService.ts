@@ -1,15 +1,12 @@
 import { ScaleLinear, ScaleTime, scaleLinear, scaleTime } from 'd3'
 import { addSeconds } from 'date-fns'
+import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SPAN_SECONDS } from '@/consts'
 import { Pixels, Position, SetHorizontalModeParameters, SetHorizontalModeTimeParameters, SetVerticalModeParameters } from '@/models/layout'
 import { NodeOffsetService } from '@/services/nodeOffsetService'
 import { exhaustive } from '@/utilities/exhaustive'
 
 type LinearScale = ScaleLinear<number, number>
 type TimeScale = ScaleTime<number, number>
-
-const DEFAULT_COLUMN_SPAN_SECONDS = 1
-const DEFAULT_TIME_COLUMN_SIZE_PIXELS = 20
-const DEFAULT_LINEAR_COLUMN_SIZE_PIXELS = 200
 
 export class NodePositionService {
   private yAxis: LinearScale | null = null
@@ -118,7 +115,7 @@ export class NodePositionService {
 
   private setXScaleTime({ startTime }: SetHorizontalModeTimeParameters): void {
     const start = startTime
-    const end = addSeconds(start, DEFAULT_COLUMN_SPAN_SECONDS)
+    const end = addSeconds(start, DEFAULT_TIME_COLUMN_SPAN_SECONDS)
 
     // example: DEFAULT_COLUMN_SIZE_PIXELS = 20, start = "2023-01-01T00:00:00"
     // scale("2023-01-01T00:00:00") = 0
