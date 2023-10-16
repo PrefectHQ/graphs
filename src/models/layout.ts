@@ -1,5 +1,35 @@
 import { RunGraphEdge } from '@/models/RunGraph'
 
+export type Position = { x: number | Date, y: number }
+export type Pixels = { x: number, y: number }
+
+export type SetVerticalModeWaterfallParameters = {
+  mode: 'waterfall',
+  rowHeight: number,
+}
+
+export type SetVerticalModeNearestParentParameters = {
+  mode: 'nearest-parent',
+  rowHeight: number,
+}
+
+export type SetVerticalModeParameters = SetVerticalModeWaterfallParameters | SetVerticalModeNearestParentParameters
+
+export type VerticalMode = SetVerticalModeParameters['mode']
+
+export type SetHorizontalModeParameters = SetHorizontalModeTimeParameters | SetHorizontalModeLinearParameters
+
+export type SetHorizontalModeTimeParameters = {
+  mode: 'time',
+  startTime: Date,
+}
+
+export type SetHorizontalModeLinearParameters = {
+  mode: 'dag',
+}
+
+export type HorizontalMode = SetHorizontalModeParameters['mode']
+
 export type NodePreLayout = {
   x: number,
   parents: RunGraphEdge[],
@@ -14,3 +44,6 @@ export type NodePostLayout = NodePreLayout & {
 }
 
 export type GraphPostLayout = Map<string, NodePostLayout>
+
+// type YAxis = number
+// type Layout = Map<YAxis, NodePostLayout[]>

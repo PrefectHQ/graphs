@@ -12,7 +12,7 @@ type RemoveBumpParameters = {
   nodeId: string,
 }
 
-type BumpFactory = {
+export type BumpFactory = {
   get: (axis: number) => number,
   set: (value: SetBumpParameters) => void,
   delete: (value: RemoveBumpParameters) => void,

@@ -57,7 +57,6 @@ export type RunGraphConfig = {
   runId: string,
   fetch: RunGraphFetch,
   animationDuration?: number,
-  nodeRenderKey?: (node: RunGraphNode) => string,
   styles?: RunGraphStyles,
 }
 
