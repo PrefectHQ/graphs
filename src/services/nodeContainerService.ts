@@ -16,11 +16,11 @@ type NodeParameters = {
 
 export class NodeContainerService {
   public container = new Container()
+  private label: BitmapText | null = null
+  private readonly box = new Graphics()
   private readonly key: string
   private readonly node: RunGraphNode
   private readonly position: NodePositionService
-  private readonly box: Graphics = new Graphics()
-  private label: BitmapText | null = null
   private readonly rendered = promiseFactory()
 
   public constructor(parameters: NodeParameters) {
