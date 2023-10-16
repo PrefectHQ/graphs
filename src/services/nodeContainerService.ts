@@ -21,7 +21,7 @@ export class NodeContainerService {
   private readonly key: string
   private readonly node: RunGraphNode
   private readonly position: NodePositionService
-  private readonly rendered = promiseFactory()
+  private rendered = promiseFactory()
 
   public constructor(parameters: NodeParameters) {
     this.node = parameters.node
@@ -62,6 +62,8 @@ export class NodeContainerService {
   }
 
   private async render(): Promise<void> {
+    this.rendered = promiseFactory()
+
     const box = await this.renderBox()
     await this.renderLabel(box)
 
