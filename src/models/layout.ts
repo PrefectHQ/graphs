@@ -45,5 +45,7 @@ export type NodePostLayout = NodePreLayout & {
 
 export type GraphPostLayout = Map<string, NodePostLayout>
 
-// type YAxis = number
-// type Layout = Map<YAxis, NodePostLayout[]>
+export type LayoutMode = {
+  horizontal: HorizontalMode,
+  vertical: VerticalMode,
+}

@@ -3,6 +3,7 @@ import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { GraphPostLayout, GraphPreLayout, NodePreLayout } from '@/models/layout'
 import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
+import { layout } from '@/objects/layout'
 import { centerViewport } from '@/objects/viewport'
 import { NodeContainerService } from '@/services/nodeContainerService'
 import { NodePositionService } from '@/services/nodePositionService'
@@ -39,14 +40,13 @@ export class NodesContainerService {
     const config = await waitForConfig()
     const data = await config.fetch(this.runId)
 
-    // todo these modes will need to come from some global layout modes object
     this.position.setHorizontalMode({
-      mode: 'time',
+      mode: layout.horizontal,
       startTime: data.start_time,
     })
 
     this.position.setVerticalMode({
-      mode: 'waterfall',
+      mode: layout.vertical,
       rowHeight: config.styles.nodeHeight,
     })
 
@@ -109,6 +109,7 @@ export class NodesContainerService {
       objects.container.visible = true
     })
 
+    // this should only happen on the first layout
     centerViewport()
   }
 

@@ -15,11 +15,6 @@ export class NodePositionService {
   private yAxis: LinearScale | null = null
   private xAxis: LinearScale | TimeScale | null = null
   private readonly offsets = new NodeOffsetService()
-  private startTime: Date | null = null
-
-  public setStartTime(startTime: Date): void {
-    this.startTime = startTime
-  }
 
   public setHorizontalMode(parameters: SetHorizontalModeParameters): void {
     const { mode } = parameters
@@ -80,9 +75,40 @@ export class NodePositionService {
     }
   }
 
+  public getPositionFromXPixels(value: Pixels['x']): Position['x'] {
+    if (!this.xAxis) {
+      throw new Error('Axis not initialized')
+    }
+
+    return this.xAxis.invert(value)
+  }
+
+  public getPositionFromYPixels(value: number): number {
+    if (!this.yAxis) {
+      throw new Error('Axis not initialized')
+    }
+
+    const maxValue = this.yAxis.invert(value)
+    const [, rowHeight] = this.yAxis.range()
+    // todo: this doesn't quite account for the offsets being "empty" space
+    const range = Array.from({ length: maxValue }, (_element, index): [number, number] => {
+      const startOffset = this.offsets.getTotalOffset(index)
+      const start = index * rowHeight + startOffset
+
+      const endOffset = this.offsets.getOffset(index)
+      const end = start + rowHeight + endOffset
+
+      return [start, end]
+    }).flat()
+
+    const axis = scaleLinear().domain([0, maxValue]).range(range)
+
+    return axis.invert(value)
+  }
+
   public getPositionFromPixels(pixels: Pixels): Position {
-    const x = this.invertXAxisValue(pixels.x)
-    const y = this.invertYAxisValue(pixels.y)
+    const x = this.getPositionFromXPixels(pixels.x)
+    const y = this.getPositionFromYPixels(pixels.y)
 
     return {
       x,
@@ -115,36 +141,5 @@ export class NodePositionService {
     // scale(1) === 20
     // scale(5) === 100
     this.yAxis = scaleLinear().domain([0, 1]).range([0, rowHeight])
-  }
-
-  private invertYAxisValue(value: number): number {
-    if (!this.yAxis) {
-      throw new Error('Axis not initialized')
-    }
-
-    const maxValue = this.yAxis.invert(value)
-    const [, rowHeight] = this.yAxis.range()
-    // todo: this doesn't quite account for the offsets being "empty" space
-    const range = Array.from({ length: maxValue }, (_element, index): [number, number] => {
-      const startOffset = this.offsets.getTotalOffset(index)
-      const start = index * rowHeight + startOffset
-
-      const endOffset = this.offsets.getOffset(index)
-      const end = start + rowHeight + endOffset
-
-      return [start, end]
-    }).flat()
-
-    const axis = scaleLinear().domain([0, maxValue]).range(range)
-
-    return axis.invert(value)
-  }
-
-  private invertXAxisValue(value: number): number | Date {
-    if (!this.xAxis) {
-      throw new Error('Axis not initialized')
-    }
-
-    return this.xAxis.invert(value)
   }
 }
