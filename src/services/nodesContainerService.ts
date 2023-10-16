@@ -79,7 +79,9 @@ export class NodesContainerService {
 
     await nodeContainerService.setNode(node)
 
-    return nodeContainerService.getLayout()
+    const layout = await nodeContainerService.getLayout()
+
+    return layout
   }
 
   private getNodeContainerService(node: RunGraphNode): NodeContainerService {

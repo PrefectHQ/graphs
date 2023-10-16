@@ -6,6 +6,7 @@ import { waitForConfig } from '@/objects/config'
 import { waitForFonts } from '@/objects/fonts'
 import { NodePositionService } from '@/services/nodePositionService'
 import { getLabelPositionRelativeToBox } from '@/utilities/getLabelPositionRelativeToBox'
+import { promiseFactory } from '@/utilities/promiseFactory'
 
 type NodeParameters = {
   node: RunGraphNode,
@@ -20,12 +21,12 @@ export class NodeContainerService {
   private readonly position: NodePositionService
   private readonly box: Graphics = new Graphics()
   private label: BitmapText | null = null
+  private readonly rendered = promiseFactory()
 
   public constructor(parameters: NodeParameters) {
     this.node = parameters.node
     this.position = parameters.position
     this.key = this.getNodeCacheKey(parameters.node)
-
     this.initialize(parameters.parent)
     this.render()
 
@@ -42,7 +43,9 @@ export class NodeContainerService {
     await this.render()
   }
 
-  public getLayout(): NodePreLayout {
+  public async getLayout(): Promise<NodePreLayout> {
+    await this.rendered.promise
+
     const { parents, children, start_time } = this.node
     const x = this.position.getPixelsFromXPosition(start_time)
     const { width } = this.container
@@ -57,7 +60,9 @@ export class NodeContainerService {
 
   private async render(): Promise<void> {
     const box = await this.renderBox()
-    this.renderLabel(box)
+    await this.renderLabel(box)
+
+    this.rendered.resolve()
   }
 
   private async renderBox(): Promise<Graphics> {
@@ -99,7 +104,7 @@ export class NodeContainerService {
   private initialize(parent: Container): void {
     this.container.eventMode = 'none'
     this.container.name = DEFAULT_NODE_CONTAINER_NAME
-    // this.container.visible = false
+    this.container.visible = false
 
     parent.addChild(this.container)
   }
