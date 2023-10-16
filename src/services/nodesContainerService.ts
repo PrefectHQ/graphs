@@ -1,4 +1,5 @@
 import { Container } from 'pixi.js'
+import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { GraphPostLayout, GraphPreLayout, NodePreLayout } from '@/models/layout'
 import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
@@ -7,8 +8,6 @@ import { NodeContainerService } from '@/services/nodeContainerService'
 import { NodePositionService } from '@/services/nodePositionService'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
-
-const DEFAULT_POLL_INTERVAL = 1000
 
 type NodeParameters = {
   runId: string,
@@ -32,6 +31,7 @@ export class NodesContainerService {
   }
 
   private initialize(parent: Container): void {
+    this.container.name = DEFAULT_NODES_CONTAINER_NAME
     parent.addChild(this.container)
   }
 

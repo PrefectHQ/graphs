@@ -1,11 +1,11 @@
 import isEqual from 'lodash.isequal'
 import { Viewport } from 'pixi-viewport'
 import { watch } from 'vue'
+import { DEFAULT_NODES_CONTAINER_NAME } from '@/consts'
 import { RunGraphProps } from '@/models/RunGraph'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { emitter, waitForEvent } from '@/objects/events'
-import { waitForNodesContainer } from '@/objects/nodesContainer'
 import { ScaleXDomain, waitForScales } from '@/objects/scales'
 import { waitForScope } from '@/objects/scope'
 import { waitForStage } from '@/objects/stage'
@@ -54,8 +54,12 @@ type CenterViewportParameters = {
 
 export async function centerViewport({ animate }: CenterViewportParameters = {}): Promise<void> {
   const viewport = await waitForViewport()
-  const container = await waitForNodesContainer()
   const config = await waitForConfig()
+  const container = viewport.getChildByName(DEFAULT_NODES_CONTAINER_NAME)
+
+  if (!container) {
+    throw new Error('Nodes container not found')
+  }
 
   // when we get to culling we might need to turn it off for this measurement
   const { x, y, width, height } = container.getLocalBounds()

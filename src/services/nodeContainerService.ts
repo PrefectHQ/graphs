@@ -1,12 +1,11 @@
 import { BitmapText, Container, Graphics } from 'pixi.js'
+import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { NodePreLayout } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { waitForFonts } from '@/objects/fonts'
 import { NodePositionService } from '@/services/nodePositionService'
 import { getLabelPositionRelativeToBox } from '@/utilities/getLabelPositionRelativeToBox'
-
-const DEFAULT_NODE_CONTAINER_NAME = 'node-container'
 
 type NodeParameters = {
   node: RunGraphNode,
