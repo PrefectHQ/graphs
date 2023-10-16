@@ -5,8 +5,8 @@ import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { waitForFonts } from '@/objects/fonts'
 import { NodePositionService } from '@/services/nodePositionService'
+import { externalPromiseFactory } from '@/utilities/externalPromiseFactory'
 import { getLabelPositionRelativeToBox } from '@/utilities/getLabelPositionRelativeToBox'
-import { promiseFactory } from '@/utilities/promiseFactory'
 
 type NodeParameters = {
   node: RunGraphNode,
@@ -21,7 +21,7 @@ export class NodeContainerService {
   private readonly node: RunGraphNode
   private readonly position: NodePositionService
   private label: BitmapText | null = null
-  private rendered = promiseFactory()
+  private rendered = externalPromiseFactory()
 
   public constructor(parameters: NodeParameters) {
     this.node = parameters.node
@@ -62,7 +62,7 @@ export class NodeContainerService {
   }
 
   private async render(): Promise<void> {
-    this.rendered = promiseFactory()
+    this.rendered = externalPromiseFactory()
 
     const box = await this.renderBox()
     await this.renderLabel(box)
