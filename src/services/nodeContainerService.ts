@@ -15,7 +15,7 @@ type NodeParameters = {
 }
 
 export class NodeContainerService {
-  public container = new Container()
+  public readonly container = new Container()
   private label: BitmapText | null = null
   private readonly box = new Graphics()
   private readonly key: string
