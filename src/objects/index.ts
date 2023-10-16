@@ -4,7 +4,6 @@ import { startConfig, stopConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { startFonts, stopFonts } from '@/objects/fonts'
 import { startNodes, stopNodes } from '@/objects/nodes'
-import { startNodesContainer, stopNodesContainer } from '@/objects/nodesContainer'
 import { startScales, stopScales } from '@/objects/scales'
 import { startScope, stopScope } from '@/objects/scope'
 import { startStage, stopStage } from '@/objects/stage'
@@ -29,7 +28,6 @@ export function start({ stage, props }: StartParameters): void {
   startFonts()
   startStage(stage)
   startConfig(props)
-  startNodesContainer()
 }
 
 export function stop(): void {
@@ -43,5 +41,4 @@ export function stop(): void {
   stopConfig()
   stopScope()
   stopFonts()
-  stopNodesContainer()
 }

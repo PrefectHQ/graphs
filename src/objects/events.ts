@@ -2,24 +2,27 @@ import mitt from 'mitt'
 import { Viewport } from 'pixi-viewport'
 import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
+import { LayoutMode } from '@/models/layout'
 import { RequiredGraphConfig } from '@/models/RunGraph'
+import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
-import { ScaleXDomain, Scales } from '@/objects/scales'
+import { NodePositionService } from '@/services/nodePositionService'
 
 type Events = {
-  scalesCreated: Scales,
-  scalesUpdated: Scales,
+  scalesCreated: NodePositionService,
+  scalesUpdated: NodePositionService,
   applicationCreated: Application,
   applicationResized: Application,
   stageCreated: HTMLDivElement,
   stageUpdated: HTMLDivElement,
   viewportCreated: Viewport,
-  viewportDateRangeUpdated: ScaleXDomain,
+  viewportDateRangeUpdated: ViewportDateRange,
   configCreated: RequiredGraphConfig,
   configUpdated: RequiredGraphConfig,
   scopeCreated: EffectScope,
   fontsLoaded: Fonts,
   containerCreated: Container,
+  layoutUpdated: LayoutMode,
 }
 
 export type EventKey = keyof Events

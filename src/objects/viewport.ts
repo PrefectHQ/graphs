@@ -1,17 +1,18 @@
 import isEqual from 'lodash.isequal'
 import { Viewport } from 'pixi-viewport'
 import { watch } from 'vue'
+import { DEFAULT_NODES_CONTAINER_NAME } from '@/consts'
 import { RunGraphProps } from '@/models/RunGraph'
+import { ViewportDateRange } from '@/models/viewport'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { emitter, waitForEvent } from '@/objects/events'
-import { waitForNodesContainer } from '@/objects/nodesContainer'
-import { ScaleXDomain, waitForScales } from '@/objects/scales'
+import { waitForScales } from '@/objects/scales'
 import { waitForScope } from '@/objects/scope'
 import { waitForStage } from '@/objects/stage'
 
 let viewport: Viewport | null = null
-let viewportDateRange: ScaleXDomain | null = null
+let viewportDateRange: ViewportDateRange | null = null
 
 export async function startViewport(props: RunGraphProps): Promise<void> {
   const application = await waitForApplication()
@@ -54,8 +55,12 @@ type CenterViewportParameters = {
 
 export async function centerViewport({ animate }: CenterViewportParameters = {}): Promise<void> {
   const viewport = await waitForViewport()
-  const container = await waitForNodesContainer()
   const config = await waitForConfig()
+  const container = viewport.getChildByName(DEFAULT_NODES_CONTAINER_NAME)
+
+  if (!container) {
+    throw new Error('Nodes container not found')
+  }
 
   // when we get to culling we might need to turn it off for this measurement
   const { x, y, width, height } = container.getLocalBounds()
@@ -86,7 +91,7 @@ export async function waitForViewport(): Promise<Viewport> {
   return await waitForEvent('viewportCreated')
 }
 
-export function setViewportDateRange(value: ScaleXDomain): void {
+export function setViewportDateRange(value: ViewportDateRange): void {
   if (isEqual(viewportDateRange, value)) {
     return
   }
@@ -138,11 +143,14 @@ async function startViewportDateRange(): Promise<void> {
 
 async function updateViewportDateRange(): Promise<void> {
   const viewport = await waitForViewport()
-  const { scaleX } = await waitForScales()
-  const left = scaleX.invert(viewport.left)
-  const right = scaleX.invert(viewport.right)
+  const scales = await waitForScales()
+  const left = scales.getPositionFromXPixels(viewport.left)
+  const right = scales.getPositionFromXPixels(viewport.right)
 
-  setViewportDateRange([left, right])
+  if (left instanceof Date && right instanceof Date) {
+    setViewportDateRange([left, right])
+  }
+
 }
 
 async function resizeViewport(): Promise<void> {

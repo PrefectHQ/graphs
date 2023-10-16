@@ -18,10 +18,10 @@ export type WorkerLayoutMessage = {
 
 export interface IRunGraphWorker extends Omit<Worker, 'postMessage' | 'onmessage'> {
   postMessage: (command: ClientMessage, transfer?: Transferable[]) => void,
-  onmessage: ((this: Worker, ev: MessageEvent<WorkerMessage>) => void) | null,
+  onmessage: ((this: Worker, event: MessageEvent<WorkerMessage>) => void) | null,
 }
 
-export function getLayoutWorker(onmessage: IRunGraphWorker['onmessage']): IRunGraphWorker {
+export function layoutWorkerFactory(onmessage: IRunGraphWorker['onmessage']): IRunGraphWorker {
   const worker = new RunGraphWorker() as IRunGraphWorker
 
   worker.onmessage = onmessage

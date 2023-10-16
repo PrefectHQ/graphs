@@ -11,7 +11,8 @@
 <script lang="ts" setup>
   import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
   import { RunGraphProps } from '@/models/RunGraph'
-  import { ScaleXDomain, start, stop, centerViewport } from '@/objects'
+  import { ViewportDateRange } from '@/models/viewport'
+  import { start, stop, centerViewport } from '@/objects'
   import { emitter } from '@/objects/events'
 
   // using the props object as a whole
@@ -21,7 +22,7 @@
   })
 
   const emit = defineEmits<{
-    (event: 'update:viewport', value: ScaleXDomain): void,
+    (event: 'update:viewport', value: ViewportDateRange): void,
     (event: 'update:fullscreen', value: boolean): void,
   }>()
 
