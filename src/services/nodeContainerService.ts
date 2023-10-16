@@ -30,6 +30,9 @@ export class NodeContainerService {
     this.initialize(parameters.parent)
     this.render()
 
+    // todo: just a dummy offset to prove offsets are working
+    this.position.setNodeOffset({ axis: 10, nodeId: 'foo', offset: 100 })
+
     this.container.addChild(this.box)
   }
 
