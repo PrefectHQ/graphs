@@ -18,7 +18,7 @@ export class NodesContainerService {
   public container = new Container()
 
   private readonly runId: string
-  private readonly worker = layoutWorkerFactory(this.onLayoutWorkerMessage)
+  private readonly worker = layoutWorkerFactory(this.onLayoutWorkerMessage.bind(this))
   private readonly position = new NodePositionService()
   private readonly nodes = new Map<string, NodeContainerService>()
 
@@ -39,7 +39,16 @@ export class NodesContainerService {
     const config = await waitForConfig()
     const data = await config.fetch(this.runId)
 
-    this.position.setStartTime(data.start_time)
+    // todo these modes will need to come from some global layout modes object
+    this.position.setHorizontalMode({
+      mode: 'time',
+      startTime: data.start_time,
+    })
+
+    this.position.setVerticalMode({
+      mode: 'waterfall',
+      rowHeight: config.styles.nodeHeight,
+    })
 
     await this.renderNodes(data.nodes)
 
@@ -80,6 +89,8 @@ export class NodesContainerService {
       position: this.position,
     })
 
+    this.nodes.set(node.id, service)
+
     return service
   }
 
@@ -92,7 +103,9 @@ export class NodesContainerService {
         return
       }
 
-      objects.container.position = this.position.getPixelsFromPosition(layout)
+      const { x } = layout
+      const y = this.position.getPixelsFromYPosition(layout.y)
+      objects.container.position = { x, y }
       objects.container.visible = true
     })
 
