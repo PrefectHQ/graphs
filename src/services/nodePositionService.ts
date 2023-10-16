@@ -65,7 +65,7 @@ export class NodePositionService {
       throw new Error('Axis not initialized')
     }
 
-    return this.yAxis(value) + this.offsets.getOffset(value)
+    return this.yAxis(value) + this.offsets.getTotalOffset(value)
   }
 
   public getPixelsFromPosition(position: Position): Pixels {
