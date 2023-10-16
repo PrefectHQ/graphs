@@ -90,6 +90,7 @@ export class NodeContainerService {
   private async renderLabel(box: Graphics): Promise<void> {
     if (this.label) {
       this.label.text = this.node.label
+      this.label.position = await getLabelPositionRelativeToBox(this.label, box)
       return
     }
 
