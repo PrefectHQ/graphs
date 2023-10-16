@@ -12,7 +12,7 @@
   import json from '@/demo/data/graph-small.json'
   import { RunGraphConfig, RunGraphData } from '@/models'
   import { StateType } from '@/models/states'
-  import { ScaleXDomain } from '@/objects'
+  import { ViewportDateRange } from '@/models/viewport'
 
   // quick and dirty way to convert the iso strings into actual dates.
   function reviver(key: string, value: any): any {
@@ -28,7 +28,7 @@
   }
 
   const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
-  const visibleDateRange = ref<ScaleXDomain>()
+  const visibleDateRange = ref<ViewportDateRange>()
 
   data.nodes = new Map(data.nodes)
 
