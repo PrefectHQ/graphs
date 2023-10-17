@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js'
+import { Container, Ticker } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { NodePreLayout } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
@@ -14,6 +14,7 @@ type NodeParameters = {
 
 export class NodeContainerService {
   public readonly container = new Container()
+
   private readonly box: NodeBoxService
   private readonly label: NodeLabelService
   private readonly key: string | undefined
@@ -59,6 +60,10 @@ export class NodeContainerService {
 
     label.position = await getLabelPositionRelativeToBox(label, box)
 
+    if (!node.end_time) {
+      Ticker.shared.addOnce(() => this.render(node))
+    }
+
     return this.container
   }
 
@@ -72,7 +77,11 @@ export class NodeContainerService {
 
   private getNodeCacheKey(node: RunGraphNode): string {
     const keys = Object.keys(node).sort((keyA, keyB) => keyA.localeCompare(keyB)) as (keyof RunGraphNode)[]
-    const values = keys.map(key => node[key]?.toString())
+    const values = keys.map(key => {
+      const value = node[key] ?? new Date()
+
+      return value.toString()
+    })
 
     return values.join(',')
   }
