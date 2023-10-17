@@ -34,8 +34,6 @@
   const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
   const visibleDateRange = ref<ViewportDateRange>()
 
-  data.nodes = new Map(data.nodes)
-
   // just hard coding the values here for now. these will come from ui-library
   const stateTypeColors = {
     completed: '#219D4B',
