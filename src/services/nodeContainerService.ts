@@ -1,55 +1,41 @@
-import { BitmapText, Container, Graphics } from 'pixi.js'
+import { Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { NodePreLayout } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
-import { waitForConfig } from '@/objects/config'
-import { waitForFonts } from '@/objects/fonts'
+import { NodeBoxService } from '@/services/nodeBoxService'
+import { NodeLabelService } from '@/services/nodeLabelService'
 import { NodePositionService } from '@/services/nodePositionService'
-import { externalPromiseFactory } from '@/utilities/externalPromiseFactory'
 import { getLabelPositionRelativeToBox } from '@/utilities/getLabelPositionRelativeToBox'
 
 type NodeParameters = {
-  node: RunGraphNode,
   position: NodePositionService,
   parent: Container,
 }
 
 export class NodeContainerService {
   public readonly container = new Container()
-  private readonly box = new Graphics()
-  private readonly key: string
-  private readonly node: RunGraphNode
+  private readonly box: NodeBoxService
+  private readonly label: NodeLabelService
+  private readonly key: string | undefined
   private readonly position: NodePositionService
-  private label: BitmapText | null = null
-  private rendered = externalPromiseFactory()
 
   public constructor(parameters: NodeParameters) {
-    this.node = parameters.node
     this.position = parameters.position
-    this.key = this.getNodeCacheKey(parameters.node)
+
+    this.box = new NodeBoxService({
+      parent: this.container,
+      position: this.position,
+    })
+
+    this.label = new NodeLabelService({
+      parent: this.container,
+    })
+
     this.initialize(parameters.parent)
-    this.render()
-
-    // todo: just a dummy offset to prove offsets are working
-    this.position.setNodeOffset({ axis: 10, nodeId: 'foo', offset: 100 })
-
-    this.container.addChild(this.box)
   }
 
-  public async setNode(node: RunGraphNode): Promise<void> {
-    const key = this.getNodeCacheKey(node)
-
-    if (key === this.key) {
-      return
-    }
-
-    await this.render()
-  }
-
-  public async getLayout(): Promise<NodePreLayout> {
-    await this.rendered.promise
-
-    const { parents, children, start_time } = this.node
+  public getLayout(node: RunGraphNode): NodePreLayout {
+    const { parents, children, start_time } = node
     const x = this.position.getPixelsFromXPosition(start_time)
     const { width } = this.container
 
@@ -61,50 +47,19 @@ export class NodeContainerService {
     }
   }
 
-  private async render(): Promise<void> {
-    this.rendered = externalPromiseFactory()
+  public async render(node: RunGraphNode): Promise<Container> {
+    const key = this.getNodeCacheKey(node)
 
-    const box = await this.renderBox()
-    await this.renderLabel(box)
-
-    this.rendered.resolve()
-  }
-
-  private async renderBox(): Promise<Graphics> {
-    const config = await waitForConfig()
-    const { background } = config.styles.node(this.node)
-
-    const { start_time, end_time } = this.node
-    const boxLeft = this.position.getPixelsFromXPosition(start_time)
-    const boxRight = this.position.getPixelsFromXPosition(end_time ?? new Date())
-    const boxWidth = boxRight - boxLeft
-    const boxHeight = config.styles.nodeHeight - config.styles.nodeMargin * 2
-
-    this.box.clear()
-    this.box.lineStyle(1, 0x0, 1, 2)
-    this.box.beginFill(background)
-    this.box.drawRoundedRect(0, 0, boxWidth, boxHeight, 4)
-    this.box.endFill()
-
-    return this.box
-  }
-
-  private async renderLabel(box: Graphics): Promise<void> {
-    if (this.label) {
-      this.label.text = this.node.label
-      this.label.position = await getLabelPositionRelativeToBox(this.label, box)
-      return
+    if (key === this.key) {
+      return this.container
     }
 
-    const { inter } = await waitForFonts()
+    const box = await this.box.render(node)
+    const label = await this.label.render(node)
 
-    const label = inter(this.node.label, {
-      fontSize: 12,
-    })
+    label.position = await getLabelPositionRelativeToBox(label, box)
 
-    this.label = label
-    this.label.position = await getLabelPositionRelativeToBox(label, box)
-    this.container.addChild(label)
+    return this.container
   }
 
   private initialize(parent: Container): void {

@@ -50,14 +50,14 @@ export class NodesContainerService {
       rowHeight: config.styles.nodeHeight,
     })
 
-    await this.renderNodes(data.nodes)
+    await this.render(data.nodes)
 
     if (!data.end_time) {
       setTimeout(() => this.fetch(), DEFAULT_POLL_INTERVAL)
     }
   }
 
-  private async renderNodes(nodes: RunGraphNodes): Promise<void> {
+  private async render(nodes: RunGraphNodes): Promise<void> {
     const layout: GraphPreLayout = new Map()
     const promises: Promise<NodePreLayout>[] = []
 
@@ -77,16 +77,13 @@ export class NodesContainerService {
   private async renderNode(node: RunGraphNode): Promise<NodePreLayout> {
     const nodeContainerService = this.getNodeContainerService(node)
 
-    await nodeContainerService.setNode(node)
+    await nodeContainerService.render(node)
 
-    const layout = await nodeContainerService.getLayout()
-
-    return layout
+    return nodeContainerService.getLayout(node)
   }
 
   private getNodeContainerService(node: RunGraphNode): NodeContainerService {
     const service = this.nodes.get(node.id) ?? new NodeContainerService({
-      node,
       parent: this.container,
       position: this.position,
     })
