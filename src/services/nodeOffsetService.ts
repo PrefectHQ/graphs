@@ -22,7 +22,7 @@ export class NodeOffsetService {
       return 0
     }
 
-    return Math.max(...values.values())
+    return Math.max(...values.values(), 0)
   }
 
   public getTotalOffset(axis: number): number {
