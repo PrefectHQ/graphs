@@ -24,10 +24,14 @@
       }
     }
 
+    if (key === 'nodes') {
+      return new Map(value)
+    }
+
     return value
   }
 
-  const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
+  // const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
   const visibleDateRange = ref<ViewportDateRange>()
 
   data.nodes = new Map(data.nodes)
