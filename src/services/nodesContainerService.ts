@@ -5,6 +5,7 @@ import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { layout } from '@/objects/layout'
 import { centerViewport } from '@/objects/viewport'
+import { ContainerService } from '@/services/containerService'
 import { NodeContainerService } from '@/services/nodeContainerService'
 import { NodePositionService } from '@/services/nodePositionService'
 import { exhaustive } from '@/utilities/exhaustive'
@@ -15,37 +16,32 @@ type NodeParameters = {
   parent: Container,
 }
 
-export class NodesContainerService {
-  public container = new Container()
-
+export class NodesContainerService extends ContainerService {
   private readonly runId: string
   private readonly worker = layoutWorkerFactory(this.onLayoutWorkerMessage.bind(this))
-  private readonly position = new NodePositionService()
+  private readonly positionService = new NodePositionService()
   private readonly nodes = new Map<string, NodeContainerService>()
 
   public constructor(parameters: NodeParameters) {
+    super(parameters)
+
     this.runId = parameters.runId
 
-    this.initialize(parameters.parent)
+    this.container.name = DEFAULT_NODES_CONTAINER_NAME
 
     this.fetch()
-  }
-
-  private initialize(parent: Container): void {
-    this.container.name = DEFAULT_NODES_CONTAINER_NAME
-    parent.addChild(this.container)
   }
 
   private async fetch(): Promise<void> {
     const config = await waitForConfig()
     const data = await config.fetch(this.runId)
 
-    this.position.setHorizontalMode({
+    this.positionService.setHorizontalMode({
       mode: layout.horizontal,
       startTime: data.start_time,
     })
 
-    this.position.setVerticalMode({
+    this.positionService.setVerticalMode({
       mode: layout.vertical,
       rowHeight: config.styles.nodeHeight,
     })
@@ -86,7 +82,7 @@ export class NodesContainerService {
     const service = this.nodes.get(node.id) ?? new NodeContainerService({
       kind: node.kind,
       parent: this.container,
-      positionService: this.position,
+      positionService: this.positionService,
     })
 
     this.nodes.set(node.id, service)
@@ -104,7 +100,7 @@ export class NodesContainerService {
       }
 
       const { x } = layout
-      const y = this.position.getPixelsFromYPosition(layout.y)
+      const y = this.positionService.getPixelsFromYPosition(layout.y)
       objects.node.position = { x, y }
       objects.node.visible = true
     })
@@ -112,7 +108,6 @@ export class NodesContainerService {
     // this should only happen on the first layout
     centerViewport()
   }
-
 
   private onLayoutWorkerMessage({ data }: MessageEvent<WorkerMessage>): void {
     const { type } = data
