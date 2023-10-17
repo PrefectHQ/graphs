@@ -5,15 +5,15 @@ import { NodePositionService } from '@/services/nodePositionService'
 
 type NodeBoxServiceParameters = {
   parent: Container,
-  position: NodePositionService,
+  positionService: NodePositionService,
 }
 
 export class NodeBoxService {
   private readonly box = new Graphics()
-  private readonly position: NodePositionService
+  private readonly positionService: NodePositionService
 
   public constructor(parameters: NodeBoxServiceParameters) {
-    this.position = parameters.position
+    this.positionService = parameters.positionService
 
     parameters.parent.addChild(this.box)
   }
@@ -23,8 +23,8 @@ export class NodeBoxService {
     const { background } = config.styles.node(node)
 
     const { start_time, end_time } = node
-    const boxLeft = this.position.getPixelsFromXPosition(start_time)
-    const boxRight = this.position.getPixelsFromXPosition(end_time ?? new Date())
+    const boxLeft = this.positionService.getPixelsFromXPosition(start_time)
+    const boxRight = this.positionService.getPixelsFromXPosition(end_time ?? new Date())
     const boxWidth = boxRight - boxLeft
     const boxHeight = config.styles.nodeHeight - config.styles.nodeMargin * 2
 

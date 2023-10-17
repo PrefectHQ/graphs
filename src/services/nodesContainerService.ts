@@ -75,17 +75,18 @@ export class NodesContainerService {
   }
 
   private async renderNode(node: RunGraphNode): Promise<NodePreLayout> {
-    const nodeContainerService = this.getNodeContainerService(node)
+    const service = this.getNodeContainerService(node)
 
-    await nodeContainerService.render(node)
+    await service.render(node)
 
-    return nodeContainerService.getLayout(node)
+    return service.getLayout(node)
   }
 
   private getNodeContainerService(node: RunGraphNode): NodeContainerService {
     const service = this.nodes.get(node.id) ?? new NodeContainerService({
+      kind: node.kind,
       parent: this.container,
-      position: this.position,
+      positionService: this.position,
     })
 
     this.nodes.set(node.id, service)
@@ -104,8 +105,8 @@ export class NodesContainerService {
 
       const { x } = layout
       const y = this.position.getPixelsFromYPosition(layout.y)
-      objects.container.position = { x, y }
-      objects.container.visible = true
+      objects.node.position = { x, y }
+      objects.node.visible = true
     })
 
     // this should only happen on the first layout
