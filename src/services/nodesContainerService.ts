@@ -1,10 +1,10 @@
+import mitt from 'mitt'
 import { Container } from 'pixi.js'
 import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { GraphPostLayout, GraphPreLayout, NodePreLayout } from '@/models/layout'
 import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { layout } from '@/objects/layout'
-import { centerViewport } from '@/objects/viewport'
 import { ContainerService } from '@/services/containerService'
 import { NodeContainerService } from '@/services/nodeContainerService'
 import { NodePositionService } from '@/services/nodePositionService'
@@ -16,6 +16,13 @@ type NodeParameters = {
   parent: Container,
 }
 
+type NodesContainerEvents = {
+  rendered: void,
+}
+
+
+export class NodesContainerService extends ContainerService {
+  public readonly emitter = mitt<NodesContainerEvents>()
 export class NodesContainerService extends ContainerService {
   private readonly runId: string
   private readonly worker = layoutWorkerFactory(this.onLayoutWorkerMessage.bind(this))
@@ -105,8 +112,7 @@ export class NodesContainerService extends ContainerService {
       objects.node.visible = true
     })
 
-    // this should only happen on the first layout
-    centerViewport()
+    this.emitter.emit('rendered')
   }
 
   private onLayoutWorkerMessage({ data }: MessageEvent<WorkerMessage>): void {
