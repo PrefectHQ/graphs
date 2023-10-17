@@ -1,44 +1,36 @@
 import { Container, Ticker } from 'pixi.js'
-import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { NodePreLayout } from '@/models/layout'
-import { RunGraphNode } from '@/models/RunGraph'
-import { NodeBoxService } from '@/services/nodeBoxService'
-import { NodeLabelService } from '@/services/nodeLabelService'
+import { RunGraphNode, RunGraphNodeKind } from '@/models/RunGraph'
+import { ContainerService } from '@/services/containerService'
+import { NodeFlowRunService } from '@/services/nodeFlowRunService'
 import { NodePositionService } from '@/services/nodePositionService'
-import { getLabelPositionRelativeToBox } from '@/utilities/getLabelPositionRelativeToBox'
+import { NodeTaskRunService } from '@/services/nodeTaskRunService'
 
 type NodeParameters = {
-  position: NodePositionService,
+  positionService: NodePositionService,
+  kind: RunGraphNodeKind,
   parent: Container,
 }
 
-export class NodeContainerService {
-  public readonly container = new Container()
+export type NodeRenderService = ContainerService & {
+  render: (node: RunGraphNode) => Promise<Container>,
+}
 
-  private readonly box: NodeBoxService
-  private readonly label: NodeLabelService
+export class NodeContainerService {
+  public readonly node: NodeRenderService
   private readonly key: string | undefined
-  private readonly position: NodePositionService
+  private readonly positionService: NodePositionService
 
   public constructor(parameters: NodeParameters) {
-    this.position = parameters.position
+    this.positionService = parameters.positionService
 
-    this.box = new NodeBoxService({
-      parent: this.container,
-      position: this.position,
-    })
-
-    this.label = new NodeLabelService({
-      parent: this.container,
-    })
-
-    this.initialize(parameters.parent)
+    this.node = this.getNodeService(parameters)
   }
 
   public getLayout(node: RunGraphNode): NodePreLayout {
     const { parents, children, start_time } = node
-    const x = this.position.getPixelsFromXPosition(start_time)
-    const { width } = this.container
+    const x = this.positionService.getPixelsFromXPosition(start_time)
+    const { width } = this.node.container
 
     return {
       x,
@@ -52,27 +44,30 @@ export class NodeContainerService {
     const key = this.getNodeCacheKey(node)
 
     if (key === this.key) {
-      return this.container
+      return this.node.container
     }
 
-    const box = await this.box.render(node)
-    const label = await this.label.render(node)
-
-    label.position = await getLabelPositionRelativeToBox(label, box)
+    const container = await this.node.render(node)
 
     if (!node.end_time) {
       Ticker.shared.addOnce(() => this.render(node))
     }
 
-    return this.container
+    return container
   }
 
-  private initialize(parent: Container): void {
-    this.container.eventMode = 'none'
-    this.container.name = DEFAULT_NODE_CONTAINER_NAME
-    this.container.visible = false
+  private getNodeService(parameters: NodeParameters): NodeRenderService {
+    const { kind } = parameters
 
-    parent.addChild(this.container)
+    switch (kind) {
+      case 'task-run':
+        return new NodeTaskRunService(parameters)
+      case 'flow-run':
+        return new NodeFlowRunService(parameters)
+      default:
+        const exhaustive: never = kind
+        throw new Error(`switch does not have case for value: ${exhaustive}`)
+    }
   }
 
   private getNodeCacheKey(node: RunGraphNode): string {
