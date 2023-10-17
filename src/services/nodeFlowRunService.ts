@@ -20,7 +20,7 @@ export class NodeFlowRunService extends ContainerService implements NodeRenderSe
   private readonly label: NodeLabelService
 
   public constructor(parameters: NodeTaskRunServiceParameters) {
-    super()
+    super(parameters)
 
     this.positionService = parameters.positionService
     this.container.name = DEFAULT_NODE_CONTAINER_NAME
@@ -34,8 +34,6 @@ export class NodeFlowRunService extends ContainerService implements NodeRenderSe
     this.label = new NodeLabelService({
       parent: this.container,
     })
-
-    parameters.parent.addChild(this.container)
   }
 
   public async render(node: RunGraphNode): Promise<Container> {

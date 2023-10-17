@@ -1,8 +1,16 @@
 import { Container } from 'pixi.js'
 import { Pixels } from '@/models/layout'
 
+type ContainerServiceParameters = {
+  parent: Container,
+}
+
 export class ContainerService {
   public container = new Container()
+
+  public constructor(parameters: ContainerServiceParameters) {
+    parameters.parent.addChild(this.container)
+  }
 
   public get position(): Pixels {
     return this.container.position
