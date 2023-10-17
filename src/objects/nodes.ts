@@ -1,3 +1,4 @@
+import { Ticker } from 'pixi.js'
 import { waitForConfig } from '@/objects/config'
 import { centerViewport, waitForViewport } from '@/objects/viewport'
 import { NodesContainerService } from '@/services/nodesContainerService'
@@ -13,9 +14,24 @@ export async function startNodes(): Promise<void> {
     parent: viewport,
   })
 
+  service.container.alpha = 0
+
   const center = (): void => {
+    if (!service) {
+      return
+    }
+
     centerViewport()
-    service?.emitter.off('rendered', center)
+
+    Ticker.shared.addOnce(() => {
+      if (!service) {
+        return
+      }
+
+      service.container.alpha = 1
+    })
+
+    service.emitter.off('rendered', center)
   }
 
   service.emitter.on('rendered', center)
