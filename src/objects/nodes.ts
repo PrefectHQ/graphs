@@ -1,5 +1,6 @@
 import { Ticker } from 'pixi.js'
 import { waitForConfig } from '@/objects/config'
+import { waitForEvent } from '@/objects/events'
 import { centerViewport, waitForViewport } from '@/objects/viewport'
 import { NodesContainerService } from '@/services/nodesContainerService'
 
@@ -16,27 +17,29 @@ export async function startNodes(): Promise<void> {
 
   service.container.alpha = 0
 
-  const center = (): void => {
-    if (!service) {
-      return
-    }
-
-    centerViewport()
-
-    Ticker.shared.addOnce(() => {
-      if (!service) {
-        return
-      }
-
-      service.container.alpha = 1
-    })
-
-    service.emitter.off('rendered', center)
-  }
-
   service.emitter.on('rendered', center)
 }
 
 export function stopNodes(): void {
   service = null
+}
+
+export async function waitForNodes(): Promise<NodesContainerService> {
+  if (service) {
+    return service
+  }
+
+  return await waitForEvent('nodesCreated')
+}
+
+async function center(): Promise<void> {
+  const service = await waitForNodes()
+
+  centerViewport()
+
+  Ticker.shared.addOnce(() => {
+    service.container.alpha = 1
+  })
+
+  service.emitter.off('rendered', center)
 }

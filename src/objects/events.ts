@@ -7,6 +7,7 @@ import { RequiredGraphConfig } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
 import { NodePositionService } from '@/services/nodePositionService'
+import { NodesContainerService } from '@/services/nodesContainerService'
 
 type Events = {
   scalesCreated: NodePositionService,
@@ -23,6 +24,7 @@ type Events = {
   fontsLoaded: Fonts,
   containerCreated: Container,
   layoutUpdated: LayoutMode,
+  nodesCreated: NodesContainerService,
 }
 
 export type EventKey = keyof Events
