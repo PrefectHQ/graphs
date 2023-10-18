@@ -1,6 +1,5 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
-import { eventsFactory } from '@/factories/events'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { HorizontalPositionSettings } from '@/factories/position'
@@ -13,18 +12,13 @@ import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/worke
 
 export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
 
-type Events = {
-  rendered: void,
-}
-
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodesContainerFactory(runId: string) {
   const worker = layoutWorkerFactory(onmessage)
   const nodes = new Map<string, NodeContainerFactory>()
   const container = new Container()
   const config = await waitForConfig()
-  const offsets = offsetsFactory()
-  const events = eventsFactory<Events>()
+  const rows = await offsetsFactory()
 
   let settings: HorizontalPositionSettings
   let layout: NodeLayoutResponse = new Map()
@@ -83,7 +77,7 @@ export async function nodesContainerFactory(runId: string) {
       node.container.position = getActualPosition(position)
     })
 
-    events.emit('rendered')
+    container.emit('rendered')
   }
 
   async function getNodeContainerService(node: RunGraphNode): Promise<NodeContainerFactory> {
@@ -95,7 +89,7 @@ export async function nodesContainerFactory(runId: string) {
 
     const response = await nodeContainerFactory(node)
 
-    response.container.on('resized', () => offset(node.id))
+    response.container.on('resized', () => resizeNode(node.id))
 
     nodes.set(node.id, response)
     container.addChild(response.container)
@@ -103,7 +97,7 @@ export async function nodesContainerFactory(runId: string) {
     return response
   }
 
-  function offset(nodeId: string): void {
+  function resizeNode(nodeId: string): void {
     const node = nodes.get(nodeId)
     const nodeLayout = layout.get(nodeId)
 
@@ -112,15 +106,15 @@ export async function nodesContainerFactory(runId: string) {
     }
 
     const axis = nodeLayout.y
-    const offset = 100
+    const offset = node.container.height
 
-    offsets.setOffset({ axis, nodeId, offset })
+    rows.setOffset({ axis, nodeId, offset })
 
     setPositions()
   }
 
   function getActualPosition(position: Pixels): Pixels {
-    const y = offsets.getTotalOffset(position.y) + position.y * config.styles.nodeHeight
+    const y = rows.getTotalOffset(position.y)
     const { x } = position
 
     return {
@@ -150,6 +144,5 @@ export async function nodesContainerFactory(runId: string) {
 
   return {
     container,
-    events,
   }
 }

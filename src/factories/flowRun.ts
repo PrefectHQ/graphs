@@ -2,6 +2,7 @@ import { BitmapText, Container, Graphics } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { nodeBoxFactory } from '@/factories/box'
 import { nodeLabelFactory } from '@/factories/label'
+import { nodesContainerFactory } from '@/factories/nodes'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
@@ -36,7 +37,19 @@ export async function flowRunContainerFactory() {
 
   function toggle(): void {
     open = !open
+
+    if (open) {
+      drawNodes()
+    }
+
     container.emit('resized')
+  }
+
+  async function drawNodes(): Promise<void> {
+    const nodes = await nodesContainerFactory('foo')
+    container.addChild(nodes.container)
+
+    nodes.container.on('rendered', () => container.emit('resized'))
   }
 
   async function getLabelPosition(label: BitmapText, box: Graphics): Promise<Pixels> {

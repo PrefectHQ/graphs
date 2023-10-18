@@ -16,7 +16,7 @@ export async function startNodes(): Promise<void> {
 
   nodes.container.alpha = 0
 
-  nodes.events.once('rendered', center)
+  nodes.container.once('rendered', center)
 
   emitter.emit('nodesCreated', nodes)
 }
