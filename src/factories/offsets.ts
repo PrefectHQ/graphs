@@ -12,7 +12,6 @@ type RemoveOffsetParameters = {
 }
 
 export type Offsets = Awaited<ReturnType<typeof offsetsFactory>>
-export type OffsetFactory = Offsets['factory']
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function offsetsFactory() {
@@ -51,22 +50,11 @@ export async function offsetsFactory() {
     offsets.clear()
   }
 
-  function factory({ axis, nodeId }: Omit<SetOffsetParameters, 'offset'>) {
-    return (offset: number) => {
-      if (offset > 0) {
-        setOffset({ axis, nodeId, offset })
-      } else {
-        removeOffset({ axis, nodeId })
-      }
-    }
-  }
-
   return {
     getOffset,
     getTotalOffset,
     setOffset,
     removeOffset,
     clear,
-    factory,
   }
 }
