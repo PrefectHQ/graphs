@@ -1,4 +1,5 @@
 import { Ticker } from 'pixi.js'
+import { nodesContainerFactory } from '@/factories/nodes'
 import { waitForConfig } from '@/objects/config'
 import { waitForEvent } from '@/objects/events'
 import { centerViewport, waitForViewport } from '@/objects/viewport'
@@ -9,15 +10,13 @@ let service: NodesContainerService | null = null
 export async function startNodes(): Promise<void> {
   const viewport = await waitForViewport()
   const config = await waitForConfig()
+  const { container } = await nodesContainerFactory(config.runId)
 
-  service = new NodesContainerService({
-    runId: config.runId,
-    parent: viewport,
-  })
+  viewport.addChild(container)
 
-  service.container.alpha = 0
+  // container.alpha = 0
 
-  service.emitter.on('rendered', center)
+  // service.emitter.on('rendered', center)
 }
 
 export function stopNodes(): void {
