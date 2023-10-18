@@ -1,4 +1,5 @@
-import { GraphPostLayout } from '@/models/layout'
+import { horizontalScaleFactory } from '@/factories/position'
+import { NodeLayoutResponse } from '@/models/layout'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerMessage, ClientMessage, ClientLayoutMessage } from '@/workers/runGraph'
 
@@ -20,19 +21,21 @@ function post(message: WorkerMessage): void {
   postMessage(message)
 }
 
-function handleLayoutMessage({ layout: preLayout }: ClientLayoutMessage): void {
+function handleLayoutMessage({ nodes, settings }: ClientLayoutMessage): void {
   let y = 0
-  const postLayout: GraphPostLayout = new Map()
+  const scale = horizontalScaleFactory(settings)
+  const layout: NodeLayoutResponse = new Map()
 
-  preLayout.forEach((node, key) => {
-    postLayout.set(key, {
-      ...node,
+  nodes.forEach(({ node }, nodeId) => {
+    layout.set(nodeId, {
+      x: scale(node.start_time),
       y: y++,
     })
   })
 
   post({
     type: 'layout',
-    layout: postLayout,
+    layout,
   })
 }
+

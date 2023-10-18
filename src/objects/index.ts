@@ -4,7 +4,7 @@ import { startConfig, stopConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { startFonts, stopFonts } from '@/objects/fonts'
 import { startNodes, stopNodes } from '@/objects/nodes'
-import { startScales, stopScales } from '@/objects/scales'
+import { startScale, stopScale } from '@/objects/scale'
 import { startScope, stopScope } from '@/objects/scope'
 import { startStage, stopStage } from '@/objects/stage'
 import { startViewport, stopViewport } from '@/objects/viewport'
@@ -12,7 +12,6 @@ import { startViewport, stopViewport } from '@/objects/viewport'
 export * from './application'
 export * from './stage'
 export * from './viewport'
-export * from './scales'
 
 type StartParameters = {
   stage: HTMLDivElement,
@@ -22,7 +21,7 @@ type StartParameters = {
 export function start({ stage, props }: StartParameters): void {
   startApplication()
   startViewport(props)
-  startScales()
+  startScale()
   startNodes()
   startScope()
   startFonts()
@@ -31,11 +30,11 @@ export function start({ stage, props }: StartParameters): void {
 }
 
 export function stop(): void {
-  emitter.all.clear()
+  emitter.clear()
 
   stopApplication()
   stopViewport()
-  stopScales()
+  stopScale()
   stopStage()
   stopNodes()
   stopConfig()

@@ -1,16 +1,17 @@
-import mitt from 'mitt'
 import { Viewport } from 'pixi-viewport'
 import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
+import { eventsFactory } from '@/factories/events'
+import { NodesContainer } from '@/factories/nodes'
+import { HorizontalScale } from '@/factories/position'
 import { LayoutMode } from '@/models/layout'
 import { RequiredGraphConfig } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
-import { NodePositionService } from '@/services/nodePositionService'
 
 type Events = {
-  scalesCreated: NodePositionService,
-  scalesUpdated: NodePositionService,
+  scaleCreated: HorizontalScale,
+  scaleUpdated: HorizontalScale,
   applicationCreated: Application,
   applicationResized: Application,
   stageCreated: HTMLDivElement,
@@ -23,11 +24,12 @@ type Events = {
   fontsLoaded: Fonts,
   containerCreated: Container,
   layoutUpdated: LayoutMode,
+  nodesCreated: NodesContainer,
 }
 
 export type EventKey = keyof Events
 
-export const emitter = mitt<Events>()
+export const emitter = eventsFactory<Events>()
 
 export function waitForEvent<T extends EventKey>(event: T): Promise<Events[T]> {
   // making ts happy with this is just not worth it IMO since this is
