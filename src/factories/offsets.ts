@@ -27,7 +27,7 @@ export async function offsetsFactory() {
   function getTotalOffset(axis: number): number {
     let value = 0
 
-    for (let index = 1; index < axis; index++) {
+    for (let index = 0; index < axis; index++) {
       value += getOffset(index)
     }
 
