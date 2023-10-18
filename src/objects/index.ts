@@ -30,7 +30,7 @@ export function start({ stage, props }: StartParameters): void {
 }
 
 export function stop(): void {
-  emitter.all.clear()
+  emitter.clear()
 
   stopApplication()
   stopViewport()
