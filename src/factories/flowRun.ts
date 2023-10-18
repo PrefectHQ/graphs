@@ -6,6 +6,8 @@ import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 
+export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory>>
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunContainerFactory() {
   const container = new Container()
@@ -50,6 +52,7 @@ export async function flowRunContainerFactory() {
   }
 
   return {
+    kind: 'flow-run' as const,
     container,
     render,
   }
