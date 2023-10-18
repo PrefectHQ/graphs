@@ -1,44 +1,46 @@
 import { Ticker } from 'pixi.js'
-import { nodesContainerFactory } from '@/factories/nodes'
+import { NodesContainer, nodesContainerFactory } from '@/factories/nodes'
 import { waitForConfig } from '@/objects/config'
-import { waitForEvent } from '@/objects/events'
+import { emitter, waitForEvent } from '@/objects/events'
 import { centerViewport, waitForViewport } from '@/objects/viewport'
-import { NodesContainerService } from '@/services/nodesContainerService'
 
-let service: NodesContainerService | null = null
+let nodes: NodesContainer | null = null
 
 export async function startNodes(): Promise<void> {
   const viewport = await waitForViewport()
   const config = await waitForConfig()
-  const { container } = await nodesContainerFactory(config.runId)
 
-  viewport.addChild(container)
+  nodes = await nodesContainerFactory(config.runId)
 
-  // container.alpha = 0
+  viewport.addChild(nodes.container)
 
-  // service.emitter.on('rendered', center)
+  nodes.container.alpha = 0
+
+  nodes.events.once('rendered', center)
+
+  emitter.emit('nodesCreated', nodes)
 }
 
 export function stopNodes(): void {
-  service = null
+  nodes = null
 }
 
-export async function waitForNodes(): Promise<NodesContainerService> {
-  if (service) {
-    return service
+export async function waitForNodes(): Promise<NodesContainer> {
+  if (nodes) {
+    return nodes
   }
 
   return await waitForEvent('nodesCreated')
 }
 
-async function center(): Promise<void> {
-  const service = await waitForNodes()
-
+function center(): void {
   centerViewport()
 
   Ticker.shared.addOnce(() => {
-    service.container.alpha = 1
-  })
+    if (!nodes) {
+      return
+    }
 
-  service.emitter.off('rendered', center)
+    nodes.container.alpha = 1
+  })
 }

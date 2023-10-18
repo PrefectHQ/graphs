@@ -7,7 +7,7 @@ import { ViewportDateRange } from '@/models/viewport'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { emitter, waitForEvent } from '@/objects/events'
-import { waitForScales } from '@/objects/scales'
+import { waitForScale } from '@/objects/scale'
 import { waitForScope } from '@/objects/scope'
 import { waitForStage } from '@/objects/stage'
 
@@ -143,9 +143,9 @@ async function startViewportDateRange(): Promise<void> {
 
 async function updateViewportDateRange(): Promise<void> {
   const viewport = await waitForViewport()
-  const scales = await waitForScales()
-  const left = scales.getPositionFromXPixels(viewport.left)
-  const right = scales.getPositionFromXPixels(viewport.right)
+  const scale = await waitForScale()
+  const left = scale.invert(viewport.left)
+  const right = scale.invert(viewport.right)
 
   if (left instanceof Date && right instanceof Date) {
     setViewportDateRange([left, right])

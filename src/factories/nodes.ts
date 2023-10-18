@@ -1,5 +1,6 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
+import { eventsFactory } from '@/factories/events'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { HorizontalPositionSettings } from '@/factories/position'
@@ -10,6 +11,12 @@ import { waitForConfig } from '@/objects/config'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
+export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
+
+type Events = {
+  rendered: void,
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodesContainerFactory(runId: string) {
   const worker = layoutWorkerFactory(onmessage)
@@ -17,6 +24,7 @@ export async function nodesContainerFactory(runId: string) {
   const container = new Container()
   const config = await waitForConfig()
   const offsets = offsetsFactory()
+  const events = eventsFactory<Events>()
 
   let settings: HorizontalPositionSettings
   let layout: NodeLayoutResponse = new Map()
@@ -74,6 +82,8 @@ export async function nodesContainerFactory(runId: string) {
 
       node.container.position = getActualPosition(position)
     })
+
+    events.emit('rendered')
   }
 
   async function getNodeContainerService(node: RunGraphNode): Promise<NodeContainerFactory> {
@@ -122,5 +132,6 @@ export async function nodesContainerFactory(runId: string) {
 
   return {
     container,
+    events,
   }
 }

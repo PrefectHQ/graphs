@@ -10,6 +10,8 @@ export type HorizontalPositionSettings = {
   dagColumnSize: number,
 }
 
+export type HorizontalScale = ReturnType<typeof horizontalScaleFactory>
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function horizontalScaleFactory(settings: HorizontalPositionSettings) {
   if (settings.mode === 'time') {
