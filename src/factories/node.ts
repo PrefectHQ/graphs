@@ -33,7 +33,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       case 'task-run':
         return await taskRunContainerFactory()
       case 'flow-run':
-        return await flowRunContainerFactory()
+        return await flowRunContainerFactory(node)
       default:
         const exhaustive: never = kind
         throw new Error(`switch does not have case for value: ${exhaustive}`)

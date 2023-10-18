@@ -25,21 +25,19 @@ export async function nodesContainerFactory(runId: string) {
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  fetch()
-
-  async function fetch(): Promise<void> {
+  async function render(): Promise<void> {
     const data = await config.fetch(runId)
 
     settings = horizontalSettingsFactory(data.start_time)
 
-    await render(data.nodes)
+    await renderNodes(data.nodes)
 
     if (!data.end_time) {
-      setTimeout(() => fetch(), DEFAULT_POLL_INTERVAL)
+      setTimeout(() => render(), DEFAULT_POLL_INTERVAL)
     }
   }
 
-  async function render(nodes: RunGraphNodes): Promise<void> {
+  async function renderNodes(nodes: RunGraphNodes): Promise<void> {
     const request: NodeLayoutRequest = new Map()
 
     for (const [nodeId, node] of nodes) {
@@ -77,6 +75,7 @@ export async function nodesContainerFactory(runId: string) {
       node.container.position = getActualPosition(position)
     })
 
+    container.emit('resized')
     container.emit('rendered')
   }
 
@@ -144,5 +143,6 @@ export async function nodesContainerFactory(runId: string) {
 
   return {
     container,
+    render,
   }
 }

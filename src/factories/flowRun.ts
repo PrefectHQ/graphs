@@ -10,21 +10,24 @@ import { waitForConfig } from '@/objects/config'
 export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function flowRunContainerFactory() {
+export async function flowRunContainerFactory(node: RunGraphNode) {
   const container = new Container()
   const { label, render: renderLabel } = await nodeLabelFactory()
   const { box, render: renderBox } = await nodeBoxFactory()
+  const { container: nodesContainer, render: renderNodes } = await nodesContainerFactory(node.id)
 
   let open = false
 
   container.addChild(box)
   container.addChild(label)
+  container.addChild(nodesContainer)
 
   container.name = DEFAULT_NODE_CONTAINER_NAME
   container.eventMode = 'static'
   container.cursor = 'pointer'
 
   container.on('click', toggle)
+  nodesContainer.on('resized', () => container.emit('resized'))
 
   async function render(node: RunGraphNode): Promise<Container> {
     const label = await renderLabel(node)
@@ -39,17 +42,10 @@ export async function flowRunContainerFactory() {
     open = !open
 
     if (open) {
-      drawNodes()
+      renderNodes()
     }
 
     container.emit('resized')
-  }
-
-  async function drawNodes(): Promise<void> {
-    const nodes = await nodesContainerFactory('foo')
-    container.addChild(nodes.container)
-
-    nodes.container.on('rendered', () => container.emit('resized'))
   }
 
   async function getLabelPosition(label: BitmapText, box: Graphics): Promise<Pixels> {
