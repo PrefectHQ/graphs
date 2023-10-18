@@ -14,12 +14,16 @@ export async function flowRunContainerFactory() {
   const { label, render: renderLabel } = await nodeLabelFactory()
   const { box, render: renderBox } = await nodeBoxFactory()
 
+  let open = false
+
   container.addChild(box)
   container.addChild(label)
 
   container.name = DEFAULT_NODE_CONTAINER_NAME
   container.eventMode = 'static'
   container.cursor = 'pointer'
+
+  container.on('click', toggle)
 
   async function render(node: RunGraphNode): Promise<Container> {
     const label = await renderLabel(node)
@@ -28,6 +32,11 @@ export async function flowRunContainerFactory() {
     label.position = await getLabelPosition(label, box)
 
     return container
+  }
+
+  function toggle(): void {
+    open = !open
+    container.emit('resized')
   }
 
   async function getLabelPosition(label: BitmapText, box: Graphics): Promise<Pixels> {

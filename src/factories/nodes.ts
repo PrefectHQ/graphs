@@ -71,7 +71,7 @@ export async function nodesContainerFactory(runId: string) {
     return await render(node)
   }
 
-  function updateLayout(): void {
+  function setPositions(): void {
     layout.forEach((position, nodeId) => {
       const node = nodes.get(nodeId)
 
@@ -95,10 +95,28 @@ export async function nodesContainerFactory(runId: string) {
 
     const response = await nodeContainerFactory(node)
 
+    response.container.on('resized', () => offset(node.id))
+
     nodes.set(node.id, response)
     container.addChild(response.container)
 
     return response
+  }
+
+  function offset(nodeId: string): void {
+    const node = nodes.get(nodeId)
+    const nodeLayout = layout.get(nodeId)
+
+    if (!node || !nodeLayout) {
+      return
+    }
+
+    const axis = nodeLayout.y
+    const offset = 100
+
+    offsets.setOffset({ axis, nodeId, offset })
+
+    setPositions()
   }
 
   function getActualPosition(position: Pixels): Pixels {
@@ -127,7 +145,7 @@ export async function nodesContainerFactory(runId: string) {
     // eslint-disable-next-line prefer-destructuring
     layout = data.layout
 
-    updateLayout()
+    setPositions()
   }
 
   return {
