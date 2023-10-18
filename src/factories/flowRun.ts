@@ -44,8 +44,6 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     if (open) {
       renderNodes()
     }
-
-    container.emit('resized')
   }
 
   async function getLabelPosition(label: BitmapText, box: Graphics): Promise<Pixels> {
