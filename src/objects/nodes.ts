@@ -21,6 +21,7 @@ export async function startNodes(): Promise<void> {
 }
 
 export function stopNodes(): void {
+  nodes?.stop()
   nodes = null
 }
 
