@@ -2,11 +2,11 @@ import { Container } from 'pixi.js'
 import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
-import { HorizontalPositionSettings } from '@/factories/position'
 import { horizontalSettingsFactory } from '@/factories/settings'
-import { NodeLayoutRequest, NodeLayoutResponse, Pixels } from '@/models/layout'
-import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
+import { NodeLayoutResponse, NodeWidths, Pixels } from '@/models/layout'
+import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
+import { emitter } from '@/objects/events'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
@@ -20,40 +20,55 @@ export async function nodesContainerFactory(runId: string) {
   const config = await waitForConfig()
   const rows = await offsetsFactory()
 
-  let settings: HorizontalPositionSettings
+  let data: RunGraphData | null = null
   let layout: NodeLayoutResponse = new Map()
+  let interval: ReturnType<typeof setInterval> | undefined = undefined
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
+  emitter.on('layoutUpdated', () => renderNodes())
+
   async function render(): Promise<void> {
-    const data = await config.fetch(runId)
+    if (data === null) {
+      await fetch()
+    }
 
-    settings = horizontalSettingsFactory(data.start_time)
+    if (data === null) {
+      throw new Error('Data was null after fetch')
+    }
 
-    await renderNodes(data.nodes)
+    await renderNodes()
+  }
+
+  async function fetch(): Promise<void> {
+    clearInterval(interval)
+
+    data = await config.fetch(runId)
 
     if (!data.end_time) {
-      setTimeout(() => render(), DEFAULT_POLL_INTERVAL)
+      interval = setTimeout(() => fetch(), DEFAULT_POLL_INTERVAL)
     }
   }
 
-  async function renderNodes(nodes: RunGraphNodes): Promise<void> {
-    const request: NodeLayoutRequest = new Map()
+  async function renderNodes(): Promise<void> {
+    if (data === null) {
+      return
+    }
 
-    for (const [nodeId, node] of nodes) {
+    const widths: NodeWidths = new Map()
+
+    for (const [nodeId, node] of data.nodes) {
       // eslint-disable-next-line no-await-in-loop
       const { width } = await renderNode(node)
 
-      request.set(nodeId, {
-        node,
-        width,
-      })
+      widths.set(nodeId, width)
     }
 
     worker.postMessage({
       type: 'layout',
-      nodes: request,
-      settings,
+      data,
+      widths,
+      settings: horizontalSettingsFactory(data.start_time),
     })
   }
 
