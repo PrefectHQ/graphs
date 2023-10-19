@@ -2,10 +2,9 @@ import { Container } from 'pixi.js'
 import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
-import { HorizontalPositionSettings } from '@/factories/position'
 import { horizontalSettingsFactory } from '@/factories/settings'
-import { NodeLayoutRequest, NodeLayoutResponse, Pixels } from '@/models/layout'
-import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
+import { NodeLayoutResponse, NodeWidths, Pixels } from '@/models/layout'
+import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
@@ -20,7 +19,6 @@ export async function nodesContainerFactory(runId: string) {
   const config = await waitForConfig()
   const rows = await offsetsFactory()
 
-  let settings: HorizontalPositionSettings
   let layout: NodeLayoutResponse = new Map()
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
@@ -28,32 +26,28 @@ export async function nodesContainerFactory(runId: string) {
   async function render(): Promise<void> {
     const data = await config.fetch(runId)
 
-    settings = horizontalSettingsFactory(data.start_time)
-
-    await renderNodes(data.nodes)
+    await renderRun(data)
 
     if (!data.end_time) {
       setTimeout(() => render(), DEFAULT_POLL_INTERVAL)
     }
   }
 
-  async function renderNodes(nodes: RunGraphNodes): Promise<void> {
-    const request: NodeLayoutRequest = new Map()
+  async function renderRun(data: RunGraphData): Promise<void> {
+    const widths: NodeWidths = new Map()
 
-    for (const [nodeId, node] of nodes) {
+    for (const [nodeId, node] of data.nodes) {
       // eslint-disable-next-line no-await-in-loop
       const { width } = await renderNode(node)
 
-      request.set(nodeId, {
-        node,
-        width,
-      })
+      widths.set(nodeId, width)
     }
 
     worker.postMessage({
       type: 'layout',
-      nodes: request,
-      settings,
+      data,
+      widths,
+      settings: horizontalSettingsFactory(data.start_time),
     })
   }
 

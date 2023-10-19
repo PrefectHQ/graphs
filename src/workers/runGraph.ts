@@ -1,5 +1,6 @@
 import { HorizontalPositionSettings } from '@/factories/position'
-import { NodeLayoutRequest, NodeLayoutResponse } from '@/models/layout'
+import { NodeLayoutResponse, NodeWidths } from '@/models/layout'
+import { RunGraphData } from '@/models/RunGraph'
 
 // eslint-disable-next-line import/default
 import RunGraphWorker from '@/workers/runGraph.worker?worker'
@@ -9,7 +10,8 @@ export type WorkerMessage = WorkerLayoutMessage
 
 export type ClientLayoutMessage = {
   type: 'layout',
-  nodes: NodeLayoutRequest,
+  data: RunGraphData,
+  widths: NodeWidths,
   settings: HorizontalPositionSettings,
 }
 
