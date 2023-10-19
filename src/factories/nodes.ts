@@ -22,10 +22,11 @@ export async function nodesContainerFactory(runId: string) {
 
   let data: RunGraphData | null = null
   let layout: NodeLayoutResponse = new Map()
+  let interval: ReturnType<typeof setInterval> | undefined = undefined
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  emitter.on('layoutUpdated', () => renderRun())
+  emitter.on('layoutUpdated', () => renderNodes())
 
   async function render(): Promise<void> {
     if (data === null) {
@@ -36,18 +37,20 @@ export async function nodesContainerFactory(runId: string) {
       throw new Error('Data was null after fetch')
     }
 
-    await renderRun()
-
-    if (!data.end_time) {
-      setTimeout(() => fetch(), DEFAULT_POLL_INTERVAL)
-    }
+    await renderNodes()
   }
 
   async function fetch(): Promise<void> {
+    clearInterval(interval)
+
     data = await config.fetch(runId)
+
+    if (!data.end_time) {
+      interval = setTimeout(() => fetch(), DEFAULT_POLL_INTERVAL)
+    }
   }
 
-  async function renderRun(): Promise<void> {
+  async function renderNodes(): Promise<void> {
     if (data === null) {
       return
     }
