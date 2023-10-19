@@ -2,7 +2,6 @@ import { Viewport } from 'pixi-viewport'
 import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { eventsFactory } from '@/factories/events'
-import { NodesContainer } from '@/factories/nodes'
 import { HorizontalScale } from '@/factories/position'
 import { LayoutMode } from '@/models/layout'
 import { RequiredGraphConfig } from '@/models/RunGraph'
@@ -24,7 +23,6 @@ type Events = {
   fontsLoaded: Fonts,
   containerCreated: Container,
   layoutUpdated: LayoutMode,
-  nodesCreated: NodesContainer,
 }
 
 export type EventKey = keyof Events

@@ -1,6 +1,5 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
-import { eventsFactory } from '@/factories/events'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { HorizontalPositionSettings } from '@/factories/position'
@@ -13,39 +12,32 @@ import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/worke
 
 export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
 
-type Events = {
-  rendered: void,
-}
-
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodesContainerFactory(runId: string) {
   const worker = layoutWorkerFactory(onmessage)
   const nodes = new Map<string, NodeContainerFactory>()
   const container = new Container()
   const config = await waitForConfig()
-  const offsets = offsetsFactory()
-  const events = eventsFactory<Events>()
+  const rows = await offsetsFactory()
 
   let settings: HorizontalPositionSettings
   let layout: NodeLayoutResponse = new Map()
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  fetch()
-
-  async function fetch(): Promise<void> {
+  async function render(): Promise<void> {
     const data = await config.fetch(runId)
 
     settings = horizontalSettingsFactory(data.start_time)
 
-    await render(data.nodes)
+    await renderNodes(data.nodes)
 
     if (!data.end_time) {
-      setTimeout(() => fetch(), DEFAULT_POLL_INTERVAL)
+      setTimeout(() => render(), DEFAULT_POLL_INTERVAL)
     }
   }
 
-  async function render(nodes: RunGraphNodes): Promise<void> {
+  async function renderNodes(nodes: RunGraphNodes): Promise<void> {
     const request: NodeLayoutRequest = new Map()
 
     for (const [nodeId, node] of nodes) {
@@ -71,7 +63,7 @@ export async function nodesContainerFactory(runId: string) {
     return await render(node)
   }
 
-  function updateLayout(): void {
+  function setPositions(): void {
     layout.forEach((position, nodeId) => {
       const node = nodes.get(nodeId)
 
@@ -83,7 +75,8 @@ export async function nodesContainerFactory(runId: string) {
       node.container.position = getActualPosition(position)
     })
 
-    events.emit('rendered')
+    container.emit('resized')
+    container.emit('rendered')
   }
 
   async function getNodeContainerService(node: RunGraphNode): Promise<NodeContainerFactory> {
@@ -95,14 +88,32 @@ export async function nodesContainerFactory(runId: string) {
 
     const response = await nodeContainerFactory(node)
 
+    response.container.on('resized', () => resizeNode(node.id))
+
     nodes.set(node.id, response)
     container.addChild(response.container)
 
     return response
   }
 
+  function resizeNode(nodeId: string): void {
+    const node = nodes.get(nodeId)
+    const nodeLayout = layout.get(nodeId)
+
+    if (!node || !nodeLayout) {
+      return
+    }
+
+    const axis = nodeLayout.y
+    const offset = node.container.height
+
+    rows.setOffset({ axis, nodeId, offset })
+
+    setPositions()
+  }
+
   function getActualPosition(position: Pixels): Pixels {
-    const y = offsets.getTotalOffset(position.y) + position.y * config.styles.nodeHeight
+    const y = rows.getTotalOffset(position.y)
     const { x } = position
 
     return {
@@ -127,11 +138,11 @@ export async function nodesContainerFactory(runId: string) {
     // eslint-disable-next-line prefer-destructuring
     layout = data.layout
 
-    updateLayout()
+    setPositions()
   }
 
   return {
     container,
-    events,
+    render,
   }
 }

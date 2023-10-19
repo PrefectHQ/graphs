@@ -1,6 +1,6 @@
 import { Container, Ticker } from 'pixi.js'
-import { flowRunContainerFactory } from '@/factories/flowRun'
-import { taskRunContainerFactory } from '@/factories/taskRun'
+import { FlowRunContainer, flowRunContainerFactory } from '@/factories/flowRun'
+import { TaskRunContainer, taskRunContainerFactory } from '@/factories/taskRun'
 import { RunGraphNode } from '@/models/RunGraph'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
@@ -26,15 +26,14 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     return container
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  async function getNodeFactory(node: RunGraphNode) {
+  async function getNodeFactory(node: RunGraphNode): Promise<TaskRunContainer | FlowRunContainer> {
     const { kind } = node
 
     switch (kind) {
       case 'task-run':
         return await taskRunContainerFactory()
       case 'flow-run':
-        return await flowRunContainerFactory()
+        return await flowRunContainerFactory(node)
       default:
         const exhaustive: never = kind
         throw new Error(`switch does not have case for value: ${exhaustive}`)
