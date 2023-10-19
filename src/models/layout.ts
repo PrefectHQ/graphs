@@ -1,6 +1,6 @@
 export type Pixels = { x: number, y: number }
 export type VerticalMode = 'waterfall' | 'nearest-parent'
-export type HorizontalMode = 'time' | 'dag'
+export type HorizontalMode = 'trace' | 'dependency'
 
 export type LayoutMode = {
   horizontal: HorizontalMode,

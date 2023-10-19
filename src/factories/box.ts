@@ -26,7 +26,7 @@ export async function nodeBoxFactory() {
   }
 
   function getWidth(node: RunGraphNode): number {
-    if (layout.horizontal === 'time') {
+    if (layout.horizontal === 'trace') {
       const right = node.start_time
       const left = node.end_time ?? new Date()
       const seconds = differenceInMilliseconds(left, right) / millisecondsInSecond

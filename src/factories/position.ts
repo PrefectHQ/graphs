@@ -7,14 +7,14 @@ export type HorizontalPositionSettings = {
   startTime: Date,
   timeSpan: number,
   timeSpanPixels: number,
-  dagColumnSize: number,
+  dependencyColumnSize: number,
 }
 
 export type HorizontalScale = ReturnType<typeof horizontalScaleFactory>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function horizontalScaleFactory(settings: HorizontalPositionSettings) {
-  if (settings.mode === 'time') {
+  if (settings.mode === 'trace') {
     return getTimeScale(settings)
   }
 
@@ -36,6 +36,6 @@ function getTimeScale({ startTime, timeSpan, timeSpanPixels }: HorizontalPositio
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-function getLinearScale({ dagColumnSize }: HorizontalPositionSettings) {
-  return scaleLinear().domain([0, 1]).range([0, dagColumnSize])
+function getLinearScale({ dependencyColumnSize }: HorizontalPositionSettings) {
+  return scaleLinear().domain([0, 1]).range([0, dependencyColumnSize])
 }

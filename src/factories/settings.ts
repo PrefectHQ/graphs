@@ -8,6 +8,6 @@ export function horizontalSettingsFactory(startTime: Date): HorizontalPositionSe
     startTime,
     timeSpan: DEFAULT_TIME_COLUMN_SPAN_SECONDS,
     timeSpanPixels: DEFAULT_TIME_COLUMN_SIZE_PIXELS,
-    dagColumnSize: DEFAULT_LINEAR_COLUMN_SIZE_PIXELS,
+    dependencyColumnSize: DEFAULT_LINEAR_COLUMN_SIZE_PIXELS,
   }
 }

@@ -51,14 +51,14 @@ function handleLayoutMessage(message: ClientLayoutMessage): void {
 type HorizontalLayout = Map<string, number>
 
 function getHorizontalLayout(message: ClientLayoutMessage): HorizontalLayout {
-  if (message.settings.mode === 'dag') {
-    return getHorizontalDagLayout(message)
+  if (message.settings.mode === 'dependency') {
+    return getHorizontalDependencyLayout(message)
   }
 
   return getHorizontalTimeLayout(message)
 }
 
-function getHorizontalDagLayout({ data, settings }: ClientLayoutMessage): HorizontalLayout {
+function getHorizontalDependencyLayout({ data, settings }: ClientLayoutMessage): HorizontalLayout {
   const levels = getLevels(data.root_node_ids, data.nodes)
   const scale = horizontalScaleFactory(settings)
   const layout: HorizontalLayout = new Map()

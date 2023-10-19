@@ -4,12 +4,14 @@
     <div class="run-graph__actions">
       <p-button title="Recenter Timeline" icon="Target" flat @click="() => centerViewport({ animate: true })" />
       <p-button title="View Timeline in Fullscreen" icon="ArrowsPointingOutIcon" flat @click="toggleFullscreen" />
+      <RunGraphSettings />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
   import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+  import RunGraphSettings from '@/components/RunGraphSettings.vue'
   import { RunGraphProps } from '@/models/RunGraph'
   import { ViewportDateRange } from '@/models/viewport'
   import { start, stop, centerViewport } from '@/objects'

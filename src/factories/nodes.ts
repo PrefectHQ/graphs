@@ -6,6 +6,7 @@ import { horizontalSettingsFactory } from '@/factories/settings'
 import { NodeLayoutResponse, NodeWidths, Pixels } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
+import { emitter } from '@/objects/events'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
@@ -19,21 +20,38 @@ export async function nodesContainerFactory(runId: string) {
   const config = await waitForConfig()
   const rows = await offsetsFactory()
 
+  let data: RunGraphData | null = null
   let layout: NodeLayoutResponse = new Map()
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  async function render(): Promise<void> {
-    const data = await config.fetch(runId)
+  emitter.on('layoutUpdated', () => renderRun())
 
-    await renderRun(data)
+  async function render(): Promise<void> {
+    if (data === null) {
+      await fetch()
+    }
+
+    if (data === null) {
+      throw new Error('Data was null after fetch')
+    }
+
+    await renderRun()
 
     if (!data.end_time) {
-      setTimeout(() => render(), DEFAULT_POLL_INTERVAL)
+      setTimeout(() => fetch(), DEFAULT_POLL_INTERVAL)
     }
   }
 
-  async function renderRun(data: RunGraphData): Promise<void> {
+  async function fetch(): Promise<void> {
+    data = await config.fetch(runId)
+  }
+
+  async function renderRun(): Promise<void> {
+    if (data === null) {
+      return
+    }
+
     const widths: NodeWidths = new Map()
 
     for (const [nodeId, node] of data.nodes) {
