@@ -2,7 +2,7 @@ import { Container } from 'pixi.js'
 import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
-import { horizontalSettingsFactory } from '@/factories/settings'
+import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
 import { NodeLayoutResponse, NodeWidths, Pixels } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
@@ -68,7 +68,8 @@ export async function nodesContainerFactory(runId: string) {
       type: 'layout',
       data,
       widths,
-      settings: horizontalSettingsFactory(data.start_time),
+      horizontalSettings: horizontalSettingsFactory(data.start_time),
+      verticalSettings: verticalSettingsFactory(),
     })
   }
 

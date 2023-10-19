@@ -1,6 +1,10 @@
 import { scaleLinear, scaleTime } from 'd3'
 import { addSeconds } from 'date-fns'
-import { HorizontalMode } from '@/models/layout'
+import { HorizontalMode, VerticalMode } from '@/models/layout'
+
+export type VerticalPositionSettings = {
+  mode: VerticalMode,
+}
 
 export type HorizontalPositionSettings = {
   mode: HorizontalMode,
