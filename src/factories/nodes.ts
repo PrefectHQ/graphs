@@ -156,8 +156,14 @@ export async function nodesContainerFactory(runId: string) {
     setPositions()
   }
 
+  function stop(): void {
+    clearInterval(interval)
+    data = null
+  }
+
   return {
     container,
     render,
+    stop,
   }
 }
