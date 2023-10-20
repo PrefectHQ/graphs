@@ -14,7 +14,7 @@ export function getHorizontalLayout(message: ClientLayoutMessage): HorizontalLay
 }
 
 function getHorizontalDependencyLayout({ data, horizontalSettings }: ClientLayoutMessage): HorizontalLayout {
-  const levels = getColumns(data.root_node_ids, data.nodes)
+  const levels = getColumns(data)
   const scale = horizontalScaleFactory(horizontalSettings)
   const layout: HorizontalLayout = new Map()
 
