@@ -27,7 +27,8 @@ export function getColumns({ root_node_ids, nodes }: RunGraphData): NodeColumns 
  *
  * This function sets up the initial columns for the root nodes and then calls `getChildrenColumns` to process all the children.
  *
- * Performance: 54-58 operations per second processing 2,000 highly connected nodes
+ * Performance: 200k operations per seconds processing 23 connected nodes
+ * Performance: 54-58 operations per second processing 2,000 highly connected nodes.
  *
  * @param nodeIds - The IDs of the root nodes.
  * @param nodes - The nodes in the run graph.
@@ -113,6 +114,7 @@ function getChildrenColumns(nodeIds: string[], nodes: RunGraphNodes, columns: No
  *
  * This function processes the children of each node in the `nodeIds` array and calculates their columns based on the columns of their parents.
  *
+ * Performance: 45k operations per second processing 23 connected nodes
  * Performance: 23-25 operations per second processing 2,000 highly connected nodes
  *
  * @param nodeIds - The IDs of the nodes whose children should be processed.
