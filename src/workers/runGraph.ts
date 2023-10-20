@@ -1,4 +1,4 @@
-import { HorizontalPositionSettings } from '@/factories/position'
+import { HorizontalPositionSettings, VerticalPositionSettings } from '@/factories/position'
 import { NodeLayoutResponse, NodeWidths } from '@/models/layout'
 import { RunGraphData } from '@/models/RunGraph'
 
@@ -12,7 +12,8 @@ export type ClientLayoutMessage = {
   type: 'layout',
   data: RunGraphData,
   widths: NodeWidths,
-  settings: HorizontalPositionSettings,
+  horizontalSettings: HorizontalPositionSettings,
+  verticalSettings: VerticalPositionSettings,
 }
 
 export type WorkerLayoutMessage = {
