@@ -80,7 +80,7 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function setPositions(): void {
-    layout.forEach((position, nodeId) => {
+    for (const [nodeId, position] of layout) {
       const node = nodes.get(nodeId)
 
       if (!node) {
@@ -89,7 +89,7 @@ export async function nodesContainerFactory(runId: string) {
       }
 
       node.container.position = getActualPosition(position)
-    })
+    }
 
     container.emit('resized')
     container.emit('rendered')
