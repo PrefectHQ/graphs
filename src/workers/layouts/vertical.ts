@@ -16,9 +16,9 @@ function getVerticalWaterfallLayout(message: ClientLayoutMessage): VerticalLayou
 
   let index = 0
 
-  message.data.nodes.forEach((node, nodeId) => {
+  for (const [nodeId] of message.data.nodes) {
     layout.set(nodeId, index++)
-  })
+  }
 
   return layout
 }

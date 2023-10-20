@@ -28,7 +28,7 @@ function handleLayoutMessage(message: ClientLayoutMessage): void {
   const vertical = getVerticalLayout(message, horizontal)
   const layout: NodeLayoutResponse = new Map()
 
-  data.nodes.forEach((node, nodeId) => {
+  for (const [nodeId, node] of data.nodes) {
     const x = horizontal.get(nodeId)
     const y = vertical.get(nodeId)
 
@@ -46,7 +46,7 @@ function handleLayoutMessage(message: ClientLayoutMessage): void {
       x,
       y,
     })
-  })
+  }
 
   post({
     type: 'layout',
