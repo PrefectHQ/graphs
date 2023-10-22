@@ -7,8 +7,8 @@ type BarStyle = {
   height: number,
   background: ColorSource,
   radius: number,
-  capLeft?: boolean,
-  capRight?: boolean,
+  capLeft?: false,
+  capRight?: false,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
