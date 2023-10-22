@@ -11,6 +11,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
   styles: {
     nodeHeight: 30,
     nodeMargin: 2,
+    nodeBorderRadius: 8,
     node: () => ({
       background: '#ffffff',
     }),
