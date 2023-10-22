@@ -1,6 +1,6 @@
 import { Container, Ticker } from 'pixi.js'
-import { FlowRunContainer, flowRunContainerFactory } from '@/factories/flowRun'
-import { TaskRunContainer, taskRunContainerFactory } from '@/factories/taskRun'
+import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
+import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
 import { RunGraphNode } from '@/models/RunGraph'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
