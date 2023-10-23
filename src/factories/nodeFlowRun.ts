@@ -35,9 +35,9 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function render(node: RunGraphNode): Promise<Container> {
     const label = await renderLabel(node)
-    const box = await renderBar(node)
+    const bar = await renderBar(node)
 
-    label.position = getLabelPosition(label, box)
+    label.position = getLabelPosition(label, bar)
 
     return container
   }
@@ -54,11 +54,11 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     }
   }
 
-  function getLabelPosition(label: BitmapText, box: Container): Pixels {
+  function getLabelPosition(label: BitmapText, bar: Container): Pixels {
     // todo: this should probably be nodePadding
     const margin = config.styles.nodeMargin
-    const inside = box.width > margin + label.width + margin
-    const y = box.height / 2 - label.height
+    const inside = bar.width > margin + label.width + margin
+    const y = bar.height / 2 - label.height
 
     if (inside) {
       return {
@@ -68,7 +68,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     }
 
     return {
-      x: box.width + margin,
+      x: bar.width + margin,
       y,
     }
   }
