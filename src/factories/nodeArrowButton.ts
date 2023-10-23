@@ -12,18 +12,18 @@ type NodeArrowBarStyles = {
 export async function nodeArrowButtonFactory() {
   const container = new Container()
   const { arrow, render: renderArrow } = await arrowFactory()
-  const { bar: button, render: renderBar } = await barFactory()
+  const { bar, render: renderBar } = await barFactory()
   const filter = new ColorMatrixFilter()
 
   container.eventMode = 'static'
   container.cursor = 'pointer'
-  container.addChild(button)
+  container.addChild(bar)
   container.addChild(arrow)
 
   container.on('mouseover', onMouseover)
   container.on('mouseout', onMouseout)
 
-  button.filters = [filter]
+  bar.filters = [filter]
 
   async function render({ arrow: arrowStyles, button: buttonStyles, isOpen }: NodeArrowBarStyles): Promise<Container> {
     const rotate = isOpen ? ArrowDirection.Up : ArrowDirection.Down
