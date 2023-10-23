@@ -22,10 +22,10 @@ function post(message: WorkerMessage): void {
   postMessage(message)
 }
 
-function handleLayoutMessage(message: ClientLayoutMessage): void {
+async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> {
   const { data } = message
   const horizontal = getHorizontalLayout(message)
-  const vertical = getVerticalLayout(message, horizontal)
+  const vertical = await getVerticalLayout(message, horizontal)
   const layout: NodeLayoutResponse = new Map()
 
   for (const [nodeId, node] of data.nodes) {

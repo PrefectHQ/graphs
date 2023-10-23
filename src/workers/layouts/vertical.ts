@@ -1,11 +1,13 @@
 import { HorizontalLayout } from '@/workers/layouts/horizontal'
 import { ClientLayoutMessage } from '@/workers/runGraph'
+import { getVerticalNearestParentLayout } from './nearestParentVertical'
 
-type VerticalLayout = Map<string, number>
+export type VerticalLayout = Map<string, number>
 
-export function getVerticalLayout(message: ClientLayoutMessage, horizontal: HorizontalLayout): VerticalLayout {
+export async function getVerticalLayout(message: ClientLayoutMessage, horizontal: HorizontalLayout): Promise<VerticalLayout> {
   if (message.verticalSettings.mode === 'nearest-parent') {
-    return getVerticalNearestParentLayout(message, horizontal)
+    const layout = await getVerticalNearestParentLayout(message, horizontal)
+    return layout
   }
 
   return getVerticalWaterfallLayout(message)
@@ -21,8 +23,4 @@ function getVerticalWaterfallLayout(message: ClientLayoutMessage): VerticalLayou
   }
 
   return layout
-}
-
-function getVerticalNearestParentLayout(message: ClientLayoutMessage, horizontal: HorizontalLayout): VerticalLayout {
-  throw new Error('Not implemented')
 }
