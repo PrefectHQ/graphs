@@ -4,44 +4,24 @@ import { RunGraphNode } from "@/models"
 import { ClientLayoutMessage } from '@/workers/runGraph'
 
 type NodeShoveDirection = 1 | -1
-type NearestParentLayoutItem = {
-  row: number,
-  startX: number,
-  endX: number,
-  nextDependencyShove?: NodeShoveDirection
-}
-type NearestParentLayout = Map<string, NearestParentLayoutItem>
 
 export async function getVerticalNearestParentLayout(message: ClientLayoutMessage, horizontal: HorizontalLayout): Promise<VerticalLayout> {
   const defaultNearestParentPosition = 0
   const minimumNodeEdgeGap = 16
+  const nodeShoveRecords = new Map<string, NodeShoveDirection>()
 
-  const nearestParentLayout: NearestParentLayout = new Map()
   const layout: VerticalLayout = new Map()
 
   for (const [nodeId] of message.data.nodes) {
     const node = message.data.nodes.get(nodeId)
-    const nodeWidth = message.widths.get(nodeId)
 
-    if (!node || !node.start_time || !nodeWidth) {
-      console.warn('NearestParentLayout: Node ID was not found, has no start time or no width', nodeId)
+    if (!node) {
+      console.warn('NearestParentLayout: Node was not found in the data', nodeId)
       continue
     }
 
-    const startX = horizontal.get(nodeId)!
-    const endX = startX + nodeWidth
+    const row = await getNearestParentPosition(node)
 
-    const row = await getNearestParentPosition(node, startX)
-
-    nearestParentLayout.set(nodeId, {
-      row,
-      startX,
-      endX,
-    })
-  }
-
-  for (const [nodeId] of nearestParentLayout) {
-    const { row } = nearestParentLayout.get(nodeId)!
     layout.set(nodeId, row)
   }
 
@@ -49,12 +29,18 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
 
   return layout
 
-  async function getNearestParentPosition(node: RunGraphNode, nodeStartX: number): Promise<number> {
+  async function getNearestParentPosition(node: RunGraphNode): Promise<number> {
+    const nodeStartX = horizontal.get(node.id)
+
+    if (nodeStartX === undefined) {
+      console.warn('NearestParentLayout: Node was not found in the horizontal layout', node.id)
+      return defaultNearestParentPosition
+    }
+
     // if one dependency
     if (node.parents && node.parents.length === 1) {
-      if ( nearestParentLayout.has(node.parents[0].id)) {
-        const parent = nearestParentLayout.get(node.parents[0].id)!
-        return await placeNearUpstreamNode(parent, nodeStartX)
+      if (layout.has(node.parents[0].id)) {
+        return await placeNearUpstreamNode(node.parents[0].id, nodeStartX)
       }
 
       console.warn('NearestParentLayout: Parent node not found in layout', node.parents[0].id)
@@ -63,47 +49,53 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
 
     // if more than one dependency – add to the middle of upstream dependencies
     if (node.parents && node.parents.length > 0) {
-      const parentLayoutItems = node.parents
-        .map(edge => nearestParentLayout.get(edge.id))
-        .filter((layoutItem: NearestParentLayoutItem | undefined): layoutItem is NearestParentLayoutItem => !!layoutItem)
+      const upstreamRows = node.parents.map(({id}) => {
+        const row = layout.get(id)
 
-      const upstreamRows = parentLayoutItems.map(layoutItem => layoutItem.row)
+        if (row === undefined) {
+          console.warn('NearestParentLayout: Parent node not found in layout', id)
+          return defaultNearestParentPosition
+        }
+
+        return row
+      })
+
       const upstreamRowsSum = upstreamRows.reduce((sum, position) => sum + position, 0)
       const upstreamRowsAverage = upstreamRowsSum / upstreamRows.length
-
       const row = Math.round(upstreamRowsAverage)
 
       if (isPositionTaken(nodeStartX, row)) {
-        const overlappingLayoutIds = getOverlappingLayoutIds(
+        const overlappingNodes = getOverlappingNodeIds(
           nodeStartX,
           row,
         )!
 
-        const upstreamDependenciesOverlapping = overlappingLayoutIds.filter(layoutId => {
-          return node.parents?.some((edge) => edge.id === layoutId)
+        const overlappingParentNodes = overlappingNodes.filter(layoutId => {
+          return node.parents?.some(({id}) => id === layoutId)
         })
 
-        if (upstreamDependenciesOverlapping.length > 0 || overlappingLayoutIds.length > 1) {
-          // upstream nodeData dependencies always win, or if there are more than one node in the way
-          const [upstreamLayoutItemId] = upstreamDependenciesOverlapping.length > 0
-            ? upstreamDependenciesOverlapping
-            : overlappingLayoutIds
-          const upstreamLayoutItem = nearestParentLayout.get(upstreamLayoutItemId)!
+        if (overlappingParentNodes.length > 0 || overlappingNodes.length > 1) {
+          // upstream node parents always win, or if there are more than one node in the way
+          const [upstreamLayoutItemId] = overlappingParentNodes.length > 0
+            ? overlappingParentNodes
+            : overlappingNodes
 
-          upstreamLayoutItem.nextDependencyShove = getShoveDirectionWeightedByDependencies(
+          const shoveDirection = getShoveDirectionWeightedByDependencies(
             upstreamRows,
             row,
-            upstreamLayoutItem.nextDependencyShove,
+            nodeShoveRecords.get(upstreamLayoutItemId),
           )
 
-          return await placeNearUpstreamNode(upstreamLayoutItem, nodeStartX)
+          nodeShoveRecords.set(upstreamLayoutItemId, shoveDirection)
+
+          return await placeNearUpstreamNode(upstreamLayoutItemId, nodeStartX)
         }
 
         return await argueWithCompetingUpstreamPlacement({
-          competingLayoutItemId: overlappingLayoutIds[0],
-          upstreamPositions: upstreamRows,
+          competingNodeId: overlappingNodes[0],
+          upstreamRows,
           nodeStartX,
-          desiredPosition: row,
+          desiredRow: row,
         })
       }
     }
@@ -120,49 +112,71 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     return defaultPosition
   }
 
-  async function placeNearUpstreamNode(upstreamLayoutItem: NearestParentLayoutItem, nodeStartX: number): Promise<number> {
+  async function placeNearUpstreamNode(upstreamNodeId: string, nodeStartX: number): Promise<number> {
     // See this diagram for how shove logic works in this scenario
     // https://www.figma.com/file/1u1oXkiYRxgtqWSRG9Yely/DAG-Design?node-id=385%3A2782&t=yRLIggko0TzbMaIG-4
-    if (upstreamLayoutItem.nextDependencyShove !== 1 && upstreamLayoutItem.nextDependencyShove !== -1) {
-      upstreamLayoutItem.nextDependencyShove = 1
+    const upstreamRow = layout.get(upstreamNodeId)
+
+    if (upstreamRow === undefined) {
+      console.warn('NearestParentLayout: Upstream node not found in layout', upstreamNodeId)
+      return defaultNearestParentPosition
     }
 
-    const {
-      row: upstreamNodePosition,
-      nextDependencyShove,
-    } = upstreamLayoutItem
-    if (isPositionTaken(nodeStartX, upstreamNodePosition)) {
-      if (nextDependencyShove === 1 && !isPositionTaken(nodeStartX, upstreamNodePosition + 1)) {
-        upstreamLayoutItem.nextDependencyShove = -1
-        return upstreamNodePosition + 1
-      } else if (!isPositionTaken(nodeStartX, upstreamNodePosition - 1)) {
-        upstreamLayoutItem.nextDependencyShove = 1
-        return upstreamNodePosition - 1
+    if (!nodeShoveRecords.get(upstreamNodeId)) {
+      nodeShoveRecords.set(upstreamNodeId, 1)
+    }
+
+    const nextDependencyShove = nodeShoveRecords.get(upstreamNodeId)!
+
+
+    if (isPositionTaken(nodeStartX, upstreamRow)) {
+      if (nextDependencyShove === 1 && !isPositionTaken(nodeStartX, upstreamRow + 1)) {
+        nodeShoveRecords.set(upstreamNodeId, -1)
+        return upstreamRow + 1
+      } else if (!isPositionTaken(nodeStartX, upstreamRow - 1)) {
+        nodeShoveRecords.set(upstreamNodeId, 1)
+        return upstreamRow - 1
       }
+
       await shove({
         direction: nextDependencyShove,
         nodeStartX,
-        desiredPosition: upstreamNodePosition + nextDependencyShove,
+        desiredRow: upstreamRow + nextDependencyShove,
       })
-      upstreamLayoutItem.nextDependencyShove = nextDependencyShove === 1 ? -1 : 1
-      return upstreamNodePosition + nextDependencyShove
+
+      nodeShoveRecords.set(upstreamNodeId, nextDependencyShove === 1 ? -1 : 1)
+
+      return upstreamRow + nextDependencyShove
     }
-    return upstreamNodePosition
+    return upstreamRow
   }
 
+  // function isPositionTaken(nodeStartX: number, position: number): boolean {
+  //   const layoutKeys = Object.keys(layout)
+  //   return layoutKeys.length > 0 && layoutKeys.some((nodeId) => {
+  //     const layoutItem = layout[nodeId]
+  //     return isNodesOverlapping({
+  //       firstNodeEndX: layoutItem.endX,
+  //       firstNodePosition: layoutItem.position,
+  //       lastNodeStartX: nodeStartX,
+  //       lastNodePosition: position,
+  //     })
+  //   })
+  // }
   function isPositionTaken(nodeStartX: number, row: number): boolean {
-    if (nearestParentLayout.size === 0) {
+    if (layout.size === 0) {
       return false
     }
 
     let positionTaken = false
 
-    for (const [nodeId] of nearestParentLayout) {
-      const layoutItem = nearestParentLayout.get(nodeId)!
+    for (const [nodeId] of layout) {
+      const firstNodePosition = layout.get(nodeId)!
+      const firstNodeEndX = getNodeEndX(nodeId)
 
       const overlapping = isNodesOverlapping({
-        firstNodeEndX: layoutItem.endX,
-        firstNodePosition: layoutItem.row,
+        firstNodeEndX,
+        firstNodePosition,
         lastNodeStartX: nodeStartX,
         lastNodePosition: row,
       })
@@ -179,25 +193,34 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
   type ShoveProps = {
     direction: NodeShoveDirection,
     nodeStartX: number,
-    desiredPosition: number,
+    desiredRow: number,
   }
-  async function shove({ direction, nodeStartX, desiredPosition }: ShoveProps): Promise<void> {
-    const overlappingLayoutIds = getOverlappingLayoutIds(nodeStartX, desiredPosition)
+  async function shove({ direction, nodeStartX, desiredRow }: ShoveProps): Promise<void> {
+    const overlappingNodeIds = getOverlappingNodeIds(nodeStartX, desiredRow)
 
-    if (!overlappingLayoutIds) {
+    if (!overlappingNodeIds) {
       return
     }
 
-    for await (const overlapId of overlappingLayoutIds) {
+    for await (const nodeId of overlappingNodeIds) {
       // push nodes and recursively shove as needed
-      const layoutItem = nearestParentLayout.get(overlapId)!
-      const newPosition = layoutItem.row + direction
+      const overlappingRow = layout.get(nodeId)
+      const nodeStartX = horizontal.get(nodeId)
+
+      if (overlappingRow === undefined || !nodeStartX) {
+        console.warn('NearestParentLayout - shove: Node was not found in the vertical or horizontal layout', nodeId)
+        continue
+      }
+
+      const desiredRow = overlappingRow + direction
+
       await shove({
         direction,
-        nodeStartX: layoutItem.startX,
-        desiredPosition: newPosition,
+        nodeStartX,
+        desiredRow,
       })
-      layoutItem.row = newPosition
+
+      layout.set(nodeId, desiredRow)
     }
   }
 
@@ -217,40 +240,48 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
       && firstNodeEndX + minimumNodeEdgeGap >= lastNodeStartX
   }
 
-  function getOverlappingLayoutIds(nodeStartX: number, position: number): string[] | undefined {
-    const overlappingLayoutItems: string[] = []
+  function getOverlappingNodeIds(nodeStartX: number, position: number): string[] | undefined {
+    const overlappingNodeIds: string[] = []
 
-    nearestParentLayout.forEach((layoutItem, itemId) => {
+    layout.forEach((row, nodeId) => {
+      const firstNodeEndX = getNodeEndX(nodeId)
+      const firstNodePosition = layout.get(nodeId)
+
+      if (firstNodePosition === undefined) {
+        console.warn('NearestParentLayout - getOverlappingNodeIds: Node was not found in the layout', nodeId)
+        return
+      }
+
       const isItemOverlapping = isNodesOverlapping({
-        firstNodeEndX: layoutItem.endX,
-        firstNodePosition: layoutItem.row,
+        firstNodeEndX,
+        firstNodePosition,
         lastNodeStartX: nodeStartX,
         lastNodePosition: position,
       })
 
       if (isItemOverlapping) {
-        overlappingLayoutItems.push(itemId)
+        overlappingNodeIds.push(nodeId)
       }
     })
 
-    if (overlappingLayoutItems.length === 0) {
+    if (overlappingNodeIds.length === 0) {
       return
     }
 
     // sort last to first
-    overlappingLayoutItems.sort((itemAId, itemBId) => {
-      const itemA = nearestParentLayout.get(itemAId)!
-      const itemB = nearestParentLayout.get(itemBId)!
-      if (itemA.endX < itemB.endX) {
+    overlappingNodeIds.sort((itemAId, itemBId) => {
+      const itemAEndX = getNodeEndX(itemAId)
+      const itemBEndX = getNodeEndX(itemBId)
+      if (itemAEndX < itemBEndX) {
         return 1
       }
-      if (itemA.endX > itemB.endX) {
+      if (itemAEndX > itemBEndX) {
         return -1
       }
       return 0
     })
 
-    return overlappingLayoutItems
+    return overlappingNodeIds
   }
 
   function getShoveDirectionWeightedByDependencies(
@@ -259,8 +290,8 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     defaultGravity?: NodeShoveDirection,
   ): NodeShoveDirection {
     // check if node has more connections above or below, prefer placement in that direction
-    const upwardConnections = parentRows.filter((upstreamPosition) => upstreamPosition < position).length
-    const downwardConnections = parentRows.filter((upstreamPosition) => upstreamPosition > position).length
+    const upwardConnections = parentRows.filter((row) => row < position).length
+    const downwardConnections = parentRows.filter((row) => row > position).length
 
     if (upwardConnections > downwardConnections) {
       return -1
@@ -270,24 +301,30 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
   }
 
   type ArgueWithCompetingUpstreamPlacementProps = {
-    desiredPosition: number,
+    desiredRow: number,
     nodeStartX: number,
-    upstreamPositions: number[],
-    competingLayoutItemId: string,
+    upstreamRows: number[],
+    competingNodeId: string,
   }
   async function argueWithCompetingUpstreamPlacement({
-    desiredPosition,
+    desiredRow,
     nodeStartX,
-    upstreamPositions,
-    competingLayoutItemId,
+    upstreamRows,
+    competingNodeId,
   }: ArgueWithCompetingUpstreamPlacementProps): Promise<number> {
-    const competitor = nearestParentLayout.get(competingLayoutItemId)!
+    const competitor = layout.get(competingNodeId)
+
+    if (competitor === undefined) {
+      console.warn('NearestParentLayout - argueWithCompetingUpstreamPlacement: Competitor node was not found in the layout', competingNodeId)
+      return desiredRow
+    }
+
     const [
       competitorAboveConnections,
       competitorBelowConnections,
-    ] = getLayoutItemUpAndDownwardConnections(competingLayoutItemId)
-    const nodeAboveConnections = upstreamPositions.filter((upstreamPosition) => upstreamPosition < desiredPosition).length
-    const nodeBelowConnections = upstreamPositions.filter((upstreamPosition) => upstreamPosition > desiredPosition).length
+    ] = getNodeParentDirectionCounts(competingNodeId)
+    const nodeAboveConnections = upstreamRows.filter((upstreamPosition) => upstreamPosition < desiredRow).length
+    const nodeBelowConnections = upstreamRows.filter((upstreamPosition) => upstreamPosition > desiredRow).length
 
     if (nodeAboveConnections > nodeBelowConnections) {
       // node has more above
@@ -299,9 +336,9 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
         await shove({
           direction: -1,
           nodeStartX,
-          desiredPosition,
+          desiredRow,
         })
-        return desiredPosition
+        return desiredRow
       }
       if (competitorBelowConnections > competitorAboveConnections) {
         // competitor has more below than above
@@ -309,14 +346,14 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
         await shove({
           direction: 1,
           nodeStartX,
-          desiredPosition,
+          desiredRow,
         })
-        return desiredPosition
+        return desiredRow
       }
 
       // competitor has equal above and below, or node has more above
       // place node above competitor
-      competitor.nextDependencyShove = -1
+      nodeShoveRecords.set(competingNodeId, -1)
     }
 
     if (nodeBelowConnections > nodeAboveConnections) {
@@ -329,9 +366,9 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
         await shove({
           direction: 1,
           nodeStartX,
-          desiredPosition,
+          desiredRow,
         })
-        return desiredPosition
+        return desiredRow
       }
 
       if (competitorAboveConnections > competitorBelowConnections) {
@@ -340,50 +377,67 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
         await shove({
           direction: -1,
           nodeStartX,
-          desiredPosition,
+          desiredRow,
         })
-        return desiredPosition
+        return desiredRow
       }
 
       // competitor has equal above and below, or node has more below
       // place node below competitor
-      competitor.nextDependencyShove = 1
+      nodeShoveRecords.set(competingNodeId, 1)
     }
 
-    return await placeNearUpstreamNode(competitor, nodeStartX)
+    return await placeNearUpstreamNode(competingNodeId, nodeStartX)
   }
 
-  function getLayoutItemUpAndDownwardConnections(id: string): [number, number] {
-    const node = message.data.nodes.get(id)!
-    const layoutItem = nearestParentLayout.get(id)!
+  function getNodeParentDirectionCounts(nodeId: string): [number, number] {
+    const node = message.data.nodes.get(nodeId)
+    const nodeRow = layout.get(nodeId)
+
+    if (!node || nodeRow === undefined) {
+      console.warn('NearestParentLayout: Node was not found in either the data or layout', nodeId)
+      return [0, 0]
+    }
 
     return node.parents?.reduce((counts, parent) => {
-      if (nearestParentLayout.has(parent.id)) {
-        const dependencyLayoutItem = nearestParentLayout.get(parent.id)!
+      const parentRow = layout.get(parent.id)
 
-        if (dependencyLayoutItem.row < layoutItem.row) {
-          counts[0] += 1
-        }
-
-        if (dependencyLayoutItem.row > layoutItem.row) {
-          counts[1] += 1
-        }
-
+      if (parentRow === undefined) {
+        console.warn('NearestParentLayout - getNodeParentDirectionCounts: Parent node not found on layout data', nodeId)
         return counts
       }
 
-      console.warn('nodeLayout.worker.ts: Parent node not found on layout data', id)
+      if (parentRow < nodeRow) {
+        counts[0] += 1
+      }
+
+      if (parentRow > nodeRow) {
+        counts[1] += 1
+      }
+
       return counts
     }, [0, 0]) ?? [0, 0]
   }
 
+  function getNodeEndX(nodeId: string): number {
+    const nodeStartX = horizontal.get(nodeId)
+    const nodeWidth = message.widths.get(nodeId)
+
+    if (nodeStartX === undefined || nodeWidth === undefined) {
+      console.warn('NearestParentLayout: Node was not found in the horizontal layout and/or widths', nodeId)
+      return 0
+    }
+
+    return nodeStartX + nodeWidth
+  }
+
   function purgeNegativeLayoutPositions(): void {
-    const allRows = Array.from( nearestParentLayout.values() ).map(layoutItem => layoutItem.row)
+    const allRows = Array.from( layout.values() )
     const lowestRow = Math.min(...allRows)
 
     if (lowestRow < 0) {
-      nearestParentLayout.forEach(layoutItem => {
-        layoutItem.row += Math.abs(lowestRow)
+      layout.forEach((row) => {
+        row += Math.abs(lowestRow)
       })
     }
   }
