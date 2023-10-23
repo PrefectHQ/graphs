@@ -2,7 +2,7 @@ import { useSubscription } from '@prefecthq/vue-compositions'
 import { Graphics, RenderTexture, Sprite } from 'pixi.js'
 import { waitForApplication } from '@/objects'
 
-async function rectangle(): Promise<RenderTexture> {
+async function getRectangleTexture(): Promise<RenderTexture> {
   const application = await waitForApplication()
 
   const rectangle = new Graphics()
@@ -16,7 +16,7 @@ async function rectangle(): Promise<RenderTexture> {
 }
 
 export async function rectangleFactory(): Promise<Sprite> {
-  const texture = (await useSubscription(rectangle).promise()).response
+  const texture = (await useSubscription(getRectangleTexture).promise()).response
 
   return new Sprite(texture)
 }

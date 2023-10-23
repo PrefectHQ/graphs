@@ -1,5 +1,6 @@
-import { BitmapText, Container } from 'pixi.js'
+import { BitmapText, Container, Sprite } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
+import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
@@ -16,12 +17,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const { bar, render: renderBar } = await nodeBarFactory()
   const { label, render: renderLabel } = await nodeLabelFactory()
   const { container: nodesContainer, render: renderNodes, stop: stopNodes } = await nodesContainerFactory(node.id)
-
-  let open = false
+  const { arrow, render: renderArrowSprite } = await arrowFactory()
+  let isOpen = false
 
   container.addChild(bar)
   container.addChild(label)
   container.addChild(nodesContainer)
+  container.addChild(arrow)
 
   container.name = DEFAULT_NODE_CONTAINER_NAME
   container.eventMode = 'static'
@@ -36,25 +38,61 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function render(node: RunGraphNode): Promise<Container> {
     const label = await renderLabel(node)
     const bar = await renderBar(node)
+    await renderArrow()
 
-    label.position = getLabelPosition(label, bar)
+    label.position = await getLabelPosition(label, bar)
 
     return container
   }
 
-  async function toggle(): Promise<void> {
-    open = !open
-    nodesContainer.visible = open
+  async function renderArrow(): Promise<Sprite> {
+    const size = 10
+    const rotate = isOpen ? ArrowDirection.Down : ArrowDirection.Up
+    const arrow = await renderArrowSprite({ size, stroke: 2, radius: 2, rotate })
 
-    if (open) {
-      await renderNodes()
+    const middle = bar.height / 2
+    const offset = size / 4
+    arrow.y = isOpen ? middle - offset : middle + offset
+    arrow.x = 10
+
+    return arrow
+  }
+
+  async function toggle(): Promise<void> {
+    if (!isOpen) {
+      await open()
     } else {
-      stopNodes()
-      container.emit('resized')
+      await close()
     }
   }
 
-  function getLabelPosition(label: BitmapText, bar: Container): Pixels {
+  async function open(): Promise<void> {
+    isOpen = true
+    nodesContainer.visible = true
+
+    await Promise.all([
+      render(node),
+      renderNodes(),
+    ])
+
+    container.emit('resized')
+  }
+
+  async function close(): Promise<void> {
+    isOpen = false
+    nodesContainer.visible = false
+
+    await Promise.all([
+      render(node),
+      stopNodes(),
+    ])
+
+    container.emit('resized')
+  }
+
+  async function getLabelPosition(label: BitmapText, bar: Container): Promise<Pixels> {
+    const config = await waitForConfig()
+
     // todo: this should probably be nodePadding
     const margin = config.styles.nodeMargin
     const inside = bar.width > margin + label.width + margin
