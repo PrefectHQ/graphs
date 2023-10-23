@@ -38,9 +38,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function render(node: RunGraphNode): Promise<Container> {
     const label = await renderLabel(node)
     const bar = await renderBar(node)
-    await renderArrow()
+    const arrow = await renderArrow()
 
-    label.position = await getLabelPosition(label, bar)
+    label.position = await getLabelPosition({
+      label,
+      bar,
+      arrow,
+    })
 
     return container
   }
@@ -53,7 +57,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const middle = bar.height / 2
     const offset = size / 4
     arrow.y = isOpen ? middle - offset : middle + offset
-    arrow.x = 10
+    arrow.x = config.styles.nodeMargin + size
 
     return arrow
   }
@@ -90,17 +94,23 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     container.emit('resized')
   }
 
-  async function getLabelPosition(label: BitmapText, bar: Container): Promise<Pixels> {
+  type LabelPositionObjects = {
+    label: BitmapText,
+    bar: Container,
+    arrow: Sprite,
+  }
+
+  async function getLabelPosition({ label, arrow, bar }: LabelPositionObjects): Promise<Pixels> {
     const config = await waitForConfig()
 
     // todo: this should probably be nodePadding
     const margin = config.styles.nodeMargin
-    const inside = bar.width > margin + label.width + margin
+    const inside = bar.width > margin + label.width + arrow.width + margin
     const y = bar.height / 2 - label.height
 
     if (inside) {
       return {
-        x: margin,
+        x: margin + arrow.width + margin,
         y,
       }
     }
