@@ -9,6 +9,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
   const defaultNearestParentPosition = 0
   const minimumNodeEdgeGap = 16
   const nodeShoveRecords = new Map<string, NodeShoveDirection>()
+  let lowestRow = 0
 
   const layout: VerticalLayout = new Map()
 
@@ -22,7 +23,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
 
     const row = await getNearestParentPosition(node)
 
-    layout.set(nodeId, row)
+    setLayoutNode(nodeId, row)
   }
 
   purgeNegativeLayoutPositions()
@@ -70,8 +71,9 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
           row,
         )!
 
+        const parentIds = node.parents?.map(({id}) => id)
         const overlappingParentNodes = overlappingNodes.filter(layoutId => {
-          return node.parents?.some(({id}) => id === layoutId)
+          return parentIds.includes(layoutId)
         })
 
         if (overlappingParentNodes.length > 0 || overlappingNodes.length > 1) {
@@ -151,18 +153,6 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     return upstreamRow
   }
 
-  // function isPositionTaken(nodeStartX: number, position: number): boolean {
-  //   const layoutKeys = Object.keys(layout)
-  //   return layoutKeys.length > 0 && layoutKeys.some((nodeId) => {
-  //     const layoutItem = layout[nodeId]
-  //     return isNodesOverlapping({
-  //       firstNodeEndX: layoutItem.endX,
-  //       firstNodePosition: layoutItem.position,
-  //       lastNodeStartX: nodeStartX,
-  //       lastNodePosition: position,
-  //     })
-  //   })
-  // }
   function isPositionTaken(nodeStartX: number, row: number): boolean {
     if (layout.size === 0) {
       return false
@@ -220,7 +210,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
         desiredRow,
       })
 
-      layout.set(nodeId, desiredRow)
+      setLayoutNode(nodeId, desiredRow)
     }
   }
 
@@ -243,7 +233,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
   function getOverlappingNodeIds(nodeStartX: number, position: number): string[] | undefined {
     const overlappingNodeIds: string[] = []
 
-    layout.forEach((row, nodeId) => {
+    for (const [nodeId] of layout) {
       const firstNodeEndX = getNodeEndX(nodeId)
       const firstNodePosition = layout.get(nodeId)
 
@@ -262,7 +252,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
       if (isItemOverlapping) {
         overlappingNodeIds.push(nodeId)
       }
-    })
+    }
 
     if (overlappingNodeIds.length === 0) {
       return
@@ -390,7 +380,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     return await placeNearUpstreamNode(competingNodeId, nodeStartX)
   }
 
-  function getNodeParentDirectionCounts(nodeId: string): [number, number] {
+  function getNodeParentDirectionCounts(nodeId: string): [up: number, down: number] {
     const node = message.data.nodes.get(nodeId)
     const nodeRow = layout.get(nodeId)
 
@@ -431,14 +421,20 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     return nodeStartX + nodeWidth
   }
 
-  function purgeNegativeLayoutPositions(): void {
-    const allRows = Array.from( layout.values() )
-    const lowestRow = Math.min(...allRows)
+  function setLayoutNode(nodeId: string, row: number): void {
+    if (row < lowestRow) {
+      lowestRow = row
+    }
 
+    layout.set(nodeId, row)
+  }
+
+  function purgeNegativeLayoutPositions(): void {
     if (lowestRow < 0) {
-      layout.forEach((row) => {
-        row += Math.abs(lowestRow)
-      })
+      for (const [nodeId] of layout) {
+        const row = layout.get(nodeId)!
+        layout.set(nodeId, row + Math.abs(lowestRow))
+      }
     }
   }
 }

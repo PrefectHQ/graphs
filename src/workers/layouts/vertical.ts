@@ -6,8 +6,7 @@ export type VerticalLayout = Map<string, number>
 
 export async function getVerticalLayout(message: ClientLayoutMessage, horizontal: HorizontalLayout): Promise<VerticalLayout> {
   if (message.verticalSettings.mode === 'nearest-parent') {
-    const layout = await getVerticalNearestParentLayout(message, horizontal)
-    return layout
+    return await getVerticalNearestParentLayout(message, horizontal)
   }
 
   return getVerticalWaterfallLayout(message)
