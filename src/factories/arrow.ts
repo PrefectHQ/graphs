@@ -2,7 +2,7 @@ import { useSubscription } from '@prefecthq/vue-compositions'
 import { Graphics, Rectangle, Sprite, Texture } from 'pixi.js'
 import { waitForApplication } from '@/objects'
 
-type ArrowStyle = {
+export type ArrowStyle = {
   size: number,
   radius?: number,
   stroke?: number,

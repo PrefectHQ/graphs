@@ -2,13 +2,13 @@ import { ColorSource, Container } from 'pixi.js'
 import { capFactory } from '@/factories/cap'
 import { rectangleFactory } from '@/factories/rectangle'
 
-type BarStyle = {
+export type BarStyle = {
   width: number,
   height: number,
   background: ColorSource,
   radius: number,
-  capLeft?: false,
-  capRight?: false,
+  capLeft?: boolean,
+  capRight?: boolean,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
