@@ -1,7 +1,7 @@
-import { BitmapText, Container, Graphics } from 'pixi.js'
+import { BitmapText, Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
-import { nodeBoxFactory } from '@/factories/box'
 import { nodeLabelFactory } from '@/factories/label'
+import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
@@ -13,13 +13,13 @@ export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory
 export async function flowRunContainerFactory(node: RunGraphNode) {
   const container = new Container()
   const config = await waitForConfig()
-  const { box, render: renderBox } = await nodeBoxFactory()
+  const { bar, render: renderBar } = await nodeBarFactory()
   const { label, render: renderLabel } = await nodeLabelFactory()
   const { container: nodesContainer, render: renderNodes, stop: stopNodes } = await nodesContainerFactory(node.id)
 
   let open = false
 
-  container.addChild(box)
+  container.addChild(bar)
   container.addChild(label)
   container.addChild(nodesContainer)
 
@@ -35,9 +35,9 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function render(node: RunGraphNode): Promise<Container> {
     const label = await renderLabel(node)
-    const box = await renderBox(node)
+    const bar = await renderBar(node)
 
-    label.position = getLabelPosition(label, box)
+    label.position = getLabelPosition(label, bar)
 
     return container
   }
@@ -54,11 +54,11 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     }
   }
 
-  function getLabelPosition(label: BitmapText, box: Graphics): Pixels {
+  function getLabelPosition(label: BitmapText, bar: Container): Pixels {
     // todo: this should probably be nodePadding
     const margin = config.styles.nodeMargin
-    const inside = box.width > margin + label.width + margin
-    const y = box.height / 2 - label.height
+    const inside = bar.width > margin + label.width + margin
+    const y = bar.height / 2 - label.height
 
     if (inside) {
       return {
@@ -68,7 +68,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     }
 
     return {
-      x: box.width + margin,
+      x: bar.width + margin,
       y,
     }
   }

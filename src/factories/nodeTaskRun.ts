@@ -1,7 +1,7 @@
-import { BitmapText, Container, Graphics } from 'pixi.js'
+import { BitmapText, Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
-import { nodeBoxFactory } from '@/factories/box'
 import { nodeLabelFactory } from '@/factories/label'
+import { nodeBarFactory } from '@/factories/nodeBar'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
@@ -12,9 +12,9 @@ export type TaskRunContainer = Awaited<ReturnType<typeof taskRunContainerFactory
 export async function taskRunContainerFactory() {
   const container = new Container()
   const { label, render: renderLabel } = await nodeLabelFactory()
-  const { box, render: renderBox } = await nodeBoxFactory()
+  const { bar, render: renderBar } = await nodeBarFactory()
 
-  container.addChild(box)
+  container.addChild(bar)
   container.addChild(label)
 
   container.eventMode = 'none'
@@ -22,20 +22,20 @@ export async function taskRunContainerFactory() {
 
   async function render(node: RunGraphNode): Promise<Container> {
     const label = await renderLabel(node)
-    const box = await renderBox(node)
+    const bar = await renderBar(node)
 
-    label.position = await getLabelPosition(label, box)
+    label.position = await getLabelPosition(label, bar)
 
     return container
   }
 
-  async function getLabelPosition(label: BitmapText, box: Graphics): Promise<Pixels> {
+  async function getLabelPosition(label: BitmapText, bar: Container): Promise<Pixels> {
     const config = await waitForConfig()
 
     // todo: this should probably be nodePadding
     const margin = config.styles.nodeMargin
-    const inside = box.width > margin + label.width + margin
-    const y = box.height / 2 - label.height
+    const inside = bar.width > margin + label.width + margin
+    const y = bar.height / 2 - label.height
 
     if (inside) {
       return {
@@ -45,7 +45,7 @@ export async function taskRunContainerFactory() {
     }
 
     return {
-      x: box.width + margin,
+      x: bar.width + margin,
       y,
     }
   }
