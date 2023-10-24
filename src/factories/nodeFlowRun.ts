@@ -155,6 +155,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   return {
     kind: 'flow-run' as const,
     container,
+    bar,
     render,
   }
 }

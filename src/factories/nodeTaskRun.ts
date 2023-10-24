@@ -54,5 +54,6 @@ export async function taskRunContainerFactory() {
     kind: 'task-run' as const,
     render,
     container,
+    bar,
   }
 }

@@ -142,20 +142,32 @@ export async function nodesContainerFactory(runId: string) {
       const [parentId, childId] = edgeId.split('_')
       const parentPosition = layout.get(parentId)
       const childPosition = layout.get(childId)
+      const parentNode = nodes.get(parentId)
 
       if (!parentPosition || !childPosition) {
         console.warn(`Could not find edge in layout: Skipping ${edgeId}`)
         return
       }
 
-      const parentActualPosition = getActualPosition(parentPosition)
-      const childActualPosition = getActualPosition(childPosition)
-      const childActualPositionOffset = {
-        x: childActualPosition.x - parentActualPosition.x,
-        y: childActualPosition.y - parentActualPosition.y,
+      if (!parentNode) {
+        console.warn(`Could not find parent node in nodes: Skipping ${parentId}`)
+        return
       }
 
-      edge.container.position = parentActualPosition
+      const parentBarWidth = parentNode.bar.width
+
+      const parentActualPosition = getActualPosition(parentPosition)
+      const parentActualPositionOffset = {
+        x: parentActualPosition.x + parentBarWidth,
+        y: parentActualPosition.y + config.styles.nodeHeight / 2,
+      }
+      const childActualPosition = getActualPosition(childPosition)
+      const childActualPositionOffset = {
+        x: childActualPosition.x - parentActualPositionOffset.x,
+        y: childActualPosition.y - parentActualPositionOffset.y + config.styles.nodeHeight / 2,
+      }
+
+      edge.container.position = parentActualPositionOffset
       edge.render(childActualPositionOffset)
     }
 

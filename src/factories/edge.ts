@@ -21,8 +21,13 @@ export async function edgeFactory() {
 
   container.addChild(arrow)
 
-  async function render(pixels: Pixels): Promise<Container> {
-    arrow.position = pixels
+  async function render({ x, y }: Pixels): Promise<Container> {
+    const position = {
+      x: x - arrow.width,
+      y,
+    }
+
+    arrow.position = position
 
     return container
   }
