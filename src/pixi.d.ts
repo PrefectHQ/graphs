@@ -1,6 +1,6 @@
 declare namespace GlobalMixins {
   interface DisplayObjectEvents {
-    resized: [],
+    resized: [{ height: number }],
     rendered: [],
   }
 }
