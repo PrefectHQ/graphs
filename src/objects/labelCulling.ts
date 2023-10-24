@@ -4,7 +4,6 @@ import { waitForEvent } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
 import { LabelCull } from '@/services/labelCull'
 
-
 let instance: LabelCull | null = null
 let callback: (() => void) | null = null
 
