@@ -34,6 +34,10 @@ export async function offsetsFactory() {
     return value
   }
 
+  function getTotalValue(axis: number): number {
+    return getTotalOffset(axis + 1)
+  }
+
   function setOffset({ axis, nodeId, offset }: SetOffsetParameters): void {
     const value = offsets.get(axis) ?? new Map<string, number>()
 
@@ -53,6 +57,7 @@ export async function offsetsFactory() {
   return {
     getOffset,
     getTotalOffset,
+    getTotalValue,
     setOffset,
     removeOffset,
     clear,

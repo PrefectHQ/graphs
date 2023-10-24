@@ -62,6 +62,7 @@
     "vue-router": "^4.0.12"
   },
   "dependencies": {
+    "@pixi-essentials/cull": "2.0.0",
     "d3": "7.8.5",
     "date-fns": "2.30.0",
     "lodash.isequal": "4.5.0",

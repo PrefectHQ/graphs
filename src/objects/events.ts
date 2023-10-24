@@ -1,3 +1,4 @@
+import { Cull } from '@pixi-essentials/cull'
 import { Viewport } from 'pixi-viewport'
 import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
@@ -23,6 +24,7 @@ type Events = {
   fontsLoaded: Fonts,
   containerCreated: Container,
   layoutUpdated: LayoutMode,
+  cullCreated: Cull,
 }
 
 export type EventKey = keyof Events

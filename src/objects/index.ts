@@ -1,6 +1,7 @@
 import { RunGraphProps } from '@/models/RunGraph'
 import { startApplication, stopApplication } from '@/objects/application'
 import { startConfig, stopConfig } from '@/objects/config'
+import { startCulling, stopCulling } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { startFonts, stopFonts } from '@/objects/fonts'
 import { startNodes, stopNodes } from '@/objects/nodes'
@@ -27,6 +28,7 @@ export function start({ stage, props }: StartParameters): void {
   startFonts()
   startStage(stage)
   startConfig(props)
+  startCulling()
 }
 
 export function stop(): void {
@@ -40,4 +42,5 @@ export function stop(): void {
   stopConfig()
   stopScope()
   stopFonts()
+  stopCulling()
 }

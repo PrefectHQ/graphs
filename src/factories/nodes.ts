@@ -3,7 +3,7 @@ import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
-import { NodeLayoutResponse, NodeWidths, Pixels } from '@/models/layout'
+import { NodeLayoutResponse, NodeSize, NodeWidths, Pixels } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
@@ -91,7 +91,8 @@ export async function nodesContainerFactory(runId: string) {
       node.container.position = getActualPosition(position)
     }
 
-    container.emit('resized')
+    resized()
+
     container.emit('rendered')
   }
 
@@ -104,7 +105,7 @@ export async function nodesContainerFactory(runId: string) {
 
     const response = await nodeContainerFactory(node)
 
-    response.container.on('resized', () => resizeNode(node.id))
+    response.container.on('resized', size => resizeNode(node.id, size))
 
     nodes.set(node.id, response)
     container.addChild(response.container)
@@ -112,7 +113,7 @@ export async function nodesContainerFactory(runId: string) {
     return response
   }
 
-  function resizeNode(nodeId: string): void {
+  function resizeNode(nodeId: string, size: NodeSize): void {
     const node = nodes.get(nodeId)
     const nodeLayout = layout.get(nodeId)
 
@@ -121,7 +122,7 @@ export async function nodesContainerFactory(runId: string) {
     }
 
     const axis = nodeLayout.y
-    const offset = node.container.height
+    const offset = size.height
 
     rows.setOffset({ axis, nodeId, offset })
 
@@ -136,6 +137,25 @@ export async function nodesContainerFactory(runId: string) {
       x,
       y,
     }
+  }
+
+  function resized(): void {
+    const height = getHeight()
+
+    container.emit('resized', { height })
+  }
+
+  function getHeight(): number {
+    // todo: this should probably come from the layout itself
+    let maxRow = 0
+
+    for (const [, position] of layout) {
+      maxRow = Math.max(maxRow, position.y)
+    }
+
+    const height = rows.getTotalValue(maxRow)
+
+    return height
   }
 
   function onmessage({ data }: MessageEvent<WorkerMessage>): void {
@@ -164,6 +184,7 @@ export async function nodesContainerFactory(runId: string) {
 
   return {
     container,
+    getHeight,
     render,
     stop,
   }

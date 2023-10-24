@@ -6,6 +6,7 @@ import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
+import { cull } from '@/objects/culling'
 
 export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory>>
 
@@ -15,7 +16,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const config = await waitForConfig()
   const { bar, render: renderBar } = await nodeBarFactory()
   const { label, render: renderLabelText } = await nodeLabelFactory()
-  const { container: nodesContainer, render: renderNodes, stop: stopNodes } = await nodesContainerFactory(node.id)
+  const { container: nodesContainer, render: renderNodes, stop: stopNodes, getHeight: getNodesHeight } = await nodesContainerFactory(node.id)
   const { container: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
 
   let isOpen = false
@@ -31,7 +32,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   nodesContainer.visible = false
   nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
-  nodesContainer.on('resized', () => container.emit('resized'))
+  nodesContainer.on('resized', () => resized())
 
   async function render(): Promise<Container> {
     await renderBar(node)
@@ -51,14 +52,16 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function open(): Promise<void> {
     isOpen = true
-    nodesContainer.visible = true
 
     await Promise.all([
       render(),
       renderNodes(),
     ])
 
-    container.emit('resized')
+    nodesContainer.visible = true
+
+    cull()
+    resized()
   }
 
   async function close(): Promise<void> {
@@ -70,7 +73,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       stopNodes(),
     ])
 
-    container.emit('resized')
+    cull()
+    resized()
   }
 
   async function renderArrowButton(): Promise<Container> {
@@ -133,6 +137,19 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     label.position = { x, y }
 
     return label
+  }
+
+  function resized(): void {
+    const height = getHeight()
+
+    container.emit('resized', { height })
+  }
+
+  function getHeight(): number {
+    const nodesHeight = isOpen ? getNodesHeight() : 0
+    const flowRunNodeHeight = config.styles.nodeHeight
+
+    return flowRunNodeHeight + nodesHeight
   }
 
   return {
