@@ -22,7 +22,7 @@
         </p-radio-group>
       </p-label>
       <p-label label="Layout">
-        <p-radio-group v-model="vertical" :options="verticalOptions" disabled>
+        <p-radio-group v-model="vertical" :options="verticalOptions">
           <template #label="{ option }">
             {{ option.label }}
           </template>
