@@ -27,9 +27,11 @@
     "pixi",
     "playhead",
     "prefecthq",
+    "renderable",
     "subflow",
     "tailwindcss",
     "trackpad",
+    "uncull",
     "unref",
     "vite",
     "vitejs"

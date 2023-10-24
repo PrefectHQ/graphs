@@ -29,7 +29,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   arrowButton.on('click', toggle)
 
-  nodesContainer.visible = false
+  nodesContainer.renderable = false
   nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
   nodesContainer.on('resized', () => container.emit('resized'))
 
@@ -51,7 +51,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function open(): Promise<void> {
     isOpen = true
-    nodesContainer.visible = true
+    nodesContainer.renderable = true
 
     await Promise.all([
       render(),
@@ -63,7 +63,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function close(): Promise<void> {
     isOpen = false
-    nodesContainer.visible = false
+    nodesContainer.renderable = false
 
     await Promise.all([
       render(),
