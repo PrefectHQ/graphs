@@ -1,4 +1,4 @@
-import { NodeLayoutResponse } from '@/models/layout'
+import { NodesLayoutResponse } from '@/models/layout'
 import { exhaustive } from '@/utilities/exhaustive'
 import { getHorizontalLayout } from '@/workers/layouts/horizontal'
 import { getVerticalLayout } from '@/workers/layouts/vertical'
@@ -23,14 +23,15 @@ function post(message: WorkerMessage): void {
 }
 
 async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> {
-  const { data } = message
+  const { data, widths } = message
   const horizontal = getHorizontalLayout(message)
   const vertical = await getVerticalLayout(message, horizontal)
-  const layout: NodeLayoutResponse = new Map()
+  const layout: NodesLayoutResponse = new Map()
 
   for (const [nodeId, node] of data.nodes) {
     const x = horizontal.get(nodeId)
     const y = vertical.get(nodeId)
+    const width = widths.get(nodeId)
 
     if (x === undefined) {
       console.warn(`NodeId not found in horizontal layout: Skipping ${node.label}`)
@@ -42,9 +43,15 @@ async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> 
       return
     }
 
+    if (width === undefined) {
+      console.warn(`NodeId not found in widths: Skipping ${node.label}`)
+      return
+    }
+
     layout.set(nodeId, {
       x,
       y,
+      width,
     })
   }
 
