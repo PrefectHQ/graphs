@@ -2,13 +2,17 @@ import { Container, Ticker } from 'pixi.js'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
 import { RunGraphNode } from '@/models/RunGraph'
+import { waitForCull } from '@/objects/culling'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeContainerFactory(node: RunGraphNode) {
+  const cull = await waitForCull()
   const { container, render: renderNode } = await getNodeFactory(node)
   const cacheKey: string | null = null
+
+  cull.add(container)
 
   async function render(node: RunGraphNode): Promise<Container> {
     const currentCacheKey = getNodeCacheKey(node)
