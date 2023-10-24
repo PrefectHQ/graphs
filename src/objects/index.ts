@@ -4,6 +4,7 @@ import { startConfig, stopConfig } from '@/objects/config'
 import { startCulling, stopCulling } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { startFonts, stopFonts } from '@/objects/fonts'
+import { startLabelCulling, stopLabelCulling } from '@/objects/labelCulling'
 import { startNodes, stopNodes } from '@/objects/nodes'
 import { startScale, stopScale } from '@/objects/scale'
 import { startScope, stopScope } from '@/objects/scope'
@@ -29,6 +30,7 @@ export function start({ stage, props }: StartParameters): void {
   startStage(stage)
   startConfig(props)
   startCulling()
+  startLabelCulling()
 }
 
 export function stop(): void {
@@ -43,4 +45,5 @@ export function stop(): void {
   stopScope()
   stopFonts()
   stopCulling()
+  stopLabelCulling()
 }

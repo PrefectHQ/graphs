@@ -59,8 +59,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     ])
 
     nodesContainer.visible = true
+    nodesContainer.once('rendered', () => cull())
 
-    cull()
     resized()
   }
 
