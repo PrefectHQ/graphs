@@ -11,6 +11,8 @@ export async function startCulling(): Promise<void> {
   const viewport = await waitForViewport()
   const application = await waitForApplication()
 
+  // this cull uses renderable so any other custom logic for showing or hiding must use
+  // the "visible" property or this will interfere
   cullInstance = new Cull({
     toggle: 'renderable',
   })
