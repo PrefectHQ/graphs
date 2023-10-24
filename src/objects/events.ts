@@ -8,7 +8,7 @@ import { LayoutMode } from '@/models/layout'
 import { RequiredGraphConfig } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
-import { LabelCull } from '@/objects/labelCulling'
+import { LabelCull } from '@/services/labelCull'
 
 type Events = {
   scaleCreated: HorizontalScale,
