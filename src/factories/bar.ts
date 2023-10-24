@@ -24,7 +24,10 @@ export async function barFactory() {
   async function render(style: BarStyle): Promise<Container> {
     const { width, x, visible } = getRectangleStyles(style)
 
-    await renderCaps(style)
+    await renderCaps({
+      height: style.height,
+      radius: style.radius,
+    })
 
     rectangle.visible = visible
     rectangle.width = width
