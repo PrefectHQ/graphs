@@ -1,14 +1,18 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
+import { EdgeFactory, edgeFactory } from '@/factories/edge'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
-import { NodeLayoutResponse, NodeSize, NodeWidths, Pixels } from '@/models/layout'
+import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
+
+// parentId-childId
+type EdgeKey = `${string}_${string}`
 
 export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
 
@@ -16,12 +20,13 @@ export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
 export async function nodesContainerFactory(runId: string) {
   const worker = layoutWorkerFactory(onmessage)
   const nodes = new Map<string, NodeContainerFactory>()
+  const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
   const config = await waitForConfig()
   const rows = await offsetsFactory()
 
   let data: RunGraphData | null = null
-  let layout: NodeLayoutResponse = new Map()
+  let layout: NodesLayoutResponse = new Map()
   let interval: ReturnType<typeof setInterval> | undefined = undefined
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
@@ -37,7 +42,10 @@ export async function nodesContainerFactory(runId: string) {
       throw new Error('Data was null after fetch')
     }
 
-    await renderNodes()
+    await Promise.all([
+      renderNodes(),
+      renderEdges(),
+    ])
   }
 
   async function fetch(): Promise<void> {
@@ -58,6 +66,7 @@ export async function nodesContainerFactory(runId: string) {
     const widths: NodeWidths = new Map()
 
     for (const [nodeId, node] of data.nodes) {
+      // todo: this await is probably making this slower. Probably be faster with a Promise.all
       // eslint-disable-next-line no-await-in-loop
       const { width } = await renderNode(node)
 
@@ -74,21 +83,80 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   async function renderNode(node: RunGraphNode): Promise<Container> {
-    const { render } = await getNodeContainerService(node)
+    const { render } = await getNodeContainerFactory(node)
 
     return await render(node)
   }
 
-  function setPositions(): void {
-    for (const [nodeId, position] of layout) {
-      const node = nodes.get(nodeId)
+  async function renderEdges(): Promise<void> {
+    if (data === null) {
+      return
+    }
 
-      if (!node) {
-        console.warn(`Count not find ${nodeId} from layout in nodes`)
+    const promises: Promise<Container>[] = []
+
+    for (const [nodeId, { children }] of data.nodes) {
+      for (const { id: childId } of children) {
+        promises.push(renderEdge(nodeId, childId))
+      }
+    }
+
+    await Promise.all(promises)
+  }
+
+  async function renderEdge(parentId: string, childId: string): Promise<Container> {
+    const { render } = await getEdgeFactory(parentId, childId)
+
+    return await render({ x: 0, y: 0 })
+  }
+
+  async function getEdgeFactory(parentId: string, childId: string): Promise<EdgeFactory> {
+    const key: EdgeKey = `${parentId}_${childId}`
+    const existing = edges.get(key)
+
+    if (existing) {
+      return existing
+    }
+
+    const edge = await edgeFactory()
+
+    edges.set(key, edge)
+    container.addChild(edge.container)
+
+    return edge
+  }
+
+  function setPositions(): void {
+    for (const [nodeId, { container }] of nodes) {
+      const position = layout.get(nodeId)
+
+      if (!position) {
+        console.warn(`Could not find node in layout: Skipping ${nodeId}`)
         return
       }
 
-      node.container.position = getActualPosition(position)
+      container.position = getActualPosition(position)
+    }
+
+    for (const [edgeId, edge] of edges) {
+      const [parentId, childId] = edgeId.split('_')
+      const parentPosition = layout.get(parentId)
+      const childPosition = layout.get(childId)
+
+      if (!parentPosition || !childPosition) {
+        console.warn(`Could not find edge in layout: Skipping ${edgeId}`)
+        return
+      }
+
+      const parentActualPosition = getActualPosition(parentPosition)
+      const childActualPosition = getActualPosition(childPosition)
+      const childActualPositionOffset = {
+        x: childActualPosition.x - parentActualPosition.x,
+        y: childActualPosition.y - parentActualPosition.y,
+      }
+
+      edge.container.position = parentActualPosition
+      edge.render(childActualPositionOffset)
     }
 
     resized()
@@ -96,7 +164,7 @@ export async function nodesContainerFactory(runId: string) {
     container.emit('rendered')
   }
 
-  async function getNodeContainerService(node: RunGraphNode): Promise<NodeContainerFactory> {
+  async function getNodeContainerFactory(node: RunGraphNode): Promise<NodeContainerFactory> {
     const existing = nodes.get(node.id)
 
     if (existing) {
