@@ -4,25 +4,27 @@ import { waitForApplication } from '@/objects/application'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
 
-let cull: Cull | null = null
+let cullInstance: Cull | null = null
 let callback: (() => void) | null = null
 
 export async function startCulling(): Promise<void> {
   const viewport = await waitForViewport()
   const application = await waitForApplication()
 
-  cull = new Cull()
+  cullInstance = new Cull({
+    toggle: 'renderable',
+  })
 
   callback = (): void => {
     if (viewport.dirty) {
-      cull?.cull(application.renderer.screen)
+      cullInstance?.cull(application.renderer.screen)
       viewport.dirty = false
     }
   }
 
   Ticker.shared.add(callback)
 
-  emitter.emit('cullCreated', cull)
+  emitter.emit('cullCreated', cullInstance)
 }
 
 export function stopCulling(): void {
@@ -30,31 +32,32 @@ export function stopCulling(): void {
     Ticker.shared.remove(callback)
   }
 
-  cull = null
+  cullInstance = null
   callback = null
 }
 
 export function pauseCulling(): void {
-  if (!cull) {
-    return
+  if (cullInstance) {
+    cullInstance.uncull()
   }
-
-  cull.uncull()
 }
 
-export async function resumeCulling(): Promise<void> {
-  if (!cull) {
+export async function cull(): Promise<void> {
+  if (!cullInstance) {
     return
   }
 
   const application = await waitForApplication()
 
-  cull.cull(application.renderer.screen)
+  cullInstance.cull(application.renderer.screen)
+}
+
+export async function resumeCulling(): Promise<void> {
 }
 
 export async function waitForCull(): Promise<Cull> {
-  if (cull) {
-    return cull
+  if (cullInstance) {
+    return cullInstance
   }
 
   return await waitForEvent('cullCreated')

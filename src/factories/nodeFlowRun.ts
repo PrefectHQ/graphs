@@ -6,6 +6,7 @@ import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
+import { cull } from '@/objects/culling'
 
 export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory>>
 
@@ -29,7 +30,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   arrowButton.on('click', toggle)
 
-  nodesContainer.renderable = false
+  nodesContainer.visible = false
   nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
   nodesContainer.on('resized', () => resized())
 
@@ -57,20 +58,22 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       renderNodes(),
     ])
 
-    nodesContainer.renderable = true
+    nodesContainer.visible = true
 
+    cull()
     resized()
   }
 
   async function close(): Promise<void> {
     isOpen = false
-    nodesContainer.renderable = false
+    nodesContainer.visible = false
 
     await Promise.all([
       render(),
       stopNodes(),
     ])
 
+    cull()
     resized()
   }
 

@@ -6,7 +6,7 @@ import { RunGraphProps } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
-import { pauseCulling, resumeCulling } from '@/objects/culling'
+import { pauseCulling } from '@/objects/culling'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { waitForScope } from '@/objects/scope'
@@ -65,8 +65,6 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
 
   pauseCulling()
   const { x, y, width, height } = container.getLocalBounds()
-  resumeCulling()
-
   const scale = viewport.findFit(width, height)
 
   // if the container doesn't have a size we cannot do anything here
