@@ -10,7 +10,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
   animationDuration: 500,
   styles: {
     nodeHeight: 30,
-    nodeMargin: 2,
+    nodeMargin: 4,
     nodeBorderRadius: 8,
     node: () => ({
       background: '#ffffff',

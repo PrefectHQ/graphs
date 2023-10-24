@@ -7,7 +7,7 @@ type CapStyle = {
   radius: number,
 }
 
-async function cap({ height, radius }: CapStyle): Promise<Texture> {
+async function getCapTexture({ height, radius }: CapStyle): Promise<Texture> {
   const application = await waitForApplication()
 
   const graphic = new Graphics()
@@ -37,7 +37,7 @@ export function capFactory() {
   const right = new Sprite()
 
   async function render(style: CapStyle): Promise<CapSprites> {
-    const texture = (await useSubscription(cap, [style]).promise()).response
+    const texture = (await useSubscription(getCapTexture, [style]).promise()).response
     left.texture = texture
     right.texture = texture
 

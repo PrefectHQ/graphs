@@ -1,9 +1,9 @@
-import { BitmapText, Container } from 'pixi.js'
+import { ColorSource, Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { nodeLabelFactory } from '@/factories/label'
+import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
-import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 
@@ -14,63 +14,125 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const container = new Container()
   const config = await waitForConfig()
   const { bar, render: renderBar } = await nodeBarFactory()
-  const { label, render: renderLabel } = await nodeLabelFactory()
+  const { label, render: renderLabelText } = await nodeLabelFactory()
   const { container: nodesContainer, render: renderNodes, stop: stopNodes } = await nodesContainerFactory(node.id)
+  const { container: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
 
-  let open = false
+  let isOpen = false
 
   container.addChild(bar)
   container.addChild(label)
   container.addChild(nodesContainer)
+  container.addChild(arrowButton)
 
   container.name = DEFAULT_NODE_CONTAINER_NAME
-  container.eventMode = 'static'
-  container.cursor = 'pointer'
 
-  container.on('click', toggle)
+  arrowButton.on('click', toggle)
 
   nodesContainer.visible = false
   nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
   nodesContainer.on('resized', () => container.emit('resized'))
 
-  async function render(node: RunGraphNode): Promise<Container> {
-    const label = await renderLabel(node)
-    const bar = await renderBar(node)
-
-    label.position = getLabelPosition(label, bar)
+  async function render(): Promise<Container> {
+    await renderBar(node)
+    await renderArrowButton()
+    await renderLabel()
 
     return container
   }
 
   async function toggle(): Promise<void> {
-    open = !open
-    nodesContainer.visible = open
-
-    if (open) {
-      await renderNodes()
+    if (!isOpen) {
+      await open()
     } else {
-      stopNodes()
-      container.emit('resized')
+      await close()
     }
   }
 
-  function getLabelPosition(label: BitmapText, bar: Container): Pixels {
+  async function open(): Promise<void> {
+    isOpen = true
+    nodesContainer.visible = true
+
+    await Promise.all([
+      render(),
+      renderNodes(),
+    ])
+
+    container.emit('resized')
+  }
+
+  async function close(): Promise<void> {
+    isOpen = false
+    nodesContainer.visible = false
+
+    await Promise.all([
+      render(),
+      stopNodes(),
+    ])
+
+    container.emit('resized')
+  }
+
+  async function renderArrowButton(): Promise<Container> {
+    const offset = 4
+    const buttonSize = config.styles.nodeHeight - offset
+    const inside = bar.width > buttonSize
+    const background = getArrowButtonBackground({ inside })
+
+    const container = await renderArrowButtonContainer({
+      arrow: {
+        size: 10,
+        stroke: 2,
+      },
+      button: {
+        width: buttonSize,
+        height: buttonSize,
+        background: background,
+        radius: config.styles.nodeBorderRadius - offset / 2,
+      },
+      isOpen,
+    })
+
+    container.x = inside ? offset / 2 : bar.width + config.styles.nodeMargin
+    container.y = offset / 2
+
+    return container
+  }
+
+  type ArrowButtonBackgroundParameters = {
+    inside: boolean,
+  }
+
+  function getArrowButtonBackground({ inside }: ArrowButtonBackgroundParameters): ColorSource {
+    if (inside) {
+      const { background } = config.styles.node(node)
+
+      return background ?? '#fff'
+    }
+
+    return '#333'
+  }
+
+
+  async function renderLabel(): Promise<Container> {
+    const label = await renderLabelText(node)
+
     // todo: this should probably be nodePadding
     const margin = config.styles.nodeMargin
-    const inside = bar.width > margin + label.width + margin
-    const y = bar.height / 2 - label.height
 
-    if (inside) {
-      return {
-        x: margin,
-        y,
-      }
-    }
+    const barRight = bar.x + bar.width
+    const buttonRight = arrowButton.x + arrowButton.width
+    const barWithoutMargin = bar.width - margin * 2
 
-    return {
-      x: bar.width + margin,
-      y,
-    }
+    const labelMinLeft = Math.max(barRight, buttonRight)
+    const inside = barWithoutMargin > labelMinLeft + label.width
+    const y = bar.height / 2
+    const x = inside ? labelMinLeft + margin : arrowButton.x + arrowButton.width + margin
+
+    label.anchor.set(0, 0.5)
+    label.position = { x, y }
+
+    return label
   }
 
   return {
