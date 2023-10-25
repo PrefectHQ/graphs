@@ -124,18 +124,7 @@ export async function nodesContainerFactory(runId: string) {
     container.addChild(edge.container)
   }
 
-  function setPositions(): void {
-    for (const [nodeId, { container }] of nodes) {
-      const position = layout.get(nodeId)
-
-      if (!position) {
-        console.warn(`Could not find node in layout: Skipping ${nodeId}`)
-        return
-      }
-
-      container.position = getActualPosition(position)
-    }
-
+  function renderEdges(): void {
     for (const [edgeId, edge] of edges) {
       const [parentId, childId] = edgeId.split('_')
       const parentPosition = layout.get(parentId)
@@ -168,7 +157,21 @@ export async function nodesContainerFactory(runId: string) {
       edge.container.position = parentActualPositionOffset
       edge.render(childActualPositionOffset)
     }
+  }
 
+  function setPositions(): void {
+    for (const [nodeId, { container }] of nodes) {
+      const position = layout.get(nodeId)
+
+      if (!position) {
+        console.warn(`Could not find node in layout: Skipping ${nodeId}`)
+        return
+      }
+
+      container.position = getActualPosition(position)
+    }
+
+    renderEdges()
     resized()
 
     container.emit('rendered')
