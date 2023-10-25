@@ -3,6 +3,7 @@ import { DEFAULT_EDGE_CONTAINER_NAME } from '@/consts'
 import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { Pixels } from '@/models/layout'
 import { waitForConfig } from '@/objects/config'
+import { waitForCull } from '@/objects/culling'
 import { getPixelTexture } from '@/textures/pixel'
 import { repeat } from '@/utilities/repeat'
 
@@ -14,6 +15,8 @@ const totalPoints = 20
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function edgeFactory() {
   const config = await waitForConfig()
+  const cull = await waitForCull()
+
   const container = new Container()
   const { arrow, render: renderArrow } = await arrowFactory()
   const pixel = await getPixelTexture()
@@ -22,21 +25,41 @@ export async function edgeFactory() {
 
   container.name = DEFAULT_EDGE_CONTAINER_NAME
 
-  renderArrow({
-    size: 10,
-    rotate: ArrowDirection.Right,
-  })
-
   container.addChild(arrow)
   container.addChild(rope)
+  cull.addAll([arrow, rope])
 
-  function render({ x, y }: Pixels): Container {
+  async function render(target: Pixels): Promise<Container> {
+    updatePoints(target)
+
+    const arrow = await renderArrow({
+      size: 10,
+      rotate: ArrowDirection.Right,
+    })
+
+    // little magic numbering here to get the arrows point in the right spot
+    arrow.position = {
+      x: target.x - 8,
+      y: target.y,
+    }
+
+    arrow.tint = config.styles.edgeColor
+    rope.tint = config.styles.edgeColor
+
+    return container
+  }
+
+  function updatePoints({ x, y }: Pixels): void {
     const source: Pixels = { x: 0, y: 0 }
-    const target: Pixels = { x: x - 4, y }
+
+    // little magic numbering here to get the line to end at the arrows point
+    const target: Pixels = { x: x - 2, y }
+
     const sourceBezier: Pixels = {
       x: getXBezier(source.x, { source, target }),
       y: source.y,
     }
+
     const targetBezier: Pixels = {
       x: getXBezier(target.x, { source, target }, true),
       y: target.y,
@@ -44,7 +67,7 @@ export async function edgeFactory() {
 
     for (const [index, point] of points.entries()) {
       if (index === points.length - 1) {
-        point.set(x - 4, y)
+        point.set(target.x, target.y)
         continue
       }
 
@@ -57,16 +80,6 @@ export async function edgeFactory() {
 
       point.set(position.x, position.y)
     }
-
-    arrow.position = {
-      x: x - arrow.width,
-      y,
-    }
-
-    arrow.tint = config.styles.edgeColor
-    rope.tint = config.styles.edgeColor
-
-    return container
   }
 
   return {
