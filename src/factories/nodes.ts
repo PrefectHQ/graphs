@@ -44,7 +44,7 @@ export async function nodesContainerFactory(runId: string) {
 
     await Promise.all([
       renderNodes(),
-      renderEdges(),
+      createEdges(),
     ])
   }
 
@@ -88,42 +88,40 @@ export async function nodesContainerFactory(runId: string) {
     return await render(node)
   }
 
-  async function renderEdges(): Promise<void> {
+  async function createEdges(): Promise<void> {
     if (data === null) {
       return
     }
 
-    const promises: Promise<Container>[] = []
+    const promises: Promise<void>[] = []
 
     for (const [nodeId, { children }] of data.nodes) {
       for (const { id: childId } of children) {
-        promises.push(renderEdge(nodeId, childId))
+        promises.push(createEdge(nodeId, childId))
       }
     }
 
     await Promise.all(promises)
   }
 
-  async function renderEdge(parentId: string, childId: string): Promise<Container> {
-    const { render } = await getEdgeFactory(parentId, childId)
-
-    return await render({ x: 0, y: 0 })
-  }
-
-  async function getEdgeFactory(parentId: string, childId: string): Promise<EdgeFactory> {
+  async function createEdge(parentId: string, childId: string): Promise<void> {
     const key: EdgeKey = `${parentId}_${childId}`
-    const existing = edges.get(key)
 
-    if (existing) {
-      return existing
+    // its possible a parent has duplicate children, bail if we've already created an edge
+    if (edges.has(key)) {
+      return
     }
 
     const edge = await edgeFactory()
 
+    // this second check is necessary because all edges get created at the same time in a loop without awaiting individual
+    // calls to this function. So an edge might get created twice but we want to make sure we don't add duplicate edge containers
+    if (edges.has(key)) {
+      return
+    }
+
     edges.set(key, edge)
     container.addChild(edge.container)
-
-    return edge
   }
 
   function setPositions(): void {
