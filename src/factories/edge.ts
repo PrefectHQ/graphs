@@ -1,5 +1,5 @@
 import { Container, Point, SimpleRope } from 'pixi.js'
-import { DEFAULT_EDGE_CONTAINER_NAME } from '@/consts'
+import { DEFAULT_EDGE_CONTAINER_NAME, DEFAULT_EDGE_MINIMUM_BEZIER, DEFAULT_EDGE_POINTS } from '@/consts'
 import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { Pixels } from '@/models/layout'
 import { waitForConfig } from '@/objects/config'
@@ -9,8 +9,6 @@ import { repeat } from '@/utilities/repeat'
 
 export type EdgeFactory = Awaited<ReturnType<typeof edgeFactory>>
 
-const minimumBezier = 64
-const totalPoints = 20
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function edgeFactory() {
@@ -20,7 +18,7 @@ export async function edgeFactory() {
   const container = new Container()
   const { arrow, render: renderArrow } = await arrowFactory()
   const pixel = await getPixelTexture()
-  const points = repeat(totalPoints, () => new Point())
+  const points = repeat(DEFAULT_EDGE_POINTS, () => new Point())
   const rope = new SimpleRope(pixel, points)
 
   container.name = DEFAULT_EDGE_CONTAINER_NAME
@@ -96,7 +94,7 @@ type BezierControlPoints = {
 function getXBezier(xPos: number, { source, target }: BezierControlPoints, upstream?: boolean): number {
   const bezierLength = (target.x - source.x) / 2
 
-  return xPos + (bezierLength > minimumBezier ? bezierLength : minimumBezier) * (upstream ? -1 : 1)
+  return xPos + (bezierLength > DEFAULT_EDGE_MINIMUM_BEZIER ? bezierLength : DEFAULT_EDGE_MINIMUM_BEZIER) * (upstream ? -1 : 1)
 }
 
 type ControlPoints = {
@@ -108,7 +106,7 @@ type ControlPoints = {
 
 function getPointBezierPosition(pointOnPath: number, control: ControlPoints): Pixels {
   // https://javascript.info/bezier-curve#de-casteljau-s-algorithm
-  const point = pointOnPath / totalPoints
+  const point = pointOnPath / DEFAULT_EDGE_POINTS
   const { source, target, sourceBezier, targetBezier } = control
 
   const cx1 = source.x + (sourceBezier.x - source.x) * point
