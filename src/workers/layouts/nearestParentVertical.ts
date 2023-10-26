@@ -151,18 +151,6 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     return upstreamRow
   }
 
-  // function isPositionTaken(nodeStartX: number, position: number): boolean {
-  //   const layoutKeys = Object.keys(layout)
-  //   return layoutKeys.length > 0 && layoutKeys.some((nodeId) => {
-  //     const layoutItem = layout[nodeId]
-  //     return isNodesOverlapping({
-  //       firstNodeEndX: layoutItem.endX,
-  //       firstNodePosition: layoutItem.position,
-  //       lastNodeStartX: nodeStartX,
-  //       lastNodePosition: position,
-  //     })
-  //   })
-  // }
   function isPositionTaken(nodeStartX: number, row: number): boolean {
     if (layout.size === 0) {
       return false
