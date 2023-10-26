@@ -1,5 +1,6 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
+import { borderFactory } from '@/factories/border'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
@@ -18,9 +19,11 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const { label, render: renderLabelText } = await nodeLabelFactory()
   const { container: nodesContainer, render: renderNodes, stop: stopNodes, getHeight: getNodesHeight } = await nodesContainerFactory(node.id)
   const { container: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
+  const { border, render: renderBorderContainer } = await borderFactory()
 
   let isOpen = false
 
+  container.addChild(border)
   container.addChild(bar)
   container.addChild(label)
   container.addChild(nodesContainer)
@@ -38,6 +41,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     await renderBar(node)
     await renderArrowButton()
     await renderLabel()
+    await renderBorder()
 
     return container
   }
@@ -48,6 +52,28 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     } else {
       await close()
     }
+  }
+
+  async function renderBorder(): Promise<void> {
+    const { background = '#fff' } = config.styles.node(node)
+    const offset = 4
+    const openHeight = getNodesHeight() + config.styles.nodeHeight + offset * 2
+    const closedHeight = config.styles.nodeHeight
+
+    const position = isOpen ? -offset : offset
+    const width = isOpen ? bar.width + offset * 2 : bar.width - offset * 2
+    const height = isOpen ? openHeight : closedHeight
+    const stroke = isOpen ? 2 : 1
+
+    const border = await renderBorderContainer({
+      width,
+      height,
+      stroke,
+      radius: config.styles.nodeBorderRadius,
+      color: background,
+    })
+
+    border.position.set(position, position)
   }
 
   async function open(): Promise<void> {
@@ -117,6 +143,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   function resized(): void {
+    renderBorder()
     const height = getHeight()
 
     container.emit('resized', { height })
