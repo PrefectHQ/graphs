@@ -57,10 +57,12 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function renderBorder(): Promise<void> {
     const { background = '#fff' } = config.styles.node(node)
     const offset = 4
-    const x = isOpen ? -offset : offset
-    const y = x
+    const openHeight = getNodesHeight() + config.styles.nodeHeight + offset * 2
+    const closedHeight = config.styles.nodeHeight
+
+    const position = isOpen ? -offset : offset
     const width = isOpen ? bar.width + offset * 2 : bar.width - offset * 2
-    const height = isOpen ? getNodesHeight() : config.styles.nodeHeight
+    const height = isOpen ? openHeight : closedHeight
     const stroke = isOpen ? 2 : 1
 
     const border = await renderBorderContainer({
@@ -71,7 +73,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       color: background,
     })
 
-    border.position.set(x, y)
+    border.position.set(position, position)
   }
 
   async function open(): Promise<void> {
