@@ -130,10 +130,10 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
     const labelMinLeft = Math.max(barRight, buttonRight)
     const inside = barWithoutMargin > labelMinLeft + label.width
-    const y = bar.height / 2
+    const yOffset = 0.5
+    const y = bar.height / 2 - label.height / 2 - yOffset
     const x = inside ? labelMinLeft + margin : arrowButton.x + arrowButton.width + margin
 
-    label.anchor.set(0, 0.5)
     label.position = { x, y }
 
     return label
