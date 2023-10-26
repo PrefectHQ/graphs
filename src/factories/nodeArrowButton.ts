@@ -1,6 +1,7 @@
 import { Container, ColorMatrixFilter } from 'pixi.js'
 import { ArrowDirection, ArrowStyle, arrowFactory } from '@/factories/arrow'
 import { BarStyle, barFactory } from '@/factories/bar'
+import { borderFactory } from '@/factories/border'
 
 type NodeArrowBarStyles = {
   arrow: Omit<ArrowStyle, 'rotate'>,
@@ -13,12 +14,14 @@ export async function nodeArrowButtonFactory() {
   const container = new Container()
   const { arrow, render: renderArrow } = await arrowFactory()
   const { bar, render: renderBar } = await barFactory()
+  const { border, render: renderBorder } = await borderFactory()
   const filter = new ColorMatrixFilter()
 
   container.eventMode = 'static'
   container.cursor = 'pointer'
   container.addChild(bar)
   container.addChild(arrow)
+  container.addChild(border)
 
   container.on('mouseover', onMouseover)
   container.on('mouseout', onMouseout)
@@ -29,6 +32,14 @@ export async function nodeArrowButtonFactory() {
     const rotate = isOpen ? ArrowDirection.Up : ArrowDirection.Down
     const arrow = await renderArrow({ ...arrowStyles, rotate })
     const bar = await renderBar(buttonStyles)
+
+    await renderBorder({
+      width: buttonStyles.width,
+      height: buttonStyles.height,
+      radius: buttonStyles.radius,
+      stroke: 1,
+      color: 'green',
+    })
 
     const middle = {
       y: bar.height / 2,

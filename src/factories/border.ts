@@ -22,6 +22,24 @@ export function borderFactory() {
   const top = new Sprite()
   const bottom = new Sprite()
 
+  topLeft.name = 'border-corner-top-left'
+  topRight.name = 'border-corner-top-right'
+  bottomLeft.name = 'border-corner-bottom-left'
+  bottomRight.name = 'border-corner-bottom-right'
+  left.name = 'border-corner-left'
+  right.name = 'border-corner-right'
+  top.name = 'border-corner-top'
+  bottom.name = 'border-corner-bottom'
+
+  topRight.anchor.x = 1
+  topRight.scale.x = -1
+  bottomLeft.anchor.y = 1
+  bottomLeft.scale.y = -1
+  bottomRight.anchor.x = 1
+  bottomRight.scale.x = -1
+  bottomRight.anchor.y = 1
+  bottomRight.scale.y = -1
+
   container.addChild(topLeft)
   container.addChild(topRight)
   container.addChild(bottomLeft)
@@ -32,7 +50,7 @@ export function borderFactory() {
   container.addChild(bottom)
 
   async function render(style: BorderStyle): Promise<Container> {
-    const { radius = 0, color = '#fff', stroke } = style
+    const { radius = 0, color = '#fff', stroke, width, height } = style
     const size = radius * 2
 
     const cornerStyle: CornerStyle = {
@@ -44,25 +62,77 @@ export function borderFactory() {
     const corner = await getCornerTexture(cornerStyle)
     const pixel = await getPixelTexture()
 
-    setCornerTexture(corner)
-    setBorderTexture(pixel)
+    updateCorners({
+      texture: corner,
+      width,
+      height,
+      size,
+    })
+
+    updateBorders({
+      texture: pixel,
+      width,
+      height,
+      size,
+      stroke,
+    })
+
     setTint(color)
 
     return container
   }
 
-  function setCornerTexture(texture: Texture): void {
+  type UpdateCorners = {
+    texture: Texture,
+    width: number,
+    height: number,
+    size: number,
+  }
+
+  function updateCorners({ texture, width, height, size }: UpdateCorners): void {
     topLeft.texture = texture
     topRight.texture = texture
     bottomLeft.texture = texture
     bottomRight.texture = texture
+
+    topLeft.position.set(0, 0)
+    topRight.position.set(width - size, 0)
+    bottomLeft.position.set(0, height - size)
+    bottomRight.position.set(width - size, height - size)
   }
 
-  function setBorderTexture(texture: Texture): void {
+  type UpdateBorders = {
+    texture: Texture,
+    width: number,
+    height: number,
+    size: number,
+    stroke: number,
+  }
+
+  function updateBorders({ texture, size, width, height, stroke }: UpdateBorders): void {
+    const sidesHeight = height - size * 2
+    const topAndBottomWidth = width - size * 2
+
     top.texture = texture
     left.texture = texture
     right.texture = texture
     bottom.texture = texture
+
+    left.position.set(0, size)
+    left.height = sidesHeight
+    left.width = stroke
+
+    right.position.set(width - stroke, size)
+    right.height = sidesHeight
+    right.width = stroke
+
+    top.position.set(size, 0)
+    top.width = topAndBottomWidth
+    top.height = stroke
+
+    bottom.position.set(size, height - stroke)
+    bottom.width = topAndBottomWidth
+    bottom.height = stroke
   }
 
   function setTint(color: ColorSource): void {
@@ -77,7 +147,7 @@ export function borderFactory() {
   }
 
   return {
-    container,
+    border: container,
     render,
   }
 }
