@@ -9,6 +9,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
   const defaultNearestParentPosition = 0
   const minimumNodeEdgeGap = 16
   const nodeShoveRecords = new Map<string, NodeShoveDirection>()
+  const rowTracker = new Map<number, Set<string>>()
   let lowestRow = 0
 
   const layout: VerticalLayout = new Map()
@@ -160,15 +161,17 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
 
     let positionTaken = false
 
-    for (const [nodeId] of layout) {
+    const rowNodes = rowTracker.get(row) ?? []
+
+    for (const nodeId of rowNodes) {
       const firstNodePosition = layout.get(nodeId)!
       const firstNodeEndX = getNodeEndX(nodeId)
 
       const overlapping = isNodesOverlapping({
         firstNodeEndX,
-        firstNodePosition,
+        firstNodeRow: firstNodePosition,
         lastNodeStartX: nodeStartX,
-        lastNodePosition: row,
+        lastNodeRow: row,
       })
 
       if (overlapping) {
@@ -216,37 +219,39 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
 
   type IsNodesOverlappingProps = {
     firstNodeEndX: number,
-    firstNodePosition: number,
+    firstNodeRow: number,
     lastNodeStartX: number,
-    lastNodePosition: number,
+    lastNodeRow: number,
   }
   function isNodesOverlapping({
     firstNodeEndX,
-    firstNodePosition,
+    firstNodeRow,
     lastNodeStartX,
-    lastNodePosition,
+    lastNodeRow,
   }: IsNodesOverlappingProps): boolean {
-    return firstNodePosition === lastNodePosition
+    return firstNodeRow === lastNodeRow
       && firstNodeEndX + minimumNodeEdgeGap >= lastNodeStartX
   }
 
-  function getOverlappingNodeIds(nodeStartX: number, position: number): string[] | undefined {
+  function getOverlappingNodeIds(nodeStartX: number, row: number): string[] | undefined {
     const overlappingNodeIds: string[] = []
 
-    for (const [nodeId] of layout) {
-      const firstNodeEndX = getNodeEndX(nodeId)
-      const firstNodePosition = layout.get(nodeId)
+    const rowNodes = rowTracker.get(row) ?? []
 
-      if (firstNodePosition === undefined) {
+    for (const nodeId of rowNodes) {
+      const firstNodeEndX = getNodeEndX(nodeId)
+      const firstNodeRow = layout.get(nodeId)
+
+      if (firstNodeRow === undefined) {
         console.warn('NearestParentLayout - getOverlappingNodeIds: Node was not found in the layout', nodeId)
         return
       }
 
       const isItemOverlapping = isNodesOverlapping({
         firstNodeEndX,
-        firstNodePosition,
+        firstNodeRow,
         lastNodeStartX: nodeStartX,
-        lastNodePosition: position,
+        lastNodeRow: row,
       })
 
       if (isItemOverlapping) {
@@ -425,6 +430,17 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     if (row < lowestRow) {
       lowestRow = row
     }
+
+    if (layout.has(nodeId)) {
+      const previousRow = layout.get(nodeId)!
+      rowTracker.get(previousRow)?.delete(nodeId)
+    }
+
+    if (!rowTracker.has(row)) {
+      rowTracker.set(row, new Set())
+    }
+
+    rowTracker.get(row)?.add(nodeId)
 
     layout.set(nodeId, row)
   }
