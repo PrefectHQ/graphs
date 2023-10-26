@@ -2,56 +2,65 @@ import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, BitmapText, IBitmapTextStyle } from 'pixi.js'
 import { emitter, waitForEvent } from '@/objects/events'
 
-const bitmapFontStyles = {
-  'nodeTextDefault': {
-    fontSize: 16,
-    lineHeight: 20,
-    fill: 0xffffff,
-  },
+type BitmapFontStyle = {
+  fontFamily: string,
+  fontSize: number,
+  lineHeight: number,
+  fill: number,
 }
 
-const defaultFontFamily = 'InterVariable'
-const fallbackFontFamily = 'sans-serif'
-const options = {
+const fontStyles = {
+  inter: {
+    fontFamily: 'InterVariable',
+    fontSize: 16,
+    lineHeight: 20,
+    fill: 0xFFFFFF,
+  },
+} as const satisfies Record<string, Readonly<BitmapFontStyle>>
+
+const fontOptions = {
   resolution: 4,
   chars: BitmapFont.ASCII,
 }
-let loaded = false
 
-type BitmapFonts = keyof typeof bitmapFontStyles
-const bitmapFonts = new Map<BitmapFonts, Partial<IBitmapTextStyle>>()
+const fallbackFontFamily = 'sans-serif'
 
 const fonts = {
-  nodeTextDefault: fontFactory('nodeTextDefault'),
+  inter: fontFactory(fontStyles.inter),
 } as const
+
+let loaded = false
 
 export type Fonts = typeof fonts
 
 export async function startFonts(): Promise<void> {
-  let fontFamily = defaultFontFamily
+  const styles = Object.values(fontStyles)
 
-  const font = new FontFaceObserver(fontFamily)
-
-  try {
-    await font.load()
-  } catch (error) {
-    console.error(error)
-    console.warn(`fonts: font ${fontFamily} failed to load, falling back to ${fallbackFontFamily}`)
-    fontFamily = fallbackFontFamily
-  }
-
-  for (const [fontName, style] of Object.entries(bitmapFontStyles)) {
-    const name = fontName as BitmapFonts
-    const properties: CreateBitmapFont = {
-      ...style,
-      name,
-      fontFamily,
-    }
-    bitmapFonts.set(name as BitmapFonts, createBitmapFont(properties))
-  }
+  await Promise.all(styles.map(fontStyle => loadFont(fontStyle)))
 
   loaded = true
+
   emitter.emit('fontsLoaded', fonts)
+}
+
+async function loadFont(fontStyle: BitmapFontStyle): Promise<void> {
+  const { fontFamily: name, ...style } = fontStyle
+
+  const observer = new FontFaceObserver(name)
+
+  try {
+    await observer.load()
+  } catch (error) {
+    console.error(error)
+    console.warn(`fonts: font ${name} failed to load, falling back to ${fallbackFontFamily}`)
+
+    return loadFont({
+      fontFamily: fallbackFontFamily,
+      ...style,
+    })
+  }
+
+  BitmapFont.from(name, fontStyle, fontOptions)
 }
 
 export function stopFonts(): void {
@@ -66,39 +75,15 @@ export async function waitForFonts(): Promise<Fonts> {
   return await waitForEvent('fontsLoaded')
 }
 
-function fontFactory(bitmapFont: BitmapFonts) {
-  return (text: string) => {
-    return new BitmapText(text, bitmapFonts.get(bitmapFont))
+function fontFactory(style: BitmapFontStyle): (text: string) => BitmapText {
+  const { fontFamily: fontName, ...fontStyle } = style
+
+  const bitmapStyle: Partial<IBitmapTextStyle> = {
+    fontName,
+    ...fontStyle,
   }
-}
 
-type CreateBitmapFont = {
-  name: BitmapFonts,
-  fontFamily: string,
-  fontSize: number,
-  lineHeight: number,
-  fill: number,
-}
-function createBitmapFont({
-  name,
-  fontFamily,
-  fontSize,
-  lineHeight,
-  fill,
-}: CreateBitmapFont): Partial<IBitmapTextStyle> {
-  BitmapFont.from(
-    name,
-    {
-      fontFamily,
-      fontSize,
-      lineHeight,
-      fill,
-    },
-    options,
-  )
-
-  return {
-    fontName: name,
-    fontSize,
+  return (text: string) => {
+    return new BitmapText(text, bitmapStyle)
   }
 }
