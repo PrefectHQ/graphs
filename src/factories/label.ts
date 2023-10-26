@@ -8,9 +8,7 @@ export async function nodeLabelFactory() {
   const { inter } = await waitForFonts()
   const cull = await waitForLabelCull()
 
-  const label = inter('', {
-    fontSize: 12,
-  })
+  const label = inter('')
 
   cull.add(label)
 

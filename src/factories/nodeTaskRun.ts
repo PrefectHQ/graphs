@@ -35,7 +35,7 @@ export async function taskRunContainerFactory() {
     // todo: this should probably be nodePadding
     const margin = config.styles.nodeMargin
     const inside = bar.width > margin + label.width + margin
-    const y = bar.height / 2 - label.height
+    const y = bar.height / 2 - label.height / 2
 
     if (inside) {
       return {
