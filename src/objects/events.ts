@@ -8,7 +8,7 @@ import { LayoutMode } from '@/models/layout'
 import { RequiredGraphConfig } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
-import { LabelCull } from '@/services/labelCull'
+import { VisibilityCull } from '@/services/visibilityCull'
 
 type Events = {
   scaleCreated: HorizontalScale,
@@ -26,7 +26,8 @@ type Events = {
   containerCreated: Container,
   layoutUpdated: LayoutMode,
   cullCreated: Cull,
-  labelCullCreated: LabelCull,
+  labelCullCreated: VisibilityCull,
+  edgeCullCreated: VisibilityCull,
 }
 
 export type EventKey = keyof Events
