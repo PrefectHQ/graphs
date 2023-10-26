@@ -13,7 +13,9 @@ export type LayoutMode = {
 
 export type NodeWidths = Map<string, number>
 
-export type NodeLayoutResponse = Map<string, {
+export type NodeLayoutResponse = {
   x: number,
   y: number,
-}>
+}
+
+export type NodesLayoutResponse = Map<string, NodeLayoutResponse>

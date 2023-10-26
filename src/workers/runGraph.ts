@@ -1,5 +1,5 @@
 import { HorizontalPositionSettings, VerticalPositionSettings } from '@/factories/position'
-import { NodeLayoutResponse, NodeWidths } from '@/models/layout'
+import { NodesLayoutResponse, NodeWidths } from '@/models/layout'
 import { RunGraphData } from '@/models/RunGraph'
 
 // eslint-disable-next-line import/default
@@ -18,7 +18,7 @@ export type ClientLayoutMessage = {
 
 export type WorkerLayoutMessage = {
   type: 'layout',
-  layout: NodeLayoutResponse,
+  layout: NodesLayoutResponse,
 }
 
 export interface IRunGraphWorker extends Omit<Worker, 'postMessage' | 'onmessage'> {

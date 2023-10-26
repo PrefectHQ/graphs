@@ -1,22 +1,8 @@
-import { useSubscription } from '@prefecthq/vue-compositions'
-import { Graphics, RenderTexture, Sprite } from 'pixi.js'
-import { waitForApplication } from '@/objects'
-
-async function getRectangleTexture(): Promise<RenderTexture> {
-  const application = await waitForApplication()
-
-  const rectangle = new Graphics()
-  rectangle.beginFill('#fff')
-  rectangle.drawRect(0, 0, 1, 1)
-  rectangle.endFill()
-
-  const texture = application.renderer.generateTexture(rectangle)
-
-  return texture
-}
+import { Sprite } from 'pixi.js'
+import { getPixelTexture } from '@/textures/pixel'
 
 export async function rectangleFactory(): Promise<Sprite> {
-  const texture = (await useSubscription(getRectangleTexture).promise()).response
+  const texture = await getPixelTexture()
 
   return new Sprite(texture)
 }

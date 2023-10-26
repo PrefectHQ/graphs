@@ -1,7 +1,10 @@
 export const DEFAULT_POLL_INTERVAL = 1000
 export const DEFAULT_NODES_CONTAINER_NAME = 'nodes-container'
 export const DEFAULT_NODE_CONTAINER_NAME = 'node-container'
+export const DEFAULT_EDGE_CONTAINER_NAME = 'edge-container'
 export const DEFAULT_TIME_COLUMN_SPAN_SECONDS = 1
 export const DEFAULT_TIME_COLUMN_SIZE_PIXELS = 20
 export const DEFAULT_LINEAR_COLUMN_SIZE_PIXELS = 200
 export const DEFAULT_LABEL_CULLING_THRESHOLD = 0.2
+export const DEFAULT_EDGE_MINIMUM_BEZIER = 64
+export const DEFAULT_EDGE_POINTS = 20
