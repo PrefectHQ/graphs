@@ -1,6 +1,6 @@
+import { RunGraphNode } from '@/models'
 import { HorizontalLayout } from '@/workers/layouts/horizontal'
 import { VerticalLayout } from '@/workers/layouts/vertical'
-import { RunGraphNode } from "@/models"
 import { ClientLayoutMessage } from '@/workers/runGraph'
 
 type NodeShoveDirection = 1 | -1
@@ -13,7 +13,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
 
   const layout: VerticalLayout = new Map()
 
-  for (const [nodeId] of message.data.nodes) {
+  for await (const [nodeId] of message.data.nodes) {
     const node = message.data.nodes.get(nodeId)
 
     if (!node) {
@@ -39,7 +39,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     }
 
     // if one dependency
-    if (node.parents && node.parents.length === 1) {
+    if (node.parents.length === 1) {
       if (layout.has(node.parents[0].id)) {
         return await placeNearUpstreamNode(node.parents[0].id, nodeStartX)
       }
@@ -49,8 +49,8 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     }
 
     // if more than one dependency – add to the middle of upstream dependencies
-    if (node.parents && node.parents.length > 0) {
-      const upstreamRows = node.parents.map(({id}) => {
+    if (node.parents.length > 0) {
+      const upstreamRows = node.parents.map(({ id }) => {
         const row = layout.get(id)
 
         if (row === undefined) {
@@ -71,7 +71,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
           row,
         )!
 
-        const parentIds = node.parents?.map(({id}) => id)
+        const parentIds = node.parents.map(({ id }) => id)
         const overlappingParentNodes = overlappingNodes.filter(layoutId => {
           return parentIds.includes(layoutId)
         })
@@ -389,7 +389,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
       return [0, 0]
     }
 
-    return node.parents?.reduce((counts, parent) => {
+    return node.parents.reduce((counts, parent) => {
       const parentRow = layout.get(parent.id)
 
       if (parentRow === undefined) {
@@ -406,7 +406,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
       }
 
       return counts
-    }, [0, 0]) ?? [0, 0]
+    }, [0, 0])
   }
 
   function getNodeEndX(nodeId: string): number {
