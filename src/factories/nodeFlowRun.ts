@@ -78,22 +78,14 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderArrowButton(): Promise<Container> {
-    const offset = 4
-    const buttonSize = config.styles.nodeHeight - offset
+    const buttonSize = config.styles.nodeToggleSize
+    const offset = config.styles.nodeHeight - buttonSize
     const inside = bar.width > buttonSize
-    const background = getArrowButtonBackground({ inside })
+    const { background = '#fff' } = config.styles.node(node)
 
     const container = await renderArrowButtonContainer({
-      arrow: {
-        size: 10,
-        stroke: 2,
-      },
-      button: {
-        width: buttonSize,
-        height: buttonSize,
-        background: background,
-        radius: config.styles.nodeBorderRadius - offset / 2,
-      },
+      background,
+      inside,
       isOpen,
     })
 
@@ -102,21 +94,6 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
     return container
   }
-
-  type ArrowButtonBackgroundParameters = {
-    inside: boolean,
-  }
-
-  function getArrowButtonBackground({ inside }: ArrowButtonBackgroundParameters): ColorSource {
-    if (inside) {
-      const { background } = config.styles.node(node)
-
-      return background ?? '#fff'
-    }
-
-    return '#333'
-  }
-
 
   async function renderLabel(): Promise<Container> {
     const label = await renderLabelText(node)
