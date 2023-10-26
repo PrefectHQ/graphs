@@ -4,7 +4,6 @@ import { emitter, waitForEvent } from '@/objects/events'
 
 const bitmapFontStyles = {
   'nodeTextDefault': {
-    fontFamily: 'nodeTextDefault',
     fontSize: 16,
     lineHeight: 20,
     fill: 0xffffff,
@@ -41,8 +40,14 @@ export async function startFonts(): Promise<void> {
     fontFamily = fallbackFontFamily
   }
 
-  for (const [name, style] of Object.entries(bitmapFontStyles)) {
-    bitmapFonts.set(name as BitmapFonts, createBitmapFont(style as CreateBitmapFont))
+  for (const [fontName, style] of Object.entries(bitmapFontStyles)) {
+    const name = fontName as BitmapFonts
+    const properties: CreateBitmapFont = {
+      ...style,
+      name,
+      fontFamily,
+    }
+    bitmapFonts.set(name as BitmapFonts, createBitmapFont(properties))
   }
 
   loaded = true
