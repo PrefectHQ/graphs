@@ -61,11 +61,12 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const y = x
     const width = isOpen ? bar.width + offset * 2 : bar.width - offset * 2
     const height = isOpen ? getNodesHeight() : config.styles.nodeHeight
+    const stroke = isOpen ? 2 : 1
 
     const border = await renderBorderContainer({
-      width: width,
-      height: height,
-      stroke: 2,
+      width,
+      height,
+      stroke,
       radius: config.styles.nodeBorderRadius,
       color: background,
     })
