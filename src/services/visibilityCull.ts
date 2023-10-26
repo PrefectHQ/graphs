@@ -1,12 +1,12 @@
 import { DisplayObject } from 'pixi.js'
 
-type LabelCullStatus = 'hidden' | 'visible'
+type CullStatus = 'hidden' | 'visible'
 
-// This label culler intentionally uses the `visible` property to show and hide labels
-// this is because the viewport culling uses the `renderable` property and will interfere
-// if the same property is used
-export class LabelCull {
-  private status: LabelCullStatus = 'visible'
+// This culler intentionally uses the `visible` property to show and hide graphics
+// this is because the viewport edge culling uses the `renderable` property and will
+// interfere if the same property is used
+export class VisibilityCull {
+  private status: CullStatus = 'visible'
   private readonly labels = new Set<DisplayObject>()
 
   private get visible(): boolean {

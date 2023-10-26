@@ -4,16 +4,17 @@ import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { Pixels } from '@/models/layout'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
+import { waitForEdgeCull } from '@/objects/edgeCulling'
 import { getPixelTexture } from '@/textures/pixel'
 import { repeat } from '@/utilities/repeat'
 
 export type EdgeFactory = Awaited<ReturnType<typeof edgeFactory>>
 
-
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function edgeFactory() {
   const config = await waitForConfig()
   const cull = await waitForCull()
+  const edgeCull = await waitForEdgeCull()
 
   const container = new Container()
   const { arrow, render: renderArrow } = await arrowFactory()
@@ -25,7 +26,10 @@ export async function edgeFactory() {
 
   container.addChild(arrow)
   container.addChild(rope)
+
   cull.addAll([arrow, rope])
+
+  edgeCull.add(container)
 
   async function render(target: Pixels): Promise<Container> {
     updatePoints(target)
