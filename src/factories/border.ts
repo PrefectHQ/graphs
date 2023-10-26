@@ -51,11 +51,12 @@ export function borderFactory() {
 
   async function render(style: BorderStyle): Promise<Container> {
     const { radius = 0, color = '#fff', stroke, width, height } = style
-    const size = radius * 2
+    const smallest = Math.min(width, height)
+    const size = radius * 2 > smallest ? smallest / 2 : radius * 2
 
     const cornerStyle: CornerStyle = {
       size,
-      radius,
+      radius: radius,
       stroke,
     }
 
@@ -110,8 +111,8 @@ export function borderFactory() {
   }
 
   function updateBorders({ texture, size, width, height, stroke }: UpdateBorders): void {
-    const sidesHeight = height - size * 2
-    const topAndBottomWidth = width - size * 2
+    const sidesHeight = Math.max(height - size * 2, 0)
+    const topAndBottomWidth = Math.max(width - size * 2, 0)
 
     top.texture = texture
     left.texture = texture
