@@ -54,10 +54,12 @@ async function loadFont(fontStyle: BitmapFontStyle): Promise<void> {
     console.error(error)
     console.warn(`fonts: font ${name} failed to load, falling back to ${fallbackFontFamily}`)
 
-    return loadFont({
+    BitmapFont.from(name, {
       fontFamily: fallbackFontFamily,
       ...style,
-    })
+    }, fontOptions)
+
+    return
   }
 
   BitmapFont.from(name, fontStyle, fontOptions)
