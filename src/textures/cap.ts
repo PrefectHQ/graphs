@@ -1,5 +1,6 @@
 import { useSubscription } from '@prefecthq/vue-compositions'
 import { Graphics, Rectangle, Texture } from 'pixi.js'
+import { DEFAULT_TEXTURE_RESOLUTION } from '@/consts'
 import { waitForApplication } from '@/objects/application'
 
 export type CapStyle = {
@@ -18,9 +19,7 @@ async function cap({ height, radius }: CapStyle): Promise<Texture> {
   const cap = application.renderer.generateTexture(graphic, {
     // drew a rounded rectangle and then just using half of the graphic to get just the left "cap"
     region: new Rectangle(0, 0, radius, height),
-
-    // manually bumping up the resolution to keep the border radius from being blurry
-    resolution: 10,
+    resolution: DEFAULT_TEXTURE_RESOLUTION,
   })
 
   return cap

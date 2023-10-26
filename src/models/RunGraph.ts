@@ -1,5 +1,4 @@
 import { ColorSource } from 'pixi.js'
-import { DeepRequired } from 'ts-essentials'
 import { StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
 
@@ -51,6 +50,9 @@ export type RunGraphStyles = {
   nodeHeight?: number,
   nodeMargin?: number,
   nodeBorderRadius?: number,
+  nodeToggleSize?: number,
+  nodeToggleBorderRadius?: number,
+  nodeToggleBorderColor?: ColorSource,
   edgeColor?: string,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }
@@ -62,4 +64,6 @@ export type RunGraphConfig = {
   styles?: RunGraphStyles,
 }
 
-export type RequiredGraphConfig = DeepRequired<RunGraphConfig>
+export type RequiredGraphConfig = Omit<RunGraphConfig, 'styles'> & {
+  styles: Required<RunGraphStyles>,
+}
