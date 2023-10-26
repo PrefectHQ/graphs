@@ -5,12 +5,10 @@ import { waitForLabelCull } from '@/objects/labelCulling'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeLabelFactory() {
-  const { inter } = await waitForFonts()
+  const { nodeTextDefault } = await waitForFonts()
   const cull = await waitForLabelCull()
 
-  const label = inter('', {
-    fontSize: 12,
-  })
+  const label = nodeTextDefault('')
 
   cull.add(label)
 
