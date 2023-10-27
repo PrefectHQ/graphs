@@ -138,12 +138,12 @@ export async function nodesContainerFactory(runId: string) {
 
       if (!parentPosition || !childPosition) {
         console.warn(`Could not find edge in layout: Skipping ${edgeId}`)
-        return
+        continue
       }
 
       if (!parentNode) {
         console.warn(`Could not find parent node in nodes: Skipping ${parentId}`)
-        return
+        continue
       }
 
       const parentBarWidth = parentNode.bar.width
@@ -169,7 +169,8 @@ export async function nodesContainerFactory(runId: string) {
 
       if (!position) {
         console.warn(`Could not find node in layout: Skipping ${nodeId}`)
-        return
+        node.container.visible = false
+        continue
       }
 
       const newPosition = getActualPosition(position)
@@ -220,6 +221,16 @@ export async function nodesContainerFactory(runId: string) {
   function getActualPosition(position: Pixels): Pixels {
     const y = rows.getTotalOffset(position.y)
     const { x } = position
+
+    if (layout.horizontal === 'dependency') {
+      const column = position.x / DEFAULT_LINEAR_COLUMN_SIZE_PIXELS
+      const x = position.x + column * config.styles.columnGap
+
+      return {
+        y,
+        x,
+      }
+    }
 
     return {
       x,

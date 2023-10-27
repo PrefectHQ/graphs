@@ -3,7 +3,10 @@ import { horizontalScaleFactory } from '@/factories/position'
 import { getColumns } from '@/utilities/columns'
 import { ClientLayoutMessage } from '@/workers/runGraph'
 
-export type HorizontalLayout = Map<string, number>
+export type HorizontalLayout = Map<string, {
+  x: number,
+  column: number,
+}>
 
 export function getHorizontalLayout(message: ClientLayoutMessage): HorizontalLayout {
   if (message.horizontalSettings.mode === 'dependency') {
@@ -14,12 +17,22 @@ export function getHorizontalLayout(message: ClientLayoutMessage): HorizontalLay
 }
 
 function getHorizontalDependencyLayout({ data, horizontalSettings }: ClientLayoutMessage): HorizontalLayout {
-  const levels = getColumns(data)
+  const columns = getColumns(data)
   const scale = horizontalScaleFactory(horizontalSettings)
   const layout: HorizontalLayout = new Map()
 
   for (const [nodeId] of data.nodes) {
-    layout.set(nodeId, scale(levels.get(nodeId)!))
+    const column = columns.get(nodeId)
+
+    if (column === undefined) {
+      console.warn(`Node not found in columns: Skipping ${nodeId}`)
+      continue
+    }
+
+    layout.set(nodeId, {
+      x: scale(column),
+      column,
+    })
   }
 
   return layout
@@ -30,7 +43,12 @@ function getHorizontalTimeLayout({ data, horizontalSettings }: ClientLayoutMessa
   const layout: HorizontalLayout = new Map()
 
   for (const [nodeId, node] of data.nodes) {
-    layout.set(nodeId, scale(node.start_time))
+    const value = scale(node.start_time)
+
+    layout.set(nodeId, {
+      column: value,
+      x: value,
+    })
   }
 
   return layout

@@ -16,6 +16,8 @@ export type NodeWidths = Map<string, number>
 export type NodeLayoutResponse = {
   x: number,
   y: number,
+  column: number,
+  row: number,
 }
 
 export type NodesLayoutResponse = Map<string, NodeLayoutResponse>

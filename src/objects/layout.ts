@@ -3,8 +3,8 @@ import { HorizontalMode, LayoutMode, VerticalMode } from '@/models/layout'
 import { emitter } from '@/objects/events'
 
 export const layout: LayoutMode = reactive({
-  horizontal: 'trace',
-  vertical: 'waterfall',
+  horizontal: 'dependency',
+  vertical: 'nearest-parent',
 })
 
 export function setLayoutMode({ horizontal, vertical }: LayoutMode): void {

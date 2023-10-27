@@ -1,6 +1,6 @@
 import { HorizontalLayout } from '@/workers/layouts/horizontal'
+import { getVerticalNearestParentLayout } from '@/workers/layouts/nearestParentVertical'
 import { ClientLayoutMessage } from '@/workers/runGraph'
-import { getVerticalNearestParentLayout } from './nearestParentVertical'
 
 export type VerticalLayout = Map<string, number>
 
