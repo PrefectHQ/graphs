@@ -1,6 +1,8 @@
 import { Container, Ticker } from 'pixi.js'
+import { animate } from '@/factories/animation'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
+import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForCull } from '@/objects/culling'
 
@@ -55,9 +57,17 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     return values.join(',')
   }
 
+  function setPosition({ x, y }: Pixels, skipAnimation?: boolean): void {
+    animate(container, {
+      x,
+      y,
+    }, skipAnimation)
+  }
+
   return {
     render,
     container,
     bar,
+    setPosition,
   }
 }
