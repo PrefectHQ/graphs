@@ -31,7 +31,7 @@ export async function nodesContainerFactory(runId: string) {
 
   let initialized = false
   let data: RunGraphData | null = null
-  let nodesLayout: NodesLayoutResponse = new Map()
+  let nodesLayout: NodesLayoutResponse | null = null
   let interval: ReturnType<typeof setInterval> | undefined = undefined
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
@@ -130,10 +130,14 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function renderEdges(): void {
+    if (!nodesLayout) {
+      return
+    }
+
     for (const [edgeId, edge] of edges) {
       const [parentId, childId] = edgeId.split('_')
-      const parentPosition = nodesLayout.get(parentId)
-      const childPosition = nodesLayout.get(childId)
+      const parentPosition = nodesLayout.positions.get(parentId)
+      const childPosition = nodesLayout.positions.get(childId)
       const parentNode = nodes.get(parentId)
 
       if (!parentPosition || !childPosition) {
@@ -164,8 +168,12 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function setPositions(): void {
+    if (!nodesLayout) {
+      return
+    }
+
     for (const [nodeId, node] of nodes) {
-      const position = nodesLayout.get(nodeId)
+      const position = nodesLayout.positions.get(nodeId)
 
       if (!position) {
         console.warn(`Could not find node in layout: Skipping ${nodeId}`)
@@ -202,8 +210,12 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function resizeNode(nodeId: string, size: NodeSize): void {
+    if (!nodesLayout) {
+      return
+    }
+
     const node = nodes.get(nodeId)
-    const nodeLayout = nodesLayout.get(nodeId)
+    const nodeLayout = nodesLayout.positions.get(nodeId)
 
     if (!node || !nodeLayout) {
       return
@@ -242,16 +254,19 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function getHeight(): number {
-    // todo: this should probably come from the layout itself
-    let maxRow = 0
-
-    for (const [, position] of nodesLayout) {
-      maxRow = Math.max(maxRow, position.y)
+    if (!nodesLayout) {
+      return 0
     }
 
-    const height = rows.getTotalValue(maxRow)
+    return rows.getTotalValue(nodesLayout.maxRow)
+  }
 
-    return height
+  function getWidth(): number {
+    if (!nodesLayout) {
+      return 0
+    }
+
+    throw new Error('Not implemented')
   }
 
   function onmessage({ data }: MessageEvent<WorkerMessage>): void {

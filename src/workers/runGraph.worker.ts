@@ -26,7 +26,10 @@ async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> 
   const { data } = message
   const horizontalLayout = getHorizontalLayout(message)
   const verticalLayout = await getVerticalLayout(message, horizontalLayout)
-  const layout: NodesLayoutResponse = new Map()
+  const positions: NodesLayoutResponse['positions'] = new Map()
+
+  let maxRow = 0
+  let maxColumn = 0
 
   for (const [nodeId, node] of data.nodes) {
     const horizontal = horizontalLayout.get(nodeId)
@@ -42,7 +45,10 @@ async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> 
       continue
     }
 
-    layout.set(nodeId, {
+    maxRow = Math.max(maxRow, vertical)
+    maxColumn = Math.max(maxColumn, horizontal.column)
+
+    positions.set(nodeId, {
       ...horizontal,
       y: vertical,
       row: vertical,
@@ -51,6 +57,10 @@ async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> 
 
   post({
     type: 'layout',
-    layout,
+    layout: {
+      maxRow,
+      maxColumn,
+      positions,
+    },
   })
 }

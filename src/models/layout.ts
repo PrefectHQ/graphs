@@ -20,4 +20,8 @@ export type NodeLayoutResponse = {
   row: number,
 }
 
-export type NodesLayoutResponse = Map<string, NodeLayoutResponse>
+export type NodesLayoutResponse = {
+  maxRow: number,
+  maxColumn: number,
+  positions: Map<string, NodeLayoutResponse>,
+}
