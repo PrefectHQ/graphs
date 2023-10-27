@@ -22,16 +22,10 @@ export async function edgeFactory() {
 
   const container = new Container()
   const { arrow, render: renderArrow } = await arrowFactory()
-  await renderArrow({
-    size: 10,
-    rotate: ArrowDirection.Right,
-  })
   const pixel = await getPixelTexture()
   const points = repeat(DEFAULT_EDGE_POINTS, () => new Point())
   const rope = new SimpleRope(pixel, points)
-
-  arrow.tint = config.styles.edgeColor
-  rope.tint = config.styles.edgeColor
+  let initialized = false
 
   container.name = DEFAULT_EDGE_CONTAINER_NAME
 
@@ -42,8 +36,25 @@ export async function edgeFactory() {
 
   edgeCull.add(container)
 
-  function setPosition(source: Pixels, target: Pixels, skipAnimation?: boolean): void {
+  async function render(): Promise<Container> {
+    await renderArrow({
+      size: 10,
+      rotate: ArrowDirection.Right,
+    })
+
+    arrow.tint = config.styles.edgeColor
+    rope.tint = config.styles.edgeColor
+
+    return container
+  }
+
+  async function setPosition(source: Pixels, target: Pixels, skipAnimation?: boolean): Promise<void> {
     const newPositions = getPointPositions(target)
+
+    if (!initialized) {
+      await render()
+      initialized = true
+    }
 
     for (const [index, point] of points.entries()) {
       const { x, y } = newPositions[index]
@@ -101,6 +112,7 @@ export async function edgeFactory() {
 
   return {
     container,
+    render,
     setPosition,
   }
 }
