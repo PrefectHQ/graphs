@@ -55,6 +55,11 @@ export async function cull(): Promise<void> {
 }
 
 export async function resumeCulling(): Promise<void> {
+  const application = await waitForApplication()
+
+  if (cullInstance) {
+    cullInstance.cull(application.renderer.screen)
+  }
 }
 
 export async function waitForCull(): Promise<Cull> {
