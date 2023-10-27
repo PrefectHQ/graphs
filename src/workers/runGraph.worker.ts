@@ -32,12 +32,12 @@ async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> 
     const horizontal = horizontalLayout.get(nodeId)
     const vertical = verticalLayout.get(nodeId)
 
-    if (!horizontal) {
+    if (horizontal === undefined) {
       console.warn(`NodeId not found in horizontal layout: Skipping ${node.label}`)
       continue
     }
 
-    if (!vertical) {
+    if (vertical === undefined) {
       console.warn(`NodeId not found in vertical layout: Skipping ${node.label}`)
       continue
     }
