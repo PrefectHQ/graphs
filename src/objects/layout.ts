@@ -3,7 +3,7 @@ import { HorizontalMode, LayoutMode, VerticalMode } from '@/models/layout'
 import { emitter } from '@/objects/events'
 
 export const layout: LayoutMode = reactive({
-  horizontal: 'dependency',
+  horizontal: 'trace',
   vertical: 'nearest-parent',
 })
 
