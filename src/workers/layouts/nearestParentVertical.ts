@@ -200,7 +200,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
       const overlappingRow = layout.get(nodeId)
       const nodeStartX = horizontal.get(nodeId)
 
-      if (overlappingRow === undefined || !nodeStartX) {
+      if (overlappingRow === undefined || nodeStartX === undefined) {
         console.warn('NearestParentLayout - shove: Node was not found in the vertical or horizontal layout', nodeId)
         continue
       }
@@ -244,7 +244,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
 
       if (firstNodeRow === undefined) {
         console.warn('NearestParentLayout - getOverlappingNodeIds: Node was not found in the layout', nodeId)
-        return
+        continue
       }
 
       const isItemOverlapping = isNodesOverlapping({
