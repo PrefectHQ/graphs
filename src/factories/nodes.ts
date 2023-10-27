@@ -1,5 +1,5 @@
 import { Container } from 'pixi.js'
-import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
+import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { EdgeFactory, edgeFactory } from '@/factories/edge'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
@@ -8,6 +8,7 @@ import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels } from '@/models/layo
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
+import { layout } from '@/objects/layout'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
@@ -27,10 +28,10 @@ export async function nodesContainerFactory(runId: string) {
     gap: config.styles.rowGap,
     minimum: config.styles.nodeHeight,
   })
-  let initialized = false
 
+  let initialized = false
   let data: RunGraphData | null = null
-  let layout: NodesLayoutResponse = new Map()
+  let nodesLayout: NodesLayoutResponse = new Map()
   let interval: ReturnType<typeof setInterval> | undefined = undefined
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
@@ -131,8 +132,8 @@ export async function nodesContainerFactory(runId: string) {
   function renderEdges(): void {
     for (const [edgeId, edge] of edges) {
       const [parentId, childId] = edgeId.split('_')
-      const parentPosition = layout.get(parentId)
-      const childPosition = layout.get(childId)
+      const parentPosition = nodesLayout.get(parentId)
+      const childPosition = nodesLayout.get(childId)
       const parentNode = nodes.get(parentId)
 
       if (!parentPosition || !childPosition) {
@@ -164,7 +165,7 @@ export async function nodesContainerFactory(runId: string) {
 
   function setPositions(): void {
     for (const [nodeId, node] of nodes) {
-      const position = layout.get(nodeId)
+      const position = nodesLayout.get(nodeId)
 
       if (!position) {
         console.warn(`Could not find node in layout: Skipping ${nodeId}`)
@@ -202,7 +203,7 @@ export async function nodesContainerFactory(runId: string) {
 
   function resizeNode(nodeId: string, size: NodeSize): void {
     const node = nodes.get(nodeId)
-    const nodeLayout = layout.get(nodeId)
+    const nodeLayout = nodesLayout.get(nodeId)
 
     if (!node || !nodeLayout) {
       return
@@ -236,7 +237,7 @@ export async function nodesContainerFactory(runId: string) {
     // todo: this should probably come from the layout itself
     let maxRow = 0
 
-    for (const [, position] of layout) {
+    for (const [, position] of nodesLayout) {
       maxRow = Math.max(maxRow, position.y)
     }
 
@@ -259,7 +260,7 @@ export async function nodesContainerFactory(runId: string) {
 
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
     // eslint-disable-next-line prefer-destructuring
-    layout = data.layout
+    nodesLayout = data.layout
 
     setPositions()
   }
