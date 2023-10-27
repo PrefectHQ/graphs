@@ -47,6 +47,8 @@ export type RunGraphNodeStyles = {
 }
 
 export type RunGraphStyles = {
+  rowGap?: number,
+  columnGap?: number,
   nodeHeight?: number,
   nodeMargin?: number,
   nodeBorderRadius?: number,
