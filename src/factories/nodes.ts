@@ -4,7 +4,7 @@ import { EdgeFactory, edgeFactory } from '@/factories/edge'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
-import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels } from '@/models/layout'
+import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
@@ -217,24 +217,22 @@ export async function nodesContainerFactory(runId: string) {
     setPositions()
   }
 
-  function getActualPosition(position: Pixels): Pixels {
+  function getActualPosition(position: NodeLayoutResponse): Pixels {
     const y = rows.getTotalOffset(position.y)
-    const { x } = position
-
-    if (layout.horizontal === 'dependency') {
-      const column = position.x / DEFAULT_LINEAR_COLUMN_SIZE_PIXELS
-      const x = position.x + column * config.styles.columnGap
-
-      return {
-        y,
-        x,
-      }
-    }
+    const x = getActualXPosition(position)
 
     return {
       x,
       y,
     }
+  }
+
+  function getActualXPosition(position: NodeLayoutResponse): number {
+    if (layout.horizontal === 'dependency') {
+      return position.x + position.column * config.styles.columnGap
+    }
+
+    return position.x
   }
 
   function resized(): void {
