@@ -169,7 +169,6 @@ export async function nodesContainerFactory(runId: string) {
 
       if (!position) {
         console.warn(`Could not find node in layout: Skipping ${nodeId}`)
-        node.container.visible = false
         continue
       }
 
