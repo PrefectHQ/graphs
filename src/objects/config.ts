@@ -9,8 +9,8 @@ let config: RequiredGraphConfig | null = null
 const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
   animationDuration: 500,
   styles: {
-    rowGap: 20,
-    columnGap: 40,
+    rowGap: 15,
+    columnGap: 30,
     nodeHeight: 30,
     nodeMargin: 4,
     nodeBorderRadius: 8,

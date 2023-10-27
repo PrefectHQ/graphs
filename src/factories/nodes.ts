@@ -23,7 +23,10 @@ export async function nodesContainerFactory(runId: string) {
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
   const config = await waitForConfig()
-  const rows = await offsetsFactory()
+  const rows = await offsetsFactory({
+    gap: config.styles.rowGap,
+    minimum: config.styles.nodeHeight,
+  })
   let initialized = false
 
   let data: RunGraphData | null = null

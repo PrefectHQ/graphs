@@ -65,8 +65,8 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
 
   uncull()
   const { x, y, width, height } = container.getLocalBounds()
-  const widthWithGap = width + config.styles.columnGap
-  const heightWithGap = height + config.styles.rowGap
+  const widthWithGap = width + config.styles.columnGap * 2
+  const heightWithGap = height + config.styles.rowGap * 2
   const scale = viewport.findFit(widthWithGap, heightWithGap)
 
   // if the container doesn't have a size we cannot do anything here

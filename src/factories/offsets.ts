@@ -1,5 +1,3 @@
-import { waitForConfig } from '@/objects/config'
-
 type SetOffsetParameters = {
   axis: number,
   nodeId: string,
@@ -13,15 +11,21 @@ type RemoveOffsetParameters = {
 
 export type Offsets = Awaited<ReturnType<typeof offsetsFactory>>
 
+export type OffsetParameters = {
+  gap?: number,
+  minimum?: number,
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function offsetsFactory() {
-  const config = await waitForConfig()
+export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) {
   const offsets: Map<number, Map<string, number> | undefined> = new Map()
 
   function getOffset(axis: number): number {
     const values = offsets.get(axis) ?? []
+    const value = Math.max(...values.values(), minimum)
+    const valueWithGap = value + gap
 
-    return Math.max(...values.values(), config.styles.nodeHeight)
+    return valueWithGap
   }
 
   function getTotalOffset(axis: number): number {
