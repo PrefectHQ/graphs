@@ -24,6 +24,7 @@ export async function nodesContainerFactory(runId: string) {
   const container = new Container()
   const config = await waitForConfig()
   const rows = await offsetsFactory()
+  let initialized = false
 
   let data: RunGraphData | null = null
   let layout: NodesLayoutResponse = new Map()
@@ -154,13 +155,12 @@ export async function nodesContainerFactory(runId: string) {
         y: childActualPosition.y - parentActualPositionOffset.y + config.styles.nodeHeight / 2,
       }
 
-      edge.container.position = parentActualPositionOffset
-      edge.render(childActualPositionOffset)
+      edge.setPosition(parentActualPositionOffset, childActualPositionOffset, !initialized)
     }
   }
 
   function setPositions(): void {
-    for (const [nodeId, { container }] of nodes) {
+    for (const [nodeId, node] of nodes) {
       const position = layout.get(nodeId)
 
       if (!position) {
@@ -168,12 +168,15 @@ export async function nodesContainerFactory(runId: string) {
         return
       }
 
-      container.position = getActualPosition(position)
+      const newPosition = getActualPosition(position)
+
+      node.setPosition(newPosition, !initialized)
     }
 
     renderEdges()
     resized()
 
+    initialized = true
     container.emit('rendered')
   }
 

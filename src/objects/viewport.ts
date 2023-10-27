@@ -6,7 +6,7 @@ import { RunGraphProps } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
-import { pauseCulling } from '@/objects/culling'
+import { uncull } from '@/objects/culling'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { waitForScope } from '@/objects/scope'
@@ -63,7 +63,7 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
     throw new Error('Nodes container not found')
   }
 
-  pauseCulling()
+  uncull()
   const { x, y, width, height } = container.getLocalBounds()
   const scale = viewport.findFit(width, height)
 

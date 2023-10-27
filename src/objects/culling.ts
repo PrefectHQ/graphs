@@ -38,12 +38,6 @@ export function stopCulling(): void {
   callback = null
 }
 
-export function pauseCulling(): void {
-  if (cullInstance) {
-    cullInstance.uncull()
-  }
-}
-
 export async function cull(): Promise<void> {
   if (!cullInstance) {
     return
@@ -54,7 +48,10 @@ export async function cull(): Promise<void> {
   cullInstance.cull(application.renderer.screen)
 }
 
-export async function resumeCulling(): Promise<void> {
+export function uncull(): void {
+  if (cullInstance) {
+    cullInstance.uncull()
+  }
 }
 
 export async function waitForCull(): Promise<Cull> {

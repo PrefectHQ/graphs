@@ -64,6 +64,6 @@ export type RunGraphConfig = {
   styles?: RunGraphStyles,
 }
 
-export type RequiredGraphConfig = Omit<RunGraphConfig, 'styles'> & {
+export type RequiredGraphConfig = Omit<Required<RunGraphConfig>, 'styles'> & {
   styles: Required<RunGraphStyles>,
 }

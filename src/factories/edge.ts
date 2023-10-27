@@ -1,5 +1,6 @@
 import { Container, Point, SimpleRope } from 'pixi.js'
 import { DEFAULT_EDGE_CONTAINER_NAME, DEFAULT_EDGE_MINIMUM_BEZIER, DEFAULT_EDGE_POINTS } from '@/consts'
+import { animate } from '@/factories/animation'
 import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { Pixels } from '@/models/layout'
 import { waitForConfig } from '@/objects/config'
@@ -9,6 +10,9 @@ import { getPixelTexture } from '@/textures/pixel'
 import { repeat } from '@/utilities/repeat'
 
 export type EdgeFactory = Awaited<ReturnType<typeof edgeFactory>>
+
+const arrowOffset = 8
+const edgeTargetOffset = 2
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function edgeFactory() {
@@ -21,6 +25,7 @@ export async function edgeFactory() {
   const pixel = await getPixelTexture()
   const points = repeat(DEFAULT_EDGE_POINTS, () => new Point())
   const rope = new SimpleRope(pixel, points)
+  let initialized = false
 
   container.name = DEFAULT_EDGE_CONTAINER_NAME
 
@@ -31,19 +36,11 @@ export async function edgeFactory() {
 
   edgeCull.add(container)
 
-  async function render(target: Pixels): Promise<Container> {
-    updatePoints(target)
-
-    const arrow = await renderArrow({
+  async function render(): Promise<Container> {
+    await renderArrow({
       size: 10,
       rotate: ArrowDirection.Right,
     })
-
-    // little magic numbering here to get the arrows point in the right spot
-    arrow.position = {
-      x: target.x - 8,
-      y: target.y,
-    }
 
     arrow.tint = config.styles.edgeColor
     rope.tint = config.styles.edgeColor
@@ -51,11 +48,38 @@ export async function edgeFactory() {
     return container
   }
 
-  function updatePoints({ x, y }: Pixels): void {
+  async function setPosition(source: Pixels, target: Pixels, skipAnimation?: boolean): Promise<void> {
+    const newPositions = getPointPositions(target)
+
+    if (!initialized) {
+      await render()
+      initialized = true
+    }
+
+    for (const [index, point] of points.entries()) {
+      const { x, y } = newPositions[index]
+      animate(point, {
+        x,
+        y,
+      }, skipAnimation)
+    }
+
+    animate(container, {
+      x: source.x,
+      y: source.y,
+    }, skipAnimation)
+
+    animate(arrow, {
+      x: target.x - arrowOffset,
+      y: target.y,
+    }, skipAnimation)
+  }
+
+  function getPointPositions({ x, y }: Pixels): Pixels[] {
+    const newPoints: Pixels[] = []
     const source: Pixels = { x: 0, y: 0 }
 
-    // little magic numbering here to get the line to end at the arrows point
-    const target: Pixels = { x: x - 2, y }
+    const target: Pixels = { x: x - edgeTargetOffset, y }
 
     const sourceBezier: Pixels = {
       x: getXBezier(source.x, { source, target }),
@@ -67,9 +91,9 @@ export async function edgeFactory() {
       y: target.y,
     }
 
-    for (const [index, point] of points.entries()) {
+    for (const [index] of points.entries()) {
       if (index === points.length - 1) {
-        point.set(target.x, target.y)
+        newPoints[index] = target
         continue
       }
 
@@ -80,13 +104,16 @@ export async function edgeFactory() {
         targetBezier,
       })
 
-      point.set(position.x, position.y)
+      newPoints[index] = position
     }
+
+    return newPoints
   }
 
   return {
     container,
     render,
+    setPosition,
   }
 }
 
