@@ -240,7 +240,7 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function getActualXPosition(position: NodeLayoutResponse): number {
-    if (layout.horizontal === 'dependency') {
+    if (layout.isDependency()) {
       return position.x + position.column * config.styles.columnGap
     }
 

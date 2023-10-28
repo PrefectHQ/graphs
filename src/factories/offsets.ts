@@ -1,3 +1,5 @@
+import { toValue } from 'vue'
+
 type SetOffsetParameters = {
   axis: number,
   nodeId: string,
@@ -9,11 +11,13 @@ type RemoveOffsetParameters = {
   nodeId: string,
 }
 
+type MaybeGetter<T> = T | (() => T)
+
 export type Offsets = Awaited<ReturnType<typeof offsetsFactory>>
 
 export type OffsetParameters = {
-  gap?: number,
-  minimum?: number,
+  gap?: MaybeGetter<number>,
+  minimum?: MaybeGetter<number>,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -22,8 +26,8 @@ export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) 
 
   function getOffset(axis: number): number {
     const values = offsets.get(axis) ?? []
-    const value = Math.max(...values.values(), minimum)
-    const valueWithGap = value + gap
+    const value = Math.max(...values.values(), toValue(minimum))
+    const valueWithGap = value + toValue(gap)
 
     return valueWithGap
   }
@@ -39,7 +43,7 @@ export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) 
   }
 
   function getTotalValue(axis: number): number {
-    return getTotalOffset(axis + 1)
+    return getTotalOffset(axis + 1) - toValue(gap)
   }
 
   function setOffset({ axis, nodeId, offset }: SetOffsetParameters): void {

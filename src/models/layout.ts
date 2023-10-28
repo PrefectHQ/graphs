@@ -9,6 +9,10 @@ export type NodeSize = {
 export type LayoutMode = {
   horizontal: HorizontalMode,
   vertical: VerticalMode,
+  isTrace: () => boolean,
+  isDependency: () => boolean,
+  isWaterfall: () => boolean,
+  isNearestParent: () => boolean,
 }
 
 export type NodeWidths = Map<string, number>
