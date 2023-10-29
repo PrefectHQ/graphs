@@ -4,6 +4,7 @@ export type HorizontalMode = 'trace' | 'dependency'
 
 export type NodeSize = {
   height: number,
+  width: number,
 }
 
 export type LayoutMode = {

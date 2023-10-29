@@ -5,6 +5,7 @@ import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
+import { NodeSize } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { cull } from '@/objects/culling'
@@ -17,7 +18,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const config = await waitForConfig()
   const { bar, render: renderBar } = await nodeBarFactory()
   const { label, render: renderLabelText } = await nodeLabelFactory()
-  const { container: nodesContainer, render: renderNodes, stop: stopNodes, getHeight: getNodesHeight } = await nodesContainerFactory(node.id)
+  const { container: nodesContainer, render: renderNodes, stop: stopNodes, getSize: getNodesSize } = await nodesContainerFactory(node.id)
   const { container: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
   const { border, render: renderBorderContainer } = await borderFactory()
 
@@ -57,11 +58,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function renderBorder(): Promise<void> {
     const { background = '#fff' } = config.styles.node(node)
     const offset = 4
-    const openHeight = getNodesHeight() + config.styles.nodeHeight + offset * 2
+    const { width: nodesWidth, height: nodesHeight } = getNodesSize()
+    const openHeight = nodesHeight + config.styles.nodeHeight + offset * 2
     const closedHeight = config.styles.nodeHeight
 
     const position = isOpen ? -offset : offset
-    const width = isOpen ? bar.width + offset * 2 : bar.width - offset * 2
+    const borderWidth = Math.max(bar.width, nodesWidth)
+    const width = isOpen ? borderWidth + offset * 2 : bar.width - offset * 2
     const height = isOpen ? openHeight : closedHeight
     const stroke = isOpen ? 2 : 1
 
@@ -143,16 +146,21 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   function resized(): void {
     renderBorder()
-    const height = getHeight()
+    const size = getSize()
 
-    container.emit('resized', { height })
+    container.emit('resized', size)
   }
 
-  function getHeight(): number {
-    const nodesHeight = isOpen ? getNodesHeight() : 0
+  function getSize(): NodeSize {
+    const nodes = getNodesSize()
+    const nodesHeight = isOpen ? nodes.height : 0
+    const nodesWidth = isOpen ? nodes.width : 0
     const flowRunNodeHeight = config.styles.nodeHeight
 
-    return flowRunNodeHeight + nodesHeight
+    return {
+      height: flowRunNodeHeight + nodesHeight,
+      width: Math.max(nodesWidth, container.width),
+    }
   }
 
   return {

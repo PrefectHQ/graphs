@@ -3,6 +3,7 @@ import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_NODES_CONTAINER_NAME, DEFAUL
 import { EdgeFactory, edgeFactory } from '@/factories/edge'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
+import { horizontalScaleFactory } from '@/factories/position'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
 import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
@@ -24,9 +25,17 @@ export async function nodesContainerFactory(runId: string) {
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
   const config = await waitForConfig()
-  const rows = await offsetsFactory({
+
+  // used for both vertical layouts
+  const rows = offsetsFactory({
     gap: config.styles.rowGap,
     minimum: config.styles.nodeHeight,
+  })
+
+  // used only for the dependency layout
+  const columns = offsetsFactory({
+    gap: config.styles.columnGap,
+    minimum: DEFAULT_LINEAR_COLUMN_SIZE_PIXELS,
   })
 
   let initialized = false
@@ -221,10 +230,8 @@ export async function nodesContainerFactory(runId: string) {
       return
     }
 
-    const axis = nodeLayout.y
-    const offset = size.height
-
-    rows.setOffset({ axis, nodeId, offset })
+    rows.setOffset({ nodeId, axis: nodeLayout.y, offset: size.height })
+    columns.setOffset({ nodeId, axis: nodeLayout.column, offset: size.width })
 
     setPositions()
   }
@@ -241,16 +248,14 @@ export async function nodesContainerFactory(runId: string) {
 
   function getActualXPosition(position: NodeLayoutResponse): number {
     if (layout.isDependency()) {
-      return position.x + position.column * config.styles.columnGap
+      return columns.getTotalOffset(position.column)
     }
 
     return position.x
   }
 
   function resized(): void {
-    const height = getHeight()
-
-    container.emit('resized', { height })
+    container.emit('resized', getSize())
   }
 
   function getHeight(): number {
@@ -262,11 +267,28 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function getWidth(): number {
-    if (!nodesLayout) {
+    if (!nodesLayout || !data) {
       return 0
     }
 
-    throw new Error('Not implemented')
+    if (layout.isDependency()) {
+      return columns.getTotalValue(nodesLayout.maxColumn)
+    }
+
+    const settings = horizontalSettingsFactory(data.start_time)
+    const scale = horizontalScaleFactory(settings)
+    const end = scale(data.end_time ?? new Date())
+    const start = scale(data.start_time)
+    const width = end - start
+
+    return width
+  }
+
+  function getSize(): { width: number, height: number } {
+    return {
+      width: getWidth(),
+      height: getHeight(),
+    }
   }
 
   function onmessage({ data }: MessageEvent<WorkerMessage>): void {
@@ -295,7 +317,7 @@ export async function nodesContainerFactory(runId: string) {
 
   return {
     container,
-    getHeight,
+    getSize,
     render,
     stop,
   }
