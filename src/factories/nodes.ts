@@ -304,9 +304,7 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
-    // eslint-disable-next-line prefer-destructuring
     nodesLayout = data.layout
-
     setPositions()
   }
 
