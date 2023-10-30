@@ -128,12 +128,12 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const label = await renderLabelText(node)
 
     const padding = config.styles.nodePadding
-    const insidePosition = arrowButton.x + arrowButton.width + padding
-    const outsidePosition = bar.width + padding
-    const inside = bar.width > insidePosition + label.width + padding
+    const rightOfButton = arrowButton.x + arrowButton.width + padding
+    const rightOfBar = bar.width + padding
+    const inside = bar.width > rightOfButton + label.width + padding
 
     const y = bar.height / 2 - label.height / 2
-    const x = inside ? insidePosition : outsidePosition
+    const x = inside ? rightOfButton : Math.max(rightOfBar, rightOfButton)
 
     label.position = { x, y }
 
