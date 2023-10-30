@@ -2,9 +2,21 @@ import { reactive } from 'vue'
 import { HorizontalMode, LayoutMode, VerticalMode } from '@/models/layout'
 import { emitter } from '@/objects/events'
 
-export const layout: LayoutMode = reactive({
+export const layout = reactive<LayoutMode>({
   horizontal: 'trace',
   vertical: 'nearest-parent',
+  isTrace() {
+    return this.horizontal === 'trace'
+  },
+  isDependency() {
+    return this.horizontal === 'dependency'
+  },
+  isWaterfall() {
+    return this.vertical === 'waterfall'
+  },
+  isNearestParent() {
+    return this.vertical === 'nearest-parent'
+  },
 })
 
 export function setLayoutMode({ horizontal, vertical }: LayoutMode): void {

@@ -4,11 +4,16 @@ export type HorizontalMode = 'trace' | 'dependency'
 
 export type NodeSize = {
   height: number,
+  width: number,
 }
 
 export type LayoutMode = {
   horizontal: HorizontalMode,
   vertical: VerticalMode,
+  isTrace: () => boolean,
+  isDependency: () => boolean,
+  isWaterfall: () => boolean,
+  isNearestParent: () => boolean,
 }
 
 export type NodeWidths = Map<string, number>

@@ -29,7 +29,7 @@ export async function nodeBarFactory() {
   }
 
   function getTotalWidth(node: RunGraphNode, borderRadius: number): number {
-    if (layout.horizontal === 'trace') {
+    if (layout.isTrace()) {
       const right = node.start_time
       const left = node.end_time ?? new Date()
       const seconds = differenceInMilliseconds(left, right) / millisecondsInSecond
