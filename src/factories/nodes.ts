@@ -1,13 +1,14 @@
 import { Container } from 'pixi.js'
-import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
+import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { EdgeFactory, edgeFactory } from '@/factories/edge'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
-import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels } from '@/models/layout'
+import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
+import { layout } from '@/objects/layout'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
@@ -23,11 +24,14 @@ export async function nodesContainerFactory(runId: string) {
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
   const config = await waitForConfig()
-  const rows = await offsetsFactory()
-  let initialized = false
+  const rows = await offsetsFactory({
+    gap: config.styles.rowGap,
+    minimum: config.styles.nodeHeight,
+  })
 
+  let initialized = false
   let data: RunGraphData | null = null
-  let layout: NodesLayoutResponse = new Map()
+  let nodesLayout: NodesLayoutResponse | null = null
   let interval: ReturnType<typeof setInterval> | undefined = undefined
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
@@ -126,20 +130,24 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function renderEdges(): void {
+    if (!nodesLayout) {
+      return
+    }
+
     for (const [edgeId, edge] of edges) {
       const [parentId, childId] = edgeId.split('_')
-      const parentPosition = layout.get(parentId)
-      const childPosition = layout.get(childId)
+      const parentPosition = nodesLayout.positions.get(parentId)
+      const childPosition = nodesLayout.positions.get(childId)
       const parentNode = nodes.get(parentId)
 
       if (!parentPosition || !childPosition) {
         console.warn(`Could not find edge in layout: Skipping ${edgeId}`)
-        return
+        continue
       }
 
       if (!parentNode) {
         console.warn(`Could not find parent node in nodes: Skipping ${parentId}`)
-        return
+        continue
       }
 
       const parentBarWidth = parentNode.bar.width
@@ -160,12 +168,16 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function setPositions(): void {
+    if (!nodesLayout) {
+      return
+    }
+
     for (const [nodeId, node] of nodes) {
-      const position = layout.get(nodeId)
+      const position = nodesLayout.positions.get(nodeId)
 
       if (!position) {
         console.warn(`Could not find node in layout: Skipping ${nodeId}`)
-        return
+        continue
       }
 
       const newPosition = getActualPosition(position)
@@ -198,8 +210,12 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function resizeNode(nodeId: string, size: NodeSize): void {
+    if (!nodesLayout) {
+      return
+    }
+
     const node = nodes.get(nodeId)
-    const nodeLayout = layout.get(nodeId)
+    const nodeLayout = nodesLayout.positions.get(nodeId)
 
     if (!node || !nodeLayout) {
       return
@@ -213,14 +229,22 @@ export async function nodesContainerFactory(runId: string) {
     setPositions()
   }
 
-  function getActualPosition(position: Pixels): Pixels {
+  function getActualPosition(position: NodeLayoutResponse): Pixels {
     const y = rows.getTotalOffset(position.y)
-    const { x } = position
+    const x = getActualXPosition(position)
 
     return {
       x,
       y,
     }
+  }
+
+  function getActualXPosition(position: NodeLayoutResponse): number {
+    if (layout.horizontal === 'dependency') {
+      return position.x + position.column * config.styles.columnGap
+    }
+
+    return position.x
   }
 
   function resized(): void {
@@ -230,16 +254,19 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function getHeight(): number {
-    // todo: this should probably come from the layout itself
-    let maxRow = 0
-
-    for (const [, position] of layout) {
-      maxRow = Math.max(maxRow, position.y)
+    if (!nodesLayout) {
+      return 0
     }
 
-    const height = rows.getTotalValue(maxRow)
+    return rows.getTotalValue(nodesLayout.maxRow)
+  }
 
-    return height
+  function getWidth(): number {
+    if (!nodesLayout) {
+      return 0
+    }
+
+    throw new Error('Not implemented')
   }
 
   function onmessage({ data }: MessageEvent<WorkerMessage>): void {
@@ -256,7 +283,7 @@ export async function nodesContainerFactory(runId: string) {
 
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
     // eslint-disable-next-line prefer-destructuring
-    layout = data.layout
+    nodesLayout = data.layout
 
     setPositions()
   }

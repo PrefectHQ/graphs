@@ -4,7 +4,7 @@ import { emitter } from '@/objects/events'
 
 export const layout: LayoutMode = reactive({
   horizontal: 'trace',
-  vertical: 'waterfall',
+  vertical: 'nearest-parent',
 })
 
 export function setLayoutMode({ horizontal, vertical }: LayoutMode): void {

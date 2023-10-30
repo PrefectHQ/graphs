@@ -24,32 +24,43 @@ function post(message: WorkerMessage): void {
 
 async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> {
   const { data } = message
-  const horizontal = getHorizontalLayout(message)
-  const vertical = await getVerticalLayout(message, horizontal)
-  const layout: NodesLayoutResponse = new Map()
+  const horizontalLayout = getHorizontalLayout(message)
+  const verticalLayout = await getVerticalLayout(message, horizontalLayout)
+  const positions: NodesLayoutResponse['positions'] = new Map()
+
+  let maxRow = 0
+  let maxColumn = 0
 
   for (const [nodeId, node] of data.nodes) {
-    const x = horizontal.get(nodeId)
-    const y = vertical.get(nodeId)
+    const horizontal = horizontalLayout.get(nodeId)
+    const vertical = verticalLayout.get(nodeId)
 
-    if (x === undefined) {
+    if (horizontal === undefined) {
       console.warn(`NodeId not found in horizontal layout: Skipping ${node.label}`)
-      return
+      continue
     }
 
-    if (y === undefined) {
+    if (vertical === undefined) {
       console.warn(`NodeId not found in vertical layout: Skipping ${node.label}`)
-      return
+      continue
     }
 
-    layout.set(nodeId, {
-      x,
-      y,
+    maxRow = Math.max(maxRow, vertical)
+    maxColumn = Math.max(maxColumn, horizontal.column)
+
+    positions.set(nodeId, {
+      ...horizontal,
+      y: vertical,
+      row: vertical,
     })
   }
 
   post({
     type: 'layout',
-    layout,
+    layout: {
+      maxRow,
+      maxColumn,
+      positions,
+    },
   })
 }

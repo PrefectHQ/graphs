@@ -32,7 +32,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
   return layout
 
   async function getNearestParentPosition(node: RunGraphNode): Promise<number> {
-    const nodeStartX = horizontal.get(node.id)
+    const { x: nodeStartX } = horizontal.get(node.id) ?? {}
 
     if (nodeStartX === undefined) {
       console.warn('NearestParentLayout: Node was not found in the horizontal layout', node.id)
@@ -198,7 +198,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
     for await (const nodeId of overlappingNodeIds) {
       // push nodes and recursively shove as needed
       const overlappingRow = layout.get(nodeId)
-      const nodeStartX = horizontal.get(nodeId)
+      const { x: nodeStartX } = horizontal.get(nodeId) ?? {}
 
       if (overlappingRow === undefined || nodeStartX === undefined) {
         console.warn('NearestParentLayout - shove: Node was not found in the vertical or horizontal layout', nodeId)
@@ -415,7 +415,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
   }
 
   function getNodeEndX(nodeId: string): number {
-    const nodeStartX = horizontal.get(nodeId)
+    const { x: nodeStartX } = horizontal.get(nodeId) ?? {}
     const nodeWidth = message.widths.get(nodeId)
 
     if (nodeStartX === undefined || nodeWidth === undefined) {
