@@ -40,6 +40,7 @@ export async function startViewport(props: RunGraphProps): Promise<void> {
 
   emitter.emit('viewportCreated', viewport)
   emitter.on('applicationResized', resizeViewport)
+  emitter.on('scaleUpdated', () => updateViewportDateRange())
 
   watchVisibleDateRange(props)
   startViewportDateRange()

@@ -76,6 +76,8 @@ export async function nodesContainerFactory(runId: string) {
     if (!data.end_time) {
       interval = setTimeout(() => fetch(), DEFAULT_POLL_INTERVAL)
     }
+
+    container.emit('fetched', data)
   }
 
   async function renderNodes(): Promise<void> {

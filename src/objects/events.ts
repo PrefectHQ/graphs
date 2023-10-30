@@ -5,7 +5,7 @@ import { EffectScope } from 'vue'
 import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
 import { LayoutSettings } from '@/models/layout'
-import { RequiredGraphConfig } from '@/models/RunGraph'
+import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
 import { VisibilityCull } from '@/services/visibilityCull'
@@ -28,6 +28,8 @@ type Events = {
   cullCreated: Cull,
   labelCullCreated: VisibilityCull,
   edgeCullCreated: VisibilityCull,
+  runDataCreated: RunGraphData,
+  runDataUpdated: RunGraphData,
 }
 
 export type EventKey = keyof Events

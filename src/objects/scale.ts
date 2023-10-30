@@ -1,18 +1,16 @@
 import { HorizontalScale, horizontalScaleFactory } from '@/factories/position'
 import { horizontalSettingsFactory } from '@/factories/settings'
-import { waitForConfig } from '@/objects/config'
-import { emitter, waitForEvent } from '@/objects/events'
+import { EventKey, emitter, waitForEvent } from '@/objects/events'
+import { waitForRunData } from '@/objects/nodes'
 
 let scale: HorizontalScale | null = null
 
 export async function startScale(): Promise<void> {
-  const config = await waitForConfig()
-  const data = await config.fetch(config.runId)
-  const settings = await horizontalSettingsFactory(data.start_time)
+  const data = await waitForRunData()
 
-  scale = await horizontalScaleFactory(settings)
+  setHorizontalScale(data.start_time)
 
-  emitter.emit('scaleCreated', scale)
+  emitter.on('layoutUpdated', () => setHorizontalScale(data.start_time))
 }
 
 export function stopScale(): void {
@@ -26,4 +24,13 @@ export async function waitForScale(): Promise<HorizontalScale> {
   }
 
   return await waitForEvent('scaleCreated')
+}
+
+function setHorizontalScale(startTime: Date): void {
+  const event: EventKey = scale ? 'scaleUpdated' : 'scaleCreated'
+  const settings = horizontalSettingsFactory(startTime)
+
+  scale = horizontalScaleFactory(settings)
+
+  emitter.emit(event, scale)
 }
