@@ -21,7 +21,7 @@ export async function edgeFactory() {
   const edgeCull = await waitForEdgeCull()
 
   const container = new Container()
-  const { arrow, render: renderArrow } = await arrowFactory()
+  const { element: arrow, render: renderArrow } = await arrowFactory()
   const pixel = await getPixelTexture()
   const points = repeat(DEFAULT_EDGE_POINTS, () => new Point())
   const rope = new SimpleRope(pixel, points)
@@ -111,7 +111,7 @@ export async function edgeFactory() {
   }
 
   return {
-    container,
+    element: container,
     render,
     setPosition,
   }

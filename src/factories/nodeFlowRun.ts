@@ -16,11 +16,11 @@ export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory
 export async function flowRunContainerFactory(node: RunGraphNode) {
   const container = new Container()
   const config = await waitForConfig()
-  const { bar, render: renderBar } = await nodeBarFactory()
-  const { label, render: renderLabelText } = await nodeLabelFactory()
-  const { container: nodesContainer, render: renderNodes, stop: stopNodes, getSize: getNodesSize } = await nodesContainerFactory(node.id)
-  const { container: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
-  const { border, render: renderBorderContainer } = await borderFactory()
+  const { element: bar, render: renderBar } = await nodeBarFactory()
+  const { element: label, render: renderLabelText } = await nodeLabelFactory()
+  const { element: nodesContainer, render: renderNodes, stop: stopNodes, getSize: getNodesSize } = await nodesContainerFactory(node.id)
+  const { element: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
+  const { element: border, render: renderBorderContainer } = await borderFactory()
 
   let isOpen = false
 
@@ -166,7 +166,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   return {
     kind: 'flow-run' as const,
-    container,
+    element: container,
     bar,
     render,
   }

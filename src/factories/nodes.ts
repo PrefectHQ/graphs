@@ -135,7 +135,7 @@ export async function nodesContainerFactory(runId: string) {
     }
 
     edges.set(key, edge)
-    container.addChild(edge.container)
+    container.addChild(edge.element)
   }
 
   function renderEdges(): void {
@@ -210,10 +210,10 @@ export async function nodesContainerFactory(runId: string) {
 
     const response = await nodeContainerFactory(node)
 
-    response.container.on('resized', size => resizeNode(node.id, size))
+    response.element.on('resized', size => resizeNode(node.id, size))
 
     nodes.set(node.id, response)
-    container.addChild(response.container)
+    container.addChild(response.element)
 
     return response
   }
@@ -314,7 +314,7 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   return {
-    container,
+    element: container,
     getSize,
     render,
     stop,

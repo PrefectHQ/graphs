@@ -80,7 +80,7 @@ export async function barFactory() {
   }
 
   return {
-    bar,
+    element: bar,
     render,
   }
 }

@@ -34,7 +34,7 @@ export function arrowFactory() {
   }
 
   return {
-    arrow,
+    element: arrow,
     render,
   }
 }

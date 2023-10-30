@@ -148,7 +148,7 @@ export function borderFactory() {
   }
 
   return {
-    border: container,
+    element: container,
     render,
   }
 }
