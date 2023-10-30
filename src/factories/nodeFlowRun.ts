@@ -1,10 +1,10 @@
-import { Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { borderFactory } from '@/factories/border'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
+import { BoundsContainer } from '@/models/boundsContainer'
 import { NodeSize } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
@@ -14,7 +14,7 @@ export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunContainerFactory(node: RunGraphNode) {
-  const container = new Container()
+  const container = new BoundsContainer()
   const config = await waitForConfig()
   const { element: bar, render: renderBar } = await nodeBarFactory()
   const { element: label, render: renderLabelText } = await nodeLabelFactory()
@@ -34,11 +34,10 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   arrowButton.on('click', toggle)
 
-  nodesContainer.visible = false
   nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
   nodesContainer.on('resized', () => resized())
 
-  async function render(): Promise<Container> {
+  async function render(): Promise<BoundsContainer> {
     await renderBar(node)
     await renderArrowButton()
     await renderLabel()
@@ -81,13 +80,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function open(): Promise<void> {
     isOpen = true
+    container.addChild(nodesContainer)
 
     await Promise.all([
       render(),
       renderNodes(),
     ])
 
-    nodesContainer.visible = true
     // todo: can we just set the viewport to dirty here?
     nodesContainer.once('rendered', () => cull())
 
@@ -96,7 +95,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function close(): Promise<void> {
     isOpen = false
-    nodesContainer.visible = false
+    container.removeChild(nodesContainer)
 
     await Promise.all([
       render(),
@@ -107,7 +106,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     resized()
   }
 
-  async function renderArrowButton(): Promise<Container> {
+  async function renderArrowButton(): Promise<BoundsContainer> {
     const buttonSize = config.styles.nodeToggleSize
     const offset = config.styles.nodeHeight - buttonSize
     const inside = bar.width > buttonSize
@@ -125,7 +124,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     return container
   }
 
-  async function renderLabel(): Promise<Container> {
+  async function renderLabel(): Promise<BoundsContainer> {
     const label = await renderLabelText(node)
 
     // todo: this should probably be nodePadding
