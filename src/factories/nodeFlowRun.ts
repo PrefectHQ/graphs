@@ -118,7 +118,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       isOpen,
     })
 
-    container.x = inside ? offset / 2 : bar.width + config.styles.nodeMargin
+    container.x = inside ? offset / 2 : bar.width + config.styles.nodePadding
     container.y = offset / 2
 
     return container
@@ -127,8 +127,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function renderLabel(): Promise<BoundsContainer> {
     const label = await renderLabelText(node)
 
-    // todo: this should probably be nodePadding
-    const padding = config.styles.nodeMargin
+    const padding = config.styles.nodePadding
     const insidePosition = arrowButton.x + arrowButton.width + padding
     const outsidePosition = bar.width + padding
     const inside = bar.width > insidePosition + label.width + padding

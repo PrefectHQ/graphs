@@ -5,9 +5,9 @@ import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
 import { emitter } from '@/objects/events'
 
 export const layout = reactive<LayoutSettings>({
-  horizontal: 'trace',
+  horizontal: 'dependency',
   vertical: 'nearest-parent',
-  horizontalScale: 1,
+  horizontalScale: 0.5,
   isTrace() {
     return this.horizontal === 'trace'
   },

@@ -12,7 +12,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     rowGap: 15,
     columnGap: 30,
     nodeHeight: 30,
-    nodeMargin: 4,
+    nodePadding: 4,
     nodeBorderRadius: 8,
     nodeToggleSize: 26,
     nodeToggleBorderRadius: 6,
