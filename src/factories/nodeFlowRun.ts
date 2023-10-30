@@ -88,6 +88,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     ])
 
     nodesContainer.visible = true
+    // todo: can we just set the viewport to dirty here?
     nodesContainer.once('rendered', () => cull())
 
     resized()
