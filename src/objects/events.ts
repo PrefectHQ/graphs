@@ -4,7 +4,7 @@ import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
-import { LayoutMode } from '@/models/layout'
+import { LayoutSettings } from '@/models/layout'
 import { RequiredGraphConfig } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
@@ -24,7 +24,7 @@ type Events = {
   scopeCreated: EffectScope,
   fontsLoaded: Fonts,
   containerCreated: Container,
-  layoutUpdated: LayoutMode,
+  layoutUpdated: LayoutSettings,
   cullCreated: Cull,
   labelCullCreated: VisibilityCull,
   edgeCullCreated: VisibilityCull,

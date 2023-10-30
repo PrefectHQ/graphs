@@ -1,5 +1,5 @@
 import { Container } from 'pixi.js'
-import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
+import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
 import { EdgeFactory, edgeFactory } from '@/factories/edge'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
@@ -10,7 +10,7 @@ import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse }
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
-import { layout } from '@/objects/layout'
+import { getHorizontalColumnSize, layout } from '@/objects/settings'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
@@ -29,14 +29,14 @@ export async function nodesContainerFactory(runId: string) {
 
   // used for both vertical layouts
   const rows = offsetsFactory({
-    gap: config.styles.rowGap,
-    minimum: config.styles.nodeHeight,
+    gap: () => config.styles.rowGap,
+    minimum: () => config.styles.nodeHeight,
   })
 
   // used only for the dependency layout
   const columns = offsetsFactory({
-    gap: config.styles.columnGap,
-    minimum: DEFAULT_LINEAR_COLUMN_SIZE_PIXELS,
+    gap: () => config.styles.columnGap,
+    minimum: () => getHorizontalColumnSize(),
   })
 
   let initialized = false

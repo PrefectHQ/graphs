@@ -21,6 +21,17 @@
           </template>
         </p-radio-group>
       </p-label>
+      <template v-if="layout.isTrace()">
+        <p-label label="Scaling">
+          <div class="flex items-center gap-2">
+            <p-button small icon="MinusIcon" @click="decreaseScale" />
+            <p-button small icon="PlusIcon" @click="increaseScale" />
+            <p-button small @click="resetScale">
+              Reset
+            </p-button>
+          </div>
+        </p-label>
+      </template>
       <p-label label="Layout">
         <p-radio-group v-model="vertical" :options="verticalOptions">
           <template #label="{ option }">
@@ -35,8 +46,9 @@
 <script lang="ts" setup>
   import { PButton, positions, PPopOver } from '@prefecthq/prefect-design'
   import { computed } from 'vue'
+  import { DEFAULT_HORIZONTAL_SCALE, DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
-  import { layout, setHorizontalMode, setVerticalMode } from '@/objects/layout'
+  import { layout, setHorizontalMode, setHorizontalScale, setVerticalMode } from '@/objects/settings'
 
   type Option<T extends string> = {
     value: T,
@@ -84,6 +96,24 @@
       setVerticalMode(value)
     },
   })
+
+  function increaseScale(): void {
+    const multiplier = DEFAULT_HORIZONTAL_SCALE_MULTIPLIER + 1
+    const scale = layout.horizontalScale * multiplier
+
+    setHorizontalScale(scale)
+  }
+
+  function decreaseScale(): void {
+    const multiplier = Math.abs(DEFAULT_HORIZONTAL_SCALE_MULTIPLIER - 1)
+    const scale = layout.horizontalScale * multiplier
+
+    setHorizontalScale(scale)
+  }
+
+  function resetScale(): void {
+    setHorizontalScale(DEFAULT_HORIZONTAL_SCALE)
+  }
 </script>
 
 <style>
