@@ -7,7 +7,7 @@ import { emitter } from '@/objects/events'
 export const layout = reactive<LayoutSettings>({
   horizontal: 'trace',
   vertical: 'nearest-parent',
-  scale: 1,
+  horizontalScale: 1,
   isTrace() {
     return this.horizontal === 'trace'
   },
@@ -24,10 +24,11 @@ export const layout = reactive<LayoutSettings>({
 
 export function getHorizontalColumnSize(): number {
   if (layout.isDependency()) {
-    return DEFAULT_LINEAR_COLUMN_SIZE_PIXELS * layout.scale
+    return DEFAULT_LINEAR_COLUMN_SIZE_PIXELS * layout.horizontalScale
   }
 
-  return DEFAULT_TIME_COLUMN_SIZE_PIXELS * layout.scale
+  // I'm not actually sure there is a benefit to adding scale to the dependency layout
+  return DEFAULT_TIME_COLUMN_SIZE_PIXELS * layout.horizontalScale
 }
 
 export function getHorizontalRange(): [number, number] {
