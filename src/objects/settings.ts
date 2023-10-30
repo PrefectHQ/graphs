@@ -5,9 +5,9 @@ import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
 import { emitter } from '@/objects/events'
 
 export const layout = reactive<LayoutSettings>({
-  horizontal: 'dependency',
+  horizontal: 'trace',
   vertical: 'nearest-parent',
-  horizontalScale: 0.5,
+  horizontalScale: 1,
   isTrace() {
     return this.horizontal === 'trace'
   },
@@ -24,10 +24,9 @@ export const layout = reactive<LayoutSettings>({
 
 export function getHorizontalColumnSize(): number {
   if (layout.isDependency()) {
-    return DEFAULT_LINEAR_COLUMN_SIZE_PIXELS * layout.horizontalScale
+    return DEFAULT_LINEAR_COLUMN_SIZE_PIXELS
   }
 
-  // I'm not actually sure there is a benefit to adding scale to the dependency layout
   return DEFAULT_TIME_COLUMN_SIZE_PIXELS * layout.horizontalScale
 }
 
@@ -46,6 +45,16 @@ export function getHorizontalDomain(startTime: Date): [Date, Date] | [number, nu
   const end = addSeconds(start, DEFAULT_TIME_COLUMN_SPAN_SECONDS)
 
   return [start, end]
+}
+
+export function setHorizontalScale(scale: number): void {
+  if (layout.horizontalScale === scale) {
+    return
+  }
+
+  layout.horizontalScale = scale
+
+  emitter.emit('layoutUpdated', layout)
 }
 
 export function setLayoutMode({ horizontal, vertical }: LayoutSettings): void {
