@@ -14,9 +14,9 @@ type NodeArrowBarStyles = {
 export async function nodeArrowButtonFactory() {
   const config = await waitForConfig()
   const container = new Container()
-  const { arrow, render: renderArrow } = await arrowFactory()
-  const { bar, render: renderBar } = await barFactory()
-  const { border, render: renderBorder } = await borderFactory()
+  const { element: arrow, render: renderArrow } = await arrowFactory()
+  const { element: bar, render: renderBar } = await barFactory()
+  const { element: border, render: renderBorder } = await borderFactory()
   const filter = new ColorMatrixFilter()
 
   container.eventMode = 'static'
@@ -84,7 +84,7 @@ export async function nodeArrowButtonFactory() {
   }
 
   return {
-    container,
+    element: container,
     render,
   }
 }

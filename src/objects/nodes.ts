@@ -11,13 +11,13 @@ export async function startNodes(): Promise<void> {
 
   nodes = await nodesContainerFactory(config.runId)
 
-  viewport.addChild(nodes.container)
+  viewport.addChild(nodes.element)
 
-  nodes.container.alpha = 0
+  nodes.element.alpha = 0
 
   nodes.render()
 
-  nodes.container.once('rendered', center)
+  nodes.element.once('rendered', center)
 }
 
 export function stopNodes(): void {
@@ -33,6 +33,6 @@ function center(): void {
       return
     }
 
-    nodes.container.alpha = 1
+    nodes.element.alpha = 1
   })
 }

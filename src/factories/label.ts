@@ -19,7 +19,7 @@ export async function nodeLabelFactory() {
   }
 
   return {
-    label,
+    element: label,
     render,
   }
 }

@@ -11,8 +11,8 @@ export type TaskRunContainer = Awaited<ReturnType<typeof taskRunContainerFactory
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function taskRunContainerFactory() {
   const container = new Container()
-  const { label, render: renderLabel } = await nodeLabelFactory()
-  const { bar, render: renderBar } = await nodeBarFactory()
+  const { element: label, render: renderLabel } = await nodeLabelFactory()
+  const { element: bar, render: renderBar } = await nodeBarFactory()
 
   container.addChild(bar)
   container.addChild(label)
@@ -52,8 +52,8 @@ export async function taskRunContainerFactory() {
 
   return {
     kind: 'task-run' as const,
+    element: container,
     render,
-    container,
     bar,
   }
 }

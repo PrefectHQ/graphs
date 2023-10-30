@@ -9,7 +9,7 @@ import { layout } from '@/objects/layout'
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeBarFactory() {
   const config = await waitForConfig()
-  const { bar, render: renderBar } = await barFactory()
+  const { element: bar, render: renderBar } = await barFactory()
 
   async function render(node: RunGraphNode): Promise<Container> {
     const { background = '#fff' } = config.styles.node(node)
@@ -43,7 +43,7 @@ export async function nodeBarFactory() {
   }
 
   return {
-    bar,
+    element: bar,
     render,
   }
 }
