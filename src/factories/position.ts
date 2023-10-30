@@ -1,5 +1,4 @@
-import { scaleLinear, scaleTime } from 'd3'
-import { addSeconds } from 'date-fns'
+import { ScaleLinear, ScaleTime, scaleLinear, scaleTime } from 'd3'
 import { HorizontalMode, VerticalMode } from '@/models/layout'
 
 export type VerticalPositionSettings = {
@@ -8,16 +7,13 @@ export type VerticalPositionSettings = {
 
 export type HorizontalPositionSettings = {
   mode: HorizontalMode,
-  startTime: Date,
-  timeSpan: number,
-  timeSpanPixels: number,
-  dependencyColumnSize: number,
+  range: [number, number],
+  domain: [Date, Date] | [number, number],
 }
 
 export type HorizontalScale = ReturnType<typeof horizontalScaleFactory>
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function horizontalScaleFactory(settings: HorizontalPositionSettings) {
+export function horizontalScaleFactory(settings: HorizontalPositionSettings): ScaleTime<number, number> | ScaleLinear<number, number> {
   if (settings.mode === 'trace') {
     return getTimeScale(settings)
   }
@@ -25,21 +21,10 @@ export function horizontalScaleFactory(settings: HorizontalPositionSettings) {
   return getLinearScale(settings)
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-function getTimeScale({ startTime, timeSpan, timeSpanPixels }: HorizontalPositionSettings) {
-  const start = startTime
-  const end = addSeconds(start, timeSpan)
-
-  // example: pixelsRange = 20, start = "2023-01-01T00:00:00"
-  // scale("2023-01-01T00:00:00") = 0
-  // scale("2023-01-01T00:00:01") = 20
-  // scale("2023-01-01T00:00:05") = 100
-  const scale = scaleTime().domain([start, end]).range([0, timeSpanPixels])
-
-  return scale
+function getTimeScale({ domain, range }: HorizontalPositionSettings): ScaleTime<number, number> {
+  return scaleTime().domain(domain).range(range)
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-function getLinearScale({ dependencyColumnSize }: HorizontalPositionSettings) {
-  return scaleLinear().domain([0, 1]).range([0, dependencyColumnSize])
+function getLinearScale({ domain, range }: HorizontalPositionSettings): ScaleLinear<number, number> {
+  return scaleLinear().domain(domain).range(range)
 }

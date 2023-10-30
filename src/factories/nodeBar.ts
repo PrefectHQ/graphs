@@ -1,10 +1,9 @@
 import { differenceInMilliseconds, millisecondsInSecond } from 'date-fns'
 import { Container } from 'pixi.js'
-import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS } from '@/consts'
 import { barFactory } from '@/factories/bar'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
-import { layout } from '@/objects/layout'
+import { layout, getHorizontalColumnSize } from '@/objects/settings'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeBarFactory() {
@@ -29,17 +28,19 @@ export async function nodeBarFactory() {
   }
 
   function getTotalWidth(node: RunGraphNode, borderRadius: number): number {
+    const columnSize = getHorizontalColumnSize()
+
     if (layout.isTrace()) {
       const right = node.start_time
       const left = node.end_time ?? new Date()
       const seconds = differenceInMilliseconds(left, right) / millisecondsInSecond
-      const width = seconds * DEFAULT_TIME_COLUMN_SIZE_PIXELS
+      const width = seconds * columnSize
 
       // this means the min node size is 18px. Is that correct?
       return Math.max(width, borderRadius * 2)
     }
 
-    return DEFAULT_LINEAR_COLUMN_SIZE_PIXELS
+    return columnSize
   }
 
   return {

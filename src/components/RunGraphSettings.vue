@@ -36,7 +36,7 @@
   import { PButton, positions, PPopOver } from '@prefecthq/prefect-design'
   import { computed } from 'vue'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
-  import { layout, setHorizontalMode, setVerticalMode } from '@/objects/layout'
+  import { layout, setHorizontalMode, setVerticalMode } from '@/objects/settings'
 
   type Option<T extends string> = {
     value: T,

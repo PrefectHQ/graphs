@@ -1,14 +1,11 @@
-import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SPAN_SECONDS } from '@/consts'
 import { HorizontalPositionSettings, VerticalPositionSettings } from '@/factories/position'
-import { layout } from '@/objects/layout'
+import { getHorizontalDomain, getHorizontalRange, layout } from '@/objects/settings'
 
 export function horizontalSettingsFactory(startTime: Date): HorizontalPositionSettings {
   return {
     mode: layout.horizontal,
-    startTime,
-    timeSpan: DEFAULT_TIME_COLUMN_SPAN_SECONDS,
-    timeSpanPixels: DEFAULT_TIME_COLUMN_SIZE_PIXELS,
-    dependencyColumnSize: DEFAULT_LINEAR_COLUMN_SIZE_PIXELS,
+    range: getHorizontalRange(),
+    domain: getHorizontalDomain(startTime),
   }
 }
 
