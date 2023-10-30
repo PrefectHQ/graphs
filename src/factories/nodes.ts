@@ -5,6 +5,7 @@ import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { horizontalScaleFactory } from '@/factories/position'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
+import { BoundsContainer } from '@/models/boundsContainer'
 import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
@@ -45,7 +46,12 @@ export async function nodesContainerFactory(runId: string) {
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  emitter.on('layoutUpdated', () => renderNodes())
+  emitter.on('layoutUpdated', () => {
+    nodesLayout = null
+    rows.clear()
+    columns.clear()
+    renderNodes()
+  })
 
   async function render(): Promise<void> {
     if (data === null) {
@@ -82,9 +88,9 @@ export async function nodesContainerFactory(runId: string) {
     for (const [nodeId, node] of data.nodes) {
       // todo: this await is probably making this slower. Probably be faster with a Promise.all
       // eslint-disable-next-line no-await-in-loop
-      const { width } = await renderNode(node)
+      const container = await renderNode(node)
 
-      widths.set(nodeId, width)
+      widths.set(nodeId, container.width)
     }
 
     worker.postMessage({
@@ -96,7 +102,7 @@ export async function nodesContainerFactory(runId: string) {
     })
   }
 
-  async function renderNode(node: RunGraphNode): Promise<Container> {
+  async function renderNode(node: RunGraphNode): Promise<BoundsContainer> {
     const { render } = await getNodeContainerFactory(node)
 
     return await render(node)

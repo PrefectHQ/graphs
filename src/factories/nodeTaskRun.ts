@@ -1,7 +1,8 @@
-import { BitmapText, Container } from 'pixi.js'
+import { BitmapText } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeBarFactory } from '@/factories/nodeBar'
+import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
@@ -10,7 +11,7 @@ export type TaskRunContainer = Awaited<ReturnType<typeof taskRunContainerFactory
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function taskRunContainerFactory() {
-  const container = new Container()
+  const container = new BoundsContainer()
   const { element: label, render: renderLabel } = await nodeLabelFactory()
   const { element: bar, render: renderBar } = await nodeBarFactory()
 
@@ -20,7 +21,7 @@ export async function taskRunContainerFactory() {
   container.eventMode = 'none'
   container.name = DEFAULT_NODE_CONTAINER_NAME
 
-  async function render(node: RunGraphNode): Promise<Container> {
+  async function render(node: RunGraphNode): Promise<BoundsContainer> {
     const label = await renderLabel(node)
     const bar = await renderBar(node)
 
@@ -29,7 +30,7 @@ export async function taskRunContainerFactory() {
     return container
   }
 
-  async function getLabelPosition(label: BitmapText, bar: Container): Promise<Pixels> {
+  async function getLabelPosition(label: BitmapText, bar: BoundsContainer): Promise<Pixels> {
     const config = await waitForConfig()
 
     // todo: this should probably be nodePadding

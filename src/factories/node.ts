@@ -1,7 +1,8 @@
-import { Container, Ticker } from 'pixi.js'
+import { Ticker } from 'pixi.js'
 import { animate } from '@/factories/animation'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
+import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForCull } from '@/objects/culling'
@@ -16,7 +17,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   cull.add(container)
 
-  async function render(node: RunGraphNode): Promise<Container> {
+  async function render(node: RunGraphNode): Promise<BoundsContainer> {
     const currentCacheKey = getNodeCacheKey(node)
 
     if (currentCacheKey === cacheKey) {
