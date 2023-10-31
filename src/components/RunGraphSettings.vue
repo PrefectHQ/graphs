@@ -99,14 +99,14 @@
 
   function increaseScale(): void {
     const multiplier = DEFAULT_HORIZONTAL_SCALE_MULTIPLIER + 1
-    const scale = layout.horizontalScale * multiplier
+    const scale = layout.horizontalScaleMultiplier * multiplier
 
     setHorizontalScale(scale)
   }
 
   function decreaseScale(): void {
     const multiplier = Math.abs(DEFAULT_HORIZONTAL_SCALE_MULTIPLIER - 1)
-    const scale = layout.horizontalScale * multiplier
+    const scale = layout.horizontalScaleMultiplier * multiplier
 
     setHorizontalScale(scale)
   }

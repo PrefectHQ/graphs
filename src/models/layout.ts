@@ -10,7 +10,7 @@ export type NodeSize = {
 export type LayoutSettings = {
   horizontal: HorizontalMode,
   vertical: VerticalMode,
-  horizontalScale: number,
+  horizontalScaleMultiplier: number,
   isTrace: () => boolean,
   isDependency: () => boolean,
   isWaterfall: () => boolean,

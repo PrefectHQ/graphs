@@ -12,13 +12,13 @@ export async function startSettings(): Promise<void> {
 }
 
 export function stopSettings(): void {
-  layout.horizontalScale = 0
+  layout.horizontalScaleMultiplier = 0
 }
 
 export const layout = reactive<LayoutSettings>({
   horizontal: 'trace',
   vertical: 'nearest-parent',
-  horizontalScale: 0,
+  horizontalScaleMultiplier: 0,
   isTrace() {
     return this.horizontal === 'trace'
   },
@@ -46,7 +46,7 @@ export function getHorizontalColumnSize(): number {
     return DEFAULT_LINEAR_COLUMN_SIZE_PIXELS
   }
 
-  return DEFAULT_TIME_COLUMN_SIZE_PIXELS * layout.horizontalScale
+  return DEFAULT_TIME_COLUMN_SIZE_PIXELS * layout.horizontalScaleMultiplier
 }
 
 export function getHorizontalRange(): [number, number] {
@@ -67,13 +67,13 @@ export function getHorizontalDomain(startTime: Date): [Date, Date] | [number, nu
 }
 
 export function setHorizontalScale(scale: number): void {
-  if (layout.horizontalScale === scale) {
+  if (layout.horizontalScaleMultiplier === scale) {
     return
   }
 
   const emit = emitFactory()
 
-  layout.horizontalScale = scale
+  layout.horizontalScaleMultiplier = scale
 
   emit()
 }
@@ -126,5 +126,5 @@ function emitFactory(): () => void {
 }
 
 function initialized(): boolean {
-  return layout.horizontalScale !== 0
+  return layout.horizontalScaleMultiplier !== 0
 }
