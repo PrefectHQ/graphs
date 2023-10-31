@@ -17,6 +17,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     nodeToggleSize: 26,
     nodeToggleBorderRadius: 6,
     nodeToggleBorderColor: '#51525C',
+    nodeSelectedBorderColor: 'rgba(104, 125, 155, 0.4)',
     edgeColor: '#51525C',
     node: () => ({
       background: '#ffffff',

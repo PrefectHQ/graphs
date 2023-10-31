@@ -1,5 +1,4 @@
 import { BitmapText } from 'pixi.js'
-import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { BoundsContainer } from '@/models/boundsContainer'
@@ -17,9 +16,6 @@ export async function taskRunContainerFactory() {
 
   container.addChild(bar)
   container.addChild(label)
-
-  container.eventMode = 'none'
-  container.name = DEFAULT_NODE_CONTAINER_NAME
 
   async function render(node: RunGraphNode): Promise<BoundsContainer> {
     const label = await renderLabel(node)

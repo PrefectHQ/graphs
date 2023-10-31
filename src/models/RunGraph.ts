@@ -6,6 +6,7 @@ export type RunGraphProps = {
   config: RunGraphConfig,
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
+  selected?: RunGraphNode | null,
 }
 
 export type RunGraphData = {
@@ -55,6 +56,7 @@ export type RunGraphStyles = {
   nodeToggleSize?: number,
   nodeToggleBorderRadius?: number,
   nodeToggleBorderColor?: ColorSource,
+  nodeSelectedBorderColor?: ColorSource,
   edgeColor?: string,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }

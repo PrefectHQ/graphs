@@ -4,7 +4,7 @@ import { nodesContainerFactory } from '@/factories/nodes'
 import { RunGraphData } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
-import { setHorizontalScale, waitForSettings } from '@/objects/settings'
+import { waitForSettings } from '@/objects/settings'
 import { centerViewport, waitForViewport } from '@/objects/viewport'
 
 let stopData: (() => void) | null = null

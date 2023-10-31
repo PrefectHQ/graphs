@@ -1,4 +1,5 @@
 import { Ticker } from 'pixi.js'
+import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { animate } from '@/factories/animation'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
@@ -6,6 +7,8 @@ import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForCull } from '@/objects/culling'
+import { emitter } from '@/objects/events'
+import { isSelected, selectNode } from '@/objects/selection'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
@@ -15,7 +18,27 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
   const cacheKey: string | null = null
 
+  let nodeIsSelected = false
+
   cull.add(container)
+
+  container.eventMode = 'static'
+  container.cursor = 'pointer'
+  container.name = DEFAULT_NODE_CONTAINER_NAME
+
+  container.on('click', event => {
+    event.stopPropagation()
+    selectNode(node)
+  })
+
+  emitter.on('nodeSelected', () => {
+    const isCurrentlySelected = isSelected(node)
+
+    if (isCurrentlySelected !== nodeIsSelected) {
+      nodeIsSelected = isCurrentlySelected
+      renderNode(node)
+    }
+  })
 
   async function render(node: RunGraphNode): Promise<BoundsContainer> {
     const currentCacheKey = getNodeCacheKey(node)

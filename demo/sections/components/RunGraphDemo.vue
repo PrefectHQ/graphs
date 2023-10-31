@@ -1,7 +1,7 @@
 <template>
   <p-layout-default class="run-graph-demo">
-    <RunGraph v-model:viewport="visibleDateRange" :config="config" class="run-graph-demo__graph p-background" />
-    {{ visibleDateRange }}
+    <RunGraph v-model:viewport="visibleDateRange" v-model:selected="selected" :config="config" class="run-graph-demo__graph p-background" />
+    {{ visibleDateRange }} {{ selected }}
   </p-layout-default>
 </template>
 
@@ -33,6 +33,7 @@
 
   const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
   const visibleDateRange = ref<ViewportDateRange>()
+  const selected = ref()
 
   // just hard coding the values here for now. these will come from ui-library
   const stateTypeColors = {
