@@ -48,7 +48,7 @@
   import { computed } from 'vue'
   import { DEFAULT_HORIZONTAL_SCALE, DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
-  import { layout, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
+  import { layout, resetHorizontalScaleMultiplier, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
 
   type Option<T extends string> = {
     value: T,
@@ -112,7 +112,7 @@
   }
 
   function resetScale(): void {
-    setHorizontalScaleMultiplier(DEFAULT_HORIZONTAL_SCALE)
+    resetHorizontalScaleMultiplier()
   }
 </script>
 

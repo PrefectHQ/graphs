@@ -4,20 +4,26 @@ import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS, DEF
 import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForRunData } from '@/objects/nodes'
+import { getInitialHorizontalScaleMultiplier } from '@/utilities/getInitialHorizontalScaleMultiplier'
 
 export async function startSettings(): Promise<void> {
   const data = await waitForRunData()
+  const multiplier = getInitialHorizontalScaleMultiplier(data)
 
-  setHorizontalScaleMultiplier(1)
+  layout.horizontalScaleMultiplierDefault = multiplier
+
+  setHorizontalScaleMultiplier(multiplier)
 }
 
 export function stopSettings(): void {
+  layout.horizontalScaleMultiplierDefault = 0
   layout.horizontalScaleMultiplier = 0
 }
 
 export const layout = reactive<LayoutSettings>({
   horizontal: 'trace',
   vertical: 'nearest-parent',
+  horizontalScaleMultiplierDefault: 0,
   horizontalScaleMultiplier: 0,
   isTrace() {
     return this.horizontal === 'trace'
@@ -76,6 +82,10 @@ export function setHorizontalScaleMultiplier(scale: number): void {
   layout.horizontalScaleMultiplier = scale
 
   emit()
+}
+
+export function resetHorizontalScaleMultiplier(): void {
+  setHorizontalScaleMultiplier(layout.horizontalScaleMultiplierDefault)
 }
 
 export function setLayoutMode({ horizontal, vertical }: LayoutSettings): void {
