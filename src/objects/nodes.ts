@@ -1,59 +1,70 @@
-import { Ticker } from 'pixi.js'
-import { NodesContainer, nodesContainerFactory } from '@/factories/nodes'
+import { Container, Ticker } from 'pixi.js'
+import { dataFactory } from '@/factories/data'
+import { nodesContainerFactory } from '@/factories/nodes'
 import { RunGraphData } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
+import { setHorizontalScale, waitForSettings } from '@/objects/settings'
 import { centerViewport, waitForViewport } from '@/objects/viewport'
 
-let nodes: NodesContainer | null = null
-let data: RunGraphData | null = null
+let stopData: (() => void) | null = null
+let runGraphData: RunGraphData | null = null
+let nodesContainer: Container | null = null
 
 export async function startNodes(): Promise<void> {
   const viewport = await waitForViewport()
   const config = await waitForConfig()
+  const { element, render } = await nodesContainerFactory()
 
-  nodes = await nodesContainerFactory(config.runId)
+  viewport.addChild(element)
 
-  viewport.addChild(nodes.element)
+  element.alpha = 0
 
-  nodes.element.alpha = 0
+  const response = await dataFactory(config.runId, async data => {
+    const event: EventKey = runGraphData ? 'runDataUpdated' : 'runDataCreated'
 
-  nodes.render()
+    runGraphData = data
 
-  nodes.element.once('rendered', center)
-  nodes.element.on('fetched', onFetched)
+    emitter.emit(event, runGraphData)
+
+    // this makes sure the layout settings are initialized prior to rendering
+    // important to prevent double rendering on the first render
+    await waitForSettings()
+
+    render(data)
+  })
+
+  nodesContainer = element
+  stopData = response.stop
+
+  nodesContainer.once('rendered', center)
+
+  response.start()
 }
 
 export function stopNodes(): void {
-  nodes?.stop()
-  nodes = null
-  data = null
+  stopData?.()
+  stopData = null
+  nodesContainer = null
+  runGraphData = null
 }
 
 export async function waitForRunData(): Promise<RunGraphData> {
-  if (data) {
-    return data
+  if (runGraphData) {
+    return runGraphData
   }
 
   return await waitForEvent('runDataCreated')
-}
-
-function onFetched(value: RunGraphData): void {
-  const event: EventKey = data ? 'runDataUpdated' : 'runDataCreated'
-
-  data = value
-
-  emitter.emit(event, data)
 }
 
 function center(): void {
   centerViewport()
 
   Ticker.shared.addOnce(() => {
-    if (!nodes) {
+    if (!nodesContainer) {
       return
     }
 
-    nodes.element.alpha = 1
+    nodesContainer.alpha = 1
   })
 }

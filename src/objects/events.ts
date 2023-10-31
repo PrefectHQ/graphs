@@ -25,6 +25,7 @@ type Events = {
   fontsLoaded: Fonts,
   containerCreated: Container,
   layoutUpdated: LayoutSettings,
+  layoutCreated: LayoutSettings,
   cullCreated: Cull,
   labelCullCreated: VisibilityCull,
   edgeCullCreated: VisibilityCull,

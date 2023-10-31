@@ -9,6 +9,7 @@ import { startLabelCulling, stopLabelCulling } from '@/objects/labelCulling'
 import { startNodes, stopNodes } from '@/objects/nodes'
 import { startScale, stopScale } from '@/objects/scale'
 import { startScope, stopScope } from '@/objects/scope'
+import { startSettings, stopSettings } from '@/objects/settings'
 import { startStage, stopStage } from '@/objects/stage'
 import { startViewport, stopViewport } from '@/objects/viewport'
 
@@ -33,6 +34,7 @@ export function start({ stage, props }: StartParameters): void {
   startCulling()
   startLabelCulling()
   startEdgeCulling()
+  startSettings()
 }
 
 export function stop(): void {
@@ -49,4 +51,5 @@ export function stop(): void {
   stopCulling()
   stopLabelCulling()
   stopEdgeCulling()
+  stopSettings()
 }

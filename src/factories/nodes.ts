@@ -1,5 +1,5 @@
 import { Container } from 'pixi.js'
-import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_POLL_INTERVAL } from '@/consts'
+import { DEFAULT_NODES_CONTAINER_NAME } from '@/consts'
 import { EdgeFactory, edgeFactory } from '@/factories/edge'
 import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
@@ -20,7 +20,7 @@ type EdgeKey = `${string}_${string}`
 export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function nodesContainerFactory(runId: string) {
+export async function nodesContainerFactory() {
   const worker = layoutWorkerFactory(onmessage)
   const nodes = new Map<string, NodeContainerFactory>()
   const edges = new Map<EdgeKey, EdgeFactory>()
@@ -40,81 +40,50 @@ export async function nodesContainerFactory(runId: string) {
   })
 
   let initialized = false
-  let data: RunGraphData | null = null
   let nodesLayout: NodesLayoutResponse | null = null
-  let interval: ReturnType<typeof setInterval> | undefined = undefined
+  let runData: RunGraphData | null = null
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
   emitter.on('layoutUpdated', () => {
-    nodesLayout = null
-    rows.clear()
-    columns.clear()
-    renderNodes()
-  })
-
-  async function render(): Promise<void> {
-    if (data === null) {
-      await fetch()
-    }
-
-    if (data === null) {
-      throw new Error('Data was null after fetch')
-    }
-
-    await Promise.all([
-      renderNodes(),
-      createEdges(),
-    ])
-  }
-
-  async function fetch(): Promise<void> {
-    clearInterval(interval)
-
-    data = await config.fetch(runId)
-
-    if (!data.end_time) {
-      interval = setTimeout(() => fetch(), DEFAULT_POLL_INTERVAL)
-    }
-
-    container.emit('fetched', data)
-  }
-
-  async function renderNodes(): Promise<void> {
-    if (data === null) {
+    if (!runData) {
       return
     }
 
-    const widths: NodeWidths = new Map()
+    render(runData)
+  })
 
-    for (const [nodeId, node] of data.nodes) {
-      // todo: this await is probably making this slower. Probably be faster with a Promise.all
-      // eslint-disable-next-line no-await-in-loop
-      const container = await renderNode(node)
+  async function render(data: RunGraphData): Promise<void> {
+    runData = data
+    nodesLayout = null
+    rows.clear()
+    columns.clear()
 
-      widths.set(nodeId, container.width)
-    }
+    await Promise.all([
+      createNodes(data),
+      createEdges(data),
+    ])
 
-    worker.postMessage({
-      type: 'layout',
-      data,
-      widths,
-      horizontalSettings: horizontalSettingsFactory(data.start_time),
-      verticalSettings: verticalSettingsFactory(),
-    })
+    getLayout(data)
   }
 
-  async function renderNode(node: RunGraphNode): Promise<BoundsContainer> {
+  async function createNodes(data: RunGraphData): Promise<void> {
+    const promises: Promise<Container>[] = []
+
+    for (const node of data.nodes.values()) {
+      promises.push(createNode(node))
+    }
+
+    await Promise.all(promises)
+  }
+
+  async function createNode(node: RunGraphNode): Promise<BoundsContainer> {
     const { render } = await getNodeContainerFactory(node)
 
     return await render(node)
   }
 
-  async function createEdges(): Promise<void> {
-    if (data === null) {
-      return
-    }
-
+  async function createEdges(data: RunGraphData): Promise<void> {
     const promises: Promise<void>[] = []
 
     for (const [nodeId, { children }] of data.nodes) {
@@ -144,6 +113,22 @@ export async function nodesContainerFactory(runId: string) {
 
     edges.set(key, edge)
     container.addChild(edge.element)
+  }
+
+  function getLayout(data: RunGraphData): void {
+    const widths: NodeWidths = new Map()
+
+    for (const [nodeId, { element }] of nodes) {
+      widths.set(nodeId, element.width)
+    }
+
+    worker.postMessage({
+      type: 'layout',
+      data,
+      widths,
+      horizontalSettings: horizontalSettingsFactory(data.start_time),
+      verticalSettings: verticalSettingsFactory(),
+    })
   }
 
   function renderEdges(): void {
@@ -203,10 +188,11 @@ export async function nodesContainerFactory(runId: string) {
     }
 
     renderEdges()
-    resized()
 
     initialized = true
+
     container.emit('rendered')
+    container.emit('resized', getSize())
   }
 
   async function getNodeContainerFactory(node: RunGraphNode): Promise<NodeContainerFactory> {
@@ -262,10 +248,6 @@ export async function nodesContainerFactory(runId: string) {
     return position.x
   }
 
-  function resized(): void {
-    container.emit('resized', getSize())
-  }
-
   function getHeight(): number {
     if (!nodesLayout) {
       return 0
@@ -275,7 +257,7 @@ export async function nodesContainerFactory(runId: string) {
   }
 
   function getWidth(): number {
-    if (!nodesLayout || !data) {
+    if (!nodesLayout || !runData) {
       return 0
     }
 
@@ -283,10 +265,10 @@ export async function nodesContainerFactory(runId: string) {
       return columns.getTotalValue(nodesLayout.maxColumn)
     }
 
-    const settings = horizontalSettingsFactory(data.start_time)
+    const settings = horizontalSettingsFactory(runData.start_time)
     const scale = horizontalScaleFactory(settings)
-    const end = scale(data.end_time ?? new Date())
-    const start = scale(data.start_time)
+    const end = scale(runData.end_time ?? new Date())
+    const start = scale(runData.start_time)
     const width = end - start
 
     return width
@@ -316,15 +298,9 @@ export async function nodesContainerFactory(runId: string) {
     setPositions()
   }
 
-  function stop(): void {
-    clearInterval(interval)
-    data = null
-  }
-
   return {
     element: container,
     getSize,
     render,
-    stop,
   }
 }

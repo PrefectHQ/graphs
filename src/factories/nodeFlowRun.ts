@@ -1,5 +1,6 @@
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { borderFactory } from '@/factories/border'
+import { dataFactory } from '@/factories/data'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
@@ -18,9 +19,12 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const config = await waitForConfig()
   const { element: bar, render: renderBar } = await nodeBarFactory()
   const { element: label, render: renderLabelText } = await nodeLabelFactory()
-  const { element: nodesContainer, render: renderNodes, stop: stopNodes, getSize: getNodesSize } = await nodesContainerFactory(node.id)
+  const { element: nodesContainer, render: renderNodes, getSize: getNodesSize } = await nodesContainerFactory()
   const { element: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
   const { element: border, render: renderBorderContainer } = await borderFactory()
+  const { start: startData, stop: stopData } = await dataFactory(node.id, data => {
+    renderNodes(data)
+  })
 
   let isOpen = false
 
@@ -35,7 +39,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   arrowButton.on('click', toggle)
 
   nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
-  nodesContainer.on('resized', () => resized())
+
+  // I think we can just set the viewport to dirty here rather than culling manually
+  // can probably also just cull in nodes.ts rather than here
+  nodesContainer.on('rendered', () => {
+    cull()
+    resized()
+  })
 
   async function render(): Promise<BoundsContainer> {
     await renderBar(node)
@@ -83,12 +93,9 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     container.addChild(nodesContainer)
 
     await Promise.all([
+      startData(),
       render(),
-      renderNodes(),
     ])
-
-    // todo: can we just set the viewport to dirty here?
-    nodesContainer.once('rendered', () => cull())
 
     resized()
   }
@@ -98,11 +105,10 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     container.removeChild(nodesContainer)
 
     await Promise.all([
+      stopData(),
       render(),
-      stopNodes(),
     ])
 
-    cull()
     resized()
   }
 

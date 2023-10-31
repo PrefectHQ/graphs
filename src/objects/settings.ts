@@ -2,12 +2,23 @@ import { addSeconds } from 'date-fns'
 import { reactive } from 'vue'
 import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SPAN_SECONDS } from '@/consts'
 import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
-import { emitter } from '@/objects/events'
+import { EventKey, emitter, waitForEvent } from '@/objects/events'
+import { waitForRunData } from '@/objects/nodes'
+
+export async function startSettings(): Promise<void> {
+  const data = await waitForRunData()
+
+  setHorizontalScale(1)
+}
+
+export function stopSettings(): void {
+  layout.horizontalScale = 0
+}
 
 export const layout = reactive<LayoutSettings>({
   horizontal: 'trace',
   vertical: 'nearest-parent',
-  horizontalScale: 1,
+  horizontalScale: 0,
   isTrace() {
     return this.horizontal === 'trace'
   },
@@ -21,6 +32,14 @@ export const layout = reactive<LayoutSettings>({
     return this.vertical === 'nearest-parent'
   },
 })
+
+export async function waitForSettings(): Promise<LayoutSettings> {
+  if (initialized()) {
+    return layout
+  }
+
+  return await waitForEvent('layoutCreated')
+}
 
 export function getHorizontalColumnSize(): number {
   if (layout.isDependency()) {
@@ -52,9 +71,11 @@ export function setHorizontalScale(scale: number): void {
     return
   }
 
+  const emit = emitFactory()
+
   layout.horizontalScale = scale
 
-  emitter.emit('layoutUpdated', layout)
+  emit()
 }
 
 export function setLayoutMode({ horizontal, vertical }: LayoutSettings): void {
@@ -62,10 +83,12 @@ export function setLayoutMode({ horizontal, vertical }: LayoutSettings): void {
     return
   }
 
+  const emit = emitFactory()
+
   layout.horizontal = horizontal
   layout.vertical = vertical
 
-  emitter.emit('layoutUpdated', layout)
+  emit()
 }
 
 export function setHorizontalMode(mode: HorizontalMode): void {
@@ -73,9 +96,11 @@ export function setHorizontalMode(mode: HorizontalMode): void {
     return
   }
 
+  const emit = emitFactory()
+
   layout.horizontal = mode
 
-  emitter.emit('layoutUpdated', layout)
+  emit()
 }
 
 export function setVerticalMode(mode: VerticalMode): void {
@@ -83,7 +108,23 @@ export function setVerticalMode(mode: VerticalMode): void {
     return
   }
 
+  const emit = emitFactory()
+
   layout.vertical = mode
 
-  emitter.emit('layoutUpdated', layout)
+  emit()
+}
+
+function emitFactory(): () => void {
+  const event: EventKey = initialized() ? 'layoutUpdated' : 'layoutCreated'
+
+  return () => {
+    if (initialized()) {
+      emitter.emit(event, layout)
+    }
+  }
+}
+
+function initialized(): boolean {
+  return layout.horizontalScale !== 0
 }
