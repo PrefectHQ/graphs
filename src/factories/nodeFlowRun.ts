@@ -39,8 +39,6 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
 
-  // I think we can just set the viewport to dirty here rather than culling manually
-  // can probably also just cull in nodes.ts rather than here
   nodesContainer.on('rendered', () => {
     cull()
     resized()
