@@ -56,6 +56,7 @@ export type RunGraphStyles = {
   nodeToggleSize?: number,
   nodeToggleBorderRadius?: number,
   nodeToggleBorderColor?: ColorSource,
+  nodeSelectedBorderColor?: ColorSource,
   edgeColor?: string,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }

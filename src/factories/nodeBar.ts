@@ -53,7 +53,7 @@ export async function nodeBarFactory() {
       radius: config.styles.nodeBorderRadius,
       width: width + borderOffset * 2,
       height: height + borderOffset * 2,
-      color: 'rgba(104, 125, 155, 0.4)',
+      color: config.styles.nodeSelectedBorderColor,
     })
   }
 
