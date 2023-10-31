@@ -8,7 +8,7 @@ import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
-import { selectNode } from '@/objects/selection'
+import { isSelected, selectNode } from '@/objects/selection'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
@@ -17,6 +17,8 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   const cull = await waitForCull()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
   const cacheKey: string | null = null
+
+  let nodeIsSelected = false
 
   cull.add(container)
 
@@ -29,9 +31,12 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     selectNode(node)
   })
 
-  emitter.on('nodeSelected', selected => {
-    if (selected?.id === node.id) {
-      console.log('its me!')
+  emitter.on('nodeSelected', () => {
+    const isNowSelected = isSelected(node)
+
+    if (isNowSelected !== nodeIsSelected) {
+      nodeIsSelected = isNowSelected
+      renderNode(node)
     }
   })
 

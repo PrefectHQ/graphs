@@ -1,14 +1,25 @@
 import { differenceInMilliseconds, millisecondsInSecond } from 'date-fns'
 import { Container } from 'pixi.js'
 import { barFactory } from '@/factories/bar'
+import { borderFactory } from '@/factories/border'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
+import { isSelected } from '@/objects/selection'
 import { layout, getHorizontalColumnSize } from '@/objects/settings'
+
+const borderOffset = 3
+const borderStroke = 2
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeBarFactory() {
   const config = await waitForConfig()
+  const container = new Container()
   const { element: bar, render: renderBar } = await barFactory()
+  const { element: border, render: renderBorder } = await borderFactory()
+
+  container.addChild(bar)
+
+  border.position.set(-borderOffset, -borderOffset)
 
   async function render(node: RunGraphNode): Promise<Container> {
     const { background = '#fff' } = config.styles.node(node)
@@ -24,7 +35,26 @@ export async function nodeBarFactory() {
       capLeft,
     })
 
+    await renderSelectedBorder(node, width, height)
+
     return bar
+  }
+
+  async function renderSelectedBorder(node: RunGraphNode, width: number, height: number): Promise<void> {
+    if (!isSelected(node)) {
+      container.removeChild(border)
+      return
+    }
+
+    container.addChild(border)
+
+    await renderBorder({
+      stroke: borderStroke,
+      radius: config.styles.nodeBorderRadius,
+      width: width + borderOffset * 2,
+      height: height + borderOffset * 2,
+      color: 'rgba(104, 125, 155, 0.4)',
+    })
   }
 
   function getTotalWidth(node: RunGraphNode, borderRadius: number): number {
@@ -44,7 +74,7 @@ export async function nodeBarFactory() {
   }
 
   return {
-    element: bar,
+    element: container,
     render,
   }
 }

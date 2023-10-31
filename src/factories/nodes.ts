@@ -46,14 +46,9 @@ export async function nodesContainerFactory() {
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
   emitter.on('layoutUpdated', () => {
-    // pixi says container.parent will always be a display object but it can be null
-    // if its never been added to a parent
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!runData || container.parent === null) {
-      return
+    if (shouldUpdate()) {
+      render(runData!)
     }
-
-    render(runData)
   })
 
   async function render(data: RunGraphData): Promise<void> {
@@ -299,6 +294,10 @@ export async function nodesContainerFactory() {
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
     nodesLayout = data.layout
     setPositions()
+  }
+
+  function shouldUpdate(): boolean {
+    return Boolean(runData) && Boolean(container.parent)
   }
 
   return {
