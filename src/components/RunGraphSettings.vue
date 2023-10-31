@@ -48,7 +48,7 @@
   import { computed } from 'vue'
   import { DEFAULT_HORIZONTAL_SCALE, DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
-  import { layout, setHorizontalMode, setHorizontalScale, setVerticalMode } from '@/objects/settings'
+  import { layout, resetHorizontalScaleMultiplier, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
 
   type Option<T extends string> = {
     value: T,
@@ -99,20 +99,20 @@
 
   function increaseScale(): void {
     const multiplier = DEFAULT_HORIZONTAL_SCALE_MULTIPLIER + 1
-    const scale = layout.horizontalScale * multiplier
+    const scale = layout.horizontalScaleMultiplier * multiplier
 
-    setHorizontalScale(scale)
+    setHorizontalScaleMultiplier(scale)
   }
 
   function decreaseScale(): void {
     const multiplier = Math.abs(DEFAULT_HORIZONTAL_SCALE_MULTIPLIER - 1)
-    const scale = layout.horizontalScale * multiplier
+    const scale = layout.horizontalScaleMultiplier * multiplier
 
-    setHorizontalScale(scale)
+    setHorizontalScaleMultiplier(scale)
   }
 
   function resetScale(): void {
-    setHorizontalScale(DEFAULT_HORIZONTAL_SCALE)
+    resetHorizontalScaleMultiplier()
   }
 </script>
 
