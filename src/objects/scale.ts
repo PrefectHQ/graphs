@@ -2,6 +2,7 @@ import { HorizontalScale, horizontalScaleFactory } from '@/factories/position'
 import { horizontalSettingsFactory } from '@/factories/settings'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForRunData } from '@/objects/nodes'
+import { waitForSettings } from '@/objects/settings'
 
 let scale: HorizontalScale | null = null
 
@@ -26,7 +27,10 @@ export async function waitForScale(): Promise<HorizontalScale> {
   return await waitForEvent('scaleCreated')
 }
 
-function setHorizontalScale(startTime: Date): void {
+async function setHorizontalScale(startTime: Date): Promise<void> {
+  // makes sure the initial horizontal scale multiplier is set prior to creating this scale
+  await waitForSettings()
+
   const event: EventKey = scale ? 'scaleUpdated' : 'scaleCreated'
   const settings = horizontalSettingsFactory(startTime)
 
