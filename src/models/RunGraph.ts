@@ -6,6 +6,7 @@ export type RunGraphProps = {
   config: RunGraphConfig,
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
+  selected?: RunGraphNode | null,
 }
 
 export type RunGraphData = {

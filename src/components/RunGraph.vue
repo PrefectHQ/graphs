@@ -10,22 +10,25 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import RunGraphSettings from '@/components/RunGraphSettings.vue'
   import { RunGraphProps } from '@/models/RunGraph'
   import { ViewportDateRange } from '@/models/viewport'
   import { start, stop, centerViewport } from '@/objects'
   import { emitter } from '@/objects/events'
+  import { Selection, selectNode } from '@/objects/selection'
 
   // using the props object as a whole
   // eslint-disable-next-line vue/no-unused-properties
   const props = withDefaults(defineProps<RunGraphProps>(), {
     fullscreen: null,
+    selected: null,
   })
 
   const emit = defineEmits<{
     (event: 'update:viewport', value: ViewportDateRange): void,
     (event: 'update:fullscreen', value: boolean): void,
+    (event: 'update:selected', value: Selection | null): void,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -40,6 +43,10 @@
       emit('update:fullscreen', value)
     },
   })
+
+  watch(() => props.selected, selected => selectNode(selected))
+
+  emitter.on('nodeSelected', nodeId => emit('update:selected', nodeId))
 
   const classes = computed(() => ({
     root: {

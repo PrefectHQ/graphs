@@ -1,4 +1,3 @@
-import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { borderFactory } from '@/factories/border'
 import { dataFactory } from '@/factories/data'
 import { nodeLabelFactory } from '@/factories/label'
@@ -33,9 +32,10 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   container.addChild(label)
   container.addChild(arrowButton)
 
-  container.name = DEFAULT_NODE_CONTAINER_NAME
-
-  arrowButton.on('click', toggle)
+  arrowButton.on('click', event => {
+    event.stopPropagation()
+    toggle()
+  })
 
   nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
 
