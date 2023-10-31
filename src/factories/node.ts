@@ -32,10 +32,10 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   })
 
   emitter.on('nodeSelected', () => {
-    const isNowSelected = isSelected(node)
+    const isCurrentlySelected = isSelected(node)
 
-    if (isNowSelected !== nodeIsSelected) {
-      nodeIsSelected = isNowSelected
+    if (isCurrentlySelected !== nodeIsSelected) {
+      nodeIsSelected = isCurrentlySelected
       renderNode(node)
     }
   })
