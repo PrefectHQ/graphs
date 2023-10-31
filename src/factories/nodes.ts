@@ -46,7 +46,10 @@ export async function nodesContainerFactory() {
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
   emitter.on('layoutUpdated', () => {
-    if (!runData) {
+    // pixi says container.parent will always be a display object but it can be null
+    // if its never been added to a parent
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!runData || container.parent === null) {
       return
     }
 
