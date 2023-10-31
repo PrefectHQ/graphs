@@ -39,13 +39,9 @@ export function stopCulling(): void {
 }
 
 export async function cull(): Promise<void> {
-  if (!cullInstance) {
-    return
-  }
+  const viewport = await waitForViewport()
 
-  const application = await waitForApplication()
-
-  cullInstance.cull(application.renderer.screen)
+  viewport.dirty = true
 }
 
 export function uncull(): void {
