@@ -31,7 +31,6 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   container.addChild(border)
   container.addChild(bar)
   container.addChild(label)
-  container.addChild(nodesContainer)
   container.addChild(arrowButton)
 
   container.name = DEFAULT_NODE_CONTAINER_NAME
