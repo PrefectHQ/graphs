@@ -8,7 +8,7 @@ import { waitForRunData } from '@/objects/nodes'
 export async function startSettings(): Promise<void> {
   const data = await waitForRunData()
 
-  setHorizontalScale(1)
+  setHorizontalScaleMultiplier(1)
 }
 
 export function stopSettings(): void {
@@ -66,7 +66,7 @@ export function getHorizontalDomain(startTime: Date): [Date, Date] | [number, nu
   return [start, end]
 }
 
-export function setHorizontalScale(scale: number): void {
+export function setHorizontalScaleMultiplier(scale: number): void {
   if (layout.horizontalScaleMultiplier === scale) {
     return
   }
