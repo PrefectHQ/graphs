@@ -1,6 +1,6 @@
 import { Ticker } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
-import { animate } from '@/factories/animation'
+import { animationFactory } from '@/factories/animation'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
 import { BoundsContainer } from '@/models/boundsContainer'
@@ -15,6 +15,7 @@ export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactor
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeContainerFactory(node: RunGraphNode) {
   const cull = await waitForCull()
+  const { animate } = await animationFactory()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
   const cacheKey: string | null = null
 

@@ -12,6 +12,8 @@ export type LayoutSettings = {
   vertical: VerticalMode,
   horizontalScaleMultiplierDefault: number,
   horizontalScaleMultiplier: number,
+  disableEdges: boolean,
+  disableAnimations: boolean,
   isTrace: () => boolean,
   isDependency: () => boolean,
   isWaterfall: () => boolean,

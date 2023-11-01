@@ -66,6 +66,8 @@ export type RunGraphConfig = {
   fetch: RunGraphFetch,
   animationDuration?: number,
   styles?: RunGraphStyles,
+  disableAnimationsThreshold?: number,
+  disableEdgesThreshold?: number,
 }
 
 export type RequiredGraphConfig = Omit<Required<RunGraphConfig>, 'styles'> & {

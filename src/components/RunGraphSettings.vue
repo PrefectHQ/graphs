@@ -22,7 +22,7 @@
         </p-radio-group>
       </p-label>
       <template v-if="layout.isTrace()">
-        <p-label label="Scaling">
+        <p-label label="Scaling" class="mt-4">
           <div class="flex items-center gap-2">
             <p-button small icon="MinusIcon" @click="decreaseScale" />
             <p-button small icon="PlusIcon" @click="increaseScale" />
@@ -32,6 +32,7 @@
           </div>
         </p-label>
       </template>
+      <p-divider />
       <p-label label="Layout">
         <p-radio-group v-model="vertical" :options="verticalOptions">
           <template #label="{ option }">
@@ -39,6 +40,8 @@
           </template>
         </p-radio-group>
       </p-label>
+      <p-divider />
+      <p-checkbox v-model="hideEdges" label="Hide dependency arrows" />
     </p-overflow-menu>
   </p-pop-over>
 </template>
@@ -46,9 +49,9 @@
 <script lang="ts" setup>
   import { PButton, positions, PPopOver } from '@prefecthq/prefect-design'
   import { computed } from 'vue'
-  import { DEFAULT_HORIZONTAL_SCALE, DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
+  import { DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
-  import { layout, resetHorizontalScaleMultiplier, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
+  import { layout, resetHorizontalScaleMultiplier, setDisabledEdges, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
 
   type Option<T extends string> = {
     value: T,
@@ -97,6 +100,15 @@
     },
   })
 
+  const hideEdges = computed({
+    get() {
+      return layout.disableEdges
+    },
+    set(value) {
+      setDisabledEdges(value)
+    },
+  })
+
   function increaseScale(): void {
     const multiplier = DEFAULT_HORIZONTAL_SCALE_MULTIPLIER + 1
     const scale = layout.horizontalScaleMultiplier * multiplier
@@ -122,9 +134,6 @@
 }
 
 .run-graph-settings__menu {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: theme('spacing.4');
   padding: theme('spacing.2');
 }
 </style>

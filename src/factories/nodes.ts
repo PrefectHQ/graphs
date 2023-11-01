@@ -10,7 +10,7 @@ import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse }
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
-import { getHorizontalColumnSize, layout } from '@/objects/settings'
+import { getHorizontalColumnSize, layout, waitForSettings } from '@/objects/settings'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
@@ -25,6 +25,7 @@ export async function nodesContainerFactory() {
   const nodes = new Map<string, NodeContainerFactory>()
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
+  const edgesContainer = new Container()
   const config = await waitForConfig()
 
   // used for both vertical layouts
@@ -46,7 +47,7 @@ export async function nodesContainerFactory() {
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
   emitter.on('layoutUpdated', () => {
-    if (shouldUpdate()) {
+    if (Boolean(runData) && Boolean(container.parent)) {
       render(runData!)
     }
   })
@@ -82,6 +83,15 @@ export async function nodesContainerFactory() {
   }
 
   async function createEdges(data: RunGraphData): Promise<void> {
+    const settings = await waitForSettings()
+
+    if (settings.disableEdges) {
+      container.removeChild(edgesContainer)
+      return
+    }
+
+    container.addChildAt(edgesContainer, 0)
+
     const promises: Promise<void>[] = []
 
     for (const [nodeId, { children }] of data.nodes) {
@@ -110,7 +120,7 @@ export async function nodesContainerFactory() {
     }
 
     edges.set(key, edge)
-    container.addChild(edge.element)
+    edgesContainer.addChild(edge.element)
   }
 
   function getLayout(data: RunGraphData): void {
@@ -294,10 +304,6 @@ export async function nodesContainerFactory() {
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
     nodesLayout = data.layout
     setPositions()
-  }
-
-  function shouldUpdate(): boolean {
-    return Boolean(runData) && Boolean(container.parent)
   }
 
   return {
