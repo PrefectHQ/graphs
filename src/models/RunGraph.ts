@@ -7,7 +7,6 @@ export type RunGraphProps = {
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
   selected?: RunGraphNode | null,
-  edges?: boolean,
 }
 
 export type RunGraphData = {
