@@ -5,6 +5,7 @@ import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForRunData } from '@/objects/nodes'
+import { getEdgesCount } from '@/utilities/getEdgesCount'
 import { getInitialHorizontalScaleMultiplier } from '@/utilities/getInitialHorizontalScaleMultiplier'
 
 export async function startSettings(): Promise<void> {
@@ -18,7 +19,7 @@ export async function startSettings(): Promise<void> {
     layout.disableAnimations = true
   }
 
-  if (data.nodes.size > config.disableEdgesThreshold) {
+  if (getEdgesCount(data.nodes) > config.disableEdgesThreshold) {
     layout.disableEdges = true
   }
 
