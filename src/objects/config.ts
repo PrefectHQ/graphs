@@ -56,18 +56,6 @@ export function stopConfig(): void {
   config = null
 }
 
-type UpdatableConfig = Partial<Omit<RunGraphConfig, 'style' | 'fetch' | 'runId'>>
-
-export function updateConfig(values: UpdatableConfig): void {
-  if (config === null) {
-    throw new Error('Cannot update config because config has not been set')
-  }
-
-  Object.assign(config, values)
-
-  emitter.emit('configUpdated', config)
-}
-
 export async function waitForConfig(): Promise<RequiredGraphConfig> {
   if (config) {
     return config
