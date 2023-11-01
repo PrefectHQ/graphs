@@ -36,7 +36,6 @@ export const layout = reactive<LayoutSettings>({
   horizontalScaleMultiplier: 0,
   disableAnimations: false,
   disableEdges: false,
-  disableGuides: false,
   isTrace() {
     return this.horizontal === 'trace'
   },
@@ -137,6 +136,18 @@ export function setVerticalMode(mode: VerticalMode): void {
   const emit = emitFactory()
 
   layout.vertical = mode
+
+  emit()
+}
+
+export function setDisabledEdges(value: boolean): void {
+  if (layout.disableEdges === value) {
+    return
+  }
+
+  const emit = emitFactory()
+
+  layout.disableEdges = value
 
   emit()
 }

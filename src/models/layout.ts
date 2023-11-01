@@ -13,7 +13,6 @@ export type LayoutSettings = {
   horizontalScaleMultiplierDefault: number,
   horizontalScaleMultiplier: number,
   disableEdges: boolean,
-  disableGuides: boolean,
   disableAnimations: boolean,
   isTrace: () => boolean,
   isDependency: () => boolean,

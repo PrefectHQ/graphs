@@ -25,6 +25,7 @@ export async function nodesContainerFactory() {
   const nodes = new Map<string, NodeContainerFactory>()
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
+  const edgesContainer = new Container()
   const config = await waitForConfig()
 
   // used for both vertical layouts
@@ -85,8 +86,11 @@ export async function nodesContainerFactory() {
     const settings = await waitForSettings()
 
     if (settings.disableEdges) {
+      container.removeChild(edgesContainer)
       return
     }
+
+    container.addChildAt(edgesContainer, 0)
 
     const promises: Promise<void>[] = []
 
@@ -116,7 +120,7 @@ export async function nodesContainerFactory() {
     }
 
     edges.set(key, edge)
-    container.addChild(edge.element)
+    edgesContainer.addChild(edge.element)
   }
 
   function getLayout(data: RunGraphData): void {
