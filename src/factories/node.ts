@@ -18,6 +18,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   const { animate } = await animationFactory()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
 
+  let internalNode = node
   let cacheKey: string | null = null
   let nodeIsSelected = false
   let initialized = false
@@ -30,7 +31,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   container.on('click', event => {
     event.stopPropagation()
-    selectNode(node)
+    selectNode(internalNode)
   })
 
   if (!node.end_time) {
@@ -42,11 +43,13 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
     if (isCurrentlySelected !== nodeIsSelected) {
       nodeIsSelected = isCurrentlySelected
-      renderNode(node)
+      renderNode(internalNode)
     }
   })
 
   async function render(node: RunGraphNode): Promise<BoundsContainer> {
+    internalNode = node
+
     const currentCacheKey = getNodeCacheKey(node)
 
     if (currentCacheKey === cacheKey) {
