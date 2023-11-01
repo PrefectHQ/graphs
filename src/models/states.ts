@@ -1,13 +1,13 @@
 export const stateType = [
-  'completed',
-  'running',
-  'scheduled',
-  'pending',
-  'failed',
-  'cancelled',
-  'cancelling',
-  'crashed',
-  'paused',
+  'COMPLETED',
+  'RUNNING',
+  'SCHEDULED',
+  'PENDING',
+  'FAILED',
+  'CANCELLED',
+  'CANCELLING',
+  'CRASHED',
+  'PAUSED',
 ] as const
 
 export type StateType = typeof stateType[number]
