@@ -82,11 +82,13 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     return values.join(',')
   }
 
-  function setPosition({ x, y }: Pixels, skipAnimation?: boolean): void {
+  function setPosition({ x, y }: Pixels): void {
     animate(container, {
       x,
       y,
-    }, skipAnimation)
+    }, !initialized)
+
+    initialized = true
   }
 
   return {
