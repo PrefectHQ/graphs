@@ -33,6 +33,10 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     selectNode(node)
   })
 
+  if (!node.end_time) {
+    startTicking()
+  }
+
   emitter.on('nodeSelected', () => {
     const isCurrentlySelected = isSelected(node)
 
@@ -53,11 +57,23 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
     await renderNode(node)
 
-    if (!node.end_time) {
-      Ticker.shared.addOnce(() => render(node))
+    if (node.end_time) {
+      stopTicking()
     }
 
     return container
+  }
+
+  function startTicking(): void {
+    Ticker.shared.add(tick)
+  }
+
+  function stopTicking(): void {
+    Ticker.shared.remove(tick)
+  }
+
+  function tick(): void {
+    render(node)
   }
 
   async function getNodeFactory(node: RunGraphNode): Promise<TaskRunContainer | FlowRunContainer> {
