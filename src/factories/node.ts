@@ -17,8 +17,8 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   const cull = await waitForCull()
   const { animate } = await animationFactory()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
-  const cacheKey: string | null = null
 
+  let cacheKey: string | null = null
   let nodeIsSelected = false
 
   cull.add(container)
@@ -48,6 +48,8 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       return container
     }
 
+    cacheKey = currentCacheKey
+
     await renderNode(node)
 
     if (!node.end_time) {
@@ -72,14 +74,9 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   function getNodeCacheKey(node: RunGraphNode): string {
-    const keys = Object.keys(node).sort((keyA, keyB) => keyA.localeCompare(keyB)) as (keyof RunGraphNode)[]
-    const values = keys.map(key => {
-      const value = node[key] ?? new Date()
+    const endTime = node.end_time ?? new Date()
 
-      return value.toString()
-    })
-
-    return values.join(',')
+    return `${node.state_type},${endTime.getTime()}`
   }
 
   function setPosition({ x, y }: Pixels): void {
