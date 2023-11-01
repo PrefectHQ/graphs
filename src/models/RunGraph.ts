@@ -7,6 +7,7 @@ export type RunGraphProps = {
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
   selected?: RunGraphNode | null,
+  edges?: boolean,
 }
 
 export type RunGraphData = {
@@ -66,6 +67,8 @@ export type RunGraphConfig = {
   fetch: RunGraphFetch,
   animationDuration?: number,
   styles?: RunGraphStyles,
+  disableAnimationsThreshold?: number,
+  disableEdgesThreshold?: number,
 }
 
 export type RequiredGraphConfig = Omit<Required<RunGraphConfig>, 'styles'> & {

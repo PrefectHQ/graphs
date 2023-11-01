@@ -1,17 +1,28 @@
 import gsap from 'gsap'
 import { waitForConfig } from '@/objects/config'
 import { cull } from '@/objects/culling'
+import { waitForSettings } from '@/objects/settings'
 
-export async function animate(el: gsap.TweenTarget, vars: gsap.TweenVars, skipAnimation?: boolean): Promise<gsap.core.Tween> {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export async function animationFactory() {
+  const settings = await waitForSettings()
   const config = await waitForConfig()
-  const duration = skipAnimation ? 0 : config.animationDuration / 1000
 
-  return gsap.to(el, {
-    ...vars,
-    duration,
-    ease: 'power1.out',
-    onUpdate: () => {
-      cull()
-    },
-  })
+  function animate(el: gsap.TweenTarget, vars: gsap.TweenVars, skipAnimation?: boolean): gsap.core.Tween {
+    const skip = settings.disableAnimations || skipAnimation
+    const duration = skip ? 0 : config.animationDuration / 1000
+
+    return gsap.to(el, {
+      ...vars,
+      duration,
+      ease: 'power1.out',
+      onUpdate: () => {
+        cull()
+      },
+    })
+  }
+
+  return {
+    animate,
+  }
 }

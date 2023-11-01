@@ -8,6 +8,8 @@ let config: RequiredGraphConfig | null = null
 
 const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
   animationDuration: 500,
+  disableAnimationsThreshold: 500,
+  disableEdgesThreshold: 100,
   styles: {
     rowGap: 15,
     columnGap: 30,
@@ -52,6 +54,18 @@ export async function startConfig(props: RunGraphProps): Promise<void> {
 
 export function stopConfig(): void {
   config = null
+}
+
+type UpdatableConfig = Partial<Omit<RunGraphConfig, 'style' | 'fetch' | 'runId'>>
+
+export function updateConfig(values: UpdatableConfig): void {
+  if (config === null) {
+    throw new Error('Cannot update config because config has not been set')
+  }
+
+  Object.assign(config, values)
+
+  emitter.emit('configUpdated', config)
 }
 
 export async function waitForConfig(): Promise<RequiredGraphConfig> {

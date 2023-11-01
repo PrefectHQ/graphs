@@ -2,17 +2,26 @@ import { addSeconds } from 'date-fns'
 import { reactive } from 'vue'
 import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SPAN_SECONDS } from '@/consts'
 import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
+import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForRunData } from '@/objects/nodes'
 import { getInitialHorizontalScaleMultiplier } from '@/utilities/getInitialHorizontalScaleMultiplier'
 
 export async function startSettings(): Promise<void> {
   const data = await waitForRunData()
+  const config = await waitForConfig()
   const multiplier = getInitialHorizontalScaleMultiplier(data)
 
-  layout.horizontalScaleMultiplierDefault = multiplier
+  setHorizontalScaleMultiplier(multiplier, true)
 
-  setHorizontalScaleMultiplier(multiplier)
+  if (data.nodes.size > config.disableAnimationsThreshold) {
+    layout.disableAnimations = true
+  }
+
+  if (data.nodes.size > config.disableEdgesThreshold) {
+    layout.disableEdges = true
+  }
+
 }
 
 export function stopSettings(): void {
@@ -25,6 +34,9 @@ export const layout = reactive<LayoutSettings>({
   vertical: 'nearest-parent',
   horizontalScaleMultiplierDefault: 0,
   horizontalScaleMultiplier: 0,
+  disableAnimations: false,
+  disableEdges: false,
+  disableGuides: false,
   isTrace() {
     return this.horizontal === 'trace'
   },
@@ -72,14 +84,18 @@ export function getHorizontalDomain(startTime: Date): [Date, Date] | [number, nu
   return [start, end]
 }
 
-export function setHorizontalScaleMultiplier(scale: number): void {
-  if (layout.horizontalScaleMultiplier === scale) {
+export function setHorizontalScaleMultiplier(value: number, isDefaultValue: boolean = false): void {
+  if (layout.horizontalScaleMultiplier === value) {
     return
   }
 
   const emit = emitFactory()
 
-  layout.horizontalScaleMultiplier = scale
+  layout.horizontalScaleMultiplier = value
+
+  if (isDefaultValue) {
+    layout.horizontalScaleMultiplierDefault = value
+  }
 
   emit()
 }

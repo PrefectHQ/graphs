@@ -1,6 +1,6 @@
 import { Container, Point, SimpleRope } from 'pixi.js'
 import { DEFAULT_EDGE_CONTAINER_NAME, DEFAULT_EDGE_MINIMUM_BEZIER, DEFAULT_EDGE_POINTS } from '@/consts'
-import { animate } from '@/factories/animation'
+import { animationFactory } from '@/factories/animation'
 import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { Pixels } from '@/models/layout'
 import { waitForConfig } from '@/objects/config'
@@ -19,6 +19,7 @@ export async function edgeFactory() {
   const config = await waitForConfig()
   const cull = await waitForCull()
   const edgeCull = await waitForEdgeCull()
+  const { animate } = await animationFactory()
 
   const container = new Container()
   const { element: arrow, render: renderArrow } = await arrowFactory()
