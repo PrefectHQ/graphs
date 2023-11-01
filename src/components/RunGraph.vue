@@ -13,10 +13,11 @@
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import RunGraphSettings from '@/components/RunGraphSettings.vue'
   import { RunGraphProps } from '@/models/RunGraph'
+  import { NodeSelection } from '@/models/selection'
   import { ViewportDateRange } from '@/models/viewport'
   import { start, stop, centerViewport } from '@/objects'
   import { emitter } from '@/objects/events'
-  import { Selection, selectNode } from '@/objects/selection'
+  import { selectNode } from '@/objects/selection'
 
   // using the props object as a whole
   // eslint-disable-next-line vue/no-unused-properties
@@ -28,7 +29,7 @@
   const emit = defineEmits<{
     (event: 'update:viewport', value: ViewportDateRange): void,
     (event: 'update:fullscreen', value: boolean): void,
-    (event: 'update:selected', value: Selection | null): void,
+    (event: 'update:selected', value: NodeSelection | null): void,
   }>()
 
   const stage = ref<HTMLDivElement>()

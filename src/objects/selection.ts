@@ -1,14 +1,10 @@
 import { RunGraphNode } from '@/models/RunGraph'
+import { NodeSelection } from '@/models/selection'
 import { emitter } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
 
-let selected: Selection | null = null
+let selected: NodeSelection | null = null
 let selectionDisabled: boolean = false
-
-export type Selection = {
-  id: string,
-  kind: RunGraphNode['kind'],
-}
 
 export async function startSelection(): Promise<void> {
   const viewport = await waitForViewport()
