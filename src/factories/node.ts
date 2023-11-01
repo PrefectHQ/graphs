@@ -20,6 +20,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   let cacheKey: string | null = null
   let nodeIsSelected = false
+  let initialized = false
 
   cull.add(container)
 
