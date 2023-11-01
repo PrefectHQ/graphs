@@ -58,6 +58,12 @@ export type RunGraphStyles = {
   nodeToggleBorderColor?: ColorSource,
   nodeSelectedBorderColor?: ColorSource,
   edgeColor?: string,
+  guideLineWidth?: number,
+  guideLineColor?: string,
+  guideTextTopPadding?: number,
+  guideTextLeftPadding?: number,
+  guideTextSize?: number,
+  guideTextColor?: string,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }
 
