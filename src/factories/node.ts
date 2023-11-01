@@ -1,4 +1,3 @@
-import { Ticker } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { animationFactory } from '@/factories/animation'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
@@ -6,6 +5,7 @@ import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskR
 import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
+import { waitForApplication } from '@/objects'
 import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { isSelected, selectNode } from '@/objects/selection'
@@ -14,6 +14,7 @@ export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactor
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeContainerFactory(node: RunGraphNode) {
+  const application = await waitForApplication()
   const cull = await waitForCull()
   const { animate } = await animationFactory()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
@@ -68,11 +69,11 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   function startTicking(): void {
-    Ticker.shared.add(tick)
+    application.ticker.add(tick)
   }
 
   function stopTicking(): void {
-    Ticker.shared.remove(tick)
+    application.ticker.remove(tick)
   }
 
   function tick(): void {
