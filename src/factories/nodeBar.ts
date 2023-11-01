@@ -25,14 +25,14 @@ export async function nodeBarFactory() {
     const { background = '#fff' } = config.styles.node(node)
     const { nodeHeight: height, nodeBorderRadius: radius } = config.styles
     const width = getTotalWidth(node, radius)
-    const capLeft = node.state_type !== 'RUNNING'
+    const capRight = node.state_type !== 'RUNNING'
 
     await renderBar({
       width,
       height,
       radius,
       background,
-      capLeft,
+      capRight,
     })
 
     await renderSelectedBorder(node, width, height)
