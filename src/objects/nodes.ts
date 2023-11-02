@@ -1,3 +1,4 @@
+import { isoFormat } from 'd3'
 import { Container, Ticker } from 'pixi.js'
 import { dataFactory } from '@/factories/data'
 import { nodesContainerFactory } from '@/factories/nodes'
@@ -37,7 +38,9 @@ export async function startNodes(): Promise<void> {
   nodesContainer = element
   stopData = response.stop
 
-  nodesContainer.once('rendered', center)
+  nodesContainer.once('rendered', () => centerAfterFirstRender())
+
+  emitter.on('layoutUpdated', () => centerAfterRender())
 
   response.start()
 }
@@ -57,7 +60,7 @@ export async function waitForRunData(): Promise<RunGraphData> {
   return await waitForEvent('runDataCreated')
 }
 
-function center(): void {
+function centerAfterFirstRender(): void {
   centerViewport()
 
   Ticker.shared.addOnce(() => {
@@ -66,5 +69,19 @@ function center(): void {
     }
 
     nodesContainer.alpha = 1
+  })
+}
+
+async function centerAfterRender(): Promise<void> {
+  if (!nodesContainer) {
+    return
+  }
+
+  const config = await waitForConfig()
+
+  nodesContainer.once('rendered', () => {
+    setTimeout(() => {
+      centerViewport({ animate: true })
+    }, config.animationDuration)
   })
 }
