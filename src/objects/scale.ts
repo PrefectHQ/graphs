@@ -11,7 +11,7 @@ export async function startScale(): Promise<void> {
 
   setHorizontalScale(data.start_time)
 
-  emitter.on('layoutUpdated', () => setHorizontalScale(data.start_time))
+  emitter.on('layoutSettingsUpdated', () => setHorizontalScale(data.start_time))
 }
 
 export function stopScale(): void {

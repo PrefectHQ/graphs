@@ -45,7 +45,7 @@ export async function nodesContainerFactory() {
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  emitter.on('layoutUpdated', () => {
+  emitter.on('layoutSettingsUpdated', () => {
     if (Boolean(runData) && Boolean(container.parent)) {
       render(runData!)
     }
