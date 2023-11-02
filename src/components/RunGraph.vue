@@ -10,6 +10,7 @@
 </template>
 
 <script lang="ts" setup>
+  import { useKeyDown } from '@prefecthq/vue-compositions'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import RunGraphSettings from '@/components/RunGraphSettings.vue'
   import { RunGraphProps } from '@/models/RunGraph'
@@ -75,17 +76,14 @@
       stage: stage.value,
       props,
     })
-
-    window.addEventListener('keydown', keyboardShortcutListener)
   })
 
   onBeforeUnmount(() => {
     stop()
-    window.removeEventListener('keydown', keyboardShortcutListener)
   })
 
-  function keyboardShortcutListener(event: KeyboardEvent): void {
-    if (eventTargetIsInput(event.target) || event.metaKey) {
+  function shortcutHandler(event: KeyboardEvent): void {
+    if (eventTargetIsInput(event.target)) {
       return
     }
 
@@ -101,10 +99,12 @@
           toggleFullscreen()
         }
         break
-      default:
-        break
     }
   }
+
+  useKeyDown('c', shortcutHandler)
+  useKeyDown('f', shortcutHandler)
+  useKeyDown('Escape', shortcutHandler)
 </script>
 
 <style>
