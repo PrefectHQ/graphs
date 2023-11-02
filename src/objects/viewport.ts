@@ -169,7 +169,6 @@ export async function updateViewportFromDateRange(value: ViewportDateRange | und
   const right = scale(end)
   const centerX = left + (right - left) / 2
 
-  console.log('here')
   setViewportDateRange(value)
 
   viewport.fitWidth(right - left, true)
