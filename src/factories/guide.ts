@@ -5,6 +5,7 @@ import { waitForViewport } from '@/objects'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
+import { emitter } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForScale } from '@/objects/scale'
 import { waitForSettings } from '@/objects/settings'
@@ -29,8 +30,11 @@ export async function guideFactory() {
   const label = inter('')
   element.addChild(label)
 
+  let scale = await waitForScale()
   let currentDate: Date | undefined
   let currentLabelFormatter: FormatDate
+
+  emitter.on('scaleUpdated', updated => scale = updated)
 
   application.ticker.add(() => {
     if (settings.disableGuides) {
@@ -64,9 +68,6 @@ export async function guideFactory() {
     label.tint = config.styles.guideTextColor
     label.position.set(config.styles.guideTextLeftPadding, config.styles.guideTextTopPadding)
   }
-
-  // todo: fix this for when the scale changes
-  const scale = await waitForScale()
 
   function updatePosition(): void {
     if (currentDate !== undefined) {
