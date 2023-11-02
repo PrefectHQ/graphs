@@ -7,6 +7,7 @@ import { waitForConfig } from '@/objects/config'
 import { cull, uncull } from '@/objects/culling'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
+import { waitForSettings } from '@/objects/settings'
 import { waitForStage } from '@/objects/stage'
 
 let viewport: Viewport | null = null
@@ -163,8 +164,9 @@ async function getViewportDateRange(): Promise<ViewportDateRange | null> {
 
 export async function updateViewportFromDateRange(value: ViewportDateRange | undefined): Promise<void> {
   const range = await getViewportDateRange()
+  const settings = await waitForSettings()
 
-  if (value === undefined || isEqual(value, range)) {
+  if (value === undefined || settings.isDependency() || isEqual(value, range)) {
     return
   }
 
