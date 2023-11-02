@@ -138,7 +138,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const rightOfBar = bar.width + padding
     const inside = bar.width > rightOfButton + label.width + padding
 
-    const y = bar.height / 2 - label.height / 2
+    const y = config.styles.nodeHeight / 2 - label.height / 2
     const x = inside ? rightOfButton : Math.max(rightOfBar, rightOfButton)
 
     label.position = { x, y }

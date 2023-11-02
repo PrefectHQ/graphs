@@ -7,7 +7,7 @@ import { waitForConfig } from '@/objects/config'
 import { isSelected } from '@/objects/selection'
 import { layout, getHorizontalColumnSize } from '@/objects/settings'
 
-const borderOffset = 3
+const borderOffset = 4
 const borderStroke = 2
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -23,7 +23,7 @@ export async function nodeBarFactory() {
 
   async function render(node: RunGraphNode): Promise<Container> {
     const { background = '#fff' } = config.styles.node(node)
-    const { nodeHeight: height, nodeBorderRadius: radius } = config.styles
+    const { nodeHeight: height, nodeRadius: radius } = config.styles
     const width = getTotalWidth(node, radius)
     const capRight = node.state_type !== 'RUNNING'
 
@@ -66,7 +66,6 @@ export async function nodeBarFactory() {
       const seconds = differenceInMilliseconds(left, right) / millisecondsInSecond
       const width = seconds * columnSize
 
-      // this means the min node size is 18px. Is that correct?
       return Math.max(width, borderRadius * 2)
     }
 
