@@ -1,4 +1,3 @@
-import { isoFormat } from 'd3'
 import { Container, Ticker } from 'pixi.js'
 import { dataFactory } from '@/factories/data'
 import { nodesContainerFactory } from '@/factories/nodes'

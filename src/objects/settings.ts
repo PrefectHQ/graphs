@@ -57,7 +57,7 @@ export async function waitForSettings(): Promise<LayoutSettings> {
     return layout
   }
 
-  return await waitForEvent('layoutCreated')
+  return await waitForEvent('layoutSettingsCreated')
 }
 
 export function getHorizontalColumnSize(): number {
@@ -156,11 +156,16 @@ export function setDisabledEdges(value: boolean): void {
 }
 
 function emitFactory(): () => void {
-  const event: EventKey = initialized() ? 'layoutUpdated' : 'layoutCreated'
+  const event: EventKey = initialized() ? 'layoutSettingsUpdated' : 'layoutSettingsCreated'
+  const { horizontal, vertical } = layout
 
   return () => {
     if (initialized()) {
       emitter.emit(event, layout)
+    }
+
+    if (horizontal !== layout.horizontal || vertical !== layout.vertical) {
+      emitter.emit('layoutUpdated')
     }
   }
 }

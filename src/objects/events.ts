@@ -25,14 +25,15 @@ type Events = {
   scopeCreated: EffectScope,
   fontsLoaded: Fonts,
   containerCreated: Container,
-  layoutUpdated: LayoutSettings,
-  layoutCreated: LayoutSettings,
+  layoutSettingsUpdated: LayoutSettings,
+  layoutSettingsCreated: LayoutSettings,
   cullCreated: Cull,
   labelCullCreated: VisibilityCull,
   edgeCullCreated: VisibilityCull,
   runDataCreated: RunGraphData,
   runDataUpdated: RunGraphData,
   nodeSelected: NodeSelection | null,
+  layoutUpdated: void,
 }
 
 export type EventKey = keyof Events
