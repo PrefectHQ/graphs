@@ -1,15 +1,12 @@
 import { guidesFactory } from '@/factories/guides'
 import { waitForApplication } from '@/objects/application'
 import { emitter } from '@/objects/events'
-import { waitForSettings } from '@/objects/settings'
 
 export async function startGuides(): Promise<void> {
   const application = await waitForApplication()
   const { element, render } = await guidesFactory()
 
   application.stage.addChild(element)
-
-  await waitForSettings()
 
   render()
 
