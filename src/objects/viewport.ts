@@ -82,6 +82,8 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
     },
     scale,
     time: animate ? config.animationDuration : 0,
+    ease: 'easeInOutQuad',
+    removeOnInterrupt: true,
     callbackOnComplete: () => {
       cull()
       updateViewportDateRange()

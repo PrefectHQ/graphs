@@ -38,7 +38,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     toggle()
   })
 
-  nodesContainer.position = { x: 0, y: config.styles.nodeHeight }
+  nodesContainer.position = { x: 0, y: config.styles.nodeHeight + config.styles.nodesPadding }
 
   nodesContainer.on('rendered', () => {
     cull()
@@ -68,7 +68,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const { background = '#fff' } = config.styles.node(node)
     const offset = 4
     const { width: nodesWidth, height: nodesHeight } = getNodesSize()
-    const openHeight = nodesHeight + config.styles.nodeHeight + offset * 2
+    const openHeight = nodesHeight + config.styles.nodeHeight + config.styles.nodesPadding * 2 + offset * 2
     const closedHeight = config.styles.nodeHeight
 
     const position = isOpen ? -offset : offset
@@ -138,7 +138,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const rightOfBar = bar.width + padding
     const inside = bar.width > rightOfButton + label.width + padding
 
-    const y = bar.height / 2 - label.height / 2
+    const y = config.styles.nodeHeight / 2 - label.height / 2
     const x = inside ? rightOfButton : Math.max(rightOfBar, rightOfButton)
 
     label.position = { x, y }
@@ -155,7 +155,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   function getSize(): NodeSize {
     const nodes = getNodesSize()
-    const nodesHeight = isOpen ? nodes.height : 0
+    const nodesHeight = isOpen ? nodes.height + config.styles.nodesPadding * 2 : 0
     const nodesWidth = isOpen ? nodes.width : 0
     const flowRunNodeHeight = config.styles.nodeHeight
 
