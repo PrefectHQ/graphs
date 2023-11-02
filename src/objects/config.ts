@@ -13,6 +13,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
   styles: {
     rowGap: 16,
     columnGap: 32,
+    nodesPadding: 16,
     nodeHeight: 32,
     nodePadding: 4,
     nodeRadius: 6,

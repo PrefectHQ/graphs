@@ -50,6 +50,7 @@ export type RunGraphNodeStyles = {
 export type RunGraphStyles = {
   rowGap?: number,
   columnGap?: number,
+  nodesPadding?: number,
   nodeHeight?: number,
   nodePadding?: number,
   nodeRadius?: number,
