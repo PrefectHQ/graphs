@@ -34,6 +34,14 @@ export async function startNodes(): Promise<void> {
     render(data)
   })
 
+  emitter.on('configUpdated', () => {
+    if (!runGraphData) {
+      return
+    }
+
+    render(runGraphData)
+  })
+
   nodesContainer = element
   stopData = response.stop
 

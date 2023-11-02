@@ -6,6 +6,7 @@ import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForApplication } from '@/objects'
+import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { isSelected, selectNode } from '@/objects/selection'
@@ -95,10 +96,11 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     }
   }
 
-  function getNodeCacheKey(node: RunGraphNode): string {
+  async function getNodeCacheKey(node: RunGraphNode): Promise<string> {
+    const config = await waitForConfig()
     const endTime = node.end_time ?? new Date()
 
-    return `${node.state_type},${endTime.getTime()},${layout.horizontal}`
+    return `${node.state_type},${endTime.getTime()},${layout.horizontal},${config.styles.colorMode}`
   }
 
   function setPosition({ x, y }: Pixels): void {
