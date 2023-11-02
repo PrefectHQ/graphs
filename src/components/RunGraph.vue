@@ -82,6 +82,8 @@
     stop()
   })
 
+  useKeyDown(['c', 'f', 'Escape'], shortcutHandler)
+
   function shortcutHandler(event: KeyboardEvent): void {
     if (eventTargetIsInput(event.target)) {
       return
@@ -101,10 +103,6 @@
         break
     }
   }
-
-  useKeyDown('c', shortcutHandler)
-  useKeyDown('f', shortcutHandler)
-  useKeyDown('Escape', shortcutHandler)
 </script>
 
 <style>
