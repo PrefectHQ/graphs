@@ -65,10 +65,12 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
     throw new Error('Nodes container not found')
   }
 
+  const guidesOffset = config.styles.guideTextSize + config.styles.guideTextTopPadding
+
   uncull()
   const { x, y, width, height } = container.getLocalBounds()
   const widthWithGap = width + config.styles.columnGap * 2
-  const heightWithGap = height + config.styles.rowGap * 2
+  const heightWithGap = height + config.styles.rowGap * 2 + guidesOffset * 2
   const scale = viewport.findFit(widthWithGap, heightWithGap)
 
   // if the container doesn't have a size we cannot do anything here
@@ -79,7 +81,7 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
   viewport.animate({
     position: {
       x: x + width / 2,
-      y: y + height / 2,
+      y: y + height / 2 - guidesOffset,
     },
     scale,
     time: animate ? config.animationDuration : 0,
