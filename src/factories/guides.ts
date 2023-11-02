@@ -69,10 +69,11 @@ export async function guidesFactory() {
     }
 
     const gap = gapDate.getTime() - left.getTime()
-    const { increment, labelFormat } = timeIncrements.find(timeSlot => timeSlot.ceiling > gap) ?? timeIncrements[0]
+    const { increment, getAnchor, labelFormat } = timeIncrements.find(timeSlot => timeSlot.ceiling > gap) ?? timeIncrements[0]
 
-    // TODO - remember to round down in the time increments so they're consistent at whatever moment (particularly for weeks)
-    const anchor = Math.floor(left.getTime() / increment) * increment
+    const anchor = getAnchor === undefined
+      ? Math.floor(left.getTime() / increment) * increment
+      : getAnchor(left)
 
     if (increment !== currentIncrement || anchor !== currentAnchor) {
       currentIncrement = increment

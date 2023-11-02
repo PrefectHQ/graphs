@@ -32,6 +32,20 @@ export const labelFormats = {
   date: 'date',
 }
 
+const getRoundedAnchor = {
+  day: (date: Date): number => {
+    const dateCopy = new Date(date.getTime())
+    dateCopy.setHours(0, 0, 0, 0)
+    return dateCopy.getTime()
+  },
+  week: (date: Date): number => {
+    const dateCopy = new Date(date.getTime())
+    dateCopy.setHours(0, 0, 0, 0)
+    dateCopy.setDate(date.getDate() - date.getDay() + 1)
+    return dateCopy.getTime()
+  },
+}
+
 export const timeLengths = {
   second: 1000,
   minute: 1000 * 60,
@@ -88,22 +102,27 @@ export const timeIncrements = [
   }, {
     ceiling: timeLengths.hour * 8,
     increment: timeLengths.hour * 2,
+    getAnchor: getRoundedAnchor.day,
     labelFormat: labelFormats.minutes,
   }, {
     ceiling: timeLengths.hour * 13,
     increment: timeLengths.hour * 6,
+    getAnchor: getRoundedAnchor.day,
     labelFormat: labelFormats.minutes,
   }, {
     ceiling: timeLengths.hour * 22,
     increment: timeLengths.hour * 12,
+    getAnchor: getRoundedAnchor.day,
     labelFormat: labelFormats.minutes,
   }, {
     ceiling: timeLengths.day * 4,
     increment: timeLengths.day,
+    getAnchor: getRoundedAnchor.day,
     labelFormat: labelFormats.date,
   }, {
     ceiling: timeLengths.week * 2,
     increment: timeLengths.week,
+    getAnchor: getRoundedAnchor.week,
     labelFormat: labelFormats.date,
   }, {
     ceiling: Infinity,
