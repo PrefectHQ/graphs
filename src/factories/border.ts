@@ -51,12 +51,12 @@ export function borderFactory() {
 
   async function render(style: BorderStyle): Promise<Container> {
     const { radius = 0, color = '#fff', stroke, width, height } = style
-    const smallest = Math.min(width, height)
-    const size = radius * 2 > smallest ? smallest / 2 : radius * 2
+    const maxSize = Math.min(width, height)
+    const size = radius * 2 > maxSize ? maxSize / 2 : radius
 
     const cornerStyle: CornerStyle = {
       size,
-      radius: radius,
+      radius,
       stroke,
     }
 
