@@ -31,14 +31,14 @@ export function stopSettings(): void {
 }
 
 export const layout = reactive<LayoutSettings>({
-  horizontal: 'trace',
+  horizontal: 'temporal',
   vertical: 'nearest-parent',
   horizontalScaleMultiplierDefault: 0,
   horizontalScaleMultiplier: 0,
   disableAnimations: false,
   disableEdges: false,
-  isTrace() {
-    return this.horizontal === 'trace'
+  isTemporal() {
+    return this.horizontal === 'temporal'
   },
   isDependency() {
     return this.horizontal === 'dependency'
