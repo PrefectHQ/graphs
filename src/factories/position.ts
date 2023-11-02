@@ -14,7 +14,7 @@ export type HorizontalPositionSettings = {
 export type HorizontalScale = ReturnType<typeof horizontalScaleFactory>
 
 export function horizontalScaleFactory(settings: HorizontalPositionSettings): ScaleTime<number, number> | ScaleLinear<number, number> {
-  if (settings.mode === 'trace') {
+  if (settings.mode === 'temporal') {
     return getTimeScale(settings)
   }
 

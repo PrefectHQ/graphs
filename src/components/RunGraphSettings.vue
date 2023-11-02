@@ -21,7 +21,7 @@
           </template>
         </p-radio-group>
       </p-label>
-      <template v-if="layout.isTrace()">
+      <template v-if="layout.isTemporal()">
         <p-label label="Scaling" class="mt-4">
           <div class="flex items-center gap-2">
             <p-button small icon="MinusIcon" @click="decreaseScale" />
@@ -66,8 +66,8 @@
       label: 'Dependency',
     },
     {
-      value: 'trace',
-      label: 'Trace',
+      value: 'temporal',
+      label: 'Temporal',
     },
   ]
 

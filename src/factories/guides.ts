@@ -134,7 +134,7 @@ export async function guidesFactory() {
   }
 
   function onLayoutUpdate(layout: LayoutSettings): void {
-    if (!layout.isTrace()) {
+    if (!layout.isTemporal()) {
       pauseGuides()
       return
     }

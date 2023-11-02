@@ -1,6 +1,6 @@
 export type Pixels = { x: number, y: number }
 export type VerticalMode = 'waterfall' | 'nearest-parent'
-export type HorizontalMode = 'trace' | 'dependency'
+export type HorizontalMode = 'temporal' | 'dependency'
 
 export type NodeSize = {
   height: number,
@@ -14,7 +14,7 @@ export type LayoutSettings = {
   horizontalScaleMultiplier: number,
   disableEdges: boolean,
   disableAnimations: boolean,
-  isTrace: () => boolean,
+  isTemporal: () => boolean,
   isDependency: () => boolean,
   isWaterfall: () => boolean,
   isNearestParent: () => boolean,
