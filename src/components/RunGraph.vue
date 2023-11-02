@@ -2,7 +2,7 @@
   <div class="run-graph" :class="classes.root">
     <div ref="stage" class="run-graph__stage" />
     <div class="run-graph__actions">
-      <p-button title="Recenter Timeline" icon="Target" flat @click="() => centerViewport({ animate: true })" />
+      <p-button title="Recenter Timeline" icon="Target" flat @click="center" />
       <p-button title="View Timeline in Fullscreen" icon="ArrowsPointingOutIcon" flat @click="toggleFullscreen" />
       <RunGraphSettings />
     </div>
@@ -18,6 +18,7 @@
   import { start, stop, centerViewport } from '@/objects'
   import { emitter } from '@/objects/events'
   import { selectNode } from '@/objects/selection'
+  import { eventTargetIsInput } from '@/utilities/keyboard'
 
   // using the props object as a whole
   // eslint-disable-next-line vue/no-unused-properties
@@ -57,6 +58,10 @@
 
   emitter.on('viewportDateRangeUpdated', range => emit('update:viewport', range))
 
+  function center(): void {
+    centerViewport({ animate: true })
+  }
+
   function toggleFullscreen(): void {
     fullscreenModel.value = !fullscreenModel.value
   }
@@ -70,11 +75,36 @@
       stage: stage.value,
       props,
     })
+
+    window.addEventListener('keydown', keyboardShortcutListener)
   })
 
   onBeforeUnmount(() => {
     stop()
+    window.removeEventListener('keydown', keyboardShortcutListener)
   })
+
+  function keyboardShortcutListener(event: KeyboardEvent): void {
+    if (eventTargetIsInput(event.target) || event.metaKey) {
+      return
+    }
+
+    switch (event.key) {
+      case 'c':
+        center()
+        break
+      case 'f':
+        toggleFullscreen()
+        break
+      case 'Escape':
+        if (fullscreenModel.value) {
+          toggleFullscreen()
+        }
+        break
+      default:
+        break
+    }
+  }
 </script>
 
 <style>
