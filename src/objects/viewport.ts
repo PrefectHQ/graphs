@@ -1,21 +1,18 @@
 import isEqual from 'lodash.isequal'
 import { Viewport } from 'pixi-viewport'
-import { watch } from 'vue'
 import { DEFAULT_NODES_CONTAINER_NAME } from '@/consts'
-import { RunGraphProps } from '@/models/RunGraph'
 import { ViewportDateRange } from '@/models/viewport'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
-import { uncull } from '@/objects/culling'
+import { cull, uncull } from '@/objects/culling'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
-import { waitForScope } from '@/objects/scope'
 import { waitForStage } from '@/objects/stage'
 
 let viewport: Viewport | null = null
 let viewportDateRange: ViewportDateRange | null = null
 
-export async function startViewport(props: RunGraphProps): Promise<void> {
+export async function startViewport(): Promise<void> {
   const application = await waitForApplication()
   const stage = await waitForStage()
 
@@ -24,6 +21,7 @@ export async function startViewport(props: RunGraphProps): Promise<void> {
     screenWidth: stage.clientWidth,
     events: application.renderer.events,
     passiveWheel: false,
+    ticker: application.ticker,
   })
 
   // ensures the viewport is above the guides
@@ -45,7 +43,6 @@ export async function startViewport(props: RunGraphProps): Promise<void> {
   emitter.on('applicationResized', resizeViewport)
   emitter.on('scaleUpdated', () => updateViewportDateRange())
 
-  watchVisibleDateRange(props)
   startViewportDateRange()
 }
 
@@ -87,7 +84,10 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
     time: animate ? config.animationDuration : 0,
     ease: 'easeInOutQuad',
     removeOnInterrupt: true,
-    callbackOnComplete: () => updateViewportDateRange(),
+    callbackOnComplete: () => {
+      cull()
+      updateViewportDateRange()
+    },
   })
 
 }
@@ -130,18 +130,6 @@ export function moveViewportCenter({ xOffset, yOffset }: MoveViewportCenterOptio
   )
 }
 
-async function watchVisibleDateRange(props: RunGraphProps): Promise<void> {
-  const scope = await waitForScope()
-
-  scope.run(() => {
-    watch(() => props.viewport, value => {
-      if (value) {
-        setViewportDateRange(value)
-      }
-    })
-  })
-}
-
 async function startViewportDateRange(): Promise<void> {
   const viewport = await waitForViewport()
 
@@ -151,15 +139,46 @@ async function startViewportDateRange(): Promise<void> {
 }
 
 async function updateViewportDateRange(): Promise<void> {
-  const viewport = await waitForViewport()
-  const scale = await waitForScale()
-  const left = scale.invert(viewport.left)
-  const right = scale.invert(viewport.right)
+  const range = await getViewportDateRange()
 
-  if (left instanceof Date && right instanceof Date) {
-    setViewportDateRange([left, right])
+  if (!range) {
+    return
   }
 
+  setViewportDateRange(range)
+}
+
+async function getViewportDateRange(): Promise<ViewportDateRange | null> {
+  const viewport = await waitForViewport()
+  const scale = await waitForScale()
+  const start = scale.invert(viewport.left)
+  const end = scale.invert(viewport.right)
+
+  if (start instanceof Date && end instanceof Date) {
+    return [start, end]
+  }
+
+  return null
+}
+
+export async function updateViewportFromDateRange(value: ViewportDateRange | undefined): Promise<void> {
+  const range = await getViewportDateRange()
+
+  if (value === undefined || isEqual(value, range)) {
+    return
+  }
+
+  const viewport = await waitForViewport()
+  const scale = await waitForScale()
+  const [start, end] = value
+  const left = scale(start)
+  const right = scale(end)
+  const centerX = left + (right - left) / 2
+
+  setViewportDateRange(value)
+
+  viewport.fitWidth(right - left, true)
+  viewport.moveCenter(centerX, viewport.center.y)
 }
 
 async function resizeViewport(): Promise<void> {

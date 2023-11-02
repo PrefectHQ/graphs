@@ -37,6 +37,7 @@ export const layout = reactive<LayoutSettings>({
   horizontalScaleMultiplier: 0,
   disableAnimations: false,
   disableEdges: false,
+  disableGuides: false,
   isTemporal() {
     return this.horizontal === 'temporal'
   },
@@ -125,6 +126,7 @@ export function setHorizontalMode(mode: HorizontalMode): void {
   const emit = emitFactory()
 
   layout.horizontal = mode
+  layout.disableGuides = layout.isDependency()
 
   emit()
 }

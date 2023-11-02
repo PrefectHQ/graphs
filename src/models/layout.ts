@@ -14,6 +14,7 @@ export type LayoutSettings = {
   horizontalScaleMultiplier: number,
   disableEdges: boolean,
   disableAnimations: boolean,
+  disableGuides: boolean,
   isTemporal: () => boolean,
   isDependency: () => boolean,
   isWaterfall: () => boolean,

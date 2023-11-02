@@ -26,7 +26,7 @@ type StartParameters = {
 
 export function start({ stage, props }: StartParameters): void {
   startApplication()
-  startViewport(props)
+  startViewport()
   startScale()
   startGuides()
   startNodes()

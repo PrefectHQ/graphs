@@ -54,7 +54,14 @@ export const timeLengths = {
   week: 1000 * 60 * 60 * 24 * 7,
 }
 
-export const timeIncrements = [
+export type TimeIncrement = {
+  ceiling: number,
+  increment: number,
+  labelFormat: string,
+  getAnchor?: (date: Date) => number,
+}
+
+export const timeIncrements: TimeIncrement[] = [
   {
     ceiling: timeLengths.second * 4,
     increment: timeLengths.second,
