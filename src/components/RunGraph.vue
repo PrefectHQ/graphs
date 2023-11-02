@@ -16,7 +16,7 @@
   import { RunGraphProps } from '@/models/RunGraph'
   import { NodeSelection } from '@/models/selection'
   import { ViewportDateRange } from '@/models/viewport'
-  import { start, stop, centerViewport, setViewportDateRange, updateViewportFromDateRange } from '@/objects'
+  import { start, stop, centerViewport, updateViewportFromDateRange } from '@/objects'
   import { emitter } from '@/objects/events'
   import { selectNode } from '@/objects/selection'
   import { eventTargetIsInput } from '@/utilities/keyboard'

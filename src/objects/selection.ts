@@ -1,4 +1,3 @@
-import { RunGraphNode } from '@/models/RunGraph'
 import { NodeSelection } from '@/models/selection'
 import { emitter } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
@@ -30,7 +29,7 @@ export function stopSelection(): void {
   selectionDisabled = false
 }
 
-export function selectNode(node: RunGraphNode | null): void {
+export function selectNode(node: NodeSelection | null): void {
   if (selectionDisabled) {
     return
   }
@@ -51,6 +50,6 @@ export function selectNode(node: RunGraphNode | null): void {
   emitter.emit('nodeSelected', { id, kind })
 }
 
-export function isSelected(node: RunGraphNode | null): boolean {
-  return node?.id === selected?.id
+export function isSelected(selection: NodeSelection | null): boolean {
+  return selection?.id === selected?.id
 }

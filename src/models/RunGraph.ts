@@ -1,4 +1,5 @@
 import { ColorSource } from 'pixi.js'
+import { NodeSelection } from '@/models/selection'
 import { StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
 
@@ -6,7 +7,7 @@ export type RunGraphProps = {
   config: RunGraphConfig,
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
-  selected?: RunGraphNode | null,
+  selected?: NodeSelection | null,
 }
 
 export type RunGraphData = {
