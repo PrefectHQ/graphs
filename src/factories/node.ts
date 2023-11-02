@@ -9,6 +9,7 @@ import { waitForApplication } from '@/objects'
 import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { isSelected, selectNode } from '@/objects/selection'
+import { layout } from '@/objects/settings'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
@@ -97,7 +98,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   function getNodeCacheKey(node: RunGraphNode): string {
     const endTime = node.end_time ?? new Date()
 
-    return `${node.state_type},${endTime.getTime()}`
+    return `${node.state_type},${endTime.getTime()},${layout.horizontal}`
   }
 
   function setPosition({ x, y }: Pixels): void {
