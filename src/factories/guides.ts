@@ -3,6 +3,7 @@ import { DEFAULT_GUIDES_COUNT, DEFAULT_GUIDES_MIN_GAP } from '@/consts'
 import { GuideFactory, guideFactory } from '@/factories/guide'
 import { FormatDate } from '@/models/guides'
 import { waitForViewport } from '@/objects'
+import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { waitForSettings } from '@/objects/settings'
 import { repeat } from '@/utilities/repeat'
@@ -18,19 +19,22 @@ export async function guidesFactory() {
   const element = new Container()
   const guides = new Map<number, GuideFactory>()
 
+  let scale = await waitForScale()
+  emitter.on('scaleUpdated', updated => scale = updated)
+
   await createGuides()
 
-  async function render(): Promise<void> {
+  function render(): void {
     element.visible = !settings.disableGuides
 
     if (settings.disableGuides) {
       return
     }
 
-    const { anchor, increment, labelFormat } = await getIncrement()
+    const { anchor, increment, labelFormat } = getIncrement()
     const times = getGuideTimes(anchor, increment)
 
-    await renderGuides(times, labelFormat)
+    renderGuides(times, labelFormat)
   }
 
   async function createGuides(): Promise<void> {
@@ -51,8 +55,7 @@ export async function guidesFactory() {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  async function getIncrement() {
-    const scale = await waitForScale()
+  function getIncrement() {
     const left = viewport.left - visibleGuideBoundsMargin
     const start = scale.invert(left)
     const gapDate = scale.invert(left + DEFAULT_GUIDES_MIN_GAP / viewport.scale.x)
