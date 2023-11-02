@@ -31,10 +31,14 @@ export async function guidesFactory() {
       return
     }
 
-    const { anchor, increment, labelFormat } = getIncrement()
-    const times = getGuideTimes(anchor, increment)
+    try {
+      const { anchor, increment, labelFormat } = getIncrement()
+      const times = getGuideTimes(anchor, increment)
 
-    renderGuides(times, labelFormat)
+      renderGuides(times, labelFormat)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   async function createGuides(): Promise<void> {
