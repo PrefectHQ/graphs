@@ -4,7 +4,7 @@ import { DEFAULT_NODES_CONTAINER_NAME } from '@/consts'
 import { ViewportDateRange } from '@/models/viewport'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
-import { uncull } from '@/objects/culling'
+import { cull, uncull } from '@/objects/culling'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { waitForStage } from '@/objects/stage'
@@ -21,6 +21,7 @@ export async function startViewport(): Promise<void> {
     screenWidth: stage.clientWidth,
     events: application.renderer.events,
     passiveWheel: false,
+    ticker: application.ticker,
   })
 
   // ensures the viewport is above the guides
@@ -81,7 +82,10 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
     },
     scale,
     time: animate ? config.animationDuration : 0,
-    callbackOnComplete: () => updateViewportDateRange(),
+    callbackOnComplete: () => {
+      cull()
+      updateViewportDateRange()
+    },
   })
 
 }

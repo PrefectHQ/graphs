@@ -2,107 +2,100 @@ import { Container } from 'pixi.js'
 import { DEFAULT_GUIDES_COUNT, DEFAULT_GUIDES_MIN_GAP } from '@/consts'
 import { GuideFactory, guideFactory } from '@/factories/guide'
 import { FormatDate } from '@/models/guides'
-import { LayoutSettings } from '@/models/layout'
 import { waitForViewport } from '@/objects'
-import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
+import { waitForSettings } from '@/objects/settings'
 import { repeat } from '@/utilities/repeat'
-import { formatDateFns, labelFormats, timeIncrements } from '@/utilities/timeIncrements'
+import { TimeIncrement, formatDateFns, labelFormats, timeIncrements } from '@/utilities/timeIncrements'
 
 const visibleGuideBoundsMargin = 300
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function guidesFactory() {
   const viewport = await waitForViewport()
+  const settings = await waitForSettings()
 
   const element = new Container()
   const guides = new Map<number, GuideFactory>()
 
-  let paused = false
+  await createGuides()
 
-  let currentIncrement = 0
-  let currentAnchor = 0
-  let labelFormatter: FormatDate = (date) => date.toLocaleTimeString()
+  async function render(): Promise<void> {
+    element.visible = !settings.disableGuides
 
-  emitter.on('viewportDateRangeUpdated', () => {
-    update()
-  })
-  emitter.on('layoutCreated', (layout) => onLayoutUpdate(layout))
-  emitter.on('layoutUpdated', (layout) => onLayoutUpdate(layout))
+    if (settings.disableGuides) {
+      return
+    }
 
-  function render(): void {
-    createGuides()
+    const { anchor, increment, labelFormat } = await getIncrement()
+    const times = getGuideTimes(anchor, increment)
+
+    await renderGuides(times, labelFormat)
   }
 
   async function createGuides(): Promise<void> {
-    const guideIndexes = Array.from({ length: DEFAULT_GUIDES_COUNT }, (val, i) => i)
+    const promises: Promise<GuideFactory>[] = []
 
-    for await (const guideIndex of guideIndexes) {
-      await createGuide(guideIndex)
-    }
+    repeat(DEFAULT_GUIDES_COUNT, async (index) => {
+      const promise = guideFactory()
+
+      promises.push(promise)
+
+      const guide = await promise
+
+      element.addChild(guide.element)
+      guides.set(index, guide)
+    })
+
+    await Promise.all(promises)
   }
 
-  async function createGuide(index: number): Promise<void> {
-    if (guides.has(index)) {
-      return
-    }
-
-    const response = await guideFactory()
-
-    element.addChild(response.element)
-
-    guides.set(index, response)
-  }
-
-  async function update(): Promise<void> {
-    if (paused) {
-      return
-    }
-
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  async function getIncrement() {
     const scale = await waitForScale()
-    const left = scale.invert(viewport.left - visibleGuideBoundsMargin)
-    const gapDate = scale.invert(viewport.left - visibleGuideBoundsMargin + DEFAULT_GUIDES_MIN_GAP / viewport.scale.x)
+    const left = viewport.left - visibleGuideBoundsMargin
+    const start = scale.invert(left)
+    const gapDate = scale.invert(left + DEFAULT_GUIDES_MIN_GAP / viewport.scale.x)
 
-    if (!(left instanceof Date) || !(gapDate instanceof Date)) {
-      console.warn('Guides: Attempted to update guides with a non-temporal layout.')
-      return
+    if (!(start instanceof Date) || !(gapDate instanceof Date)) {
+      throw new Error('Guides: Attempted to update guides with a non-temporal layout.')
     }
 
-    const gap = gapDate.getTime() - left.getTime()
-    const { increment, getAnchor, labelFormat } = timeIncrements.find(timeSlot => timeSlot.ceiling > gap) ?? timeIncrements[0]
+    const gap = gapDate.getTime() - start.getTime()
+    const { increment, getAnchor, labelFormat } = getTimeIncrement(gap)
+    const anchor = getAnchor(start)
 
-    const anchor = getAnchor === undefined
-      ? Math.floor(left.getTime() / increment) * increment
-      : getAnchor(left)
-
-    if (increment !== currentIncrement || anchor !== currentAnchor) {
-      currentIncrement = increment
-      currentAnchor = anchor
-      setLabelFormat(labelFormat)
+    return {
+      anchor,
+      increment,
+      labelFormat: getLabelFormat(labelFormat),
     }
-
-    setGuides()
   }
 
-  function setLabelFormat(labelFormat: string): void {
+  function getTimeIncrement(gap: number): Required<TimeIncrement> {
+    const selected = timeIncrements.find(timeSlot => timeSlot.ceiling > gap) ?? timeIncrements[0]
+
+    if (!selected.getAnchor) {
+      selected.getAnchor = (start: Date) => Math.floor(start.getTime() / selected.increment) * selected.increment
+    }
+
+    return selected as Required<TimeIncrement>
+  }
+
+  function getLabelFormat(labelFormat: string): FormatDate {
     switch (labelFormat) {
       case labelFormats.minutes:
-        labelFormatter = formatDateFns.timeByMinutesWithDates
-        break
+        return formatDateFns.timeByMinutesWithDates
       case labelFormats.date:
-        labelFormatter = formatDateFns.date
-        break
+        return formatDateFns.date
       default:
-        labelFormatter = formatDateFns.timeBySeconds
+        return formatDateFns.timeBySeconds
     }
   }
 
-  function setGuides(): void {
-    const times = getGuideTimes()
+  function renderGuides(times: number[], labelFormat: FormatDate): void {
     const guidesStore = new Map(guides.entries())
-    const unused = Array.from(guidesStore.keys()).filter((time) => {
-      return !times.includes(time)
-    })
+    const unused = Array.from(guidesStore.keys()).filter((time) => !times.includes(time))
 
     guides.clear()
 
@@ -122,35 +115,15 @@ export async function guidesFactory() {
         continue
       }
 
-      guide.render(new Date(time), labelFormatter)
+      guide.render(new Date(time), labelFormat)
       guides.set(time, guide)
     }
   }
 
-  function getGuideTimes(): number[] {
+  function getGuideTimes(anchor: number, increment: number): number[] {
     return repeat(DEFAULT_GUIDES_COUNT, (index) => {
-      return currentAnchor + currentIncrement * index
+      return anchor + increment * index
     })
-  }
-
-  function onLayoutUpdate(layout: LayoutSettings): void {
-    if (!layout.isTemporal()) {
-      pauseGuides()
-      return
-    }
-
-    resumeGuides()
-  }
-
-  function pauseGuides(): void {
-    paused = true
-    element.visible = false
-  }
-
-  function resumeGuides(): void {
-    paused = false
-    update()
-    element.visible = true
   }
 
   return {

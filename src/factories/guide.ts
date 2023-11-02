@@ -7,6 +7,7 @@ import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForScale } from '@/objects/scale'
+import { waitForSettings } from '@/objects/settings'
 
 export type GuideFactory = Awaited<ReturnType<typeof guideFactory>>
 
@@ -14,6 +15,7 @@ export type GuideFactory = Awaited<ReturnType<typeof guideFactory>>
 export async function guideFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
+  const settings = await waitForSettings()
   const cull = await waitForCull()
   const config = await waitForConfig()
   const { inter } = await waitForFonts()
@@ -31,6 +33,10 @@ export async function guideFactory() {
   let currentLabelFormatter: FormatDate
 
   application.ticker.add(() => {
+    if (settings.disableGuides) {
+      return
+    }
+
     updatePosition()
 
     if (element.height !== application.screen.height) {
@@ -38,12 +44,12 @@ export async function guideFactory() {
     }
   })
 
-  async function render(date: Date, labelFormatter: FormatDate): Promise<void> {
+  function render(date: Date, labelFormatter: FormatDate): void {
     currentDate = date
     currentLabelFormatter = labelFormatter
 
     renderLine()
-    await renderLabel(date)
+    renderLabel(date)
   }
 
   function renderLine(): void {
@@ -59,8 +65,10 @@ export async function guideFactory() {
     label.position.set(config.styles.guideTextLeftPadding, config.styles.guideTextTopPadding)
   }
 
-  async function updatePosition(): Promise<void> {
-    const scale = await waitForScale()
+  // todo: fix this for when the scale changes
+  const scale = await waitForScale()
+
+  function updatePosition(): void {
     if (currentDate !== undefined) {
       element.position.x = scale(currentDate) * viewport.scale._x + viewport.worldTransform.tx
     }
