@@ -132,7 +132,9 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function renderLabel(node: RunGraphNode): Promise<BoundsContainer> {
     const label = await renderLabelText(node.label)
-    const { colorOnBackground = '#fff' } = config.styles.node(node)
+    const colorOnNode = config.styles.colorMode === 'dark'
+      ? config.styles.textDefault
+      : config.styles.textInverse
 
     const padding = config.styles.nodePadding
     const rightOfButton = arrowButton.x + arrowButton.width + padding
@@ -143,7 +145,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const x = inside ? rightOfButton : Math.max(rightOfBar, rightOfButton)
 
     label.position = { x, y }
-    label.tint = inside ? colorOnBackground : config.styles.textDefault
+    label.tint = inside ? colorOnNode : config.styles.textDefault
 
     return label
   }

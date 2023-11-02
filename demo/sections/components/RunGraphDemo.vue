@@ -11,7 +11,7 @@
   import { computed, ref } from 'vue'
   import RunGraph from '@/components/RunGraph.vue'
   import json from '@/demo/data/graph-small.json'
-  import { RunGraphConfig, RunGraphData, RunGraphStyles } from '@/models'
+  import { RunGraphConfig, RunGraphData } from '@/models'
   import { StateType } from '@/models/states'
   import { ViewportDateRange } from '@/models/viewport'
 
@@ -57,22 +57,18 @@
     return documentStyles.getPropertyValue(cssVariable).trim()
   }
 
-  const styleOverrides = computed<Partial<RunGraphStyles>>(() => ({
-    textDefault: getColorToken('--p-color-text-default'),
-    nodeSelectedBorderColor: getColorToken('--p-color-selected'),
-    guideLineColor: getColorToken('--p-color-text-default'),
-  }))
-
   const config = computed<RunGraphConfig>(() => ({
     runId: 'foo',
     fetch: () => data,
     styles: {
-      ...styleOverrides.value,
+      colorMode: colorThemeValue.value,
+      textDefault: getColorToken('--p-color-text-default'),
+      textInverse: getColorToken('--p-color-text-inverse'),
+      nodeSelectedBorderColor: getColorToken('--p-color-selected'),
+      guideLineColor: getColorToken('--p-color-divider'),
+      edgeColor: getColorToken('--p-color-text-subdued'),
       node: node => ({
         background: stateTypeColors[node.state_type],
-        colorOnBackground: colorThemeValue.value === 'light'
-          ? getColorToken('--p-color-text-inverse')
-          : getColorToken('--p-color-text-default'),
       }),
     },
   }))

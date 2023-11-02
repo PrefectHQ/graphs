@@ -50,9 +50,11 @@ export type RunGraphNodeStyles = {
 }
 
 export type RunGraphStyles = {
+  colorMode: 'dark' | 'light',
   rowGap?: number,
   columnGap?: number,
   textDefault?: ColorSource,
+  textInverse?: ColorSource,
   nodesPadding?: number,
   nodeHeight?: number,
   nodePadding?: number,

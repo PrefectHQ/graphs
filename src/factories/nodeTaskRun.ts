@@ -21,14 +21,16 @@ export async function taskRunContainerFactory() {
       renderLabel(node.label),
     ])
 
-    await updateLabel(node)
+    await updateLabel()
 
     return container
   }
 
-  async function updateLabel(node: RunGraphNode): Promise<void> {
+  async function updateLabel(): Promise<void> {
     const config = await waitForConfig()
-    const { colorOnBackground = '#fff' } = config.styles.node(node)
+    const colorOnNode = config.styles.colorMode === 'dark'
+      ? config.styles.textDefault
+      : config.styles.textInverse
 
     const padding = config.styles.nodePadding
     const inside = bar.width > padding + label.width + padding
@@ -36,7 +38,7 @@ export async function taskRunContainerFactory() {
     const y = bar.height / 2 - label.height / 2
 
     label.position = { x, y }
-    label.tint = inside ? colorOnBackground : config.styles.textDefault
+    label.tint = inside ? colorOnNode : config.styles.textDefault
   }
 
   return {

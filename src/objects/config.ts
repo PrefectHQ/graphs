@@ -11,9 +11,11 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
   disableAnimationsThreshold: 500,
   disableEdgesThreshold: 100,
   styles: {
+    colorMode: 'dark',
     rowGap: 16,
     columnGap: 32,
     textDefault: '#ffffff',
+    textInverse: '#000000',
     nodesPadding: 16,
     nodeHeight: 32,
     nodePadding: 4,
@@ -32,7 +34,6 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     guideTextColor: '#ADADAD',
     node: () => ({
       background: '#ffffff',
-      colorOnBackground: '#ffffff',
     }),
   },
 }
@@ -53,7 +54,6 @@ export async function startConfig(props: RunGraphProps): Promise<void> {
 
   scope.run(() => {
     watch(() => props.config, value => {
-      console.log('Config updated')
       const event: EventKey = config ? 'configUpdated' : 'configCreated'
 
       config = withDefaults(value)
