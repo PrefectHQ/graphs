@@ -2,6 +2,7 @@ import { Container } from 'pixi.js'
 import { DEFAULT_GUIDES_COUNT, DEFAULT_GUIDES_MIN_GAP } from '@/consts'
 import { GuideFactory, guideFactory } from '@/factories/guide'
 import { FormatDate } from '@/models/guides'
+import { NonTemporalLayoutError } from '@/models/nonTemporalLayoutError'
 import { waitForViewport } from '@/objects'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
@@ -37,6 +38,11 @@ export async function guidesFactory() {
 
       renderGuides(times, labelFormat)
     } catch (error) {
+      if (error instanceof NonTemporalLayoutError) {
+        // do nothing. we expect this to happen sometimes
+        return
+      }
+
       console.error(error)
     }
   }
@@ -65,7 +71,7 @@ export async function guidesFactory() {
     const gapDate = scale.invert(left + DEFAULT_GUIDES_MIN_GAP / viewport.scale.x)
 
     if (!(start instanceof Date) || !(gapDate instanceof Date)) {
-      throw new Error('Guides: Attempted to update guides with a non-temporal layout.')
+      throw new NonTemporalLayoutError()
     }
 
     const gap = gapDate.getTime() - start.getTime()
