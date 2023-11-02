@@ -26,6 +26,9 @@ export async function startViewport(props: RunGraphProps): Promise<void> {
     passiveWheel: false,
   })
 
+  // ensures the viewport is above the guides
+  viewport.zIndex = 1
+
   viewport
     .drag()
     .pinch()

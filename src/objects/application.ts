@@ -32,6 +32,9 @@ function createApplication(stage: HTMLDivElement): void {
     resolution: window.devicePixelRatio,
   })
 
+  // for setting the viewport above the guides
+  application.stage.sortableChildren = true
+
   stage.appendChild(application.view as HTMLCanvasElement)
 
   emitter.emit('applicationCreated', application)

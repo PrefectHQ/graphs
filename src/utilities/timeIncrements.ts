@@ -1,26 +1,4 @@
-export const timeLengths = {
-  second: 1000,
-  minute: 1000 * 60,
-  hour: 1000 * 60 * 60,
-  day: 1000 * 60 * 60 * 24,
-  week: 1000 * 60 * 60 * 24 * 7,
-}
-
-export const labelFormats = {
-  seconds: 'seconds',
-  minutes: 'minutes',
-  date: 'date',
-}
-
-// TODO - Cleanup this file, move types to types file
-export type FormatDate = (date: Date) => string
-
-type FormatDateFns = {
-  timeBySeconds: FormatDate,
-  timeByMinutes: FormatDate,
-  timeByMinutesWithDates: FormatDate,
-  date: FormatDate,
-}
+import { FormatDateFns } from '@/models/guides'
 
 function formatDateBySeconds(date: Date): string {
   return date.toLocaleTimeString()
@@ -34,19 +12,32 @@ function formatDate(date: Date): string {
   return new Intl.DateTimeFormat(currentLocale, { dateStyle: 'short' }).format(date)
 }
 
-export function formatByMinutesWithDates(date: Date): string {
+function formatByMinutesWithDates(date: Date): string {
   if (date.getHours() === 0 && date.getMinutes() === 0) {
-    return `${formatDateFns.date(date)}\n${formatDateFns.timeByMinutes(date)}`
+    return `${formatDateFns.date(date)}\n${formatDateByMinutes(date)}`
   }
 
-  return formatDateFns.timeByMinutes(date)
+  return formatDateByMinutes(date)
 }
 
 export const formatDateFns: FormatDateFns = {
   timeBySeconds: formatDateBySeconds,
-  timeByMinutes: formatDateByMinutes,
   timeByMinutesWithDates: formatByMinutesWithDates,
   date: formatDate,
+}
+
+export const labelFormats = {
+  seconds: 'seconds',
+  minutes: 'minutes',
+  date: 'date',
+}
+
+export const timeLengths = {
+  second: 1000,
+  minute: 1000 * 60,
+  hour: 1000 * 60 * 60,
+  day: 1000 * 60 * 60 * 24,
+  week: 1000 * 60 * 60 * 24 * 7,
 }
 
 export const timeIncrements = [

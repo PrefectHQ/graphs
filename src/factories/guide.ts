@@ -1,12 +1,12 @@
 import { Container, Ticker } from 'pixi.js'
 import { rectangleFactory } from '@/factories/rectangle'
+import { FormatDate } from '@/models/guides'
 import { waitForViewport } from '@/objects'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForScale } from '@/objects/scale'
-import { FormatDate } from '@/utilities/timeIncrements'
 
 export type GuideFactory = Awaited<ReturnType<typeof guideFactory>>
 

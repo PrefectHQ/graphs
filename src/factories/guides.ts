@@ -1,12 +1,13 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_GUIDES_COUNT, DEFAULT_GUIDES_MIN_GAP } from '@/consts'
 import { GuideFactory, guideFactory } from '@/factories/guide'
+import { FormatDate } from '@/models/guides'
 import { LayoutSettings } from '@/models/layout'
 import { waitForViewport } from '@/objects'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { repeat } from '@/utilities/repeat'
-import { formatDateFns, labelFormats, timeIncrements, FormatDate } from '@/utilities/timeIncrements'
+import { formatDateFns, labelFormats, timeIncrements } from '@/utilities/timeIncrements'
 
 const visibleGuideBoundsMargin = 300
 
@@ -54,14 +55,13 @@ export async function guidesFactory() {
     guides.set(index, response)
   }
 
-
   function update(): void {
     if (paused) {
       return
     }
 
     const left = scale.invert(viewport.left - visibleGuideBoundsMargin)
-    const gapDate = scale.invert(viewport.left - visibleGuideBoundsMargin + DEFAULT_GUIDES_MIN_GAP) as Date
+    const gapDate = scale.invert(viewport.left - visibleGuideBoundsMargin + DEFAULT_GUIDES_MIN_GAP / viewport.scale.x) as Date
 
     if (!(left instanceof Date)) {
       console.warn('Guides: Attempted to update guides with a non-temporal layout.')
@@ -70,6 +70,7 @@ export async function guidesFactory() {
 
     const gap = gapDate.getTime() - left.getTime()
     const { increment, labelFormat } = timeIncrements.find(timeSlot => timeSlot.ceiling > gap) ?? timeIncrements[0]
+
     // TODO - remember to round down in the time increments so they're consistent at whatever moment (particularly for weeks)
     const anchor = Math.floor(left.getTime() / increment) * increment
 
