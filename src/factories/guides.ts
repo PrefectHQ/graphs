@@ -14,7 +14,6 @@ const visibleGuideBoundsMargin = 300
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function guidesFactory() {
   const viewport = await waitForViewport()
-  const scale = await waitForScale()
 
   const element = new Container()
   const guides = new Map<number, GuideFactory>()
@@ -55,15 +54,16 @@ export async function guidesFactory() {
     guides.set(index, response)
   }
 
-  function update(): void {
+  async function update(): Promise<void> {
     if (paused) {
       return
     }
 
+    const scale = await waitForScale()
     const left = scale.invert(viewport.left - visibleGuideBoundsMargin)
-    const gapDate = scale.invert(viewport.left - visibleGuideBoundsMargin + DEFAULT_GUIDES_MIN_GAP / viewport.scale.x) as Date
+    const gapDate = scale.invert(viewport.left - visibleGuideBoundsMargin + DEFAULT_GUIDES_MIN_GAP / viewport.scale.x)
 
-    if (!(left instanceof Date)) {
+    if (!(left instanceof Date) || !(gapDate instanceof Date)) {
       console.warn('Guides: Attempted to update guides with a non-temporal layout.')
       return
     }
@@ -134,7 +134,7 @@ export async function guidesFactory() {
   }
 
   function onLayoutUpdate(layout: LayoutSettings): void {
-    if (layout.horizontal !== 'trace') {
+    if (!layout.isTrace()) {
       pauseGuides()
       return
     }

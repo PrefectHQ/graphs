@@ -1,4 +1,4 @@
-import { Container, Ticker } from 'pixi.js'
+import { Container } from 'pixi.js'
 import { rectangleFactory } from '@/factories/rectangle'
 import { FormatDate } from '@/models/guides'
 import { waitForViewport } from '@/objects'
@@ -15,8 +15,7 @@ export async function guideFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const cull = await waitForCull()
-  const scale = await waitForScale()
-  const { styles } = await waitForConfig()
+  const config = await waitForConfig()
   const { inter } = await waitForFonts()
 
   const element = new Container()
@@ -32,9 +31,8 @@ export async function guideFactory() {
   let currentLabelFormatter: FormatDate
 
   application.ticker.add(() => {
-    if (currentDate !== undefined) {
-      element.position.x = scale(currentDate) * viewport.scale._x + viewport.worldTransform.tx
-    }
+    updatePosition()
+
     if (element.height !== application.screen.height) {
       renderLine()
     }
@@ -49,18 +47,23 @@ export async function guideFactory() {
   }
 
   function renderLine(): void {
-    rectangle.width = styles.guideLineWidth
+    rectangle.width = config.styles.guideLineWidth
     rectangle.height = application.screen.height
-    rectangle.tint = styles.guideLineColor
+    rectangle.tint = config.styles.guideLineColor
   }
 
-  async function renderLabel(date: Date): Promise<void> {
+  function renderLabel(date: Date): void {
     label.text = currentLabelFormatter(date)
-    label.fontSize = styles.guideTextSize
-    label.tint = styles.guideTextColor
-    label.position.set(styles.guideTextLeftPadding, styles.guideTextTopPadding)
+    label.fontSize = config.styles.guideTextSize
+    label.tint = config.styles.guideTextColor
+    label.position.set(config.styles.guideTextLeftPadding, config.styles.guideTextTopPadding)
+  }
 
-    await label
+  async function updatePosition(): Promise<void> {
+    const scale = await waitForScale()
+    if (currentDate !== undefined) {
+      element.position.x = scale(currentDate) * viewport.scale._x + viewport.worldTransform.tx
+    }
   }
 
   return {
