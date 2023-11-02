@@ -15,7 +15,7 @@
   import { RunGraphProps } from '@/models/RunGraph'
   import { NodeSelection } from '@/models/selection'
   import { ViewportDateRange } from '@/models/viewport'
-  import { start, stop, centerViewport } from '@/objects'
+  import { start, stop, centerViewport, setViewportDateRange, updateViewportFromDateRange } from '@/objects'
   import { emitter } from '@/objects/events'
   import { selectNode } from '@/objects/selection'
 
@@ -48,6 +48,8 @@
   watch(() => props.selected, selected => selectNode(selected))
 
   emitter.on('nodeSelected', nodeId => emit('update:selected', nodeId))
+
+  watch(() => props.viewport, viewport => updateViewportFromDateRange(viewport))
 
   const classes = computed(() => ({
     root: {
