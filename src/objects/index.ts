@@ -5,6 +5,7 @@ import { startCulling, stopCulling } from '@/objects/culling'
 import { startEdgeCulling, stopEdgeCulling } from '@/objects/edgeCulling'
 import { emitter } from '@/objects/events'
 import { startFonts, stopFonts } from '@/objects/fonts'
+import { startGuides, stopGuides } from '@/objects/guides'
 import { startLabelCulling, stopLabelCulling } from '@/objects/labelCulling'
 import { startNodes, stopNodes } from '@/objects/nodes'
 import { startScale, stopScale } from '@/objects/scale'
@@ -27,6 +28,7 @@ export function start({ stage, props }: StartParameters): void {
   startApplication()
   startViewport(props)
   startScale()
+  startGuides()
   startNodes()
   startScope()
   startFonts()
@@ -45,6 +47,7 @@ export function stop(): void {
   stopApplication()
   stopViewport()
   stopScale()
+  stopGuides()
   stopStage()
   stopNodes()
   stopConfig()

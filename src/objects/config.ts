@@ -21,6 +21,12 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     nodeToggleBorderColor: '#51525C',
     nodeSelectedBorderColor: 'rgba(104, 125, 155, 0.4)',
     edgeColor: '#51525C',
+    guideLineWidth: 1,
+    guideLineColor: '#51525C',
+    guideTextTopPadding: 8,
+    guideTextLeftPadding: 8,
+    guideTextSize: 12,
+    guideTextColor: '#ADADAD',
     node: () => ({
       background: '#ffffff',
     }),
