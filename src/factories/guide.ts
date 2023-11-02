@@ -31,7 +31,7 @@ export async function guideFactory() {
   let currentDate: Date | undefined
   let currentLabelFormatter: FormatDate
 
-  Ticker.shared.add(() => {
+  application.ticker.add(() => {
     if (currentDate !== undefined) {
       element.position.x = scale(currentDate) * viewport.scale._x + viewport.worldTransform.tx
     }
