@@ -2,7 +2,7 @@
   <div class="run-graph" :class="classes.root">
     <div ref="stage" class="run-graph__stage" />
     <div class="run-graph__actions">
-      <p-button title="Recenter Timeline" icon="Target" flat @click="() => centerViewport({ animate: true })" />
+      <p-button title="Recenter Timeline" icon="Target" flat @click="center" />
       <p-button title="View Timeline in Fullscreen" icon="ArrowsPointingOutIcon" flat @click="toggleFullscreen" />
       <RunGraphSettings />
     </div>
@@ -10,6 +10,7 @@
 </template>
 
 <script lang="ts" setup>
+  import { useKeyDown } from '@prefecthq/vue-compositions'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import RunGraphSettings from '@/components/RunGraphSettings.vue'
   import { RunGraphProps } from '@/models/RunGraph'
@@ -18,6 +19,7 @@
   import { start, stop, centerViewport } from '@/objects'
   import { emitter } from '@/objects/events'
   import { selectNode } from '@/objects/selection'
+  import { eventTargetIsInput } from '@/utilities/keyboard'
 
   // using the props object as a whole
   // eslint-disable-next-line vue/no-unused-properties
@@ -57,6 +59,10 @@
 
   emitter.on('viewportDateRangeUpdated', range => emit('update:viewport', range))
 
+  function center(): void {
+    centerViewport({ animate: true })
+  }
+
   function toggleFullscreen(): void {
     fullscreenModel.value = !fullscreenModel.value
   }
@@ -75,6 +81,28 @@
   onBeforeUnmount(() => {
     stop()
   })
+
+  useKeyDown(['c', 'f', 'Escape'], shortcutHandler)
+
+  function shortcutHandler(event: KeyboardEvent): void {
+    if (eventTargetIsInput(event.target)) {
+      return
+    }
+
+    switch (event.key) {
+      case 'c':
+        center()
+        break
+      case 'f':
+        toggleFullscreen()
+        break
+      case 'Escape':
+        if (fullscreenModel.value) {
+          toggleFullscreen()
+        }
+        break
+    }
+  }
 </script>
 
 <style>
