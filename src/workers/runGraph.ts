@@ -3,7 +3,7 @@ import { NodesLayoutResponse, NodeWidths } from '@/models/layout'
 import { RunGraphData } from '@/models/RunGraph'
 
 // eslint-disable-next-line import/default
-import RunGraphWorker from '@/workers/runGraph.worker?worker'
+import RunGraphWorker from '@/workers/runGraph.worker?worker&inline'
 
 export type ClientMessage = ClientLayoutMessage
 export type WorkerMessage = WorkerLayoutMessage

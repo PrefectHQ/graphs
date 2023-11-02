@@ -25,6 +25,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     renderNodes(data)
   })
 
+  let internalNode = node
   let isOpen = false
 
   container.addChild(border)
@@ -44,11 +45,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     resized()
   })
 
-  async function render(): Promise<BoundsContainer> {
+  async function render(node: RunGraphNode): Promise<BoundsContainer> {
+    internalNode = node
+
     await renderBar(node)
-    await renderArrowButton()
-    await renderLabel()
-    await renderBorder()
+    await renderArrowButton(node)
+    await renderLabel(node)
+    await renderBorder(node)
 
     return container
   }
@@ -61,7 +64,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     }
   }
 
-  async function renderBorder(): Promise<void> {
+  async function renderBorder(node: RunGraphNode): Promise<void> {
     const { background = '#fff' } = config.styles.node(node)
     const offset = 4
     const { width: nodesWidth, height: nodesHeight } = getNodesSize()
@@ -91,7 +94,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
     await Promise.all([
       startData(),
-      render(),
+      render(internalNode),
     ])
 
     resized()
@@ -103,13 +106,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
     await Promise.all([
       stopData(),
-      render(),
+      render(internalNode),
     ])
 
     resized()
   }
 
-  async function renderArrowButton(): Promise<BoundsContainer> {
+  async function renderArrowButton(node: RunGraphNode): Promise<BoundsContainer> {
     const buttonSize = config.styles.nodeToggleSize
     const offset = config.styles.nodeHeight - buttonSize
     const inside = bar.width > buttonSize
@@ -127,7 +130,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     return container
   }
 
-  async function renderLabel(): Promise<BoundsContainer> {
+  async function renderLabel(node: RunGraphNode): Promise<BoundsContainer> {
     const label = await renderLabelText(node)
 
     const padding = config.styles.nodePadding
@@ -144,7 +147,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   function resized(): void {
-    renderBorder()
+    renderBorder(internalNode)
     const size = getSize()
 
     container.emit('resized', size)

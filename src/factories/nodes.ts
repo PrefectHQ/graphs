@@ -40,7 +40,6 @@ export async function nodesContainerFactory() {
     minimum: () => getHorizontalColumnSize(),
   })
 
-  let initialized = false
   let nodesLayout: NodesLayoutResponse | null = null
   let runData: RunGraphData | null = null
 
@@ -173,7 +172,7 @@ export async function nodesContainerFactory() {
         y: childActualPosition.y - parentActualPositionOffset.y + config.styles.nodeHeight / 2,
       }
 
-      edge.setPosition(parentActualPositionOffset, childActualPositionOffset, !initialized)
+      edge.setPosition(parentActualPositionOffset, childActualPositionOffset)
     }
   }
 
@@ -192,12 +191,10 @@ export async function nodesContainerFactory() {
 
       const newPosition = getActualPosition(position)
 
-      node.setPosition(newPosition, !initialized)
+      node.setPosition(newPosition)
     }
 
     renderEdges()
-
-    initialized = true
 
     container.emit('rendered')
     container.emit('resized', getSize())

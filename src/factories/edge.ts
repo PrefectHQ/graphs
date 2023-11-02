@@ -26,6 +26,7 @@ export async function edgeFactory() {
   const pixel = await getPixelTexture()
   const points = repeat(DEFAULT_EDGE_POINTS, () => new Point())
   const rope = new SimpleRope(pixel, points)
+
   let initialized = false
 
   container.name = DEFAULT_EDGE_CONTAINER_NAME
@@ -49,31 +50,34 @@ export async function edgeFactory() {
     return container
   }
 
-  async function setPosition(source: Pixels, target: Pixels, skipAnimation?: boolean): Promise<void> {
+  async function setPosition(source: Pixels, target: Pixels): Promise<void> {
     const newPositions = getPointPositions(target)
 
     if (!initialized) {
       await render()
-      initialized = true
     }
 
     for (const [index, point] of points.entries()) {
       const { x, y } = newPositions[index]
+
       animate(point, {
         x,
         y,
-      }, skipAnimation)
+      }, !initialized)
     }
 
     animate(container, {
       x: source.x,
       y: source.y,
-    }, skipAnimation)
+    }, !initialized)
 
     animate(arrow, {
       x: target.x - arrowOffset,
       y: target.y,
-    }, skipAnimation)
+    }, !initialized)
+
+
+    initialized = true
   }
 
   function getPointPositions({ x, y }: Pixels): Pixels[] {

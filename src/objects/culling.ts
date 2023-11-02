@@ -1,11 +1,9 @@
 import { Cull } from '@pixi-essentials/cull'
-import { Ticker } from 'pixi.js'
 import { waitForApplication } from '@/objects/application'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
 
 let cullInstance: Cull | null = null
-let callback: (() => void) | null = null
 
 export async function startCulling(): Promise<void> {
   const viewport = await waitForViewport()
@@ -17,25 +15,18 @@ export async function startCulling(): Promise<void> {
     toggle: 'renderable',
   })
 
-  callback = (): void => {
+  application.ticker.add(() => {
     if (viewport.dirty) {
       cullInstance?.cull(application.renderer.screen)
       viewport.dirty = false
     }
-  }
-
-  Ticker.shared.add(callback)
+  })
 
   emitter.emit('cullCreated', cullInstance)
 }
 
 export function stopCulling(): void {
-  if (callback) {
-    Ticker.shared.remove(callback)
-  }
-
   cullInstance = null
-  callback = null
 }
 
 export async function cull(): Promise<void> {

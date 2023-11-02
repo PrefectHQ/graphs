@@ -9,13 +9,19 @@ export async function dataFactory(runId: string, callback: DataCallback) {
   const config = await waitForConfig()
 
   let interval: ReturnType<typeof setInterval> | undefined = undefined
+  let data: RunGraphData | null = null
 
   async function start(): Promise<void> {
-    const data = await config.fetch(runId)
+    try {
+      data = await config.fetch(runId)
 
-    callback(data)
+      callback(data)
+    } catch (error) {
+      console.error(error)
+    }
 
-    if (!data.end_time) {
+
+    if (data && !data.end_time) {
       interval = setTimeout(() => start(), DEFAULT_POLL_INTERVAL)
     }
   }

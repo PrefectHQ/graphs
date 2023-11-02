@@ -6,9 +6,9 @@ import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
 import { LayoutSettings } from '@/models/layout'
 import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
+import { NodeSelection } from '@/models/selection'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
-import { Selection } from '@/objects/selection'
 import { VisibilityCull } from '@/services/visibilityCull'
 
 type Events = {
@@ -32,7 +32,7 @@ type Events = {
   edgeCullCreated: VisibilityCull,
   runDataCreated: RunGraphData,
   runDataUpdated: RunGraphData,
-  nodeSelected: Selection | null,
+  nodeSelected: NodeSelection | null,
 }
 
 export type EventKey = keyof Events

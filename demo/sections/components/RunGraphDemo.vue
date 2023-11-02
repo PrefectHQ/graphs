@@ -37,15 +37,15 @@
 
   // just hard coding the values here for now. these will come from ui-library
   const stateTypeColors = {
-    completed: '#219D4B',
-    running: '#09439B',
-    scheduled: '#E08504',
-    pending: '#554B58',
-    failed: '#DE0529',
-    cancelled: '#333333',
-    cancelling: '#333333',
-    crashed: '#EA580C',
-    paused: '#554B58',
+    COMPLETED: '#219D4B',
+    RUNNING: '#09439B',
+    SCHEDULED: '#E08504',
+    PENDING: '#554B58',
+    FAILED: '#DE0529',
+    CANCELLED: '#333333',
+    CANCELLING: '#333333',
+    CRASHED: '#EA580C',
+    PAUSED: '#554B58',
   } satisfies Record<StateType, string>
 
   const config: RunGraphConfig = {
