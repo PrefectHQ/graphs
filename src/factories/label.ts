@@ -1,5 +1,4 @@
 import { BitmapText } from 'pixi.js'
-import { RunGraphNode } from '@/models/RunGraph'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForLabelCull } from '@/objects/labelCulling'
 
@@ -12,8 +11,8 @@ export async function nodeLabelFactory() {
 
   cull.add(label)
 
-  async function render(node: RunGraphNode): Promise<BitmapText> {
-    label.text = node.label
+  async function render(text: string): Promise<BitmapText> {
+    label.text = text
 
     return await label
   }

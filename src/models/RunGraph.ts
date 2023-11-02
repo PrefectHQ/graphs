@@ -46,11 +46,13 @@ export type RunGraphFetch = (runId: string) => RunGraphData | Promise<RunGraphDa
 
 export type RunGraphNodeStyles = {
   background?: ColorSource,
+  colorOnBackground?: ColorSource,
 }
 
 export type RunGraphStyles = {
   rowGap?: number,
   columnGap?: number,
+  textDefault?: ColorSource,
   nodesPadding?: number,
   nodeHeight?: number,
   nodePadding?: number,
@@ -60,13 +62,13 @@ export type RunGraphStyles = {
   nodeToggleBorderRadius?: number,
   nodeToggleBorderColor?: ColorSource,
   nodeSelectedBorderColor?: ColorSource,
-  edgeColor?: string,
+  edgeColor?: ColorSource,
   guideLineWidth?: number,
-  guideLineColor?: string,
+  guideLineColor?: ColorSource,
   guideTextTopPadding?: number,
   guideTextLeftPadding?: number,
   guideTextSize?: number,
-  guideTextColor?: string,
+  guideTextColor?: ColorSource,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }
 

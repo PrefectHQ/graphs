@@ -1,8 +1,6 @@
-import { BitmapText } from 'pixi.js'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { BoundsContainer } from '@/models/boundsContainer'
-import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 
@@ -18,33 +16,27 @@ export async function taskRunContainerFactory() {
   container.addChild(label)
 
   async function render(node: RunGraphNode): Promise<BoundsContainer> {
-    const label = await renderLabel(node)
-    const bar = await renderBar(node)
+    await Promise.all([
+      renderBar(node),
+      renderLabel(node.label),
+    ])
 
-    label.position = await getLabelPosition(label, bar)
+    await updateLabel(node)
 
     return container
   }
 
-  async function getLabelPosition(label: BitmapText, bar: BoundsContainer): Promise<Pixels> {
+  async function updateLabel(node: RunGraphNode): Promise<void> {
     const config = await waitForConfig()
+    const { colorOnBackground = '#fff' } = config.styles.node(node)
 
-    // todo: this should probably be nodePadding
-    const margin = config.styles.nodePadding
-    const inside = bar.width > margin + label.width + margin
+    const padding = config.styles.nodePadding
+    const inside = bar.width > padding + label.width + padding
+    const x = inside ? padding : bar.width + padding
     const y = bar.height / 2 - label.height / 2
 
-    if (inside) {
-      return {
-        x: margin,
-        y,
-      }
-    }
-
-    return {
-      x: bar.width + margin,
-      y,
-    }
+    label.position = { x, y }
+    label.tint = inside ? colorOnBackground : config.styles.textDefault
   }
 
   return {
