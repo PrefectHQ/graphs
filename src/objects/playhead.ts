@@ -17,9 +17,8 @@ export async function startPlayhead(): Promise<void> {
     }
   }
 
-  playheadContainer = element
-
   if (!runGraphData.end_time) {
+    playheadContainer = element
     application.stage.addChild(element)
     render()
   }

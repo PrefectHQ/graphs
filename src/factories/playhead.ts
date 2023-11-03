@@ -13,6 +13,7 @@ export async function playheadFactory() {
   const viewport = await waitForViewport()
   const config = await waitForConfig()
   let scale = await waitForScale()
+  let initialized = false
 
   const element = new Container()
 
@@ -26,13 +27,16 @@ export async function playheadFactory() {
     checkViewport()
   }
 
-  application.ticker.add(ticker)
-
   function render(): void {
     playhead.width = config.styles.playheadWidth
     playhead.height = application.stage.height
     playhead.tint = config.styles.playheadColor
     element.position.x = scale(new Date()) * viewport.scale._x + viewport.worldTransform.tx
+
+    if (!initialized) {
+      application.ticker.add(ticker)
+      initialized = true
+    }
   }
 
   function checkViewport(): void {
