@@ -87,7 +87,7 @@
   useKeyDown(['c', 'f', 'Escape'], shortcutHandler)
 
   function shortcutHandler(event: KeyboardEvent): void {
-    if (eventTargetIsInput(event.target)) {
+    if (eventTargetIsInput(event.target) || event.metaKey || event.ctrlKey) {
       return
     }
 
