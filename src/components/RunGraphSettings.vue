@@ -24,8 +24,8 @@
       <template v-if="layout.isTemporal()">
         <p-label label="Scaling" class="mt-4">
           <div class="flex items-center gap-2">
-            <p-button small icon="MinusIcon" @click="decreaseScale" />
-            <p-button small icon="PlusIcon" @click="increaseScale" />
+            <p-button title="Decrease scale (-)" small icon="MinusIcon" @click="decreaseScale" />
+            <p-button title="Increase scale (+)" small icon="PlusIcon" @click="increaseScale" />
             <p-button small @click="resetScale">
               Reset
             </p-button>
@@ -48,10 +48,12 @@
 
 <script lang="ts" setup>
   import { PButton, positions, PPopOver } from '@prefecthq/prefect-design'
+  import { useKeyDown } from '@prefecthq/vue-compositions'
   import { computed } from 'vue'
   import { DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
   import { layout, resetHorizontalScaleMultiplier, setDisabledEdges, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
+  import { eventTargetIsInput } from '@/utilities/keyboard'
 
   type Option<T extends string> = {
     value: T,
@@ -121,6 +123,23 @@
     const scale = layout.horizontalScaleMultiplier * multiplier
 
     setHorizontalScaleMultiplier(scale)
+  }
+
+  useKeyDown(['-', '='], shortcutHandler)
+
+  function shortcutHandler(event: KeyboardEvent): void {
+    if (eventTargetIsInput(event.target) || event.metaKey || event.ctrlKey) {
+      return
+    }
+
+    switch (event.key) {
+      case '-':
+        decreaseScale()
+        break
+      case '=':
+        increaseScale()
+        break
+    }
   }
 
   function resetScale(): void {
