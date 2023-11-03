@@ -9,7 +9,7 @@ let playheadContainer: Container | null = null
 export async function startPlayhead(): Promise<void> {
   const application = await waitForApplication()
   const runGraphData = await waitForRunData()
-  const { element, render } = await playheadFactory()
+  const { element, render, stopTicker } = await playheadFactory()
 
   const renderIfNotStopped = (): void => {
     if (playheadContainer) {
@@ -27,6 +27,7 @@ export async function startPlayhead(): Promise<void> {
   emitter.on('runDataUpdated', (data) => {
     if (data.end_time && playheadContainer) {
       application.stage.removeChild(playheadContainer)
+      stopTicker()
       playheadContainer = null
     }
   })
