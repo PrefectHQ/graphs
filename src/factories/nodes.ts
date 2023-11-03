@@ -53,6 +53,14 @@ export async function nodesContainerFactory() {
     }
   })
 
+  emitter.on('nodeSelected', (selection) => {
+    unHighlightPath()
+
+    if (selection?.id && nodes.has(selection.id)) {
+      highlightPath(selection.id)
+    }
+  })
+
   async function render(data: RunGraphData): Promise<void> {
     runData = data
     nodesLayout = null
@@ -301,6 +309,60 @@ export async function nodesContainerFactory() {
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
     nodesLayout = data.layout
     setPositions()
+  }
+
+  function highlightPath(nodeId: string): void {
+    const path = getDependencyPathIds(nodeId)
+
+    for (const [nodeId, { element }] of nodes) {
+      if (!path.includes(nodeId)) {
+        element.alpha = 0.2
+      }
+    }
+
+    for (const [edgeId, edge] of edges) {
+      const [parentId, childId] = edgeId.split('_')
+
+      const include = path.includes(parentId) && path.includes(childId)
+
+      if (!include) {
+        edge.element.alpha = 0.2
+      }
+    }
+  }
+
+  function getDependencyPathIds(nodeId: string): string[] {
+    const parents = getAllSiblingIds(nodeId, 'parents')
+    const children = getAllSiblingIds(nodeId, 'children')
+
+    return [nodeId, ...parents, ...children]
+  }
+
+  function getAllSiblingIds(nodeId: string, direction: 'parents' | 'children'): string[] {
+    const node = runData?.nodes.get(nodeId)
+
+    if (!node) {
+      return []
+    }
+
+    const ids = []
+
+    for (const { id } of node[direction]) {
+      ids.push(id)
+      ids.push(...getAllSiblingIds(id, direction))
+    }
+
+    return ids
+  }
+
+  function unHighlightPath(): void {
+    for (const { element } of nodes.values()) {
+      element.alpha = 1
+    }
+
+    for (const { element } of edges.values()) {
+      element.alpha = 1
+    }
   }
 
   return {
