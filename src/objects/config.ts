@@ -33,6 +33,8 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     guideTextLeftPadding: 8,
     guideTextSize: 12,
     guideTextColor: '#ADADAD',
+    playheadWidth: 2,
+    playheadColor: '#6272FF',
     node: () => ({
       background: '#ffffff',
     }),

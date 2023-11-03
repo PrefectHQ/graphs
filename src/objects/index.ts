@@ -8,6 +8,7 @@ import { startFonts, stopFonts } from '@/objects/fonts'
 import { startGuides, stopGuides } from '@/objects/guides'
 import { startLabelCulling, stopLabelCulling } from '@/objects/labelCulling'
 import { startNodes, stopNodes } from '@/objects/nodes'
+import { startPlayhead, stopPlayhead } from '@/objects/playhead'
 import { startScale, stopScale } from '@/objects/scale'
 import { startScope, stopScope } from '@/objects/scope'
 import { startSelection, stopSelection } from '@/objects/selection'
@@ -30,6 +31,7 @@ export function start({ stage, props }: StartParameters): void {
   startScale()
   startGuides()
   startNodes()
+  startPlayhead()
   startScope()
   startFonts()
   startStage(stage)
@@ -50,6 +52,7 @@ export function stop(): void {
   stopGuides()
   stopStage()
   stopNodes()
+  stopPlayhead()
   stopConfig()
   stopScope()
   stopFonts()

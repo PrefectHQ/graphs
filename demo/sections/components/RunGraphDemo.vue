@@ -64,9 +64,11 @@
       colorMode: colorThemeValue.value,
       textDefault: getColorToken('--p-color-text-default'),
       textInverse: getColorToken('--p-color-text-inverse'),
-      nodeSelectedBorderColor: getColorToken('--p-color-selected'),
-      guideLineColor: getColorToken('--p-color-divider'),
+      nodeToggleBorderColor: getColorToken('--p-color-button-default-border'),
+      nodeSelectedBorderColor: getColorToken('--p-color-text-selected'),
       edgeColor: getColorToken('--p-color-text-subdued'),
+      guideLineColor: getColorToken('--p-color-divider'),
+      guideTextColor: getColorToken('--p-color-text-subdued'),
       node: node => ({
         background: stateTypeColors[node.state_type],
       }),
