@@ -37,6 +37,9 @@ export async function startViewport(): Promise<void> {
     .decelerate({
       friction: 0.9,
     })
+    .clampZoom({
+      minWidth: stage.clientWidth / 2,
+    })
 
   application.stage.addChild(viewport)
 
