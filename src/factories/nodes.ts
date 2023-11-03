@@ -47,6 +47,8 @@ export async function nodesContainerFactory() {
 
   emitter.on('layoutSettingsUpdated', () => {
     if (Boolean(runData) && Boolean(container.parent)) {
+      rows.clear()
+      columns.clear()
       render(runData!)
     }
   })
@@ -54,8 +56,6 @@ export async function nodesContainerFactory() {
   async function render(data: RunGraphData): Promise<void> {
     runData = data
     nodesLayout = null
-    rows.clear()
-    columns.clear()
 
     await Promise.all([
       createNodes(data),
