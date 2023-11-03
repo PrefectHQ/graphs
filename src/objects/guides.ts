@@ -12,6 +12,7 @@ export async function startGuides(): Promise<void> {
 
   emitter.on('viewportDateRangeUpdated', () => render())
   emitter.on('layoutSettingsUpdated', () => render())
+  emitter.on('configUpdated', () => render())
 }
 
 export function stopGuides(): void {

@@ -6,13 +6,16 @@
 </template>
 
 <script lang="ts" setup>
+  import { useColorTheme } from '@prefecthq/prefect-design'
   import { parseISO, isValid } from 'date-fns'
-  import { ref } from 'vue'
+  import { computed, ref } from 'vue'
   import RunGraph from '@/components/RunGraph.vue'
   import json from '@/demo/data/graph-small.json'
   import { RunGraphConfig, RunGraphData } from '@/models'
   import { StateType } from '@/models/states'
   import { ViewportDateRange } from '@/models/viewport'
+
+  const { value: colorThemeValue } = useColorTheme()
 
   // quick and dirty way to convert the iso strings into actual dates.
   function reviver(key: string, value: any): any {
@@ -48,15 +51,27 @@
     PAUSED: '#554B58',
   } satisfies Record<StateType, string>
 
-  const config: RunGraphConfig = {
+  const documentStyles = getComputedStyle(document.documentElement)
+
+  function getColorToken(cssVariable: string): string {
+    return documentStyles.getPropertyValue(cssVariable).trim()
+  }
+
+  const config = computed<RunGraphConfig>(() => ({
     runId: 'foo',
     fetch: () => data,
     styles: {
+      colorMode: colorThemeValue.value,
+      textDefault: getColorToken('--p-color-text-default'),
+      textInverse: getColorToken('--p-color-text-inverse'),
+      nodeSelectedBorderColor: getColorToken('--p-color-selected'),
+      guideLineColor: getColorToken('--p-color-divider'),
+      edgeColor: getColorToken('--p-color-text-subdued'),
       node: node => ({
         background: stateTypeColors[node.state_type],
       }),
     },
-  }
+  }))
 </script>
 
 <style>

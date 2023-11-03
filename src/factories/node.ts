@@ -6,6 +6,7 @@ import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForApplication } from '@/objects'
+import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { isSelected, selectNode } from '@/objects/selection'
@@ -15,6 +16,7 @@ export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactor
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeContainerFactory(node: RunGraphNode) {
+  const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
   const { animate } = await animationFactory()
@@ -98,7 +100,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   function getNodeCacheKey(node: RunGraphNode): string {
     const endTime = node.end_time ?? new Date()
 
-    return `${node.state_type},${endTime.getTime()},${layout.horizontal}`
+    return `${node.state_type},${endTime.getTime()},${layout.horizontal},${config.styles.colorMode}`
   }
 
   function setPosition({ x, y }: Pixels): void {

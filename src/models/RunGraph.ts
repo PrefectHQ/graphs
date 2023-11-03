@@ -49,8 +49,11 @@ export type RunGraphNodeStyles = {
 }
 
 export type RunGraphStyles = {
+  colorMode: 'dark' | 'light',
   rowGap?: number,
   columnGap?: number,
+  textDefault?: ColorSource,
+  textInverse?: ColorSource,
   nodesPadding?: number,
   nodeHeight?: number,
   nodePadding?: number,
@@ -60,13 +63,13 @@ export type RunGraphStyles = {
   nodeToggleBorderRadius?: number,
   nodeToggleBorderColor?: ColorSource,
   nodeSelectedBorderColor?: ColorSource,
-  edgeColor?: string,
+  edgeColor?: ColorSource,
   guideLineWidth?: number,
-  guideLineColor?: string,
+  guideLineColor?: ColorSource,
   guideTextTopPadding?: number,
   guideTextLeftPadding?: number,
   guideTextSize?: number,
-  guideTextColor?: string,
+  guideTextColor?: ColorSource,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }
 
