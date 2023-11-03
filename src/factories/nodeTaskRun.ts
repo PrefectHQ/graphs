@@ -8,6 +8,7 @@ export type TaskRunContainer = Awaited<ReturnType<typeof taskRunContainerFactory
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function taskRunContainerFactory() {
+  const config = await waitForConfig()
   const container = new BoundsContainer()
   const { element: label, render: renderLabel } = await nodeLabelFactory()
   const { element: bar, render: renderBar } = await nodeBarFactory()
@@ -21,13 +22,12 @@ export async function taskRunContainerFactory() {
       renderLabel(node.label),
     ])
 
-    await updateLabel()
+    updateLabel()
 
     return container
   }
 
-  async function updateLabel(): Promise<void> {
-    const config = await waitForConfig()
+  function updateLabel(): void {
     const colorOnNode = config.styles.colorMode === 'dark'
       ? config.styles.textDefault
       : config.styles.textInverse

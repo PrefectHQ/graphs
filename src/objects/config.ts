@@ -54,11 +54,16 @@ export async function startConfig(props: RunGraphProps): Promise<void> {
 
   scope.run(() => {
     watch(() => props.config, value => {
-      const event: EventKey = config ? 'configUpdated' : 'configCreated'
+      const newConfig = withDefaults(value)
 
-      config = withDefaults(value)
+      if (!config) {
+        config = newConfig
+        emitter.emit('configCreated', config)
+        return
+      }
 
-      emitter.emit(event, config)
+      Object.assign(config, newConfig)
+      emitter.emit('configUpdated', config)
     }, { immediate: true })
   })
 }

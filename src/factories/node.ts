@@ -16,6 +16,7 @@ export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactor
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeContainerFactory(node: RunGraphNode) {
+  const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
   const { animate } = await animationFactory()
@@ -96,8 +97,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     }
   }
 
-  async function getNodeCacheKey(node: RunGraphNode): Promise<string> {
-    const config = await waitForConfig()
+  function getNodeCacheKey(node: RunGraphNode): string {
     const endTime = node.end_time ?? new Date()
 
     return `${node.state_type},${endTime.getTime()},${layout.horizontal},${config.styles.colorMode}`
