@@ -117,6 +117,7 @@ export async function guidesFactory() {
         const guide = guidesStore.get(time)!
 
         guides.set(time, guide)
+        guide.render()
 
         continue
       }

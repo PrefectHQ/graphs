@@ -1,7 +1,7 @@
 import merge from 'lodash.merge'
 import { watch } from 'vue'
 import { RequiredGraphConfig, RunGraphConfig, RunGraphProps } from '@/models/RunGraph'
-import { EventKey, emitter, waitForEvent } from '@/objects/events'
+import { emitter, waitForEvent } from '@/objects/events'
 import { waitForScope } from '@/objects/scope'
 
 let config: RequiredGraphConfig | null = null
