@@ -47,19 +47,17 @@ export async function nodesContainerFactory() {
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
   emitter.on('layoutSettingsUpdated', async () => {
-    const selected = getSelected()
-
     if (Boolean(runData) && Boolean(container.parent)) {
       rows.clear()
       columns.clear()
       await render(runData!)
     }
 
-    handleSelection(selected?.id ?? null)
+    highlightSelectedNode()
   })
 
-  emitter.on('nodeSelected', (selected) => {
-    handleSelection(selected?.id ?? null)
+  emitter.on('nodeSelected', () => {
+    highlightSelectedNode()
   })
 
   async function render(data: RunGraphData): Promise<void> {
@@ -312,38 +310,49 @@ export async function nodesContainerFactory() {
     setPositions()
   }
 
-  async function handleSelection(selectedNodeId: string | null): Promise<void> {
+  async function highlightSelectedNode(): Promise<void> {
     const settings = await waitForSettings()
+    const selected = getSelected()
 
-    const path = selectedNodeId && !settings.disableEdges ? getDependencyPathIds(selectedNodeId) : []
-
-    if (selectedNodeId) {
-      path.push(selectedNodeId)
+    if (!selected || settings.disableEdges) {
+      highlightPath([])
+      return
     }
 
-    for (const [nodeId, { element }] of nodes) {
-      const dim = selectedNodeId && !path.includes(nodeId)
+    const path = getDependencyPathIds(selected.id)
 
-      if (dim) {
-        element.alpha = config.styles.nodeUnselectedAlpha
+    highlightPath(path)
+  }
+
+  function highlightPath(path: string[]): void {
+    highlightNodes(path)
+    highlightEdges(path)
+  }
+
+  function highlightNodes(path: string[]): void {
+    for (const [nodeId, { element }] of nodes) {
+      const highlight = path.length === 0 || path.includes(nodeId)
+
+      if (highlight) {
+        element.alpha = 1
         continue
       }
 
-      element.alpha = 1
+      element.alpha = config.styles.nodeUnselectedAlpha
     }
+  }
 
+  function highlightEdges(path: string[]): void {
     for (const [edgeId, { element }] of edges) {
       const [parentId, childId] = edgeId.split('_')
-      const inPath = path.includes(parentId) && path.includes(childId)
+      const highlighted = path.length === 0 || path.includes(parentId) && path.includes(childId)
 
-      const dim = selectedNodeId && !inPath
-
-      if (dim) {
-        element.alpha = config.styles.nodeUnselectedAlpha
+      if (highlighted) {
+        element.alpha = 1
         continue
       }
 
-      element.alpha = 1
+      element.alpha = config.styles.nodeUnselectedAlpha
     }
   }
 
@@ -351,7 +360,7 @@ export async function nodesContainerFactory() {
     const parents = getAllSiblingIds(nodeId, 'parents')
     const children = getAllSiblingIds(nodeId, 'children')
 
-    return [...parents, ...children]
+    return [nodeId, ...parents, ...children]
   }
 
   function getAllSiblingIds(nodeId: string, direction: 'parents' | 'children'): string[] {
