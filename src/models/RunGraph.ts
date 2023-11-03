@@ -46,7 +46,6 @@ export type RunGraphFetch = (runId: string) => RunGraphData | Promise<RunGraphDa
 
 export type RunGraphNodeStyles = {
   background?: ColorSource,
-  colorOnBackground?: ColorSource,
 }
 
 export type RunGraphStyles = {
