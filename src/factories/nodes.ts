@@ -10,6 +10,7 @@ import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse }
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
+import { getSelected } from '@/objects/selection'
 import { getHorizontalColumnSize, layout, waitForSettings } from '@/objects/settings'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
@@ -45,20 +46,20 @@ export async function nodesContainerFactory() {
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  emitter.on('layoutSettingsUpdated', () => {
+  emitter.on('layoutSettingsUpdated', async () => {
+    const selected = getSelected()
+
     if (Boolean(runData) && Boolean(container.parent)) {
       rows.clear()
       columns.clear()
-      render(runData!)
+      await render(runData!)
     }
+
+    handleSelection(selected?.id ?? null)
   })
 
-  emitter.on('nodeSelected', (selection) => {
-    unHighlightPath()
-
-    if (selection?.id && nodes.has(selection.id)) {
-      highlightPath(selection.id)
-    }
+  emitter.on('nodeSelected', (selected) => {
+    handleSelection(selected?.id ?? null)
   })
 
   async function render(data: RunGraphData): Promise<void> {
@@ -311,23 +312,38 @@ export async function nodesContainerFactory() {
     setPositions()
   }
 
-  function highlightPath(nodeId: string): void {
-    const path = getDependencyPathIds(nodeId)
+  async function handleSelection(selectedNodeId: string | null): Promise<void> {
+    const settings = await waitForSettings()
 
-    for (const [nodeId, { element }] of nodes) {
-      if (!path.includes(nodeId)) {
-        element.alpha = 0.2
-      }
+    const path = selectedNodeId && !settings.disableEdges ? getDependencyPathIds(selectedNodeId) : []
+
+    if (selectedNodeId) {
+      path.push(selectedNodeId)
     }
 
-    for (const [edgeId, edge] of edges) {
-      const [parentId, childId] = edgeId.split('_')
+    for (const [nodeId, { element }] of nodes) {
+      const dim = selectedNodeId && !path.includes(nodeId)
 
-      const include = path.includes(parentId) && path.includes(childId)
-
-      if (!include) {
-        edge.element.alpha = 0.2
+      if (dim) {
+        element.alpha = config.styles.nodeUnselectedAlpha
+        continue
       }
+
+      element.alpha = 1
+    }
+
+    for (const [edgeId, { element }] of edges) {
+      const [parentId, childId] = edgeId.split('_')
+      const inPath = path.includes(parentId) && path.includes(childId)
+
+      const dim = selectedNodeId && !inPath
+
+      if (dim) {
+        element.alpha = config.styles.nodeUnselectedAlpha
+        continue
+      }
+
+      element.alpha = 1
     }
   }
 
@@ -335,7 +351,7 @@ export async function nodesContainerFactory() {
     const parents = getAllSiblingIds(nodeId, 'parents')
     const children = getAllSiblingIds(nodeId, 'children')
 
-    return [nodeId, ...parents, ...children]
+    return [...parents, ...children]
   }
 
   function getAllSiblingIds(nodeId: string, direction: 'parents' | 'children'): string[] {
@@ -353,16 +369,6 @@ export async function nodesContainerFactory() {
     }
 
     return ids
-  }
-
-  function unHighlightPath(): void {
-    for (const { element } of nodes.values()) {
-      element.alpha = 1
-    }
-
-    for (const { element } of edges.values()) {
-      element.alpha = 1
-    }
   }
 
   return {

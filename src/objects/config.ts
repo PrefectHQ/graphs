@@ -25,6 +25,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     nodeToggleBorderRadius: 6,
     nodeToggleBorderColor: '#51525C',
     nodeSelectedBorderColor: '#3fa2c3',
+    nodeUnselectedAlpha: 0.2,
     edgeColor: '#51525C',
     guideLineWidth: 1,
     guideLineColor: '#51525C',
