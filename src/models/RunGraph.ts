@@ -63,6 +63,7 @@ export type RunGraphStyles = {
   nodeToggleBorderRadius?: number,
   nodeToggleBorderColor?: ColorSource,
   nodeSelectedBorderColor?: ColorSource,
+  nodeUnselectedAlpha?: number,
   edgeColor?: ColorSource,
   guideLineWidth?: number,
   guideLineColor?: ColorSource,

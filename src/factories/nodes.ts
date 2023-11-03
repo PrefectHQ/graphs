@@ -10,6 +10,7 @@ import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse }
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
+import { getSelected } from '@/objects/selection'
 import { getHorizontalColumnSize, layout, waitForSettings } from '@/objects/settings'
 import { exhaustive } from '@/utilities/exhaustive'
 import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
@@ -45,12 +46,18 @@ export async function nodesContainerFactory() {
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  emitter.on('layoutSettingsUpdated', () => {
+  emitter.on('layoutSettingsUpdated', async () => {
     if (Boolean(runData) && Boolean(container.parent)) {
       rows.clear()
       columns.clear()
-      render(runData!)
+      await render(runData!)
     }
+
+    highlightSelectedNode()
+  })
+
+  emitter.on('nodeSelected', () => {
+    highlightSelectedNode()
   })
 
   async function render(data: RunGraphData): Promise<void> {
@@ -301,6 +308,76 @@ export async function nodesContainerFactory() {
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
     nodesLayout = data.layout
     setPositions()
+  }
+
+  async function highlightSelectedNode(): Promise<void> {
+    const settings = await waitForSettings()
+    const selected = getSelected()
+
+    if (!selected || settings.disableEdges) {
+      highlightPath([])
+      return
+    }
+
+    const path = getDependencyPathIds(selected.id)
+
+    highlightPath(path)
+  }
+
+  function highlightPath(path: string[]): void {
+    highlightNodes(path)
+    highlightEdges(path)
+  }
+
+  function highlightNodes(path: string[]): void {
+    for (const [nodeId, { element }] of nodes) {
+      const highlight = path.length === 0 || path.includes(nodeId)
+
+      if (highlight) {
+        element.alpha = 1
+        continue
+      }
+
+      element.alpha = config.styles.nodeUnselectedAlpha
+    }
+  }
+
+  function highlightEdges(path: string[]): void {
+    for (const [edgeId, { element }] of edges) {
+      const [parentId, childId] = edgeId.split('_')
+      const highlighted = path.length === 0 || path.includes(parentId) && path.includes(childId)
+
+      if (highlighted) {
+        element.alpha = 1
+        continue
+      }
+
+      element.alpha = config.styles.nodeUnselectedAlpha
+    }
+  }
+
+  function getDependencyPathIds(nodeId: string): string[] {
+    const parents = getAllSiblingIds(nodeId, 'parents')
+    const children = getAllSiblingIds(nodeId, 'children')
+
+    return [nodeId, ...parents, ...children]
+  }
+
+  function getAllSiblingIds(nodeId: string, direction: 'parents' | 'children'): string[] {
+    const node = runData?.nodes.get(nodeId)
+
+    if (!node) {
+      return []
+    }
+
+    const ids = []
+
+    for (const { id } of node[direction]) {
+      ids.push(id)
+      ids.push(...getAllSiblingIds(id, direction))
+    }
+
+    return ids
   }
 
   return {

@@ -53,3 +53,7 @@ export function selectNode(node: NodeSelection | null): void {
 export function isSelected(selection: NodeSelection | null): boolean {
   return selection?.id === selected?.id
 }
+
+export function getSelected(): NodeSelection | null {
+  return selected
+}
