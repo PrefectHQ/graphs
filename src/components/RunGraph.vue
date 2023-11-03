@@ -2,8 +2,8 @@
   <div class="run-graph" :class="classes.root">
     <div ref="stage" class="run-graph__stage" />
     <div class="run-graph__actions">
-      <p-button title="Recenter Timeline" icon="Target" flat @click="center" />
-      <p-button title="View Timeline in Fullscreen" icon="ArrowsPointingOutIcon" flat @click="toggleFullscreen" />
+      <p-button title="Recenter graph (c)" icon="Target" flat @click="center" />
+      <p-button title="Toggle fullscreen (f)" icon="ArrowsPointingOutIcon" flat @click="toggleFullscreen" />
       <RunGraphSettings />
     </div>
   </div>
