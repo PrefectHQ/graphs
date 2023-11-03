@@ -41,13 +41,12 @@ export async function playheadFactory() {
 
   function checkViewport(): void {
     const playheadStartedVisible = element.position.x > 0 && element.position.x < application.screen.width
-    console.log('go', element.position.x)
+
     if (
       !viewport.moving
       && playheadStartedVisible
       && element.position.x > application.screen.width - autoViewportUpdatePadding
     ) {
-      console.log('nudge')
       const originalLeft = scale.invert(viewport.left)
 
       viewport.zoomPercent(-0.1, true)
