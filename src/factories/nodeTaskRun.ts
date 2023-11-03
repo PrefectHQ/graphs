@@ -35,7 +35,7 @@ export async function taskRunContainerFactory() {
     const padding = config.styles.nodePadding
     const inside = bar.width > padding + label.width + padding
     const x = inside ? padding : bar.width + padding
-    const y = bar.height / 2 - label.height / 2
+    const y = config.styles.nodeHeight / 2 - label.height / 2
 
     label.position = { x, y }
     label.tint = inside ? colorOnNode : config.styles.textDefault
