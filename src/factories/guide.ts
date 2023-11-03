@@ -48,13 +48,7 @@ export async function guideFactory() {
     }
   })
 
-  function render(date?: Date, labelFormatter?: FormatDate): void {
-    if (date === undefined || labelFormatter === undefined) {
-      renderLine()
-      renderLabel()
-      return
-    }
-
+  function render(date: Date, labelFormatter: FormatDate): void {
     currentDate = date
     currentLabelFormatter = labelFormatter
 
@@ -68,11 +62,8 @@ export async function guideFactory() {
     rectangle.tint = config.styles.guideLineColor
   }
 
-  function renderLabel(date?: Date): void {
-    if (date !== undefined) {
-      label.text = currentLabelFormatter(date)
-    }
-
+  function renderLabel(date: Date): void {
+    label.text = currentLabelFormatter(date)
     label.fontSize = config.styles.guideTextSize
     label.tint = config.styles.guideTextColor
     label.position.set(config.styles.guideTextLeftPadding, config.styles.guideTextTopPadding)
