@@ -99,8 +99,15 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   function getNodeCacheKey(node: RunGraphNode): string {
     const endTime = node.end_time ?? new Date()
+    const values = [
+      node.state_type,
+      endTime.getTime(),
+      layout.horizontal,
+      layout.horizontalScaleMultiplier,
+      config.styles.colorMode,
+    ]
 
-    return `${node.state_type},${endTime.getTime()},${layout.horizontal},${config.styles.colorMode}`
+    return values.join('-')
   }
 
   function setPosition({ x, y }: Pixels): void {
