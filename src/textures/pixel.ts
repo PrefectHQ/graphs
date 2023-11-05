@@ -1,6 +1,6 @@
-import { useSubscription } from '@prefecthq/vue-compositions'
 import { Graphics, RenderTexture } from 'pixi.js'
 import { waitForApplication } from '@/objects/application'
+import { cache } from '@/objects/cache'
 
 async function texture(): Promise<RenderTexture> {
   const application = await waitForApplication()
@@ -16,5 +16,5 @@ async function texture(): Promise<RenderTexture> {
 }
 
 export async function getPixelTexture(): Promise<RenderTexture> {
-  return (await useSubscription(texture).promise()).response
+  return await cache(texture, [])
 }

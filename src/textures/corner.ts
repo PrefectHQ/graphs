@@ -1,6 +1,6 @@
-import { useSubscription } from '@prefecthq/vue-compositions'
 import { Graphics, Rectangle, Texture } from 'pixi.js'
 import { waitForApplication } from '@/objects/application'
+import { cache } from '@/objects/cache'
 
 export type CornerStyle = {
   size: number,
@@ -27,5 +27,5 @@ async function texture({ size, stroke = 1, radius = 0 }: CornerStyle): Promise<T
 }
 
 export async function getCornerTexture(style: CornerStyle): Promise<Texture> {
-  return (await useSubscription(texture, [style]).promise()).response
+  return await cache(texture, [style])
 }

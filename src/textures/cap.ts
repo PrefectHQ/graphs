@@ -1,14 +1,14 @@
-import { useSubscription } from '@prefecthq/vue-compositions'
 import { Graphics, Rectangle, Texture } from 'pixi.js'
 import { DEFAULT_TEXTURE_RESOLUTION } from '@/consts'
 import { waitForApplication } from '@/objects/application'
+import { cache } from '@/objects/cache'
 
 export type CapStyle = {
   height: number,
   radius: number,
 }
 
-async function cap({ height, radius }: CapStyle): Promise<Texture> {
+async function texture({ height, radius }: CapStyle): Promise<Texture> {
   const application = await waitForApplication()
 
   const graphic = new Graphics()
@@ -26,5 +26,5 @@ async function cap({ height, radius }: CapStyle): Promise<Texture> {
 }
 
 export async function getCapTexture(style: CapStyle): Promise<Texture> {
-  return (await useSubscription(cap, [style]).promise()).response
+  return await cache(texture, [style])
 }
