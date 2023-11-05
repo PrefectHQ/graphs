@@ -9,7 +9,7 @@ let config: RequiredGraphConfig | null = null
 const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
   animationDuration: 500,
   disableAnimationsThreshold: 500,
-  disableEdgesThreshold: 100,
+  disableEdgesThreshold: 500,
   styles: {
     colorMode: 'dark',
     rowGap: 16,
