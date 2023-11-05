@@ -17,12 +17,9 @@ export async function guideFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const settings = await waitForSettings()
-  const cull = await waitForCull()
   const config = await waitForConfig()
   const { inter } = await waitForFonts()
-
   const element = new Container()
-  cull.add(element)
 
   const rectangle = await rectangleFactory()
   element.addChild(rectangle)
