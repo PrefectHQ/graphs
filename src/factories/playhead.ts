@@ -3,6 +3,7 @@ import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
+import { waitForSettings } from '@/objects/settings'
 
 const autoViewportUpdatePadding = 80
 
@@ -10,6 +11,7 @@ const autoViewportUpdatePadding = 80
 export async function playheadFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
+  const settings = await waitForSettings()
   const config = await waitForConfig()
   const playhead = await rectangleFactory()
 
@@ -18,6 +20,11 @@ export async function playheadFactory() {
   emitter.on('scaleUpdated', updated => scale = updated)
 
   function render(): void {
+    if (!settings.isTemporal()) {
+      playhead.visible = false
+      return
+    }
+
     playhead.width = config.styles.playheadWidth
     playhead.height = application.stage.height
     playhead.tint = config.styles.playheadColor
