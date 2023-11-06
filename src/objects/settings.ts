@@ -50,6 +50,9 @@ export const layout = reactive<LayoutSettings>({
   isNearestParent() {
     return this.vertical === 'nearest-parent'
   },
+  isLeftAligned() {
+    return this.horizontal === 'left-aligned'
+  },
 })
 
 export async function waitForSettings(): Promise<LayoutSettings> {
@@ -126,7 +129,7 @@ export function setHorizontalMode(mode: HorizontalMode): void {
   const emit = emitFactory()
 
   layout.horizontal = mode
-  layout.disableGuides = layout.isDependency()
+  layout.disableGuides = layout.isDependency() || layout.isLeftAligned()
 
   emit()
 }

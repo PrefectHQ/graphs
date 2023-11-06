@@ -1,6 +1,6 @@
 export type Pixels = { x: number, y: number }
-export type VerticalMode = 'waterfall' | 'nearest-parent'
-export type HorizontalMode = 'temporal' | 'dependency'
+export type VerticalMode = 'waterfall' | 'nearest-parent' | 'duration-sorted'
+export type HorizontalMode = 'temporal' | 'dependency' | 'left-aligned'
 
 export type NodeSize = {
   height: number,
@@ -19,6 +19,7 @@ export type LayoutSettings = {
   isDependency: () => boolean,
   isWaterfall: () => boolean,
   isNearestParent: () => boolean,
+  isLeftAligned: () => boolean,
 }
 
 export type NodeWidths = Map<string, number>
