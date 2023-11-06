@@ -85,7 +85,7 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
       x: x + width / 2,
       y: y + height / 2 - guidesOffset,
     },
-    scale,
+    scale: scale <= 1 ? scale : 1,
     time: animate ? config.animationDuration : 0,
     ease: 'easeInOutQuad',
     removeOnInterrupt: true,
