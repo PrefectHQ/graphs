@@ -14,14 +14,14 @@
     </template>
 
     <p-overflow-menu class="run-graph-settings__menu">
-      <p-label label="View">
-        <p-radio-group v-model="horizontal" :options="horizontalOptions">
+      <p-label label="Layout">
+        <p-radio-group v-model="selectedLayoutOption" :options="layoutOptions">
           <template #label="{ option }">
             {{ option.label }}
           </template>
         </p-radio-group>
       </p-label>
-      <template v-if="layout.isTemporal()">
+      <template v-if="layout.isTemporal() || layout.isLeftAligned()">
         <p-label label="Scaling" class="mt-4">
           <div class="flex items-center gap-2">
             <p-button title="Decrease scale (-)" small icon="MinusIcon" @click="decreaseScale" />
@@ -32,14 +32,6 @@
           </div>
         </p-label>
       </template>
-      <p-divider />
-      <p-label label="Layout">
-        <p-radio-group v-model="vertical" :options="verticalOptions">
-          <template #label="{ option }">
-            {{ option.label }}
-          </template>
-        </p-radio-group>
-      </p-label>
       <p-divider />
       <p-checkbox v-model="hideEdges" label="Hide dependency arrows" />
     </p-overflow-menu>
@@ -62,43 +54,33 @@
 
   const placement = [positions.topRight, positions.bottomRight, positions.topLeft, positions.bottomLeft]
 
-  const horizontalOptions: Option<HorizontalMode>[] = [
-    {
-      value: 'dependency',
-      label: 'Dependency',
-    },
-    {
-      value: 'temporal',
-      label: 'Temporal',
-    },
-  ]
+  type LayoutOption = `${HorizontalMode}_${VerticalMode}`
 
-  const horizontal = computed({
-    get() {
-      return layout.horizontal
-    },
-    set(value) {
-      setHorizontalMode(value)
-    },
-  })
-
-  const verticalOptions: Option<VerticalMode>[] = [
+  const layoutOptions: Option<LayoutOption>[] = [
     {
-      value: 'waterfall',
+      label: 'Dependencies in time',
+      value: 'temporal_nearest-parent',
+    }, {
       label: 'Waterfall',
-    },
-    {
-      value: 'nearest-parent',
-      label: 'Nearest Parent',
+      value: 'temporal_waterfall',
+    }, {
+      label: 'Dependencies only (DAG)',
+      value: 'dependency_nearest-parent',
+    }, {
+      label: 'Sorted run durations',
+      value: 'left-aligned_duration-sorted',
     },
   ]
 
-  const vertical = computed({
+  const selectedLayoutOption = computed({
     get() {
-      return layout.vertical
+      return `${layout.horizontal}_${layout.vertical}`
     },
     set(value) {
-      setVerticalMode(value)
+      const [horizontal, vertical] = value.split('_') as [HorizontalMode, VerticalMode]
+
+      setHorizontalMode(horizontal)
+      setVerticalMode(vertical)
     },
   })
 

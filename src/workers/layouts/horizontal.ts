@@ -13,6 +13,10 @@ export function getHorizontalLayout(message: ClientLayoutMessage): HorizontalLay
     return getHorizontalDependencyLayout(message)
   }
 
+  if (message.horizontalSettings.mode === 'left-aligned') {
+    return getHorizontalLeftAlignedLayout(message)
+  }
+
   return getHorizontalTimeLayout(message)
 }
 
@@ -54,3 +58,18 @@ function getHorizontalTimeLayout({ data, horizontalSettings }: ClientLayoutMessa
   return layout
 }
 
+function getHorizontalLeftAlignedLayout({ data, horizontalSettings }: ClientLayoutMessage): HorizontalLayout {
+  const scale = horizontalScaleFactory(horizontalSettings)
+  const layout: HorizontalLayout = new Map()
+
+  const x = scale(data.nodes.entries().next().value[1].start_time ?? new Date())
+
+  for (const [nodeId] of data.nodes) {
+    layout.set(nodeId, {
+      column: 0,
+      x,
+    })
+  }
+
+  return layout
+}

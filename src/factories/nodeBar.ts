@@ -60,7 +60,7 @@ export async function nodeBarFactory() {
   function getTotalWidth(node: RunGraphNode, borderRadius: number): number {
     const columnSize = getHorizontalColumnSize()
 
-    if (layout.isTemporal()) {
+    if (layout.isTemporal() || layout.isLeftAligned()) {
       const right = node.start_time
       const left = node.end_time ?? new Date()
       const seconds = differenceInMilliseconds(left, right) / millisecondsInSecond
