@@ -24,11 +24,12 @@ export async function playheadFactory() {
       playhead.visible = false
       return
     }
+    console.log('tick')
 
     playhead.width = config.styles.playheadWidth
     playhead.height = application.stage.height
     playhead.tint = config.styles.playheadColor
-    playhead.position.x = scale(new Date()) * viewport.scale._x + viewport.worldTransform.tx
+    playhead.position.x = scale(new Date()) * viewport.scale.x + viewport.worldTransform.tx
 
     checkViewport()
   }
