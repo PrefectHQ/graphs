@@ -71,6 +71,8 @@ export type RunGraphStyles = {
   guideTextLeftPadding?: number,
   guideTextSize?: number,
   guideTextColor?: ColorSource,
+  playheadWidth?: number,
+  playheadColor?: ColorSource,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
 }
 
