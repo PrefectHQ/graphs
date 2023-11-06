@@ -79,13 +79,13 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
   if (!width || !height) {
     return
   }
-
+  console.log(scale)
   viewport.animate({
     position: {
       x: x + width / 2,
       y: y + height / 2 - guidesOffset,
     },
-    scale: Math.max(scale, 1),
+    scale: Math.min(scale, 1),
     time: animate ? config.animationDuration : 0,
     ease: 'easeInOutQuad',
     removeOnInterrupt: true,
