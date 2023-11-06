@@ -4,7 +4,6 @@ import { FormatDate } from '@/models/guides'
 import { waitForViewport } from '@/objects'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
-import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForScale } from '@/objects/scale'
@@ -17,12 +16,9 @@ export async function guideFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const settings = await waitForSettings()
-  const cull = await waitForCull()
   const config = await waitForConfig()
   const { inter } = await waitForFonts()
-
   const element = new Container()
-  cull.add(element)
 
   const rectangle = await rectangleFactory()
   element.addChild(rectangle)

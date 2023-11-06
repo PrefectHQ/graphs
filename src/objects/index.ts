@@ -1,5 +1,6 @@
 import { RunGraphProps } from '@/models/RunGraph'
 import { startApplication, stopApplication } from '@/objects/application'
+import { startCache, stopCache } from '@/objects/cache'
 import { startConfig, stopConfig } from '@/objects/config'
 import { startCulling, stopCulling } from '@/objects/culling'
 import { startEdgeCulling, stopEdgeCulling } from '@/objects/edgeCulling'
@@ -41,24 +42,30 @@ export function start({ stage, props }: StartParameters): void {
   startEdgeCulling()
   startSettings()
   startSelection()
+  startCache()
 }
 
 export function stop(): void {
   emitter.clear()
 
-  stopApplication()
-  stopViewport()
-  stopScale()
-  stopGuides()
-  stopStage()
-  stopNodes()
-  stopPlayhead()
-  stopConfig()
-  stopScope()
-  stopFonts()
-  stopCulling()
-  stopLabelCulling()
-  stopEdgeCulling()
-  stopSettings()
-  stopSelection()
+  try {
+    stopApplication()
+    stopViewport()
+    stopScale()
+    stopGuides()
+    stopStage()
+    stopNodes()
+    stopPlayhead()
+    stopConfig()
+    stopScope()
+    stopFonts()
+    stopCulling()
+    stopLabelCulling()
+    stopEdgeCulling()
+    stopSettings()
+    stopSelection()
+    stopCache()
+  } catch (error) {
+    console.error(error)
+  }
 }

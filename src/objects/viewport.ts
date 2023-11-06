@@ -22,7 +22,6 @@ export async function startViewport(): Promise<void> {
     screenWidth: stage.clientWidth,
     events: application.renderer.events,
     passiveWheel: false,
-    ticker: application.ticker,
   })
 
   // ensures the viewport is above the guides
