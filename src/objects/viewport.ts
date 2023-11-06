@@ -79,7 +79,7 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
   if (!width || !height) {
     return
   }
-  console.log(scale)
+
   viewport.animate({
     position: {
       x: x + width / 2,
