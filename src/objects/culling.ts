@@ -1,9 +1,13 @@
 import { Cull } from '@pixi-essentials/cull'
+import { DEFAULT_EDGE_CULLING_THRESHOLD, DEFAULT_LABEL_CULLING_THRESHOLD } from '@/consts'
 import { waitForApplication } from '@/objects/application'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
+import { VisibilityCull } from '@/services/visibilityCull'
 
-let cullInstance: Cull | null = null
+let viewportCuller: Cull | null = null
+let labelCuller: VisibilityCull | null = null
+let edgeCuller: VisibilityCull | null = null
 
 export async function startCulling(): Promise<void> {
   const viewport = await waitForViewport()
@@ -11,22 +15,35 @@ export async function startCulling(): Promise<void> {
 
   // this cull uses renderable so any other custom logic for showing or hiding must use
   // the "visible" property or this will interfere
-  cullInstance = new Cull({
+  viewportCuller = new Cull({
     toggle: 'renderable',
   })
 
+  labelCuller = new VisibilityCull()
+  edgeCuller = new VisibilityCull()
+
   application.ticker.add(() => {
     if (viewport.dirty) {
-      cullInstance?.cull(application.renderer.screen)
+      const edgesVisible = viewport.scale.x > DEFAULT_EDGE_CULLING_THRESHOLD
+      const labelsVisible = viewport.scale.x > DEFAULT_LABEL_CULLING_THRESHOLD
+
+      edgeCuller?.toggle(edgesVisible)
+      labelCuller?.toggle(labelsVisible)
+      viewportCuller?.cull(application.renderer.screen)
+
       viewport.dirty = false
     }
   })
 
-  emitter.emit('cullCreated', cullInstance)
+  emitter.emit('cullCreated', viewportCuller)
 }
 
 export function stopCulling(): void {
-  cullInstance = null
+  viewportCuller = null
+  labelCuller?.clear()
+  labelCuller = null
+  edgeCuller?.clear()
+  edgeCuller = null
 }
 
 export async function cull(): Promise<void> {
@@ -36,15 +53,31 @@ export async function cull(): Promise<void> {
 }
 
 export function uncull(): void {
-  if (cullInstance) {
-    cullInstance.uncull()
+  if (viewportCuller) {
+    viewportCuller.uncull()
   }
 }
 
 export async function waitForCull(): Promise<Cull> {
-  if (cullInstance) {
-    return cullInstance
+  if (viewportCuller) {
+    return viewportCuller
   }
 
   return await waitForEvent('cullCreated')
+}
+
+export async function waitForEdgeCull(): Promise<VisibilityCull> {
+  if (edgeCuller) {
+    return edgeCuller
+  }
+
+  return await waitForEvent('edgeCullCreated')
+}
+
+export async function waitForLabelCull(): Promise<VisibilityCull> {
+  if (labelCuller) {
+    return labelCuller
+  }
+
+  return await waitForEvent('labelCullCreated')
 }

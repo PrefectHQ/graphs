@@ -3,11 +3,9 @@ import { startApplication, stopApplication } from '@/objects/application'
 import { startCache, stopCache } from '@/objects/cache'
 import { startConfig, stopConfig } from '@/objects/config'
 import { startCulling, stopCulling } from '@/objects/culling'
-import { startEdgeCulling, stopEdgeCulling } from '@/objects/edgeCulling'
 import { emitter } from '@/objects/events'
 import { startFonts, stopFonts } from '@/objects/fonts'
 import { startGuides, stopGuides } from '@/objects/guides'
-import { startLabelCulling, stopLabelCulling } from '@/objects/labelCulling'
 import { startNodes, stopNodes } from '@/objects/nodes'
 import { startPlayhead, stopPlayhead } from '@/objects/playhead'
 import { startScale, stopScale } from '@/objects/scale'
@@ -38,8 +36,6 @@ export function start({ stage, props }: StartParameters): void {
   startStage(stage)
   startConfig(props)
   startCulling()
-  startLabelCulling()
-  startEdgeCulling()
   startSettings()
   startSelection()
   startCache()
@@ -60,8 +56,6 @@ export function stop(): void {
     stopScope()
     stopFonts()
     stopCulling()
-    stopLabelCulling()
-    stopEdgeCulling()
     stopSettings()
     stopSelection()
     stopCache()
