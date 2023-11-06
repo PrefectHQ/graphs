@@ -1,6 +1,6 @@
 import { BitmapText } from 'pixi.js'
+import { waitForLabelCull } from '@/objects/culling'
 import { waitForFonts } from '@/objects/fonts'
-import { waitForLabelCull } from '@/objects/labelCulling'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeLabelFactory() {
