@@ -62,12 +62,10 @@ function getHorizontalLeftAlignedLayout({ data, horizontalSettings }: ClientLayo
   const scale = horizontalScaleFactory(horizontalSettings)
   const layout: HorizontalLayout = new Map()
 
-  const firstEntryStartTime = data.nodes.entries().next().value[1].start_time
-
   for (const [nodeId] of data.nodes) {
     layout.set(nodeId, {
       column: 0,
-      x: scale(firstEntryStartTime ?? new Date()),
+      x: scale(data.start_time),
     })
   }
 
