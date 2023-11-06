@@ -22,7 +22,8 @@
         </p-radio-group>
       </p-label>
       <template v-if="layout.isTemporal() || layout.isLeftAligned()">
-        <p-label label="Scaling" class="mt-4">
+        <p-divider />
+        <p-label label="Scaling">
           <div class="flex items-center gap-2">
             <p-button title="Decrease scale (-)" small icon="MinusIcon" @click="decreaseScale" />
             <p-button title="Increase scale (+)" small icon="PlusIcon" @click="increaseScale" />
@@ -58,16 +59,19 @@
 
   const layoutOptions: Option<LayoutOption>[] = [
     {
-      label: 'Dependencies in time',
+      label: 'Temporal dependency',
       value: 'temporal_nearest-parent',
     }, {
-      label: 'Waterfall',
+      label: 'Temporal sequence',
       value: 'temporal_waterfall',
     }, {
-      label: 'Dependencies only (DAG)',
+      label: 'Dependency grid',
       value: 'dependency_nearest-parent',
     }, {
-      label: 'Sorted run durations',
+      label: 'Sequential grid',
+      value: 'dependency_waterfall',
+    }, {
+      label: 'Comparative duration',
       value: 'left-aligned_duration-sorted',
     },
   ]
