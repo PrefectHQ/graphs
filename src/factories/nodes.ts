@@ -202,6 +202,9 @@ export async function nodesContainerFactory() {
       const newPosition = getActualPosition(position)
 
       node.setPosition(newPosition)
+
+      rows.updateNodeAxis({ nodeId, axis: position.y })
+      columns.updateNodeAxis({ nodeId, axis: position.column })
     }
 
     renderEdges()
