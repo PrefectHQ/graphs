@@ -26,8 +26,13 @@ export async function startSettings(): Promise<void> {
 }
 
 export function stopSettings(): void {
+  layout.horizontal = 'temporal'
+  layout.vertical = 'nearest-parent'
   layout.horizontalScaleMultiplierDefault = 0
   layout.horizontalScaleMultiplier = 0
+  layout.disableAnimations = false
+  layout.disableEdges = false
+  layout.disableGuides = false
 }
 
 export const layout = reactive<LayoutSettings>({
