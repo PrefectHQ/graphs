@@ -202,6 +202,9 @@ export async function nodesContainerFactory() {
       const newPosition = getActualPosition(position)
 
       node.setPosition(newPosition)
+
+      rows.updateNodeAxis({ nodeId, axis: position.y })
+      columns.updateNodeAxis({ nodeId, axis: position.column })
     }
 
     renderEdges()
@@ -310,26 +313,7 @@ export async function nodesContainerFactory() {
 
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
     nodesLayout = data.layout
-    updateOffsetAxis()
     setPositions()
-  }
-
-  function updateOffsetAxis(): void {
-    if (!nodesLayout) {
-      return
-    }
-
-    for (const [nodeId] of nodes) {
-      const nodeLayout = nodesLayout.positions.get(nodeId)
-
-      if (!nodeLayout) {
-        console.warn(`Nodes - handleLayoutMessage: Could not find node in layout: Skipping ${nodeId}`)
-        continue
-      }
-
-      rows.updateOffsetAxis({ nodeId, axis: nodeLayout.y })
-      columns.updateOffsetAxis({ nodeId, axis: nodeLayout.column })
-    }
   }
 
   async function highlightSelectedNode(): Promise<void> {

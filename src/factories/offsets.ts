@@ -27,7 +27,7 @@ export type OffsetParameters = {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) {
-  const offsets: Map<number, Map<string, number> | undefined> = new Map()
+  const offsets: Map<number, Map<string, number>> = new Map()
 
   function getOffset(axis: number): number {
     const values = offsets.get(axis) ?? []
@@ -59,25 +59,24 @@ export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) 
     offsets.set(axis, value)
   }
 
-  function updateOffsetAxis({ axis, nodeId }: UpdateOffsetAxisParameters): void {
-    let oldAxis
+  function updateNodeAxis({ axis, nodeId }: UpdateOffsetAxisParameters): void {
+    let currentAxis: number | undefined
+    let currentOffset: number | undefined
 
-    for (const [key, value] of offsets.entries()) {
-      if (value?.has(nodeId)) {
-        oldAxis = key
+    for (const [axis, nodes] of offsets.entries()) {
+      if (nodes.has(nodeId)) {
+        currentAxis = axis
+        currentOffset = nodes.get(nodeId)
         break
       }
     }
 
-    if (oldAxis === undefined || oldAxis === axis) {
+    if (currentAxis === axis || currentAxis === undefined || currentOffset === undefined) {
       return
     }
 
-    const oldAxisOffsets = offsets.get(oldAxis)!
-    const offset = oldAxisOffsets.get(nodeId)!
-
-    oldAxisOffsets.delete(nodeId)
-    setOffset({ axis, nodeId, offset })
+    removeOffset({ axis: currentAxis, nodeId })
+    setOffset({ axis, nodeId, offset: currentOffset })
   }
 
   function removeOffset({ axis, nodeId }: RemoveOffsetParameters): void {
@@ -93,7 +92,7 @@ export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) 
     getTotalOffset,
     getTotalValue,
     setOffset,
-    updateOffsetAxis,
+    updateNodeAxis,
     removeOffset,
     clear,
   }
