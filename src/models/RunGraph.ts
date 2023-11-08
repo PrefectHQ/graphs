@@ -23,7 +23,6 @@ export type RunGraphNode = {
   kind: RunGraphNodeKind,
   id: string,
   label: string,
-  state_name: string,
   state_type: StateType,
   start_time: Date,
   end_time: Date | null,
