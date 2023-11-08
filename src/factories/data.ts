@@ -1,4 +1,4 @@
-import { DEFAULT_POLL_INTERVAL } from '@/consts'
+import { millisecondsInSecond } from 'date-fns'
 import { RunGraphData } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 
@@ -22,7 +22,7 @@ export async function dataFactory(runId: string, callback: DataCallback) {
 
 
     if (data && !data.end_time) {
-      interval = setTimeout(() => start(), DEFAULT_POLL_INTERVAL)
+      interval = setTimeout(() => start(), getIntervalForDataSize(data))
     }
   }
 
@@ -36,4 +36,10 @@ export async function dataFactory(runId: string, callback: DataCallback) {
     stop,
   }
 
+}
+
+function getIntervalForDataSize(data: RunGraphData): number {
+  const intervalBasedOnNodeCount = Math.floor(data.nodes.size / millisecondsInSecond) * millisecondsInSecond
+
+  return Math.max(millisecondsInSecond, intervalBasedOnNodeCount)
 }
