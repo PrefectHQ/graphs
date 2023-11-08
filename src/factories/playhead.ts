@@ -24,7 +24,6 @@ export async function playheadFactory() {
       playhead.visible = false
       return
     }
-    console.log('tick')
 
     playhead.width = config.styles.playheadWidth
     playhead.height = application.stage.height

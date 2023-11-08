@@ -6,6 +6,11 @@ type SetOffsetParameters = {
   offset: number,
 }
 
+type UpdateOffsetAxisParameters = {
+  axis: number,
+  nodeId: string,
+}
+
 type RemoveOffsetParameters = {
   axis: number,
   nodeId: string,
@@ -54,6 +59,27 @@ export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) 
     offsets.set(axis, value)
   }
 
+  function updateOffsetAxisParameters({ axis, nodeId }: UpdateOffsetAxisParameters): void {
+    let oldAxis
+
+    for (const [key, value] of offsets.entries()) {
+      if (value?.has(nodeId)) {
+        oldAxis = key
+        break
+      }
+    }
+
+    if (oldAxis === undefined || oldAxis === axis) {
+      return
+    }
+
+    const oldAxisOffsets = offsets.get(oldAxis)!
+    const offset = oldAxisOffsets.get(nodeId)!
+
+    oldAxisOffsets.delete(nodeId)
+    setOffset({ axis, nodeId, offset })
+  }
+
   function removeOffset({ axis, nodeId }: RemoveOffsetParameters): void {
     offsets.get(axis)?.delete(nodeId)
   }
@@ -67,6 +93,7 @@ export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) 
     getTotalOffset,
     getTotalValue,
     setOffset,
+    updateOffsetAxisParameters,
     removeOffset,
     clear,
   }

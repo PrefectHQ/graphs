@@ -310,7 +310,26 @@ export async function nodesContainerFactory() {
 
   function handleLayoutMessage(data: WorkerLayoutMessage): void {
     nodesLayout = data.layout
+    updateOffsetAxis()
     setPositions()
+  }
+
+  function updateOffsetAxis(): void {
+    if (!nodesLayout) {
+      return
+    }
+
+    for (const [nodeId] of nodes) {
+      const nodeLayout = nodesLayout.positions.get(nodeId)
+
+      if (!nodeLayout) {
+        console.warn(`Nodes - handleLayoutMessage: Could not find node in layout: Skipping ${nodeId}`)
+        continue
+      }
+
+      rows.updateOffsetAxisParameters({ nodeId, axis: nodeLayout.y })
+      columns.updateOffsetAxisParameters({ nodeId, axis: nodeLayout.column })
+    }
   }
 
   async function highlightSelectedNode(): Promise<void> {
