@@ -327,8 +327,8 @@ export async function nodesContainerFactory() {
         continue
       }
 
-      rows.updateOffsetAxisParameters({ nodeId, axis: nodeLayout.y })
-      columns.updateOffsetAxisParameters({ nodeId, axis: nodeLayout.column })
+      rows.updateOffsetAxis({ nodeId, axis: nodeLayout.y })
+      columns.updateOffsetAxis({ nodeId, axis: nodeLayout.column })
     }
   }
 

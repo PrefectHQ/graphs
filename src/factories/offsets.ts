@@ -59,7 +59,7 @@ export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) 
     offsets.set(axis, value)
   }
 
-  function updateOffsetAxisParameters({ axis, nodeId }: UpdateOffsetAxisParameters): void {
+  function updateOffsetAxis({ axis, nodeId }: UpdateOffsetAxisParameters): void {
     let oldAxis
 
     for (const [key, value] of offsets.entries()) {
@@ -93,7 +93,7 @@ export function offsetsFactory({ gap = 0, minimum = 0 }: OffsetParameters = {}) 
     getTotalOffset,
     getTotalValue,
     setOffset,
-    updateOffsetAxisParameters,
+    updateOffsetAxis,
     removeOffset,
     clear,
   }
