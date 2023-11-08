@@ -46,11 +46,14 @@ export async function nodesContainerFactory() {
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
-  emitter.on('layoutSettingsUpdated', async () => {
-    if (Boolean(runData) && Boolean(container.parent)) {
-      rows.clear()
-      columns.clear()
-      await render(runData!)
+  emitter.on('layoutUpdated', () => {
+    rows.clear()
+    columns.clear()
+  })
+
+  emitter.on('layoutSettingsUpdated', () => {
+    if (runData && Boolean(container.parent)) {
+      render(runData)
     }
 
     highlightSelectedNode()
