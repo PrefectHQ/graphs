@@ -18,7 +18,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const config = await waitForConfig()
   const { element: bar, render: renderBar } = await nodeBarFactory()
   const { element: label, render: renderLabelText } = await nodeLabelFactory()
-  const { element: nodesContainer, render: renderNodes, getSize: getNodesSize } = await nodesContainerFactory()
+  const { element: nodesContainer, render: renderNodes, getSize: getNodesSize, stopWorker: stopNodesWorker } = await nodesContainerFactory()
   const { element: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
   const { element: border, render: renderBorderContainer } = await borderFactory()
   const { start: startData, stop: stopData } = await dataFactory(node.id, data => {
@@ -103,6 +103,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function close(): Promise<void> {
     isOpen = false
     container.removeChild(nodesContainer)
+    stopNodesWorker()
 
     await Promise.all([
       stopData(),

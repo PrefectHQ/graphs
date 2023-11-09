@@ -13,7 +13,7 @@ import { emitter } from '@/objects/events'
 import { getSelected } from '@/objects/selection'
 import { getHorizontalColumnSize, layout, waitForSettings } from '@/objects/settings'
 import { exhaustive } from '@/utilities/exhaustive'
-import { WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
+import { IRunGraphWorker, WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
 // parentId-childId
 type EdgeKey = `${string}_${string}`
@@ -22,12 +22,13 @@ export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodesContainerFactory() {
-  const worker = layoutWorkerFactory(onmessage)
   const nodes = new Map<string, NodeContainerFactory>()
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
   const edgesContainer = new Container()
   const config = await waitForConfig()
+
+  let worker: IRunGraphWorker | null = null
 
   // used for both vertical layouts
   const rows = offsetsFactory({
@@ -64,6 +65,8 @@ export async function nodesContainerFactory() {
   })
 
   async function render(data: RunGraphData): Promise<void> {
+    startWorker()
+
     runData = data
     nodesLayout = null
 
@@ -73,6 +76,23 @@ export async function nodesContainerFactory() {
     ])
 
     getLayout(data)
+  }
+
+  function startWorker(): void {
+    if (worker) {
+      return
+    }
+
+    worker = layoutWorkerFactory(onmessage)
+  }
+
+  function stopWorker(): void {
+    if (!worker) {
+      return
+    }
+
+    worker.terminate()
+    worker = null
   }
 
   async function createNodes(data: RunGraphData): Promise<void> {
@@ -133,6 +153,10 @@ export async function nodesContainerFactory() {
   }
 
   function getLayout(data: RunGraphData): void {
+    if (!worker) {
+      throw new Error('Layout worker not initialized')
+    }
+
     const widths: NodeWidths = new Map()
 
     for (const [nodeId, { element }] of nodes) {
@@ -388,6 +412,7 @@ export async function nodesContainerFactory() {
 
   return {
     element: container,
+    stopWorker,
     getSize,
     render,
   }
