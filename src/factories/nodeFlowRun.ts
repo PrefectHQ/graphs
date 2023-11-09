@@ -49,7 +49,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     internalNode = node
 
     await renderBar(node)
-    await renderArrowButton(node)
+    await renderArrowButton()
     await renderLabel(node)
     await renderBorder(node)
 
@@ -112,14 +112,12 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     resized()
   }
 
-  async function renderArrowButton(node: RunGraphNode): Promise<BoundsContainer> {
+  async function renderArrowButton(): Promise<BoundsContainer> {
     const buttonSize = config.styles.nodeToggleSize
     const offset = config.styles.nodeHeight - buttonSize
     const inside = bar.width > buttonSize
-    const { background = '#fff' } = config.styles.node(node)
 
     const container = await renderArrowButtonContainer({
-      background,
       inside,
       isOpen,
     })
