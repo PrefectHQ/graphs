@@ -3,6 +3,7 @@ import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { barFactory } from '@/factories/bar'
 import { borderFactory } from '@/factories/border'
 import { waitForConfig } from '@/objects/config'
+import { waitForLabelCull } from '@/objects/culling'
 
 type NodeArrowBarStyles = {
   inside: boolean,
@@ -12,10 +13,14 @@ type NodeArrowBarStyles = {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeArrowButtonFactory() {
   const config = await waitForConfig()
+  const cull = await waitForLabelCull()
   const container = new Container()
   const { element: arrow, render: renderArrow } = await arrowFactory()
   const { element: bar, render: renderBar } = await barFactory()
   const { element: border, render: renderBorder } = await borderFactory()
+
+  cull.add(container)
+
   let isInside = false
 
   container.eventMode = 'static'
