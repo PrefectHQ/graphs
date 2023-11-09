@@ -1,4 +1,4 @@
-import { Container, ColorMatrixFilter, ColorSource } from 'pixi.js'
+import { Container } from 'pixi.js'
 import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { barFactory } from '@/factories/bar'
 import { borderFactory } from '@/factories/border'
@@ -6,7 +6,6 @@ import { waitForConfig } from '@/objects/config'
 
 type NodeArrowBarStyles = {
   inside: boolean,
-  background: ColorSource,
   isOpen: boolean,
 }
 
@@ -17,7 +16,7 @@ export async function nodeArrowButtonFactory() {
   const { element: arrow, render: renderArrow } = await arrowFactory()
   const { element: bar, render: renderBar } = await barFactory()
   const { element: border, render: renderBorder } = await borderFactory()
-  const filter = new ColorMatrixFilter()
+  let isInside = false
 
   container.eventMode = 'static'
   container.cursor = 'pointer'
@@ -28,11 +27,9 @@ export async function nodeArrowButtonFactory() {
   container.on('mouseover', onMouseover)
   container.on('mouseout', onMouseout)
 
-  bar.filters = [filter]
+  async function render({ inside, isOpen }: NodeArrowBarStyles): Promise<Container> {
+    isInside = inside
 
-  border.visible = false
-
-  async function render({ inside, isOpen, background }: NodeArrowBarStyles): Promise<Container> {
     const arrowStyles = {
       size: 10,
       stroke: 2,
@@ -44,11 +41,13 @@ export async function nodeArrowButtonFactory() {
     const buttonStyles = {
       width: config.styles.nodeToggleSize,
       height: config.styles.nodeToggleSize,
-      background: inside ? background : '#333',
+      background: config.styles.nodeToggleBgColor,
       radius: config.styles.nodeToggleBorderRadius,
     }
 
     const bar = await renderBar(buttonStyles)
+
+    bar.alpha = inside ? 0 : 0.5
 
     const border = await renderBorder({
       width: buttonStyles.width,
@@ -74,13 +73,11 @@ export async function nodeArrowButtonFactory() {
   }
 
   function onMouseover(): void {
-    filter.brightness(0.5, false)
-    border.visible = true
+    bar.alpha = isInside ? 0.5 : 1
   }
 
   function onMouseout(): void {
-    filter.brightness(1, false)
-    border.visible = false
+    bar.alpha = isInside ? 0 : 0.5
   }
 
   return {

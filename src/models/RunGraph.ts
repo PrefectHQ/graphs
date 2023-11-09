@@ -58,6 +58,7 @@ export type RunGraphStyles = {
   nodePadding?: number,
   nodeRadius?: number,
   nodeBorderRadius?: number,
+  nodeToggleBgColor?: ColorSource,
   nodeToggleSize?: number,
   nodeToggleBorderRadius?: number,
   nodeToggleBorderColor?: ColorSource,
