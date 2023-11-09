@@ -1,5 +1,5 @@
 import { Cull } from '@pixi-essentials/cull'
-import { DEFAULT_EDGE_CULLING_THRESHOLD, DEFAULT_LABEL_CULLING_THRESHOLD } from '@/consts'
+import { DEFAULT_EDGE_CULLING_THRESHOLD, DEFAULT_LABEL_CULLING_THRESHOLD, DEFAULT_TOGGLE_CULLING_THRESHOLD } from '@/consts'
 import { waitForApplication } from '@/objects/application'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
@@ -7,6 +7,7 @@ import { VisibilityCull } from '@/services/visibilityCull'
 
 let viewportCuller: Cull | null = null
 let labelCuller: VisibilityCull | null = null
+let toggleCuller: VisibilityCull | null = null
 let edgeCuller: VisibilityCull | null = null
 
 export async function startCulling(): Promise<void> {
@@ -21,14 +22,17 @@ export async function startCulling(): Promise<void> {
 
   labelCuller = new VisibilityCull()
   edgeCuller = new VisibilityCull()
+  toggleCuller = new VisibilityCull()
 
   application.ticker.add(() => {
     if (viewport.dirty) {
       const edgesVisible = viewport.scale.x > DEFAULT_EDGE_CULLING_THRESHOLD
       const labelsVisible = viewport.scale.x > DEFAULT_LABEL_CULLING_THRESHOLD
+      const togglesVisible = viewport.scale.x > DEFAULT_TOGGLE_CULLING_THRESHOLD
 
       edgeCuller?.toggle(edgesVisible)
       labelCuller?.toggle(labelsVisible)
+      toggleCuller?.toggle(togglesVisible)
       viewportCuller?.cull(application.renderer.screen)
 
       viewport.dirty = false
@@ -36,6 +40,9 @@ export async function startCulling(): Promise<void> {
   })
 
   emitter.emit('cullCreated', viewportCuller)
+  emitter.emit('labelCullCreated', labelCuller)
+  emitter.emit('edgeCullCreated', edgeCuller)
+  emitter.emit('toggleCullCreated', toggleCuller)
 }
 
 export function stopCulling(): void {
@@ -44,6 +51,8 @@ export function stopCulling(): void {
   labelCuller = null
   edgeCuller?.clear()
   edgeCuller = null
+  toggleCuller?.clear()
+  toggleCuller = null
 }
 
 export async function cull(): Promise<void> {
@@ -80,4 +89,12 @@ export async function waitForLabelCull(): Promise<VisibilityCull> {
   }
 
   return await waitForEvent('labelCullCreated')
+}
+
+export async function waitForToggleCull(): Promise<VisibilityCull> {
+  if (toggleCuller) {
+    return toggleCuller
+  }
+
+  return await waitForEvent('toggleCullCreated')
 }

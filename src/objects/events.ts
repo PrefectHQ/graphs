@@ -34,6 +34,7 @@ type Events = {
   runDataUpdated: RunGraphData,
   nodeSelected: NodeSelection | null,
   layoutUpdated: void,
+  toggleCullCreated: VisibilityCull,
 }
 
 export type EventKey = keyof Events
