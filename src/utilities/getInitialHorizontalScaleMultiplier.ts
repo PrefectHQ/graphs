@@ -1,16 +1,17 @@
-import { differenceInSeconds, secondsInHour } from 'date-fns'
-import { RunGraphData } from '@/models/RunGraph'
+import { differenceInSeconds } from 'date-fns'
+import { DEFAULT_TIME_COLUMN_SIZE_PIXELS } from '@/consts'
+import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
 
-export function getInitialHorizontalScaleMultiplier({ start_time, end_time }: RunGraphData): number {
+export function getInitialHorizontalScaleMultiplier({ start_time, end_time, nodes }: RunGraphData, config: RequiredGraphConfig, aspectRatio: number): number {
   const seconds = differenceInSeconds(end_time ?? new Date(), start_time)
 
-  if (seconds < secondsInHour) {
-    return 2
-  }
+  const nodeHeight = config.styles.nodeHeight + config.styles.rowGap
+  const apxConcurrencyFactor = 0.5
 
-  if (seconds < secondsInHour * 6) {
-    return 1
-  }
+  const apxNodesHeight = nodes.size * nodeHeight * apxConcurrencyFactor
+  const widthWeWant = apxNodesHeight * aspectRatio
 
-  return 0.1
+  const idealMultiplier = widthWeWant / (seconds * DEFAULT_TIME_COLUMN_SIZE_PIXELS)
+
+  return idealMultiplier
 }
