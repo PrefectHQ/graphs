@@ -1,0 +1,38 @@
+{
+  "start_time": "2023-09-27T15:50:39.425118+00:00",
+  "end_time": "2023-09-27T15:51:11.922153+00:00",
+  "root_node_ids": [
+    "ea9d7c12-7418-4ea9-b33d-189f22f737af",
+    "7d93e182-e17f-40a2-a0c3-784d1d0e7ff5"
+  ],
+  "nodes": [
+    [
+      "ea9d7c12-7418-4ea9-b33d-189f22f737af",
+      {
+        "kind": "task-run",
+        "id": "ea9d7c12-7418-4ea9-b33d-189f22f737af",
+        "label": "random_number-1",
+        "state_name": "Completed",
+        "state_type": "COMPLETED",
+        "start_time": "2023-09-27T15:50:39.425118+00:00",
+        "end_time": "2023-09-27T15:51:05.922153+00:00",
+        "parents": [],
+        "children": []
+      }
+    ],
+    [
+      "7d93e182-e17f-40a2-a0c3-784d1d0e7ff5",
+      {
+        "kind": "task-run",
+        "id": "7d93e182-e17f-40a2-a0c3-784d1d0e7ff5",
+        "label": "random_number-2",
+        "state_name": "Completed",
+        "state_type": "COMPLETED",
+        "start_time": "2023-09-27T15:50:39.425118+00:00",
+        "end_time": "2023-09-27T15:51:11.922153+00:00",
+        "parents": [],
+        "children": []
+      }
+    ]
+  ]
+}

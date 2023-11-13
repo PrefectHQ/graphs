@@ -2,6 +2,7 @@ import { addSeconds } from 'date-fns'
 import { reactive } from 'vue'
 import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SPAN_SECONDS } from '@/consts'
 import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
+import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForRunData } from '@/objects/nodes'
@@ -11,7 +12,10 @@ import { getInitialHorizontalScaleMultiplier } from '@/utilities/getInitialHoriz
 export async function startSettings(): Promise<void> {
   const data = await waitForRunData()
   const config = await waitForConfig()
-  const multiplier = getInitialHorizontalScaleMultiplier(data)
+  const application = await waitForApplication()
+
+  const aspectRatio = application.view.width / application.view.height
+  const multiplier = getInitialHorizontalScaleMultiplier(data, aspectRatio)
 
   setHorizontalScaleMultiplier(multiplier, true)
 
