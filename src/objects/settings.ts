@@ -15,7 +15,7 @@ export async function startSettings(): Promise<void> {
   const application = await waitForApplication()
 
   const aspectRatio = application.view.width / application.view.height
-  const multiplier = getInitialHorizontalScaleMultiplier(data, aspectRatio)
+  const multiplier = getInitialHorizontalScaleMultiplier(data, config, aspectRatio)
 
   setHorizontalScaleMultiplier(multiplier, true)
 
