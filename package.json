@@ -47,7 +47,7 @@
     "auto-changelog": "^2.4.0",
     "autoprefixer": "10.4.16",
     "eslint": "8.54.0",
-    "postcss": "8.4.31",
+    "postcss": "8.4.32",
     "tailwindcss": "3.3.5",
     "tsc-alias": "1.8.8",
     "typescript": "5.3.2",
