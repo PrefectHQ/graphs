@@ -3,7 +3,7 @@ import { DEFAULT_TIME_COLUMN_SIZE_PIXELS } from '@/consts'
 import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
 
 export function getInitialHorizontalScaleMultiplier({ start_time, end_time, nodes }: RunGraphData, config: RequiredGraphConfig, aspectRatio: number): number {
-  const seconds = differenceInSeconds(end_time ?? new Date(), start_time)
+  const seconds = Math.max(differenceInSeconds(end_time ?? new Date(), start_time), 1)
 
   const nodeHeight = config.styles.nodeHeight + config.styles.rowGap
   const apxConcurrencyFactor = 0.5
