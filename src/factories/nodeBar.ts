@@ -1,4 +1,5 @@
-import { differenceInMilliseconds, millisecondsInSecond } from 'date-fns'
+import { differenceInMilliseconds } from 'date-fns'
+import { millisecondsInSecond } from 'date-fns/constants'
 import { Container } from 'pixi.js'
 import { barFactory } from '@/factories/bar'
 import { borderFactory } from '@/factories/border'

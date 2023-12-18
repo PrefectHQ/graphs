@@ -1,4 +1,4 @@
-import { millisecondsInSecond } from 'date-fns'
+import { millisecondsInSecond } from 'date-fns/constants'
 import { RunGraphData } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 
