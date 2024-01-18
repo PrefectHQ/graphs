@@ -29,7 +29,8 @@ jobs:
     name: Build & Publish Release
     runs-on: ubuntu-latest
     environment: 'prod'
-
+    needs: verify-release
+    if: needs.verify-release.outputs.release == 'true'
     steps:
       - uses: actions/checkout@v4
 
