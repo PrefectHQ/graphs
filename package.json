@@ -64,7 +64,7 @@
   "dependencies": {
     "@pixi-essentials/cull": "2.0.0",
     "d3": "7.8.5",
-    "date-fns": "3.2.0",
+    "date-fns": "3.3.1",
     "fontfaceobserver": "^2.3.0",
     "gsap": "^3.12.2",
     "lodash.isequal": "4.5.0",
