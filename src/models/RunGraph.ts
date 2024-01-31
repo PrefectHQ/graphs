@@ -1,4 +1,5 @@
 import { ColorSource } from 'pixi.js'
+import { Artifact } from '@/models/artifact'
 import { NodeSelection } from '@/models/selection'
 import { StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
@@ -43,6 +44,8 @@ export function isRunGraphNodeType(value: unknown): value is RunGraphNodeKind {
 
 export type RunGraphFetch = (runId: string) => RunGraphData | Promise<RunGraphData>
 
+export type ArtifactsFetch = (runId: string) => Artifact[] | Promise<Artifact[]>
+
 export type RunGraphNodeStyles = {
   background?: ColorSource,
 }
@@ -78,7 +81,8 @@ export type RunGraphStyles = {
 
 export type RunGraphConfig = {
   runId: string,
-  fetch: RunGraphFetch,
+  fetchGraph: RunGraphFetch,
+  fetchArtifacts: ArtifactsFetch,
   animationDuration?: number,
   styles?: RunGraphStyles,
   disableAnimationsThreshold?: number,

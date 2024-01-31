@@ -1,0 +1,50 @@
+[
+  {
+      "id": "d86b507d-c784-4bf2-b12c-ff6953026257",
+      "key": "variable-data-link",
+      "flowRunId": "root-1234",
+      "taskRunId": "b00e48b1-be37-4d22-a3e9-e6c69847f3da",
+      "created": "2024-01-30T16:29:31.776Z",
+      "updated": "2024-01-30T16:29:31.776Z",
+      "type": "markdown",
+      "description": "## Highly variable data",
+      "data": "[Highly variable data](https://nyc3.digitaloceanspaces.com/my-bucket-name/highly_variable_data_.csv)",
+      "metadata": null
+  },
+  {
+      "id": "cae8b622-6742-4615-a02f-700323eaeb41",
+      "key": "personalized-reachout",
+      "flowRunId": "root-1234",
+      "taskRunId": "9c5a12e5-61e3-42b8-af3e-b99e37f4ff5e",
+      "created": "2024-01-30T16:29:32.606Z",
+      "updated": "2024-01-30T16:29:32.606Z",
+      "type": "table",
+      "description": "# Marvin, please reach out to these customers today!",
+      "data": "[{\"customer_id\": \"12345\", \"name\": \"John Smith\", \"churn_probability\": 0.85}, {\"customer_id\": \"56789\", \"name\": \"Jane Jones\", \"churn_probability\": 0.65}]",
+      "metadata": null
+  },
+  {
+      "id": "c922b8ce-78e4-459c-8549-b5f6adf5342d",
+      "key": "gtm-markdown-report",
+      "flowRunId": "root-1234",
+      "taskRunId": "68ba2fce-caac-4b07-9f1c-4cb25ff6a3ec",
+      "created": "2024-01-30T16:29:31.027Z",
+      "updated": "2024-01-30T16:29:31.027Z",
+      "type": "markdown",
+      "description": "Quarterly Sales Report",
+      "data": "# Sales Report\n\n## Summary\n\nIn the past quarter, our company saw a significant increase in sales, with a total revenue of $1,000,000. This represents a 20% increase over the same period last year.\n\n## Sales by Region\n\n| Region        | Revenue |\n|:--------------|-------:|\n| North America | $500,000 |\n| Europe        | $250,000 |\n| Asia          | $150,000 |\n| South America | $75,000 |\n| Africa        | $25,000 |\n\n## Top Products\n\n1. Product A - $300,000 in revenue\n2. Product B - $200,000 in revenue\n3. Product C - $150,000 in revenue\n\n## Conclusion\n\nOverall, these results are very encouraging and demonstrate the success of our sales team in increasing revenue across all regions. However, we still have room for improvement and should focus on further increasing sales in the coming quarter.\n",
+      "metadata": null
+  },
+  {
+      "id": "ae8aab85-b3bd-44b7-90d0-8afc95bf1ba3",
+      "key": "variable-data-link",
+      "flowRunId": "root-1234",
+      "taskRunId": "",
+      "created": "2024-01-30T16:29:32.215Z",
+      "updated": "2024-01-30T16:29:32.215Z",
+      "type": "markdown",
+      "description": "# Low prediction accuracy data",
+      "data": "[https://nyc3.digitaloceanspaces.com/my-bucket-name/low_pred_data_.csv](https://nyc3.digitaloceanspaces.com/my-bucket-name/low_pred_data_.csv)",
+      "metadata": null
+  }
+]
