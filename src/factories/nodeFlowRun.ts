@@ -21,7 +21,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const { element: nodesContainer, render: renderNodes, getSize: getNodesSize, stopWorker: stopNodesWorker } = await nodesContainerFactory()
   const { element: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
   const { element: border, render: renderBorderContainer } = await borderFactory()
-  const { start: startData, stop: stopData } = await dataFactory(node.id, ({ data }) => {
+  const { start: startData, stop: stopData } = await dataFactory(node.id, (data) => {
     renderNodes(data)
   })
 

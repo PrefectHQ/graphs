@@ -1,7 +1,10 @@
+import { Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { animationFactory } from '@/factories/animation'
+import { ArtifactFactory, artifactFactory } from '@/factories/artifact'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
+import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
@@ -16,16 +19,20 @@ export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactor
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeContainerFactory(node: RunGraphNode) {
+  const artifacts = new Map<string, ArtifactFactory>()
   const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
   const { animate } = await animationFactory()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
+  const artifactsContainer = new Container()
 
   let internalNode = node
   let cacheKey: string | null = null
   let nodeIsSelected = false
   let initialized = false
+
+  container.addChild(artifactsContainer)
 
   cull.add(container)
 
@@ -69,6 +76,36 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     }
 
     return container
+  }
+
+  async function renderArtifacts(artifactsData: Artifact[]): Promise<Container> {
+    const promises: Promise<ArtifactFactory>[] = []
+
+    for (const artifact of artifactsData) {
+      const exists = artifacts.has(artifact.id)
+
+      if (exists) {
+        continue
+      }
+
+      promises.push(createArtifact(artifact))
+    }
+
+    await Promise.all(promises)
+
+    // TODO: Update artifact positions
+
+    return artifactsContainer
+  }
+
+  async function createArtifact(artifact: Artifact): Promise<ArtifactFactory> {
+    const factory = await artifactFactory(artifact)
+
+    artifacts.set(artifact.id, factory)
+    artifactsContainer.addChild(factory.element)
+    factory.render()
+
+    return factory
   }
 
   function startTicking(): void {
@@ -122,6 +159,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   return {
     element: container,
     render,
+    renderArtifacts,
     bar,
     setPosition,
   }

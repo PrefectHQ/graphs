@@ -1,14 +1,14 @@
 import { Container, Ticker } from 'pixi.js'
 import { dataFactory } from '@/factories/data'
 import { nodesContainerFactory } from '@/factories/nodes'
-import { RunGraphData } from '@/models/RunGraph'
+import { DataBundle, RunGraphData } from '@/models'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForSettings } from '@/objects/settings'
 import { centerViewport, waitForViewport } from '@/objects/viewport'
 
 let stopData: (() => void) | null = null
-let runGraphData: RunGraphData | null = null
+let dataBundle: DataBundle | null = null
 let nodesContainer: Container | null = null
 
 export async function startNodes(): Promise<void> {
@@ -20,12 +20,12 @@ export async function startNodes(): Promise<void> {
 
   element.alpha = 0
 
-  const response = await dataFactory(config.runId, async ({ data }) => {
-    const event: EventKey = runGraphData ? 'runDataUpdated' : 'runDataCreated'
+  const response = await dataFactory(config.runId, async (data) => {
+    const event: EventKey = dataBundle?.data ? 'runDataUpdated' : 'runDataCreated'
 
-    runGraphData = data
+    dataBundle = data
 
-    emitter.emit(event, runGraphData)
+    emitter.emit(event, dataBundle.data)
 
     // this makes sure the layout settings are initialized prior to rendering
     // important to prevent double rendering on the first render
@@ -35,11 +35,11 @@ export async function startNodes(): Promise<void> {
   })
 
   emitter.on('configUpdated', () => {
-    if (!runGraphData) {
+    if (!dataBundle) {
       return
     }
 
-    render(runGraphData)
+    render(dataBundle)
   })
 
   nodesContainer = element
@@ -56,12 +56,12 @@ export function stopNodes(): void {
   stopData?.()
   stopData = null
   nodesContainer = null
-  runGraphData = null
+  dataBundle = null
 }
 
 export async function waitForRunData(): Promise<RunGraphData> {
-  if (runGraphData) {
-    return runGraphData
+  if (dataBundle?.data) {
+    return dataBundle.data
   }
 
   return await waitForEvent('runDataCreated')

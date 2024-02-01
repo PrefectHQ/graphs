@@ -5,9 +5,10 @@ import { NodeContainerFactory, nodeContainerFactory } from '@/factories/node'
 import { offsetsFactory } from '@/factories/offsets'
 import { horizontalScaleFactory } from '@/factories/position'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
+import { Artifact, DataBundle } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
-import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
+import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { getSelected } from '@/objects/selection'
@@ -43,7 +44,7 @@ export async function nodesContainerFactory() {
   })
 
   let nodesLayout: NodesLayoutResponse | null = null
-  let runData: RunGraphData | null = null
+  let dataBundle: DataBundle | null = null
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
@@ -53,8 +54,8 @@ export async function nodesContainerFactory() {
   })
 
   emitter.on('layoutSettingsUpdated', () => {
-    if (runData && Boolean(container.parent)) {
-      render(runData)
+    if (dataBundle && Boolean(container.parent)) {
+      render(dataBundle)
     }
 
     highlightSelectedNode()
@@ -64,18 +65,20 @@ export async function nodesContainerFactory() {
     highlightSelectedNode()
   })
 
-  async function render(data: RunGraphData): Promise<void> {
+  async function render(data: DataBundle): Promise<void> {
     startWorker()
 
-    runData = data
+    dataBundle = data
     nodesLayout = null
 
     await Promise.all([
-      createNodes(data),
-      createEdges(data),
+      createNodes(),
+      createEdges(),
     ])
 
-    getLayout(data)
+    await createArtifacts()
+
+    getLayout()
   }
 
   function startWorker(): void {
@@ -95,7 +98,13 @@ export async function nodesContainerFactory() {
     worker = null
   }
 
-  async function createNodes(data: RunGraphData): Promise<void> {
+  async function createNodes(): Promise<void> {
+    const { data } = dataBundle ?? {}
+
+    if (!data) {
+      return
+    }
+
     const promises: Promise<Container>[] = []
 
     for (const node of data.nodes.values()) {
@@ -111,7 +120,13 @@ export async function nodesContainerFactory() {
     return await render(node)
   }
 
-  async function createEdges(data: RunGraphData): Promise<void> {
+  async function createEdges(): Promise<void> {
+    const { data } = dataBundle ?? {}
+
+    if (!data) {
+      return
+    }
+
     const settings = await waitForSettings()
 
     if (settings.disableEdges) {
@@ -152,7 +167,55 @@ export async function nodesContainerFactory() {
     edgesContainer.addChild(edge.element)
   }
 
-  function getLayout(data: RunGraphData): void {
+  async function createArtifacts(): Promise<void> {
+    const { artifacts } = dataBundle ?? {}
+
+    if (!artifacts) {
+      return
+    }
+
+    const promises: Promise<Container>[] = []
+    const artifactGroups = groupArtifactsByNodeId(artifacts)
+
+    for (const [nodeId, nodeArtifacts] of artifactGroups) {
+      const node = nodes.get(nodeId)
+
+      if (!node) {
+        console.warn(`Could not find node for artifacts: Skipping ${nodeId}`)
+        continue
+      }
+
+      promises.push(node.renderArtifacts(nodeArtifacts))
+    }
+
+    await Promise.all(promises)
+  }
+
+  function groupArtifactsByNodeId(artifacts: Artifact[]): Map<string, Artifact[]> {
+    const grouped = new Map<string, Artifact[]>()
+
+    for (const artifact of artifacts) {
+      if (!artifact.taskRunId) {
+        continue
+      }
+
+      const group = grouped.get(artifact.taskRunId) ?? []
+
+      group.push(artifact)
+
+      grouped.set(artifact.taskRunId, group)
+    }
+
+    return grouped
+  }
+
+  function getLayout(): void {
+    const { data } = dataBundle ?? {}
+
+    if (!data) {
+      return
+    }
+
     if (!worker) {
       throw new Error('Layout worker not initialized')
     }
@@ -299,7 +362,9 @@ export async function nodesContainerFactory() {
   }
 
   function getWidth(): number {
-    if (!nodesLayout || !runData) {
+    const { data } = dataBundle ?? {}
+
+    if (!nodesLayout || !data) {
       return 0
     }
 
@@ -307,10 +372,10 @@ export async function nodesContainerFactory() {
       return columns.getTotalValue(nodesLayout.maxColumn)
     }
 
-    const settings = horizontalSettingsFactory(runData.start_time)
+    const settings = horizontalSettingsFactory(data.start_time)
     const scale = horizontalScaleFactory(settings)
-    const end = scale(runData.end_time ?? new Date())
-    const start = scale(runData.start_time)
+    const end = scale(data.end_time ?? new Date())
+    const start = scale(data.start_time)
     const width = end - start
 
     return width
@@ -394,7 +459,7 @@ export async function nodesContainerFactory() {
   }
 
   function getAllSiblingIds(nodeId: string, direction: 'parents' | 'children'): string[] {
-    const node = runData?.nodes.get(nodeId)
+    const node = dataBundle?.data.nodes.get(nodeId)
 
     if (!node) {
       return []

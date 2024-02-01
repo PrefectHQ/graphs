@@ -1,13 +1,8 @@
 import { millisecondsInSecond } from 'date-fns/constants'
-import { RunGraphData, Artifact } from '@/models'
+import { RunGraphData, DataBundle } from '@/models'
 import { waitForConfig } from '@/objects/config'
 
-type DataFactoryBundle = {
-  data: RunGraphData,
-  artifacts: Artifact[],
-}
-
-type DataCallback = (dataBundle: DataFactoryBundle) => void
+type DataCallback = (dataBundle: DataBundle) => void
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function dataFactory(runId: string, callback: DataCallback) {
