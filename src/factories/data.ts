@@ -1,8 +1,13 @@
 import { millisecondsInSecond } from 'date-fns/constants'
-import { RunGraphData } from '@/models/RunGraph'
+import { RunGraphData, Artifact } from '@/models'
 import { waitForConfig } from '@/objects/config'
 
-type DataCallback = (data: RunGraphData) => void
+type DataFactoryBundle = {
+  data: RunGraphData,
+  artifacts: Artifact[],
+}
+
+type DataCallback = (dataBundle: DataFactoryBundle) => void
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function dataFactory(runId: string, callback: DataCallback) {
@@ -13,9 +18,16 @@ export async function dataFactory(runId: string, callback: DataCallback) {
 
   async function start(): Promise<void> {
     try {
-      data = await config.fetch(runId)
+      const [graphData, artifacts] = await Promise.all([
+        config.fetchGraph(runId),
+        config.fetchArtifacts(runId),
+      ])
+      data = graphData
 
-      callback(data)
+      callback({
+        data,
+        artifacts,
+      })
     } catch (error) {
       console.error(error)
     }

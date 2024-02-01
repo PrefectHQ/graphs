@@ -20,7 +20,7 @@ export async function startNodes(): Promise<void> {
 
   element.alpha = 0
 
-  const response = await dataFactory(config.runId, async data => {
+  const response = await dataFactory(config.runId, async ({ data }) => {
     const event: EventKey = runGraphData ? 'runDataUpdated' : 'runDataCreated'
 
     runGraphData = data

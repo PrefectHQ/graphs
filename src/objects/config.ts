@@ -6,7 +6,7 @@ import { waitForScope } from '@/objects/scope'
 
 let config: RequiredGraphConfig | null = null
 
-const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
+const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetchGraph' | 'fetchArtifacts'> = {
   animationDuration: 500,
   disableAnimationsThreshold: 500,
   disableEdgesThreshold: 500,

@@ -10,8 +10,9 @@
   import { parseISO, isValid } from 'date-fns'
   import { computed, ref } from 'vue'
   import RunGraph from '@/components/RunGraph.vue'
+  import artifactJson from '@/demo/data/artifacts.json'
   import json from '@/demo/data/graph-small.json'
-  import { RunGraphConfig, RunGraphData } from '@/models'
+  import { Artifact, RunGraphConfig, RunGraphData } from '@/models'
   import { StateType } from '@/models/states'
   import { ViewportDateRange } from '@/models/viewport'
 
@@ -35,6 +36,7 @@
   }
 
   const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
+  const artifacts: Artifact[] = JSON.parse(JSON.stringify(artifactJson), reviver)
   const visibleDateRange = ref<ViewportDateRange>()
   const selected = ref()
 
@@ -59,7 +61,8 @@
 
   const config = computed<RunGraphConfig>(() => ({
     runId: 'foo',
-    fetch: () => data,
+    fetchGraph: () => data,
+    fetchArtifacts: () => artifacts,
     styles: {
       colorMode: colorThemeValue.value,
       textDefault: getColorToken('--p-color-text-default'),
