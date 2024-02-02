@@ -15,6 +15,7 @@
     "68ba2fce-caac-4b07-9f1c-4cb25ff6a3ec",
     "be920a79-18e9-4521-9c39-0f4883de34af"
   ],
+  "artifacts": [],
   "nodes": [
     [
       "ea9d7c12-7418-4ea9-b33d-189f22f737af",
@@ -27,6 +28,7 @@
         "start_time": "2023-11-13T11:41:34.734958",
         "end_time": "2023-11-13T11:46:47.778436",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "d9742b2c-acd7-4b4a-81ea-f5237a473816"
@@ -45,6 +47,7 @@
         "start_time": "2023-11-13T11:46:47.778436",
         "end_time": "2023-11-13T11:52:00.821914",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "53d142c5-96ee-4f08-966b-b731ca787f32"
@@ -63,6 +66,7 @@
         "start_time": "2023-11-13T11:52:00.821914",
         "end_time": "2023-11-13T11:57:13.865392",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "004e28e4-0705-4342-a9e3-569357ecf92a"
@@ -87,6 +91,7 @@
         "start_time": "2023-11-13T11:57:13.865392",
         "end_time": "2023-11-13T12:02:26.908870",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "2833a401-7a7b-45bc-a511-463a75b53fc4"
@@ -105,6 +110,7 @@
         "start_time": "2023-11-13T12:02:26.908870",
         "end_time": "2023-11-13T12:07:39.952348",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "4223393e-0cc5-46ae-803f-0f3bbfb136f7"
@@ -123,6 +129,7 @@
         "start_time": "2023-11-13T12:07:39.952348",
         "end_time": "2023-11-13T12:12:52.995826",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "4ebe79ac-1453-42bf-b20d-86ef56a2af88"
@@ -141,6 +148,7 @@
         "start_time": "2023-11-13T12:12:52.995826",
         "end_time": "2023-11-13T12:18:06.039304",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "004e28e4-0705-4342-a9e3-569357ecf92a"
@@ -159,6 +167,7 @@
         "start_time": "2023-11-13T12:18:06.039304",
         "end_time": "2023-11-13T12:23:19.082782",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "bf12a66d-ab6a-4cbe-9c55-8e22af8430ba"
@@ -177,6 +186,7 @@
         "start_time": "2023-11-13T12:23:19.082782",
         "end_time": "2023-11-13T12:28:32.126260",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "b00e48b1-be37-4d22-a3e9-e6c69847f3da"
@@ -195,6 +205,7 @@
         "start_time": "2023-11-13T12:28:32.126260",
         "end_time": "2023-11-13T12:33:45.169738",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "bb4eb820-568d-4a54-ae4d-b1c6a9da4858"
@@ -213,6 +224,7 @@
         "start_time": "2023-11-13T12:33:45.169738",
         "end_time": "2023-11-13T12:38:58.213216",
         "parents": [],
+        "artifacts": [],
         "children": [
           {
             "id": "518d7e9f-54c9-407f-aac5-26b653afa947"
@@ -238,6 +250,7 @@
             "id": "ea9d7c12-7418-4ea9-b33d-189f22f737af"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "41d010f5-9311-4474-8dfd-93270bd9d9d0"
@@ -278,6 +291,7 @@
             "id": "8920bfa5-091c-4623-aca2-281572c69d91"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "41d010f5-9311-4474-8dfd-93270bd9d9d0"
@@ -312,6 +326,7 @@
             "id": "68ba2fce-caac-4b07-9f1c-4cb25ff6a3ec"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "41d010f5-9311-4474-8dfd-93270bd9d9d0"
@@ -340,6 +355,7 @@
             "id": "92e9b529-0671-4fa4-b41a-570e8e848946"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "4223393e-0cc5-46ae-803f-0f3bbfb136f7"
@@ -374,6 +390,7 @@
             "id": "7d93e182-e17f-40a2-a0c3-784d1d0e7ff5"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "2833a401-7a7b-45bc-a511-463a75b53fc4"
@@ -408,6 +425,7 @@
             "id": "aaf0dd37-87a9-45f1-a4a0-26df1694d5b1"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "41d010f5-9311-4474-8dfd-93270bd9d9d0"
@@ -442,6 +460,7 @@
             "id": "65b35f89-5439-46e5-8593-343bfd34e6cd"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "41d010f5-9311-4474-8dfd-93270bd9d9d0"
@@ -470,6 +489,7 @@
             "id": "213b9c4c-82a3-4616-aa86-048572432af8"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "4ebe79ac-1453-42bf-b20d-86ef56a2af88"
@@ -504,6 +524,7 @@
             "id": "9c5a12e5-61e3-42b8-af3e-b99e37f4ff5e"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "b00e48b1-be37-4d22-a3e9-e6c69847f3da"
@@ -538,6 +559,7 @@
             "id": "cf818bc1-8698-4a88-8438-5fbfdd4eddcd"
           }
         ],
+        "artifacts": [],
         "children": [
           {
             "id": "41d010f5-9311-4474-8dfd-93270bd9d9d0"
@@ -593,6 +615,7 @@
             "id": "b00e48b1-be37-4d22-a3e9-e6c69847f3da"
           }
         ],
+        "artifacts": [],
         "children": []
       }
     ],
@@ -607,6 +630,7 @@
         "start_time": "2023-11-13T13:36:21.691474",
         "end_time": "2023-11-13T13:41:34.734952",
         "parents": [],
+        "artifacts": [],
         "children": []
       }
     ]
