@@ -132,9 +132,11 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   function getNodeCacheKey(node: RunGraphNode): string {
     const endTime = node.end_time ?? new Date()
+    const artifactCount = node.artifacts?.length ?? 0
     const values = [
       node.state_type,
       endTime.getTime(),
+      artifactCount,
       layout.horizontal,
       layout.horizontalScaleMultiplier,
       config.styles.colorMode,
