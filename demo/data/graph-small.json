@@ -15,6 +15,15 @@
     "68ba2fce-caac-4b07-9f1c-4cb25ff6a3ec",
     "be920a79-18e9-4521-9c39-0f4883de34af"
   ],
+  "artifacts": [
+    {
+      "id": "ae8aab85-b3bd-44b7-90d0-8afc95bf1ba3",
+      "created": "2023-09-27T15:51:11.922153+00:00",
+      "key": "variable-data-link",
+      "type": "markdown",
+      "isLatest": "true"
+    }
+  ],
   "nodes": [
     [
       "ea9d7c12-7418-4ea9-b33d-189f22f737af",
@@ -123,6 +132,15 @@
         "start_time": "2023-09-27T15:50:40.038379+00:00",
         "end_time": "2023-09-27T15:50:42.014724+00:00",
         "parents": [],
+        "artifacts": [
+          {
+            "id": "cae8b622-6742-4615-a02f-700323eaeb41",
+            "created": "2023-09-27T15:50:42.014724+00:00",
+            "key": "personalized-reachout",
+            "type": "table",
+            "isLatest": "true"
+          }
+        ],
         "children": [
           {
             "id": "4ebe79ac-1453-42bf-b20d-86ef56a2af88"
@@ -177,6 +195,15 @@
         "start_time": "2023-09-27T15:50:40.041340+00:00",
         "end_time": "2023-09-27T15:50:41.925548+00:00",
         "parents": [],
+        "artifacts": [
+          {
+            "id": "d86b507d-c784-4bf2-b12c-ff6953026257",
+            "created": "2023-09-27T15:50:41.925548+00:00",
+            "key": "variable-data-link",
+            "type": "markdown",
+            "isLatest": "true"
+          }
+        ],
         "children": [
           {
             "id": "b00e48b1-be37-4d22-a3e9-e6c69847f3da"
@@ -213,6 +240,15 @@
         "start_time": "2023-09-27T15:50:40.049282+00:00",
         "end_time": "2023-09-27T15:50:42.004911+00:00",
         "parents": [],
+        "artifacts": [
+          {
+            "id": "c922b8ce-78e4-459c-8549-b5f6adf5342d",
+            "created": "2023-09-27T15:50:42.004911+00:00",
+            "key": "gtm-markdown-report",
+            "type": "markdown",
+            "isLatest": "true"
+          }
+        ],
         "children": [
           {
             "id": "518d7e9f-54c9-407f-aac5-26b653afa947"
