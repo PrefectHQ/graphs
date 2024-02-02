@@ -16,7 +16,7 @@ export type RunGraphData = {
   start_time: Date,
   end_time: Date | null,
   nodes: RunGraphNodes,
-  artifacts: Artifact[],
+  artifacts?: Artifact[],
 }
 
 export type RunGraphNodes = Map<string, RunGraphNode>
@@ -30,7 +30,7 @@ export type RunGraphNode = {
   end_time: Date | null,
   parents: RunGraphEdge[],
   children: RunGraphEdge[],
-  artifacts: Artifact[],
+  artifacts?: Artifact[],
 }
 
 export type RunGraphEdge = {
