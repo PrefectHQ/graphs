@@ -18,17 +18,13 @@ export async function artifactFactory(artifact: Artifact) {
 
   element.addChild(bar)
 
-  // TODO: Add icon to content
   content.addChild(label)
   element.addChild(content)
 
   cull.add(element)
 
   async function render(): Promise<Container> {
-    // TODO: Render icon at the same time
     await renderLabelText()
-
-    // TODO: Align icon with label, include padding
 
     await renderBg()
 
