@@ -1,4 +1,5 @@
 import { ColorSource } from 'pixi.js'
+import { Artifact } from '@/models'
 import { NodeSelection } from '@/models/selection'
 import { StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
@@ -15,6 +16,7 @@ export type RunGraphData = {
   start_time: Date,
   end_time: Date | null,
   nodes: RunGraphNodes,
+  artifacts: Artifact[],
 }
 
 export type RunGraphNodes = Map<string, RunGraphNode>
@@ -28,6 +30,7 @@ export type RunGraphNode = {
   end_time: Date | null,
   parents: RunGraphEdge[],
   children: RunGraphEdge[],
+  artifacts: Artifact[],
 }
 
 export type RunGraphEdge = {
@@ -65,6 +68,11 @@ export type RunGraphStyles = {
   nodeSelectedBorderColor?: ColorSource,
   nodeUnselectedAlpha?: number,
   edgeColor?: ColorSource,
+  artifactPaddingX?: number,
+  artifactPaddingY?: number,
+  artifactTextColor?: ColorSource,
+  artifactBgColor?: ColorSource,
+  artifactBorderRadius?: number,
   guideLineWidth?: number,
   guideLineColor?: ColorSource,
   guideTextTopPadding?: number,
