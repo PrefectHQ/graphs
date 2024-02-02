@@ -1,7 +1,9 @@
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { animationFactory } from '@/factories/animation'
+import { artifactFactory, ArtifactFactory } from '@/factories/artifact'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
+import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
@@ -19,6 +21,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
+  const artifacts: Map<string, ArtifactFactory> = new Map()
   const { animate } = await animationFactory()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
 
@@ -62,13 +65,43 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
     cacheKey = currentCacheKey
 
-    await renderNode(node)
+    await Promise.all([
+      renderNode(node),
+      createArtifacts(node.artifacts),
+    ])
 
     if (node.end_time) {
       stopTicking()
     }
 
     return container
+  }
+
+  async function createArtifacts(artifactsData?: Artifact[]): Promise<void> {
+    if (!artifactsData) {
+      return
+    }
+
+    const promises: Promise<BoundsContainer>[] = []
+
+    for (const artifact of artifactsData) {
+      promises.push(createArtifact(artifact))
+    }
+
+    await Promise.all(promises)
+  }
+
+  async function createArtifact(artifact: Artifact): Promise<BoundsContainer> {
+    if (artifacts.has(artifact.id)) {
+      return artifacts.get(artifact.id)!.render()
+    }
+
+    const factory = await artifactFactory(artifact)
+
+    artifacts.set(artifact.id, factory)
+    container.addChild(factory.element)
+
+    return factory.render()
   }
 
   function startTicking(): void {
