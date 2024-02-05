@@ -1,5 +1,6 @@
 import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, BitmapText, IBitmapTextStyle } from 'pixi.js'
+import { DEFAULT_TEXT_RESOLUTION } from '@/consts'
 import { emitter, waitForEvent } from '@/objects/events'
 
 type BitmapFontStyle = {
@@ -19,7 +20,7 @@ const fontStyles = {
 } as const satisfies Record<string, Readonly<BitmapFontStyle>>
 
 const fontOptions = {
-  resolution: 4,
+  resolution: DEFAULT_TEXT_RESOLUTION,
   chars: BitmapFont.ASCII,
 }
 

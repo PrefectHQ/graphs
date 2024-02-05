@@ -1,3 +1,5 @@
+import { IconName } from '@/models/icon'
+
 export const artifactTypes = [
   'result',
   'markdown',
@@ -14,3 +16,10 @@ export type Artifact = {
   type: ArtifactType,
   isLatest: boolean,
 }
+
+export const artifactTypeIconMap = {
+  markdown: 'ArtifactMarkdown',
+  table: 'ArtifactTable',
+  result: 'ArtifactResult',
+  unknown: 'Artifact',
+} as Record<ArtifactType, IconName>
