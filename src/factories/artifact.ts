@@ -1,7 +1,8 @@
 import { BitmapText, Container } from 'pixi.js'
 import { barFactory } from '@/factories/bar'
+import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
-import { Artifact } from '@/models/artifact'
+import { Artifact, artifactTypeIconMap } from '@/models/artifact'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
 
@@ -13,22 +14,46 @@ export async function artifactFactory(artifact: Artifact) {
   const content = new Container()
   const config = await waitForConfig()
   const cull = await waitForCull()
+  const { element: icon, render: renderIcon } = await iconFactory()
   const { element: label, render: renderLabel } = await nodeLabelFactory()
   const { element: bar, render: renderBar } = await barFactory()
 
   element.addChild(bar)
 
+  content.addChild(icon)
   content.addChild(label)
   element.addChild(content)
 
   cull.add(element)
 
   async function render(): Promise<Container> {
-    await renderLabelText()
+    await Promise.all([
+      renderArtifactIcon(),
+      renderLabelText(),
+    ])
 
     await renderBg()
 
     return element
+  }
+
+  async function renderArtifactIcon(): Promise<Container> {
+    const iconName = artifactTypeIconMap[artifact.type]
+    const {
+      artifactIconSize,
+      artifactIconColor,
+      artifactPaddingX,
+      artifactPaddingY,
+    } = config.styles
+
+    const newIcon = await renderIcon(iconName)
+
+    newIcon.position = { x: artifactPaddingX, y: artifactPaddingY }
+    newIcon.width = artifactIconSize
+    newIcon.height = artifactIconSize
+    newIcon.tint = artifactIconColor
+
+    return newIcon
   }
 
   async function renderLabelText(): Promise<BitmapText> {
@@ -38,14 +63,20 @@ export async function artifactFactory(artifact: Artifact) {
 
     await renderLabel(artifact.key)
 
-    const { artifactPaddingX, artifactPaddingY, artifactTextColor } = config.styles
+    const {
+      artifactPaddingX,
+      artifactPaddingY,
+      artifactTextColor,
+      artifactIconSize,
+      artifactContentGap,
+    } = config.styles
+
+    const x = artifactPaddingX + artifactIconSize + artifactContentGap
+    const y = artifactPaddingY
 
     label.tint = artifactTextColor
     label.scale.set(0.75)
-    label.position = {
-      x: artifactPaddingX,
-      y: artifactPaddingY,
-    }
+    label.position = { x, y }
 
     return label
   }
