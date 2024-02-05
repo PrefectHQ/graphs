@@ -29,6 +29,7 @@ type Events = {
   layoutSettingsCreated: LayoutSettings,
   cullCreated: Cull,
   labelCullCreated: VisibilityCull,
+  iconCullCreated: VisibilityCull,
   edgeCullCreated: VisibilityCull,
   runDataCreated: RunGraphData,
   runDataUpdated: RunGraphData,
