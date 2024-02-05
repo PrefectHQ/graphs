@@ -22,4 +22,4 @@ export const artifactTypeIconMap = {
   table: 'ArtifactTable',
   result: 'ArtifactResult',
   unknown: 'Artifact',
-} as Record<ArtifactType, IconName>
+} as const satisfies Record<ArtifactType, IconName>
