@@ -96,9 +96,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
     await Promise.all(promises)
 
-    if (artifacts.size > 1) {
-      alignArtifacts()
-    }
+    alignArtifacts()
   }
 
   async function createArtifact(artifact: Artifact): Promise<BoundsContainer> {
