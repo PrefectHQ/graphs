@@ -4,7 +4,6 @@ import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
 import { Artifact, artifactTypeIconMap } from '@/models/artifact'
 import { waitForConfig } from '@/objects/config'
-import { waitForCull } from '@/objects/culling'
 
 export type ArtifactFactory = Awaited<ReturnType<typeof artifactFactory>>
 
@@ -13,7 +12,6 @@ export async function artifactFactory(artifact: Artifact) {
   const element = new Container()
   const content = new Container()
   const config = await waitForConfig()
-  const cull = await waitForCull()
   const { element: icon, render: renderIcon } = await iconFactory()
   const { element: label, render: renderLabel } = await nodeLabelFactory()
   const { element: bar, render: renderBar } = await barFactory()
@@ -23,8 +21,6 @@ export async function artifactFactory(artifact: Artifact) {
   content.addChild(icon)
   content.addChild(label)
   element.addChild(content)
-
-  cull.add(element)
 
   async function render(): Promise<Container> {
     await Promise.all([
