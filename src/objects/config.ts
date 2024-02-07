@@ -33,7 +33,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     artifactPaddingY: 2,
     artifactTextColor: '#ffffff',
     artifactBgColor: '#35363b',
-    artifactBorderRadius: 2,
+    artifactBorderRadius: 4,
     artifactContentGap: 4,
     artifactIconSize: 16,
     artifactIconColor: '#ffffff',
