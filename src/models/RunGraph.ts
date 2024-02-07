@@ -68,6 +68,8 @@ export type RunGraphStyles = {
   nodeSelectedBorderColor?: ColorSource,
   nodeUnselectedAlpha?: number,
   edgeColor?: ColorSource,
+  artifactsGap?: number,
+  artifactsNodeOverlap?: number,
   artifactPaddingX?: number,
   artifactPaddingY?: number,
   artifactTextColor?: ColorSource,
