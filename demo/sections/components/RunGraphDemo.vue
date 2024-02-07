@@ -1,7 +1,21 @@
 <template>
   <p-layout-default class="run-graph-demo">
-    <RunGraph v-model:viewport="visibleDateRange" v-model:selected="selected" :config="config" class="run-graph-demo__graph p-background" />
+    <RunGraph
+      v-model:viewport="visibleDateRange"
+      v-model:selected="selected"
+      :config="config"
+      class="run-graph-demo__graph p-background"
+      @inspect-artifact="inspectArtifact"
+    />
     {{ visibleDateRange }} {{ selected }}
+    <p-drawer v-model:open="artifactDrawerOpen" placement="right" class="p-background p-4">
+      <span class="text-sm text-subdued">Inspecting</span>
+      <h2 class="mb-2">
+        {{ inspectedArtifactId }}
+      </h2>
+      <span class="text-sm text-subdued">Stuff</span>
+      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque recusandae ad, nam hic ipsam est dolor cumque optio nostrum quaerat?</p>
+    </p-drawer>
   </p-layout-default>
 </template>
 
@@ -11,7 +25,7 @@
   import { computed, ref } from 'vue'
   import RunGraph from '@/components/RunGraph.vue'
   import json from '@/demo/data/graph-small.json'
-  import { RunGraphConfig, RunGraphData } from '@/models'
+  import { InspectedArtifact, RunGraphConfig, RunGraphData } from '@/models'
   import { StateType } from '@/models/states'
   import { ViewportDateRange } from '@/models/viewport'
 
@@ -37,6 +51,8 @@
   const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
   const visibleDateRange = ref<ViewportDateRange>()
   const selected = ref()
+  const artifactDrawerOpen = ref(false)
+  const inspectedArtifactId = ref()
 
   // just hard coding the values here for now. these will come from ui-library
   const stateTypeColors = {
@@ -74,6 +90,12 @@
       }),
     },
   }))
+
+  function inspectArtifact({ id }: InspectedArtifact): void {
+    console.log('inspectArtifact', id)
+    inspectedArtifactId.value = id
+    artifactDrawerOpen.value = true
+  }
 </script>
 
 <style>

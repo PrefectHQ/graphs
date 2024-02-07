@@ -13,6 +13,7 @@
   import { useKeyDown } from '@prefecthq/vue-compositions'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import RunGraphSettings from '@/components/RunGraphSettings.vue'
+  import { InspectedArtifact } from '@/models'
   import { RunGraphProps } from '@/models/RunGraph'
   import { NodeSelection } from '@/models/selection'
   import { ViewportDateRange } from '@/models/viewport'
@@ -32,6 +33,7 @@
     (event: 'update:viewport', value: ViewportDateRange): void,
     (event: 'update:fullscreen', value: boolean): void,
     (event: 'update:selected', value: NodeSelection | null): void,
+    (event: 'inspectArtifact', value: InspectedArtifact): void,
   }>()
 
   const stage = ref<HTMLDivElement>()
@@ -49,7 +51,11 @@
 
   watch(() => props.selected, selected => selectNode(selected))
 
-  emitter.on('nodeSelected', nodeId => emit('update:selected', nodeId))
+  emitter.on('nodeSelected', selection => emit('update:selected', selection))
+
+  emitter.on('inspectArtifact', artifact => {
+    emit('inspectArtifact', artifact)
+  })
 
   watch(() => props.viewport, viewport => updateViewportFromDateRange(viewport))
 

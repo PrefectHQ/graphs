@@ -1,4 +1,5 @@
 export * from './artifact'
+export * from './inspection'
 export * from './RunGraph'
 export * from './viewport'
 export * from './selection'

@@ -4,6 +4,7 @@ import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
 import { Artifact, artifactTypeIconMap } from '@/models/artifact'
 import { waitForConfig } from '@/objects/config'
+import { inspectArtifact } from '@/services/inspection'
 
 export type ArtifactFactory = Awaited<ReturnType<typeof artifactFactory>>
 
@@ -21,6 +22,14 @@ export async function artifactFactory(artifact: Artifact) {
   content.addChild(icon)
   content.addChild(label)
   element.addChild(content)
+
+  element.eventMode = 'static'
+  element.cursor = 'pointer'
+
+  element.on('click', event => {
+    event.stopPropagation()
+    inspectArtifact(artifact)
+  })
 
   async function render(): Promise<Container> {
     await Promise.all([

@@ -4,6 +4,7 @@ import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
+import { InspectedArtifact } from '@/models/inspection'
 import { LayoutSettings } from '@/models/layout'
 import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
 import { NodeSelection } from '@/models/selection'
@@ -34,6 +35,7 @@ type Events = {
   runDataCreated: RunGraphData,
   runDataUpdated: RunGraphData,
   nodeSelected: NodeSelection | null,
+  inspectArtifact: InspectedArtifact,
   layoutUpdated: void,
   toggleCullCreated: VisibilityCull,
 }
