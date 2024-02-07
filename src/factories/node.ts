@@ -1,3 +1,4 @@
+import { Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { animationFactory } from '@/factories/animation'
 import { artifactFactory, ArtifactFactory } from '@/factories/artifact'
@@ -21,6 +22,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
+  let artifactsContainer: Container | null = null
   const artifacts: Map<string, ArtifactFactory> = new Map()
   const { animate } = await animationFactory()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
@@ -82,6 +84,10 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       return
     }
 
+    if (!artifactsContainer) {
+      createArtifactsContainer()
+    }
+
     const promises: Promise<BoundsContainer>[] = []
 
     for (const artifact of artifactsData) {
@@ -89,6 +95,10 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     }
 
     await Promise.all(promises)
+
+    if (artifacts.size > 1) {
+      alignArtifacts()
+    }
   }
 
   async function createArtifact(artifact: Artifact): Promise<BoundsContainer> {
@@ -99,9 +109,35 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     const factory = await artifactFactory(artifact)
 
     artifacts.set(artifact.id, factory)
-    container.addChild(factory.element)
+
+    artifactsContainer!.addChild(factory.element)
 
     return factory.render()
+  }
+
+  function createArtifactsContainer(): void {
+    artifactsContainer = new Container()
+    container.addChild(artifactsContainer)
+  }
+
+  function alignArtifacts(): void {
+    if (!artifactsContainer) {
+      return
+    }
+
+    const { artifactsGap, artifactsNodeOverlap } = config.styles
+    let x = 0
+
+    for (const artifact of artifacts.values()) {
+      artifact.element.position.x = x
+      x += artifact.element.width + artifactsGap
+    }
+
+    artifactsContainer.position.y = -artifactsContainer.height + artifactsNodeOverlap
+
+    if (artifactsContainer.width < bar.width) {
+      artifactsContainer.position.x = bar.width - artifactsContainer!.width
+    }
   }
 
   function startTicking(): void {
