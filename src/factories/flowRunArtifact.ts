@@ -5,6 +5,7 @@ import { Artifact } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
+import { layout } from '@/objects/settings'
 
 export type FlowRunArtifactFactory = Awaited<ReturnType<typeof flowRunArtifactFactory>>
 
@@ -29,10 +30,11 @@ export async function flowRunArtifactFactory(artifact: Artifact) {
   }
 
   function updatePosition(): void {
-    // TODO: Account for different layouts, if non temporal, let the parent handle the position
+    if (layout.isTemporal()) {
+      const x = scale(artifact.created) * viewport.scale._x + viewport.worldTransform.tx
+      element.position.x = x - element.width / 2
+    }
 
-    const x = scale(artifact.created) * viewport.scale._x + viewport.worldTransform.tx
-    element.position.x = x - element.width / 2
     element.position.y = application.screen.height - element.height - DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET
   }
 
