@@ -13,9 +13,9 @@ export type FlowRunArtifactFactory = Awaited<ReturnType<typeof flowRunArtifactFa
 export async function flowRunArtifactFactory(artifact: Artifact) {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
+  let scale = await waitForScale()
 
   const { element, render: renderArtifact } = await artifactFactory(artifact)
-  let scale = await waitForScale()
 
   emitter.on('scaleUpdated', updated => scale = updated)
 
@@ -40,6 +40,7 @@ export async function flowRunArtifactFactory(artifact: Artifact) {
 
   return {
     element,
+    data: artifact,
     render,
   }
 }
