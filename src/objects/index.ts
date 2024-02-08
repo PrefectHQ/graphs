@@ -4,7 +4,7 @@ import { startCache, stopCache } from '@/objects/cache'
 import { startConfig, stopConfig } from '@/objects/config'
 import { startCulling, stopCulling } from '@/objects/culling'
 import { emitter } from '@/objects/events'
-import { startFlowRunDetails, stopFlowRunDetails } from '@/objects/flowDetails'
+import { startFlowRunArtifacts, stopFlowRunArtifacts } from '@/objects/flowRunArtifacts'
 import { startFonts, stopFonts } from '@/objects/fonts'
 import { startGuides, stopGuides } from '@/objects/guides'
 import { startNodes, stopNodes } from '@/objects/nodes'
@@ -31,7 +31,7 @@ export function start({ stage, props }: StartParameters): void {
   startScale()
   startGuides()
   startNodes()
-  startFlowRunDetails()
+  startFlowRunArtifacts()
   startPlayhead()
   startScope()
   startFonts()
@@ -53,7 +53,7 @@ export function stop(): void {
     stopGuides()
     stopStage()
     stopNodes()
-    stopFlowRunDetails()
+    stopFlowRunArtifacts()
     stopPlayhead()
     stopConfig()
     stopScope()
