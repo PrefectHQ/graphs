@@ -1,4 +1,5 @@
 import { Container } from 'pixi.js'
+import { DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
 import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
@@ -38,6 +39,7 @@ export async function flowRunArtifactsFactory() {
 
   function createContainer(): void {
     container = new Container()
+    container.zIndex = DEFAULT_ROOT_ARTIFACT_Z_INDEX
     application.stage.addChild(container)
   }
 
