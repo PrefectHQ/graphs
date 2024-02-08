@@ -12,6 +12,7 @@ export async function startFlowRunDetails(): Promise<void> {
   emitter.on('runDataCreated', (data) => render(data))
   emitter.on('runDataUpdated', (data) => render(data))
   emitter.on('configUpdated', () => render())
+  emitter.on('layoutSettingsUpdated', () => render())
 }
 
 export function stopFlowRunDetails(): void {

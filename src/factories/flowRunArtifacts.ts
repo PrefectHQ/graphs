@@ -3,11 +3,15 @@ import { DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
 import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
-import { waitForApplication } from '@/objects'
+import { waitForApplication, waitForViewport } from '@/objects'
+import { waitForConfig } from '@/objects/config'
+import { layout } from '@/objects/settings'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunArtifactsFactory() {
   const application = await waitForApplication()
+  const viewport = await waitForViewport()
+  const config = await waitForConfig()
 
   let container: Container | null = null
   let internalData: Artifact[] | null = null
@@ -24,6 +28,7 @@ export async function flowRunArtifactsFactory() {
 
     if (!container) {
       createContainer()
+      initTicker()
     }
 
     const promises: Promise<BoundsContainer>[] = []
@@ -33,14 +38,6 @@ export async function flowRunArtifactsFactory() {
     }
 
     await Promise.all(promises)
-
-    // TODO: Check collisions – account for different layouts
-  }
-
-  function createContainer(): void {
-    container = new Container()
-    container.zIndex = DEFAULT_ROOT_ARTIFACT_Z_INDEX
-    application.stage.addChild(container)
   }
 
   async function createArtifact(artifact: Artifact): Promise<BoundsContainer> {
@@ -55,6 +52,30 @@ export async function flowRunArtifactsFactory() {
     container!.addChild(factory.element)
 
     return factory.render()
+  }
+
+  function createContainer(): void {
+    container = new Container()
+    container.zIndex = DEFAULT_ROOT_ARTIFACT_Z_INDEX
+    application.stage.addChild(container)
+  }
+
+  function initTicker(): void {
+    application.ticker.add(ticker)
+  }
+
+  function ticker(): void {
+    if (!layout.isTemporal()) {
+      const { artifactContentGap } = config.styles
+      let x = viewport.scale._x + viewport.worldTransform.tx
+
+      for (const artifact of artifacts.values()) {
+        artifact.element.x = x
+        x += artifact.element.width + artifactContentGap
+      }
+    }
+
+    // TODO: Check collisions
   }
 
   return {
