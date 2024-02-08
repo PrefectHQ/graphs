@@ -15,7 +15,7 @@ export async function flowRunArtifactFactory(artifact: Artifact) {
   const viewport = await waitForViewport()
   let scale = await waitForScale()
 
-  const { element, render: renderArtifact } = await artifactFactory(artifact)
+  const { element, render: renderArtifact } = await artifactFactory(artifact, true)
 
   emitter.on('scaleUpdated', updated => scale = updated)
 
