@@ -1,6 +1,6 @@
 import isEqual from 'lodash.isequal'
 import { Viewport } from 'pixi-viewport'
-import { DEFAULT_NODES_CONTAINER_NAME } from '@/consts'
+import { DEFAULT_NODES_CONTAINER_NAME, DEFAULT_VIEWPORT_Z_INDEX } from '@/consts'
 import { ViewportDateRange } from '@/models/viewport'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
@@ -25,7 +25,7 @@ export async function startViewport(): Promise<void> {
   })
 
   // ensures the viewport is above the guides
-  viewport.zIndex = 1
+  viewport.zIndex = DEFAULT_VIEWPORT_Z_INDEX
 
   viewport
     .drag()
