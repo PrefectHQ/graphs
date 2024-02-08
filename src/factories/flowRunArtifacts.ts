@@ -16,10 +16,13 @@ export async function flowRunArtifactsFactory() {
   const viewport = await waitForViewport()
   const config = await waitForConfig()
 
+  const artifacts: Map<string, FlowRunArtifactFactory> = new Map()
+  const clusterNodes: ArtifactClusterFactory[] = []
+
   let container: Container | null = null
   let internalData: Artifact[] | null = null
-  const artifacts: Map<string, FlowRunArtifactFactory> = new Map()
-
+  let availableClusterNodes: ArtifactClusterFactory[] = []
+  let visibleItems: (FlowRunArtifactFactory | ArtifactClusterFactory)[] = []
   let nonTemporalAlignmentEngaged = false
 
   emitter.on('viewportDateRangeUpdated', () => {
@@ -82,7 +85,7 @@ export async function flowRunArtifactsFactory() {
 
     if (!layout.isTemporal()) {
       if (!nonTemporalAlignmentEngaged) {
-        // TODO: clear any clustering
+        clearClustering()
         alignNonTemporal()
         nonTemporalAlignmentEngaged = true
       }
@@ -106,13 +109,6 @@ export async function flowRunArtifactsFactory() {
     }
   }
 
-  /**
-   * Cluster checking logic
-   */
-  const clusterNodes: ArtifactClusterFactory[] = []
-  let availableClusterNodes: ArtifactClusterFactory[] = []
-  let visibleItems: (FlowRunArtifactFactory | ArtifactClusterFactory)[] = []
-
   const checkLayout = debounce(async () => {
     visibleItems = [...artifacts.values()]
     availableClusterNodes = [...clusterNodes]
@@ -132,9 +128,8 @@ export async function flowRunArtifactsFactory() {
     visibleItems.sort((itemA, itemB) => itemA.element.x - itemB.element.x)
 
     for (const item of visibleItems) {
-      item.element.visible = true
-
       const itemX = item.element.x
+      item.element.visible = true
 
       if (prevItem && lastEndX && itemX < lastEndX) {
         collisionItem = item
@@ -159,64 +154,56 @@ export async function flowRunArtifactsFactory() {
     prevItem: FlowRunArtifactFactory | ArtifactClusterFactory,
     currentItem: FlowRunArtifactFactory | ArtifactClusterFactory,
   ): Promise<void> {
-    let clusterNode: ArtifactClusterFactory | null = null
-    let ids = []
-    let middleDate: Date | undefined
+    const isPrevItemCluster = 'getCurrentData' in prevItem
+    const isCurrentCluster = 'getCurrentData' in currentItem
 
-    const isPrevItemAnArtifact = 'data' in prevItem
-    const isCurrentItemAnArtifact = 'data' in currentItem
+    const prevDate = isPrevItemCluster ? prevItem.getCurrentData()?.date : prevItem.data.created
+    const prevIds = isPrevItemCluster ? prevItem.getCurrentData()?.ids : [prevItem.data.id]
+    const currentDate = isCurrentCluster ? currentItem.getCurrentData()?.date : currentItem.data.created
+    const currentIds = isCurrentCluster ? currentItem.getCurrentData()?.ids : [currentItem.data.id]
 
-    if (isPrevItemAnArtifact && isCurrentItemAnArtifact) {
-      // both items are artifacts
-      ids = [prevItem.data.id, currentItem.data.id]
-      middleDate = new Date((prevItem.data.created.getTime() + currentItem.data.created.getTime()) / 2)
-
-      if (availableClusterNodes.length > 0) {
-        clusterNode = availableClusterNodes.pop()!
-        return
-      }
-
-      clusterNode = await artifactClusterFactory()
-      container!.addChild(clusterNode.element)
-      clusterNodes.push(clusterNode)
-    } else if (!isPrevItemAnArtifact && !isCurrentItemAnArtifact) {
-      // both items are clusters
-      const prevItemData = prevItem.getCurrentData()
-      const currentItemData = currentItem.getCurrentData()
-
-      if (!prevItemData || !currentItemData) {
-        console.error('flowRunArtifacts: visible cluster is missing data')
-        return
-      }
-
-      ids = [...prevItemData.ids, ...currentItemData.ids]
-      middleDate = new Date((prevItemData.date.getTime() + currentItemData.date.getTime()) / 2)
-      clusterNode = prevItem
-      availableClusterNodes.push(currentItem)
-    } else {
-      // one item is an artifact and the other is a cluster
-      const artifact = (isPrevItemAnArtifact ? prevItem : currentItem) as FlowRunArtifactFactory
-      const clusterNode = (isPrevItemAnArtifact ? currentItem : prevItem) as ArtifactClusterFactory
-
-      const clusterData = clusterNode.getCurrentData()
-
-      if (!clusterData) {
-        console.error('flowRunArtifacts: visible cluster is missing data')
-        return
-      }
-
-      ids = [...clusterData.ids, artifact.data.id]
-      middleDate = new Date((clusterData.date.getTime() + artifact.data.created.getTime()) / 2)
-    }
-
-    if (!clusterNode) {
-      console.error('flowRunArtifacts: no cluster node was found or created')
+    if (!prevDate || !currentDate || !prevIds || !currentIds) {
+      console.error('flowRunArtifacts: visible item is missing date or ID data')
       return
     }
 
-    clusterNode.render({ ids, date: middleDate })
+    let clusterNode: ArtifactClusterFactory
+
+    if (isPrevItemCluster) {
+      clusterNode = prevItem
+    } else if (isCurrentCluster) {
+      clusterNode = currentItem
+    } else {
+      clusterNode = await getClusterNode()
+    }
+
+    const ids = [...prevIds, ...currentIds]
+    const date = new Date((prevDate.getTime() + currentDate.getTime()) / 2)
+
+    clusterNode.render({ ids, date })
     visibleItems.push(clusterNode)
     checkCollisions()
+  }
+
+  async function getClusterNode(): Promise<ArtifactClusterFactory> {
+    if (availableClusterNodes.length > 0) {
+      return availableClusterNodes.pop()!
+    }
+
+    const newCluster = await artifactClusterFactory()
+    container!.addChild(newCluster.element)
+    clusterNodes.push(newCluster)
+
+    return newCluster
+  }
+
+  function clearClustering(): void {
+    for (const cluster of clusterNodes) {
+      cluster.render()
+    }
+    for (const artifact of artifacts.values()) {
+      artifact.element.visible = true
+    }
   }
 
   return {
