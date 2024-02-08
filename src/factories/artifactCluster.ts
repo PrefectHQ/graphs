@@ -24,8 +24,8 @@ export async function artifactClusterFactory() {
 
   const element = new Container()
   const content = new Container()
-  const { element: icon, render: renderIcon } = await iconFactory()
-  const { element: label, render: renderLabel } = await nodeLabelFactory()
+  const { element: icon, render: renderIcon } = await iconFactory(true)
+  const { element: label, render: renderLabel } = await nodeLabelFactory(true)
   const { element: bar, render: renderBar } = await barFactory()
 
   let currentDate: Date | null = null
@@ -53,6 +53,9 @@ export async function artifactClusterFactory() {
 
     const { ids, date } = props
 
+    currentDate = date
+    currentIds = ids
+
     await Promise.all([
       renderArtifactIcon(),
       renderLabelText(ids.length),
@@ -60,9 +63,9 @@ export async function artifactClusterFactory() {
 
     await renderBg()
 
-    currentDate = date
-    currentIds = ids
     element.visible = true
+
+    updatePosition()
 
     return ids
   }
