@@ -1,6 +1,6 @@
 {
   "start_time": "2023-09-27T15:50:39.425118+00:00",
-  "end_time": "2023-09-27T15:51:11.922153+00:00",
+  "end_time": "2023-09-27T15:51:08.999871+00:00",
   "root_node_ids": [
     "ea9d7c12-7418-4ea9-b33d-189f22f737af",
     "7d93e182-e17f-40a2-a0c3-784d1d0e7ff5",
@@ -18,7 +18,7 @@
   "artifacts": [
     {
       "id": "ae8aab85-b3bd-44b7-90d0-8afc95bf1ba3",
-      "created": "2023-09-27T15:51:11.922153+00:00",
+      "created": "2023-09-27T15:51:08.999871+00:00",
       "key": "variable-data-link",
       "type": "markdown",
       "isLatest": "true"
