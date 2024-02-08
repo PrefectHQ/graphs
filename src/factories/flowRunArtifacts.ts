@@ -25,6 +25,17 @@ export async function flowRunArtifactsFactory() {
   let visibleItems: (FlowRunArtifactFactory | ArtifactClusterFactory)[] = []
   let nonTemporalAlignmentEngaged = false
 
+  const checkLayout = debounce(async () => {
+    visibleItems = [...artifacts.values()]
+    availableClusterNodes = [...clusterNodes]
+
+    await checkCollisions()
+
+    for (const cluster of availableClusterNodes) {
+      cluster.render()
+    }
+  }, DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE)
+
   emitter.on('viewportDateRangeUpdated', () => {
     if (container && layout.isTemporal()) {
       checkLayout()
@@ -108,17 +119,6 @@ export async function flowRunArtifactsFactory() {
       x += artifact.element.width + artifactContentGap
     }
   }
-
-  const checkLayout = debounce(async () => {
-    visibleItems = [...artifacts.values()]
-    availableClusterNodes = [...clusterNodes]
-
-    await checkCollisions()
-
-    for (const cluster of availableClusterNodes) {
-      cluster.render()
-    }
-  }, DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE)
 
   async function checkCollisions(): Promise<void> {
     let lastEndX
