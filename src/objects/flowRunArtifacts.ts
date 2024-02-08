@@ -2,7 +2,7 @@ import { flowRunArtifactsFactory } from '@/factories/flowRunArtifacts'
 import { RunGraphData } from '@/models/RunGraph'
 import { emitter } from '@/objects/events'
 
-export async function startFlowRunDetails(): Promise<void> {
+export async function startFlowRunArtifacts(): Promise<void> {
   const { render: renderArtifacts } = await flowRunArtifactsFactory()
 
   function render(newData?: RunGraphData): void {
@@ -15,6 +15,6 @@ export async function startFlowRunDetails(): Promise<void> {
   emitter.on('layoutSettingsUpdated', () => render())
 }
 
-export function stopFlowRunDetails(): void {
+export function stopFlowRunArtifacts(): void {
   // do nothing
 }
