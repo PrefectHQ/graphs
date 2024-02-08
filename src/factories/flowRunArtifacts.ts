@@ -1,10 +1,12 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
+import { artifactClusterFactory } from '@/factories/artifactCluster'
 import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
+import { emitter } from '@/objects/events'
 import { layout } from '@/objects/settings'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -69,13 +71,64 @@ export async function flowRunArtifactsFactory() {
       const { artifactContentGap } = config.styles
       let x = viewport.scale._x + viewport.worldTransform.tx
 
+      // TODO: clear any clustering
+
       for (const artifact of artifacts.values()) {
         artifact.element.x = x
         x += artifact.element.width + artifactContentGap
       }
     }
+  }
 
-    // TODO: Check collisions
+  // TODO: WIP
+  const clusteredArtifacts: FlowRunArtifactFactory[] = []
+
+  emitter.on('viewportDateRangeUpdated', () => {
+    if (container && layout.isTemporal()) {
+      resolveCollisions()
+    }
+  })
+
+  // TODO: debounce resolveOverlaps
+  function resolveCollisions(): void {
+    clusteredArtifacts.length = 0
+    checkCollisions()
+  }
+
+  function checkCollisions(): void {
+    let lastEndX
+    let prevArtifact
+
+    for (const artifact of artifacts.values()) {
+      if (clusteredArtifacts.includes(artifact)) {
+        artifact.element.visible = false
+        continue
+      }
+
+      artifact.element.visible = true
+
+      const artifactX = artifact.element.x
+      if (lastEndX && artifactX < lastEndX && prevArtifact) {
+        // collision
+        handleCollision(prevArtifact, artifact)
+        break
+      }
+      prevArtifact = artifact
+      lastEndX = artifactX + artifact.element.width
+    }
+  }
+
+  function handleCollision(prevArtifact: FlowRunArtifactFactory, artifact: FlowRunArtifactFactory): void {
+    clusteredArtifacts.push(prevArtifact, artifact)
+    // create cluster node
+    makeCluster(prevArtifact, artifact)
+
+    checkCollisions()
+  }
+
+  async function makeCluster(prevArtifact: FlowRunArtifactFactory, artifact: FlowRunArtifactFactory): Promise<void> {
+    // TODO: continue
+    const cluster = await artifactClusterFactory()
   }
 
   return {
