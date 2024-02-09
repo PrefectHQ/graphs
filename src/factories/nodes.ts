@@ -10,7 +10,7 @@ import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse }
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
-import { getSelected } from '@/objects/selection'
+import { getSelectedRunGraphNode } from '@/objects/selection'
 import { getHorizontalColumnSize, layout, waitForSettings } from '@/objects/settings'
 import { exhaustive } from '@/utilities/exhaustive'
 import { IRunGraphWorker, WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
@@ -60,7 +60,7 @@ export async function nodesContainerFactory() {
     highlightSelectedNode()
   })
 
-  emitter.on('nodeSelected', () => {
+  emitter.on('itemSelected', () => {
     highlightSelectedNode()
   })
 
@@ -342,7 +342,7 @@ export async function nodesContainerFactory() {
 
   async function highlightSelectedNode(): Promise<void> {
     const settings = await waitForSettings()
-    const selected = getSelected()
+    const selected = getSelectedRunGraphNode()
 
     if (!selected || settings.disableEdges) {
       highlightPath([])

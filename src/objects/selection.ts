@@ -1,14 +1,15 @@
-import { NodeSelection } from '@/models/selection'
+import { RunGraphNodeKind, runGraphNodeKinds } from '@/models'
+import { GraphItemSelection, NodeSelection, SelectableItem } from '@/models/selection'
 import { emitter } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
 
-let selected: NodeSelection | null = null
+let selected: GraphItemSelection | null = null
 let selectionDisabled: boolean = false
 
 export async function startSelection(): Promise<void> {
   const viewport = await waitForViewport()
 
-  viewport.on('click', () => selectNode(null))
+  viewport.on('click', () => selectItem(null))
 
   // these drag events are to prevent selection from being cleared while dragging
   viewport.on('drag-start', () => {
@@ -29,31 +30,37 @@ export function stopSelection(): void {
   selectionDisabled = false
 }
 
-export function selectNode(node: NodeSelection | null): void {
+export function selectItem(item: GraphItemSelection | null): void {
   if (selectionDisabled) {
     return
   }
 
-  if (isSelected(node)) {
+  if (isSelected(item)) {
     return
   }
 
-  selected = node
+  selected = item
 
-  if (node === null) {
-    emitter.emit('nodeSelected', null)
+  if (item === null) {
+    emitter.emit('itemSelected', null)
     return
   }
 
-  const { id, kind } = node
-
-  emitter.emit('nodeSelected', { id, kind })
+  emitter.emit('itemSelected', item)
 }
 
-export function isSelected(selection: NodeSelection | null): boolean {
-  return selection?.id === selected?.id
+export function isSelected(item: GraphItemSelection | SelectableItem | null): boolean {
+  return item?.id === selected?.id
 }
 
-export function getSelected(): NodeSelection | null {
+export function getSelectedRunGraphNode(): NodeSelection | null {
+  if (!!selected && runGraphNodeKinds.includes(selected.kind as RunGraphNodeKind)) {
+    return selected as NodeSelection
+  }
+
+  return null
+}
+
+export function getSelected(): GraphItemSelection | null {
   return selected
 }

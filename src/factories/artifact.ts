@@ -1,9 +1,11 @@
 import { BitmapText, Container } from 'pixi.js'
-import { barFactory } from '@/factories/bar'
+import { artifactBarFactory } from '@/factories/artifactBar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
 import { Artifact, artifactTypeIconMap } from '@/models/artifact'
 import { waitForConfig } from '@/objects/config'
+import { emitter } from '@/objects/events'
+import { isSelected, selectItem } from '@/objects/selection'
 
 export type ArtifactFactory = Awaited<ReturnType<typeof artifactFactory>>
 
@@ -14,13 +16,32 @@ export async function artifactFactory(artifact: Artifact) {
   const config = await waitForConfig()
   const { element: icon, render: renderIcon } = await iconFactory()
   const { element: label, render: renderLabel } = await nodeLabelFactory()
-  const { element: bar, render: renderBar } = await barFactory()
+  const { element: bar, render: renderBar } = await artifactBarFactory(artifact)
+
+  let isArtifactSelected = false
 
   element.addChild(bar)
 
   content.addChild(icon)
   content.addChild(label)
   element.addChild(content)
+
+  element.eventMode = 'static'
+  element.cursor = 'pointer'
+
+  element.on('click', event => {
+    event.stopPropagation()
+    selectItem({ kind: 'artifact', id: artifact.id })
+  })
+
+  emitter.on('itemSelected', () => {
+    const isCurrentlySelected = isSelected(artifact)
+
+    if (isCurrentlySelected !== isArtifactSelected) {
+      isArtifactSelected = isCurrentlySelected
+      render()
+    }
+  })
 
   async function render(): Promise<Container> {
     await Promise.all([
@@ -82,17 +103,11 @@ export async function artifactFactory(artifact: Artifact) {
       artifactPaddingLeft,
       artifactPaddingRight,
       artifactPaddingY,
-      artifactBgColor,
-      artifactBorderRadius,
     } = config.styles
 
     const barStyle = {
       width: content.width + artifactPaddingLeft + artifactPaddingRight,
       height: content.height + artifactPaddingY * 2,
-      background: artifactBgColor,
-      radius: artifactBorderRadius,
-      capLeft: true,
-      capRight: true,
     }
 
     return await renderBar(barStyle)

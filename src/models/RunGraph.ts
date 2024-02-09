@@ -1,6 +1,6 @@
 import { ColorSource } from 'pixi.js'
 import { Artifact } from '@/models'
-import { NodeSelection } from '@/models/selection'
+import { GraphItemSelection } from '@/models/selection'
 import { StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
 
@@ -8,7 +8,7 @@ export type RunGraphProps = {
   config: RunGraphConfig,
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
-  selected?: NodeSelection | null,
+  selected?: GraphItemSelection | null,
 }
 
 export type RunGraphData = {
@@ -56,6 +56,10 @@ export type RunGraphStyles = {
   columnGap?: number,
   textDefault?: ColorSource,
   textInverse?: ColorSource,
+  selectedBorderColor?: ColorSource,
+  selectedBorderWidth?: number,
+  selectedBorderOffset?: number,
+  selectedBorderRadius?: number,
   nodesPadding?: number,
   nodeHeight?: number,
   nodePadding?: number,
@@ -65,7 +69,6 @@ export type RunGraphStyles = {
   nodeToggleSize?: number,
   nodeToggleBorderRadius?: number,
   nodeToggleBorderColor?: ColorSource,
-  nodeSelectedBorderColor?: ColorSource,
   nodeUnselectedAlpha?: number,
   edgeColor?: ColorSource,
   artifactsGap?: number,
