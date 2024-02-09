@@ -38,13 +38,13 @@ export async function artifactFactory(artifact: Artifact) {
     const {
       artifactIconSize,
       artifactIconColor,
-      artifactPaddingX,
+      artifactPaddingLeft,
       artifactPaddingY,
     } = config.styles
 
     const newIcon = await renderIcon(iconName)
 
-    newIcon.position = { x: artifactPaddingX, y: artifactPaddingY }
+    newIcon.position = { x: artifactPaddingLeft, y: artifactPaddingY }
     newIcon.width = artifactIconSize
     newIcon.height = artifactIconSize
     newIcon.tint = artifactIconColor
@@ -60,14 +60,14 @@ export async function artifactFactory(artifact: Artifact) {
     await renderLabel(artifact.key)
 
     const {
-      artifactPaddingX,
+      artifactPaddingLeft,
       artifactPaddingY,
       artifactTextColor,
       artifactIconSize,
       artifactContentGap,
     } = config.styles
 
-    const x = artifactPaddingX + artifactIconSize + artifactContentGap
+    const x = artifactPaddingLeft + artifactIconSize + artifactContentGap
     const y = artifactPaddingY
 
     label.tint = artifactTextColor
@@ -79,14 +79,15 @@ export async function artifactFactory(artifact: Artifact) {
 
   async function renderBg(): Promise<Container> {
     const {
-      artifactPaddingX,
+      artifactPaddingLeft,
+      artifactPaddingRight,
       artifactPaddingY,
       artifactBgColor,
       artifactBorderRadius,
     } = config.styles
 
     const barStyle = {
-      width: content.width + artifactPaddingX * 2,
+      width: content.width + artifactPaddingLeft + artifactPaddingRight,
       height: content.height + artifactPaddingY * 2,
       background: artifactBgColor,
       radius: artifactBorderRadius,
