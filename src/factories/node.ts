@@ -40,7 +40,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   container.on('click', event => {
     event.stopPropagation()
-    selectItem(internalNode)
+    selectItem({ kind: internalNode.kind, id: internalNode.id })
   })
 
   if (!node.end_time) {
