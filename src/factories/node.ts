@@ -12,7 +12,7 @@ import { waitForApplication } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
-import { isSelected, selectNode } from '@/objects/selection'
+import { isSelected, selectItem } from '@/objects/selection'
 import { layout } from '@/objects/settings'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
@@ -40,14 +40,14 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   container.on('click', event => {
     event.stopPropagation()
-    selectNode(internalNode)
+    selectItem(internalNode)
   })
 
   if (!node.end_time) {
     startTicking()
   }
 
-  emitter.on('nodeSelected', () => {
+  emitter.on('itemSelected', () => {
     const isCurrentlySelected = isSelected(node)
 
     if (isCurrentlySelected !== nodeIsSelected) {
