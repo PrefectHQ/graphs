@@ -5,7 +5,7 @@
     <p-drawer v-model:open="artifactDrawerOpen" placement="right" class="p-background p-4">
       <span class="text-sm text-subdued">Inspecting</span>
       <h2 class="mb-2">
-        {{ selected?.id }}
+        {{ selected && 'id' in selected ? selected.id : selected?.ids.join(', ') }}
       </h2>
       <span class="text-sm text-subdued">Stuff</span>
       <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque recusandae ad, nam hic ipsam est dolor cumque optio nostrum quaerat?</p>
