@@ -40,6 +40,16 @@ export async function startViewport(): Promise<void> {
       minWidth: stage.clientWidth / 2,
     })
 
+  // Both the `moved` and `moved-end` events are required for a reliable `viewportMoved` event call that
+  // includes the final positions for both scroll wheel and touch pad interactions.
+  viewport
+    .on('moved', () => {
+      emitter.emit('viewportMoved', null)
+    })
+    .on('moved-end', () => {
+      emitter.emit('viewportMoved', null)
+    })
+
   application.stage.addChild(viewport)
 
   emitter.emit('viewportCreated', viewport)

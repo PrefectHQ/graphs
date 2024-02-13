@@ -18,10 +18,7 @@ export async function flowRunArtifactFactory(artifact: Artifact) {
   const { element, render: renderArtifact } = await artifactFactory(artifact, { cullAtZoomThreshold: false })
 
   emitter.on('scaleUpdated', updated => scale = updated)
-
-  application.ticker.add(() => {
-    updatePosition()
-  })
+  emitter.on('viewportMoved', () => updatePosition())
 
   async function render(): Promise<Container> {
     await renderArtifact()
@@ -30,12 +27,14 @@ export async function flowRunArtifactFactory(artifact: Artifact) {
   }
 
   function updatePosition(): void {
-    if (layout.isTemporal()) {
-      const x = scale(artifact.created) * viewport.scale._x + viewport.worldTransform.tx
-      element.position.x = x - element.width / 2
+    if (!layout.isTemporal()) {
+      return
     }
 
-    element.position.y = application.screen.height - element.height - DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET
+    const x = scale(artifact.created) * viewport.scale._x + viewport.worldTransform.tx
+    const y = application.screen.height - element.height - DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET
+
+    element.position.set(x - element.width / 2, y)
   }
 
   return {
