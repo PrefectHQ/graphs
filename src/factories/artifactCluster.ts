@@ -24,8 +24,8 @@ export async function artifactClusterFactory() {
 
   const element = new Container()
   const content = new Container()
-  const { element: icon, render: renderIcon } = await iconFactory(true)
-  const { element: label, render: renderLabel } = await nodeLabelFactory(true)
+  const { element: icon, render: renderIcon } = await iconFactory({ cullAtZoomThreshold: false })
+  const { element: label, render: renderLabel } = await nodeLabelFactory({ cullAtZoomThreshold: false })
   const { element: bar, render: renderBar } = await barFactory()
 
   let currentDate: Date | null = null
@@ -74,13 +74,13 @@ export async function artifactClusterFactory() {
     const {
       artifactIconSize,
       artifactIconColor,
-      artifactPaddingX,
+      artifactPaddingLeft,
       artifactPaddingY,
     } = config.styles
 
     const newIcon = await renderIcon('Artifact')
 
-    newIcon.position = { x: artifactPaddingX, y: artifactPaddingY }
+    newIcon.position = { x: artifactPaddingLeft, y: artifactPaddingY }
     newIcon.width = artifactIconSize
     newIcon.height = artifactIconSize
     newIcon.tint = artifactIconColor
@@ -92,14 +92,14 @@ export async function artifactClusterFactory() {
     await renderLabel(count.toString())
 
     const {
-      artifactPaddingX,
+      artifactPaddingLeft,
       artifactPaddingY,
       artifactTextColor,
       artifactIconSize,
       artifactContentGap,
     } = config.styles
 
-    const x = artifactPaddingX + artifactIconSize + artifactContentGap
+    const x = artifactPaddingLeft + artifactIconSize + artifactContentGap
     const y = artifactPaddingY
 
     label.tint = artifactTextColor
@@ -111,14 +111,15 @@ export async function artifactClusterFactory() {
 
   async function renderBg(): Promise<Container> {
     const {
-      artifactPaddingX,
+      artifactPaddingLeft,
+      artifactPaddingRight,
       artifactPaddingY,
       artifactBgColor,
       artifactBorderRadius,
     } = config.styles
 
     const barStyle = {
-      width: content.width + artifactPaddingX * 2,
+      width: artifactPaddingLeft + content.width + artifactPaddingRight,
       height: content.height + artifactPaddingY * 2,
       background: artifactBgColor,
       radius: artifactBorderRadius,
