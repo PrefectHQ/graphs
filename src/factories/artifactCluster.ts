@@ -3,16 +3,23 @@ import { DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET } from '@/consts'
 import { barFactory } from '@/factories/bar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
+import { selectedBorderFactory } from '@/factories/selectedBorder'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
+import { isSelected, selectItem } from '@/objects/selection'
 
 export type ArtifactClusterFactory = Awaited<ReturnType<typeof artifactClusterFactory>>
 
 type ArtifactClusterFactoryRenderProps = {
   ids: string[],
   date: Date,
+}
+
+type ArtifactClusterFactoryRenderBgProps = {
+  width: number,
+  height: number,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -27,18 +34,37 @@ export async function artifactClusterFactory() {
   const { element: icon, render: renderIcon } = await iconFactory({ cullAtZoomThreshold: false })
   const { element: label, render: renderLabel } = await nodeLabelFactory({ cullAtZoomThreshold: false })
   const { element: bar, render: renderBar } = await barFactory()
+  const { element: border, render: renderBorder } = await selectedBorderFactory()
 
   let currentDate: Date | null = null
   let currentIds: string[] = []
+  let isClusterSelected = false
 
   element.addChild(bar)
+  element.addChild(border)
 
   content.addChild(icon)
   content.addChild(label)
   element.addChild(content)
 
+  element.eventMode = 'static'
+  element.cursor = 'pointer'
+
+  element.on('click', event => {
+    event.stopPropagation()
+    selectItem({ kind: 'artifactCluster', ids: currentIds })
+  })
+
   emitter.on('scaleUpdated', updated => scale = updated)
   emitter.on('viewportMoved', () => updatePosition())
+  emitter.on('itemSelected', () => {
+    const isCurrentlySelected = isSelected(currentIds)
+
+    if (isCurrentlySelected !== isClusterSelected && currentDate) {
+      isClusterSelected = isCurrentlySelected
+      render({ ids: currentIds, date: currentDate })
+    }
+  })
 
   async function render(props?: ArtifactClusterFactoryRenderProps): Promise<string[]> {
     if (!props) {
@@ -49,6 +75,11 @@ export async function artifactClusterFactory() {
     }
 
     const { ids, date } = props
+    const {
+      artifactPaddingLeft,
+      artifactPaddingRight,
+      artifactPaddingY,
+    } = config.styles
 
     currentDate = date
     currentIds = ids
@@ -58,11 +89,17 @@ export async function artifactClusterFactory() {
       renderLabelText(ids.length),
     ])
 
-    await renderBg()
+    const width = artifactPaddingLeft + content.width + artifactPaddingRight
+    const height = content.height + artifactPaddingY * 2
 
-    element.visible = true
+    await Promise.all([
+      renderBg({ width, height }),
+      renderBorder({ item: currentIds, width, height }),
+    ])
 
     updatePosition()
+
+    element.visible = true
 
     return ids
   }
@@ -106,18 +143,15 @@ export async function artifactClusterFactory() {
     return label
   }
 
-  async function renderBg(): Promise<Container> {
+  async function renderBg({ width, height }: ArtifactClusterFactoryRenderBgProps): Promise<Container> {
     const {
-      artifactPaddingLeft,
-      artifactPaddingRight,
-      artifactPaddingY,
       artifactBgColor,
       artifactBorderRadius,
     } = config.styles
 
     const barStyle = {
-      width: artifactPaddingLeft + content.width + artifactPaddingRight,
-      height: content.height + artifactPaddingY * 2,
+      width,
+      height,
       background: artifactBgColor,
       radius: artifactBorderRadius,
       capLeft: true,
@@ -132,11 +166,18 @@ export async function artifactClusterFactory() {
       return
     }
 
-    const xPos = scale(currentDate) * viewport.scale._x + viewport.worldTransform.tx
-    const x = xPos - element.width / 2
-    const y = application.screen.height - element.height - DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET
+    let selectedOffset = 0
 
-    element.position.set(x, y)
+    if (isClusterSelected) {
+      const { selectedBorderOffset, selectedBorderWidth } = config.styles
+      selectedOffset = selectedBorderOffset + selectedBorderWidth * 2
+    }
+
+    const x = scale(currentDate) * viewport.scale._x + viewport.worldTransform.tx
+    const centeredX = x - (element.width - selectedOffset) / 2
+    const y = application.screen.height - (element.height - selectedOffset) - DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET
+
+    element.position.set(centeredX, y)
   }
 
   function getCurrentData(): ArtifactClusterFactoryRenderProps | null {
