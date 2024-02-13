@@ -9,6 +9,7 @@ export type RunGraphProps = {
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
   selected?: GraphItemSelection | null,
+  hasArtifacts?: boolean,
 }
 
 export type RunGraphData = {

@@ -1,6 +1,12 @@
 <template>
   <p-layout-default class="run-graph-demo">
-    <RunGraph v-model:viewport="visibleDateRange" v-model:selected="selected" :config="config" class="run-graph-demo__graph p-background" />
+    <RunGraph
+      v-model:viewport="visibleDateRange"
+      v-model:selected="selected"
+      has-artifacts
+      :config="config"
+      class="run-graph-demo__graph p-background"
+    />
     {{ visibleDateRange }} {{ selected }}
     <p-drawer v-model:open="artifactDrawerOpen" placement="right" class="p-background p-4">
       <span class="text-sm text-subdued">Inspecting</span>

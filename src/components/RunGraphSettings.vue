@@ -35,7 +35,9 @@
       </template>
       <p-divider />
       <p-checkbox v-model="hideEdges" label="Hide dependency arrows" />
-      <!-- <p-checkbox v-model="hideArtifacts" label="Hide artifacts" /> -->
+      <template v-if="hasArtifacts">
+        <p-checkbox v-model="hideArtifacts" label="Hide artifacts" />
+      </template>
     </p-overflow-menu>
   </p-pop-over>
 </template>
@@ -48,6 +50,10 @@
   import { HorizontalMode, VerticalMode } from '@/models/layout'
   import { layout, resetHorizontalScaleMultiplier, setDisabledEdges, setDisabledArtifacts, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
   import { eventTargetIsInput } from '@/utilities/keyboard'
+
+  defineProps<{
+    hasArtifacts: boolean,
+  }>()
 
   type Option<T extends string> = {
     value: T,
