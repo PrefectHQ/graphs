@@ -20,6 +20,7 @@ type Events = {
   stageUpdated: HTMLDivElement,
   viewportCreated: Viewport,
   viewportDateRangeUpdated: ViewportDateRange,
+  viewportMoved: null,
   configCreated: RequiredGraphConfig,
   configUpdated: RequiredGraphConfig,
   scopeCreated: EffectScope,

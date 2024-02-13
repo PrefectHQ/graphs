@@ -25,22 +25,7 @@ export async function flowRunArtifactsFactory() {
   let visibleItems: (FlowRunArtifactFactory | ArtifactClusterFactory)[] = []
   let nonTemporalAlignmentEngaged = false
 
-  const checkLayout = debounce(async () => {
-    visibleItems = [...artifacts.values()]
-    availableClusterNodes = [...clusterNodes]
-
-    await checkCollisions()
-
-    for (const cluster of availableClusterNodes) {
-      cluster.render()
-    }
-  }, DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE)
-
-  emitter.on('viewportDateRangeUpdated', () => {
-    if (container && layout.isTemporal()) {
-      checkLayout()
-    }
-  })
+  emitter.on('viewportMoved', () => update())
 
   async function render(newData?: Artifact[]): Promise<void> {
     if (newData) {
@@ -53,7 +38,6 @@ export async function flowRunArtifactsFactory() {
 
     if (!container) {
       createContainer()
-      initTicker()
     }
 
     const promises: Promise<BoundsContainer>[] = []
@@ -85,11 +69,7 @@ export async function flowRunArtifactsFactory() {
     application.stage.addChild(container)
   }
 
-  function initTicker(): void {
-    application.ticker.add(ticker)
-  }
-
-  function ticker(): void {
+  function update(): void {
     if (!container) {
       return
     }
@@ -107,7 +87,19 @@ export async function flowRunArtifactsFactory() {
 
     nonTemporalAlignmentEngaged = false
     container.position.x = 0
+    checkLayout()
   }
+
+  const checkLayout = debounce(async () => {
+    visibleItems = [...artifacts.values()]
+    availableClusterNodes = [...clusterNodes]
+
+    await checkCollisions()
+
+    for (const cluster of availableClusterNodes) {
+      cluster.render()
+    }
+  }, DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE)
 
   function alignNonTemporal(): void {
     const { artifactContentGap } = config.styles
