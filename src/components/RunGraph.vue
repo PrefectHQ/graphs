@@ -4,7 +4,7 @@
     <div class="run-graph__actions">
       <p-button title="Recenter graph (c)" icon="Target" flat @click="center" />
       <p-button title="Toggle fullscreen (f)" icon="ArrowsPointingOutIcon" flat @click="toggleFullscreen" />
-      <RunGraphSettings />
+      <RunGraphSettings :has-artifacts="props.hasArtifacts" />
     </div>
   </div>
 </template>
@@ -26,6 +26,7 @@
   const props = withDefaults(defineProps<RunGraphProps>(), {
     fullscreen: null,
     selected: null,
+    hasArtifacts: false,
   })
 
   const emit = defineEmits<{
