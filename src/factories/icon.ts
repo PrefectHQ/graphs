@@ -3,12 +3,16 @@ import { IconName } from '@/models/icon'
 import { waitForIconCull } from '@/objects/culling'
 import { getIconTexture } from '@/textures/icon'
 
+type IconFactoryOptions = {
+  cullAtZoomThreshold?: boolean,
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function iconFactory(disableCulling?: boolean) {
+export async function iconFactory({ cullAtZoomThreshold = true }: IconFactoryOptions = {}) {
   const cull = await waitForIconCull()
   const element = new Sprite()
 
-  if (!disableCulling) {
+  if (cullAtZoomThreshold) {
     cull.add(element)
   }
 
