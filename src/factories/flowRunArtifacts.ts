@@ -8,7 +8,7 @@ import { BoundsContainer } from '@/models/boundsContainer'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
-import { layout } from '@/objects/settings'
+import { layout, waitForSettings } from '@/objects/settings'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunArtifactsFactory() {
@@ -21,6 +21,7 @@ export async function flowRunArtifactsFactory() {
 
   let container: Container | null = null
   let internalData: Artifact[] | null = null
+  let isArtifactsDisabled = false
   let availableClusterNodes: ArtifactClusterFactory[] = []
   let visibleItems: (FlowRunArtifactFactory | ArtifactClusterFactory)[] = []
   let nonTemporalAlignmentEngaged = false
@@ -28,6 +29,18 @@ export async function flowRunArtifactsFactory() {
   emitter.on('viewportMoved', () => update())
 
   async function render(newData?: Artifact[]): Promise<void> {
+    const settings = await waitForSettings()
+
+    isArtifactsDisabled = settings.disableArtifacts
+
+    if (container) {
+      container.visible = !isArtifactsDisabled
+    }
+
+    if (isArtifactsDisabled) {
+      return
+    }
+
     if (newData) {
       internalData = newData
     }
@@ -70,7 +83,7 @@ export async function flowRunArtifactsFactory() {
   }
 
   function update(): void {
-    if (!container) {
+    if (isArtifactsDisabled || !container) {
       return
     }
 

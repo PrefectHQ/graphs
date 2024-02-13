@@ -15,6 +15,7 @@ export type LayoutSettings = {
   disableEdges: boolean,
   disableAnimations: boolean,
   disableGuides: boolean,
+  disableArtifacts: boolean,
   isTemporal: () => boolean,
   isDependency: () => boolean,
   isWaterfall: () => boolean,
