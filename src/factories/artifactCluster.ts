@@ -9,6 +9,7 @@ import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { isSelected, selectItem } from '@/objects/selection'
+import { waitForSettings } from '@/objects/settings'
 
 export type ArtifactClusterFactory = Awaited<ReturnType<typeof artifactClusterFactory>>
 
@@ -27,6 +28,7 @@ export async function artifactClusterFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
+  const settings = await waitForSettings()
   let scale = await waitForScale()
 
   const element = new Container()
@@ -162,7 +164,7 @@ export async function artifactClusterFactory() {
   }
 
   function updatePosition(): void {
-    if (!currentDate) {
+    if (settings.disableArtifacts || !currentDate) {
       return
     }
 
