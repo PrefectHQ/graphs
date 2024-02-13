@@ -1,8 +1,8 @@
 import { RunGraphNode, Artifact } from '@/models'
 
 export type NodeSelection = {
-  id: string,
   kind: RunGraphNode['kind'],
+  id: string,
 }
 
 export type ArtifactSelection = {
@@ -10,6 +10,14 @@ export type ArtifactSelection = {
   id: string,
 }
 
-export type GraphItemSelection = NodeSelection | ArtifactSelection
+export type ArtifactClusterSelection = {
+  kind: 'artifactCluster',
+  ids: string[],
+}
 
-export type SelectableItem = RunGraphNode | Artifact
+export type GraphItemSelection =
+  | NodeSelection
+  | ArtifactSelection
+  | ArtifactClusterSelection
+
+export type SelectableItem = RunGraphNode | Artifact | string[]
