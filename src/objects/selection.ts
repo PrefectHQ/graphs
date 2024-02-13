@@ -50,7 +50,23 @@ export function selectItem(item: GraphItemSelection | null): void {
 }
 
 export function isSelected(item: GraphItemSelection | SelectableItem | null): boolean {
-  return item?.id === selected?.id
+  if (item === null || selected === null) {
+    return false
+  }
+
+  if (Array.isArray(item) && 'ids' in selected) {
+    return item.length === selected.ids.length && selected.ids.every(id => item.includes(id))
+  }
+
+  if ('ids' in item && 'ids' in selected) {
+    return item.ids.length === selected.ids.length && selected.ids.every(id => item.ids.includes(id))
+  }
+
+  if ('id' in item && 'id' in selected) {
+    return item.id === selected.id
+  }
+
+  return false
 }
 
 export function getSelectedRunGraphNode(): NodeSelection | null {
