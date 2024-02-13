@@ -1,3 +1,4 @@
+export const DEFAULT_VIEWPORT_Z_INDEX = 1
 export const DEFAULT_NODES_CONTAINER_NAME = 'nodes-container'
 export const DEFAULT_NODE_CONTAINER_NAME = 'node-container'
 export const DEFAULT_EDGE_CONTAINER_NAME = 'edge-container'
@@ -16,3 +17,6 @@ export const DEFAULT_HORIZONTAL_SCALE_MULTIPLIER = 0.25
 export const DEFAULT_HORIZONTAL_SCALE = 1
 export const DEFAULT_GUIDES_COUNT = 30
 export const DEFAULT_GUIDES_MIN_GAP = 260
+export const DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET = 10
+export const DEFAULT_ROOT_ARTIFACT_Z_INDEX = 2
+export const DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE = 100

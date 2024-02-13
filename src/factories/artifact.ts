@@ -9,13 +9,18 @@ import { isSelected, selectItem } from '@/objects/selection'
 
 export type ArtifactFactory = Awaited<ReturnType<typeof artifactFactory>>
 
+type ArtifactFactoryOptions = {
+  cullAtZoomThreshold?: boolean,
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function artifactFactory(artifact: Artifact) {
+export async function artifactFactory(artifact: Artifact, { cullAtZoomThreshold = true }: ArtifactFactoryOptions = {}) {
   const element = new Container()
   const content = new Container()
   const config = await waitForConfig()
-  const { element: icon, render: renderIcon } = await iconFactory()
-  const { element: label, render: renderLabel } = await nodeLabelFactory()
+
+  const { element: icon, render: renderIcon } = await iconFactory({ cullAtZoomThreshold })
+  const { element: label, render: renderLabel } = await nodeLabelFactory({ cullAtZoomThreshold })
   const { element: bar, render: renderBar } = await artifactBarFactory(artifact)
 
   let isArtifactSelected = false
