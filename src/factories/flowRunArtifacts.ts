@@ -15,13 +15,13 @@ export async function flowRunArtifactsFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
+  const settings = await waitForSettings()
 
   const artifacts: Map<string, FlowRunArtifactFactory> = new Map()
   const clusterNodes: ArtifactClusterFactory[] = []
 
   let container: Container | null = null
   let internalData: Artifact[] | null = null
-  let isArtifactsDisabled = false
   let availableClusterNodes: ArtifactClusterFactory[] = []
   let visibleItems: (FlowRunArtifactFactory | ArtifactClusterFactory)[] = []
   let nonTemporalAlignmentEngaged = false
@@ -29,15 +29,11 @@ export async function flowRunArtifactsFactory() {
   emitter.on('viewportMoved', () => update())
 
   async function render(newData?: Artifact[]): Promise<void> {
-    const settings = await waitForSettings()
-
-    isArtifactsDisabled = settings.disableArtifacts
-
     if (container) {
-      container.visible = !isArtifactsDisabled
+      container.visible = !settings.disableArtifacts
     }
 
-    if (isArtifactsDisabled) {
+    if (settings.disableArtifacts) {
       return
     }
 
@@ -83,7 +79,7 @@ export async function flowRunArtifactsFactory() {
   }
 
   function update(): void {
-    if (isArtifactsDisabled || !container) {
+    if (!container || settings.disableArtifacts) {
       return
     }
 
