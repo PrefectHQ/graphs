@@ -38,10 +38,7 @@ export async function artifactClusterFactory() {
   element.addChild(content)
 
   emitter.on('scaleUpdated', updated => scale = updated)
-
-  application.ticker.add(() => {
-    updatePosition()
-  })
+  emitter.on('viewportMoved', () => updatePosition())
 
   async function render(props?: ArtifactClusterFactoryRenderProps): Promise<string[]> {
     if (!props) {
