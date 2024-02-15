@@ -1,5 +1,11 @@
 import { RunGraphNodeKind, runGraphNodeKinds } from '@/models'
-import { GraphItemSelection, NodeSelection, SelectableItem } from '@/models/selection'
+import {
+  GraphItemSelection,
+  NodeSelection,
+  isArtifactClusterSelection,
+  isArtifactSelection,
+  isNodeSelection
+} from '@/models/selection'
 import { emitter } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
 
@@ -35,7 +41,7 @@ export function selectItem(item: GraphItemSelection | null): void {
     return
   }
 
-  if (isSelected(item)) {
+  if (!item && !selected || item && isSelected(item)) {
     return
   }
 
@@ -49,24 +55,28 @@ export function selectItem(item: GraphItemSelection | null): void {
   emitter.emit('itemSelected', item)
 }
 
-export function isSelected(item: GraphItemSelection | SelectableItem | null): boolean {
-  if (item === null || selected === null) {
+export function isSelected(item: GraphItemSelection): boolean {
+  if (selected === null) {
     return false
   }
 
-  if (Array.isArray(item) && 'ids' in selected) {
-    return item.length === selected.ids.length && selected.ids.every(id => item.includes(id))
-  }
+  const { kind } = item
 
-  if ('ids' in item && 'ids' in selected) {
-    return item.ids.length === selected.ids.length && selected.ids.every(id => item.ids.includes(id))
+  switch (kind) {
+    case 'task-run':
+      return isNodeSelection(selected) && selected.id === item.id
+    case 'flow-run':
+      return isNodeSelection(selected) && selected.id === item.id
+    case 'artifact':
+      return isArtifactSelection(selected) && selected.id === item.id
+    case 'artifactCluster':
+      return isArtifactClusterSelection(selected)
+        && selected.ids.length === item.ids.length
+        && selected.ids.every(id => item.ids.includes(id))
+    default:
+      const exhaustive: never = kind
+      throw new Error(`switch does not have case for value: ${exhaustive}`)
   }
-
-  if ('id' in item && 'id' in selected) {
-    return item.id === selected.id
-  }
-
-  return false
 }
 
 export function getSelectedRunGraphNode(): NodeSelection | null {

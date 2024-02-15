@@ -22,7 +22,7 @@ export async function nodeBarFactory() {
   async function render(node: RunGraphNode): Promise<Container> {
     const { background = '#fff' } = config.styles.node(node)
     const { nodeHeight: height, nodeRadius: radius } = config.styles
-    const selected = isSelected(node)
+    const selected = isSelected({ kind: node.kind, id: node.id })
     const width = getTotalWidth(node, radius)
 
     const capRight = node.state_type !== 'RUNNING' || settings.isDependency()

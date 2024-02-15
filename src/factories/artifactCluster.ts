@@ -25,7 +25,7 @@ export async function artifactClusterFactory() {
     selectItem({ kind: 'artifactCluster', ids: currentIds })
   })
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected(currentIds)
+    const isCurrentlySelected = isSelected({ kind: 'artifactCluster', ids: currentIds })
 
     if (isCurrentlySelected !== selected && currentDate) {
       selected = isCurrentlySelected

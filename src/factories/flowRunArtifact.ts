@@ -23,7 +23,7 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
 
   let date: Date | null = artifact ? artifact.created : null
   const isCluster = !artifact
-  let ids: string[] | null = artifact ? [artifact.id] : null
+  let ids: string[] = artifact ? [artifact.id] : []
   let selected = false
 
   emitter.on('scaleUpdated', updated => {
@@ -32,14 +32,18 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
   })
   emitter.on('viewportMoved', () => updatePosition())
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected(artifact ? artifact : ids)
+    const isCurrentlySelected = isSelected(
+      artifact
+        ? { kind: 'artifact', id: ids[0] }
+        : { kind: 'artifactCluster', ids },
+    )
 
     if (isCurrentlySelected === selected) {
       return
     }
 
     selected = isCurrentlySelected
-    const options = isCluster && date && ids ? { date, ids } : undefined
+    const options = isCluster && date ? { date, ids } : undefined
 
     render(options)
   })

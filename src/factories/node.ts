@@ -48,7 +48,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected(node)
+    const isCurrentlySelected = isSelected({ kind: internalNode.kind, id: internalNode.id })
 
     if (isCurrentlySelected !== nodeIsSelected) {
       nodeIsSelected = isCurrentlySelected
