@@ -75,7 +75,7 @@ export async function flowRunArtifactsFactory() {
 
     if (!layout.isTemporal()) {
       if (!nonTemporalAlignmentEngaged) {
-        clearClustering()
+        clearClusters()
         alignNonTemporal()
         nonTemporalAlignmentEngaged = true
       }
@@ -91,60 +91,60 @@ export async function flowRunArtifactsFactory() {
 
   const checkLayout = debounce(async () => {
     visibleItems = [...artifacts.values()]
+    visibleItems.sort((itemA, itemB) => itemA.element.x - itemB.element.x)
+
     availableClusterNodes = [...clusterNodes]
 
     await checkCollisions()
 
     for (const cluster of availableClusterNodes) {
-      cluster.render()
+      cluster.hideCluster()
     }
   }, DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE)
 
-  function alignNonTemporal(): void {
-    const { artifactContentGap } = config.styles
-    let x = 0
+  async function checkCollisions(startIndex?: number): Promise<void> {
+    let checkpoint
+    let prevIndex: number | null = null
+    let collisionIndex: number | null = null
 
-    for (const artifact of artifacts.values()) {
-
-      artifact.element.x = x
-      x += artifact.element.width + artifactContentGap
-    }
-  }
-
-  async function checkCollisions(): Promise<void> {
-    let lastEndX
-    let prevItem: FlowRunArtifactFactory | undefined
-    let collisionItem: FlowRunArtifactFactory | undefined
-
-    visibleItems.sort((itemA, itemB) => itemA.element.x - itemB.element.x)
-
-    for (const item of visibleItems) {
+    for (let i = startIndex ?? 0; i < visibleItems.length; i++) {
+      const item = visibleItems[i]
       const itemX = item.element.x
       item.element.visible = true
 
-      if (prevItem && lastEndX && itemX < lastEndX) {
-        collisionItem = item
+      if (prevIndex !== null && checkpoint && itemX < checkpoint) {
+        collisionIndex = i
         break
       }
 
-      prevItem = item
-      lastEndX = itemX + item.element.width
+      prevIndex = i
+      checkpoint = itemX + item.element.width
     }
 
-    if (collisionItem && prevItem) {
-      visibleItems = visibleItems.filter((item) => item !== prevItem && item !== collisionItem)
+    if (collisionIndex !== null && prevIndex !== null) {
+      const firstIndex = Math.min(prevIndex, collisionIndex)
+      const secondIndex = Math.max(prevIndex, collisionIndex)
+      const prevItem = visibleItems[prevIndex]
+      const collisionItem = visibleItems[collisionIndex]
 
-      collisionItem.element.visible = false
       prevItem.element.visible = false
+      collisionItem.element.visible = false
 
-      await handleCollision(prevItem, collisionItem)
+      const cluster = await clusterItems(prevItem, collisionItem)
+
+      if (cluster) {
+        visibleItems.splice(firstIndex, 1, cluster)
+        visibleItems.splice(secondIndex, 1)
+      }
+
+      checkCollisions(firstIndex)
     }
   }
 
-  async function handleCollision(
+  async function clusterItems(
     prevItem: FlowRunArtifactFactory,
     currentItem: FlowRunArtifactFactory,
-  ): Promise<void> {
+  ): Promise<FlowRunArtifactFactory | null> {
     const prevDate = prevItem.getDate()
     const prevIds = prevItem.getIds()
     const currentDate = currentItem.getDate()
@@ -152,7 +152,7 @@ export async function flowRunArtifactsFactory() {
 
     if (!prevDate || !currentDate || !prevIds || !currentIds) {
       console.error('flowRunArtifacts: visible item is missing date or ID data')
-      return
+      return null
     }
 
     let clusterNode: FlowRunArtifactFactory
@@ -173,8 +173,8 @@ export async function flowRunArtifactsFactory() {
     const centeredDate = new Date((minDate.getTime() + maxDate.getTime()) / 2)
 
     clusterNode.render({ ids, date: centeredDate })
-    visibleItems.push(clusterNode)
-    checkCollisions()
+
+    return clusterNode
   }
 
   async function getClusterNode(): Promise<FlowRunArtifactFactory> {
@@ -189,12 +189,23 @@ export async function flowRunArtifactsFactory() {
     return newCluster
   }
 
-  function clearClustering(): void {
+  function clearClusters(): void {
     for (const cluster of clusterNodes) {
       cluster.render()
     }
     for (const artifact of artifacts.values()) {
       artifact.element.visible = true
+    }
+  }
+
+  function alignNonTemporal(): void {
+    const { artifactContentGap } = config.styles
+    let x = 0
+
+    for (const artifact of artifacts.values()) {
+
+      artifact.element.x = x
+      x += artifact.element.width + artifactContentGap
     }
   }
 
