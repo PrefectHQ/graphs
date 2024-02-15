@@ -1,11 +1,9 @@
 import { Container } from 'pixi.js'
 import { borderFactory } from '@/factories/border'
-import { SelectableItem } from '@/models'
 import { waitForConfig } from '@/objects/config'
-import { isSelected } from '@/objects/selection'
 
 type SelectedBorderFactoryRenderProps = {
-  item: SelectableItem,
+  selected: boolean,
   width: number,
   height: number,
 }
@@ -16,8 +14,8 @@ export async function selectedBorderFactory() {
   const container = new Container()
   const { element: border, render: renderBorder } = await borderFactory()
 
-  async function render({ item, width, height }: SelectedBorderFactoryRenderProps): Promise<Container> {
-    if (!isSelected(item)) {
+  async function render({ selected, width, height }: SelectedBorderFactoryRenderProps): Promise<Container> {
+    if (!selected) {
       container.removeChild(border)
       return container
     }
