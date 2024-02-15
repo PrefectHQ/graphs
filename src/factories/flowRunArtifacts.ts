@@ -123,8 +123,6 @@ export async function flowRunArtifactsFactory() {
     }
 
     if (collisionIndex !== null && prevIndex !== null) {
-      const firstIndex = Math.min(prevIndex, collisionIndex)
-      const secondIndex = Math.max(prevIndex, collisionIndex)
       const prevItem = visibleItems[prevIndex]
       const collisionItem = visibleItems[collisionIndex]
 
@@ -134,11 +132,11 @@ export async function flowRunArtifactsFactory() {
       const cluster = await clusterItems(prevItem, collisionItem, availableClusterNodes)
 
       if (cluster) {
-        visibleItems.splice(firstIndex, 1, cluster)
-        visibleItems.splice(secondIndex, 1)
+        visibleItems.splice(prevIndex, 1, cluster)
+        visibleItems.splice(collisionIndex, 1)
       }
 
-      checkCollisions(visibleItems, availableClusterNodes, firstIndex)
+      checkCollisions(visibleItems, availableClusterNodes, prevIndex)
     }
   }
 
@@ -174,21 +172,32 @@ export async function flowRunArtifactsFactory() {
     }
 
     const ids = [...prevIds, ...currentIds]
-
-    const dates = ids.map(id => artifacts.get(id)?.getDate()).filter(Boolean) as Date[]
-    const date = getCenteredDate(dates)
+    const date = getCenteredDate(ids)
 
     clusterNode.render({ ids, date })
 
     return clusterNode
   }
 
-  function getCenteredDate(dates: Date[]): Date {
-    const minDate = new Date(Math.min(...dates.map(date => date.getTime())))
-    const maxDate = new Date(Math.max(...dates.map(date => date.getTime())))
-    const centeredDate = new Date((minDate.getTime() + maxDate.getTime()) / 2)
+  function getCenteredDate(ids: string[]): Date {
+    const times = ids.reduce((acc: number[], id) => {
+      const artifact = artifacts.get(id)
 
-    return centeredDate
+      if (artifact) {
+        const date = artifact.getDate()
+
+        if (date) {
+          acc.push(date.getTime())
+        }
+      }
+
+      return acc
+    }, [])
+
+    const min = Math.min(...times)
+    const max = Math.max(...times)
+
+    return new Date((min + max) / 2)
   }
 
   function clearClusters(): void {
