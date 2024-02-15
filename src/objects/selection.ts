@@ -2,8 +2,8 @@ import { RunGraphNodeKind, runGraphNodeKinds } from '@/models'
 import {
   GraphItemSelection,
   NodeSelection,
-  isArtifactClusterSelection,
   isArtifactSelection,
+  isArtifactsSelection,
   isNodeSelection
 } from '@/models/selection'
 import { emitter } from '@/objects/events'
@@ -69,8 +69,8 @@ export function isSelected(item: GraphItemSelection): boolean {
       return isNodeSelection(selected) && selected.id === item.id
     case 'artifact':
       return isArtifactSelection(selected) && selected.id === item.id
-    case 'artifactCluster':
-      return isArtifactClusterSelection(selected)
+    case 'artifacts':
+      return isArtifactsSelection(selected)
         && selected.ids.length === item.ids.length
         && selected.ids.every(id => item.ids.includes(id))
     default:

@@ -16,15 +16,15 @@ export function isArtifactSelection(selection: GraphItemSelection): selection is
   return selection.kind === 'artifact'
 }
 
-export type ArtifactClusterSelection = {
-  kind: 'artifactCluster',
+export type ArtifactsSelection = {
+  kind: 'artifacts',
   ids: string[],
 }
-export function isArtifactClusterSelection(selection: GraphItemSelection): selection is ArtifactClusterSelection {
-  return selection.kind === 'artifactCluster'
+export function isArtifactsSelection(selection: GraphItemSelection): selection is ArtifactsSelection {
+  return selection.kind === 'artifacts'
 }
 
 export type GraphItemSelection =
   | NodeSelection
   | ArtifactSelection
-  | ArtifactClusterSelection
+  | ArtifactsSelection
