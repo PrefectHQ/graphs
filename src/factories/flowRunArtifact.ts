@@ -35,7 +35,7 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
     const isCurrentlySelected = isSelected(
       artifact
         ? { kind: 'artifact', id: ids[0] }
-        : { kind: 'artifactCluster', ids },
+        : { kind: 'artifacts', ids },
     )
 
     if (isCurrentlySelected === selected) {

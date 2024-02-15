@@ -22,10 +22,10 @@ export async function artifactClusterFactory() {
 
   element.on('click', event => {
     event.stopPropagation()
-    selectItem({ kind: 'artifactCluster', ids: currentIds })
+    selectItem({ kind: 'artifacts', ids: currentIds })
   })
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected({ kind: 'artifactCluster', ids: currentIds })
+    const isCurrentlySelected = isSelected({ kind: 'artifacts', ids: currentIds })
 
     if (isCurrentlySelected !== selected && currentDate) {
       selected = isCurrentlySelected
