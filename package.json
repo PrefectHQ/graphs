@@ -42,7 +42,6 @@
     "@types/fontfaceobserver": "^2.1.2",
     "@types/lodash.isequal": "4.5.8",
     "@types/lodash.merge": "4.6.9",
-    "@types/lodash.debounce": "4.0.9",
     "@types/node": "^20.1.7",
     "@vitejs/plugin-vue": "5.0.4",
     "auto-changelog": "^2.4.0",
@@ -64,13 +63,14 @@
   },
   "dependencies": {
     "@pixi-essentials/cull": "2.0.0",
+    "@types/lodash.throttle": "^4.1.9",
     "d3": "7.8.5",
     "date-fns": "3.3.1",
     "fontfaceobserver": "^2.3.0",
     "gsap": "^3.12.2",
-    "lodash.debounce": "4.0.8",
     "lodash.isequal": "4.5.0",
     "lodash.merge": "4.6.2",
+    "lodash.throttle": "^4.1.1",
     "pixi-viewport": "5.0.1",
     "pixi.js": "7.3.2"
   }
