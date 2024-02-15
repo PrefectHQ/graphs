@@ -1,6 +1,6 @@
-import debounce from 'lodash.debounce'
+import throttle from 'lodash.throttle'
 import { Container } from 'pixi.js'
-import { DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE, DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
+import { DEFAULT_ROOT_ARTIFACT_COLLISION_THROTTLE, DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
 import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
@@ -20,8 +20,6 @@ export async function flowRunArtifactsFactory() {
 
   let container: Container | null = null
   let internalData: Artifact[] | null = null
-  let availableClusterNodes: FlowRunArtifactFactory[] = []
-  let visibleItems: FlowRunArtifactFactory[] = []
   let nonTemporalAlignmentEngaged = false
 
   emitter.on('viewportMoved', () => update())
@@ -89,20 +87,23 @@ export async function flowRunArtifactsFactory() {
     checkLayout()
   }
 
-  const checkLayout = debounce(async () => {
-    visibleItems = [...artifacts.values()]
+  const checkLayout = throttle(async () => {
+    const visibleItems = [...artifacts.values()]
+    const availableClusterNodes = [...clusterNodes]
     visibleItems.sort((itemA, itemB) => itemA.element.x - itemB.element.x)
 
-    availableClusterNodes = [...clusterNodes]
-
-    await checkCollisions()
+    await checkCollisions(visibleItems, availableClusterNodes)
 
     for (const cluster of availableClusterNodes) {
       cluster.hideCluster()
     }
-  }, DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE)
+  }, DEFAULT_ROOT_ARTIFACT_COLLISION_THROTTLE)
 
-  async function checkCollisions(startIndex?: number): Promise<void> {
+  async function checkCollisions(
+    visibleItems: FlowRunArtifactFactory[],
+    availableClusterNodes: FlowRunArtifactFactory[],
+    startIndex?: number,
+  ): Promise<void> {
     let checkpoint
     let prevIndex: number | null = null
     let collisionIndex: number | null = null
@@ -130,20 +131,21 @@ export async function flowRunArtifactsFactory() {
       prevItem.element.visible = false
       collisionItem.element.visible = false
 
-      const cluster = await clusterItems(prevItem, collisionItem)
+      const cluster = await clusterItems(prevItem, collisionItem, availableClusterNodes)
 
       if (cluster) {
         visibleItems.splice(firstIndex, 1, cluster)
         visibleItems.splice(secondIndex, 1)
       }
 
-      checkCollisions(firstIndex)
+      checkCollisions(visibleItems, availableClusterNodes, firstIndex)
     }
   }
 
   async function clusterItems(
     prevItem: FlowRunArtifactFactory,
     currentItem: FlowRunArtifactFactory,
+    availableClusterNodes: FlowRunArtifactFactory[],
   ): Promise<FlowRunArtifactFactory | null> {
     const prevDate = prevItem.getDate()
     const prevIds = prevItem.getIds()
@@ -161,32 +163,32 @@ export async function flowRunArtifactsFactory() {
       clusterNode = prevItem
     } else if (currentItem.isCluster) {
       clusterNode = currentItem
+    } else if (availableClusterNodes.length > 0) {
+      clusterNode = availableClusterNodes.pop()!
     } else {
-      clusterNode = await getClusterNode()
+      const newCluster = await flowRunArtifactFactory()
+      container!.addChild(newCluster.element)
+      clusterNodes.push(newCluster)
+
+      clusterNode = newCluster
     }
 
     const ids = [...prevIds, ...currentIds]
 
-    const dates = ids.map(id => artifacts.get(id)?.getDate())
-    const minDate = new Date(Math.min(...dates.map(date => date?.getTime() ?? 0)))
-    const maxDate = new Date(Math.max(...dates.map(date => date?.getTime() ?? 0)))
-    const centeredDate = new Date((minDate.getTime() + maxDate.getTime()) / 2)
+    const dates = ids.map(id => artifacts.get(id)?.getDate()).filter(Boolean) as Date[]
+    const date = getCenteredDate(dates)
 
-    clusterNode.render({ ids, date: centeredDate })
+    clusterNode.render({ ids, date })
 
     return clusterNode
   }
 
-  async function getClusterNode(): Promise<FlowRunArtifactFactory> {
-    if (availableClusterNodes.length > 0) {
-      return availableClusterNodes.pop()!
-    }
+  function getCenteredDate(dates: Date[]): Date {
+    const minDate = new Date(Math.min(...dates.map(date => date.getTime())))
+    const maxDate = new Date(Math.max(...dates.map(date => date.getTime())))
+    const centeredDate = new Date((minDate.getTime() + maxDate.getTime()) / 2)
 
-    const newCluster = await flowRunArtifactFactory()
-    container!.addChild(newCluster.element)
-    clusterNodes.push(newCluster)
-
-    return newCluster
+    return centeredDate
   }
 
   function clearClusters(): void {

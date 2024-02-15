@@ -93,7 +93,7 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
   }
 
   function hideCluster(): void {
-    if (isCluster) {
+    if (!isCluster) {
       return
     }
 
