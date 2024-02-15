@@ -25,7 +25,7 @@ export async function artifactFactory(artifact: Artifact, { cullAtZoomThreshold 
   })
 
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected(artifact)
+    const isCurrentlySelected = isSelected({ kind: 'artifact', id: artifact.id })
 
     if (isCurrentlySelected !== selected) {
       selected = isCurrentlySelected
