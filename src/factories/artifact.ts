@@ -33,10 +33,8 @@ export async function artifactFactory(artifact: Artifact, { cullAtZoomThreshold 
     }
   })
 
-  async function render(): Promise<Container> {
+  async function render(): Promise<void> {
     await renderArtifactNode({ selected, name: artifact.key, type: artifact.type })
-
-    return element
   }
 
   function getSelected(): boolean {

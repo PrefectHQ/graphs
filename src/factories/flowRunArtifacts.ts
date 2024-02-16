@@ -5,7 +5,6 @@ import { ArtifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory } from '@/factories/artifactCluster'
 import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { Artifact } from '@/models'
-import { BoundsContainer } from '@/models/boundsContainer'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
@@ -48,7 +47,7 @@ export async function flowRunArtifactsFactory() {
       createContainer()
     }
 
-    const promises: Promise<BoundsContainer>[] = []
+    const promises: Promise<void>[] = []
 
     for (const artifact of internalData) {
       promises.push(createArtifact(artifact))
@@ -57,7 +56,7 @@ export async function flowRunArtifactsFactory() {
     await Promise.all(promises)
   }
 
-  async function createArtifact(artifact: Artifact): Promise<BoundsContainer> {
+  async function createArtifact(artifact: Artifact): Promise<void> {
     if (artifacts.has(artifact.id)) {
       return artifacts.get(artifact.id)!.render()
     }

@@ -1,6 +1,6 @@
 import { DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET } from '@/consts'
 import { ArtifactFactory, artifactFactory } from '@/factories/artifact'
-import { ArtifactClusterFactory, artifactClusterFactory } from '@/factories/artifactCluster'
+import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
 import { Artifact } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
@@ -18,6 +18,10 @@ type FactoryType<T> = T extends { type: 'artifact' }
     ? ArtifactClusterFactory
     : never
 
+type RenderPropsType<T> = T extends { type: 'cluster' }
+  ? ArtifactClusterFactoryRenderProps
+  : undefined
+
 export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(options: T): Promise<FactoryType<T>> {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
@@ -25,16 +29,18 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
   const settings = await waitForSettings()
   let scale = await waitForScale()
 
-  const factory = await getFactory()
+  const factory = await getFactory() as FactoryType<T>
 
   emitter.on('scaleUpdated', updated => {
     scale = updated
     updatePosition()
   })
   emitter.on('viewportMoved', () => updatePosition())
-  emitter.on('itemSelected', () => {
-    factory.render()
-  })
+
+  async function render(props?: RenderPropsType<T>): Promise<void> {
+    await factory.render(props)
+    updatePosition()
+  }
 
   async function getFactory(): Promise<ArtifactFactory | ArtifactClusterFactory> {
     if (options.type === 'artifact') {
@@ -68,5 +74,8 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
     element.position.set(centeredX, y)
   }
 
-  return factory as FactoryType<T>
+  return {
+    ...factory,
+    render,
+  }
 }
