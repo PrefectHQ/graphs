@@ -1,7 +1,6 @@
 import debounce from 'lodash.debounce'
 import { Container } from 'pixi.js'
 import { DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE, DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
-import { ArtifactClusterFactory, artifactClusterFactory } from '@/factories/artifactCluster'
 import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
@@ -17,12 +16,12 @@ export async function flowRunArtifactsFactory() {
   const config = await waitForConfig()
 
   const artifacts: Map<string, FlowRunArtifactFactory> = new Map()
-  const clusterNodes: ArtifactClusterFactory[] = []
+  const clusterNodes: FlowRunArtifactFactory[] = []
 
   let container: Container | null = null
   let internalData: Artifact[] | null = null
-  let availableClusterNodes: ArtifactClusterFactory[] = []
-  let visibleItems: (FlowRunArtifactFactory | ArtifactClusterFactory)[] = []
+  let availableClusterNodes: FlowRunArtifactFactory[] = []
+  let visibleItems: FlowRunArtifactFactory[] = []
   let nonTemporalAlignmentEngaged = false
 
   emitter.on('viewportMoved', () => update())
@@ -114,8 +113,8 @@ export async function flowRunArtifactsFactory() {
 
   async function checkCollisions(): Promise<void> {
     let lastEndX
-    let prevItem: FlowRunArtifactFactory | ArtifactClusterFactory | undefined
-    let collisionItem: FlowRunArtifactFactory | ArtifactClusterFactory | undefined
+    let prevItem: FlowRunArtifactFactory | undefined
+    let collisionItem: FlowRunArtifactFactory | undefined
 
     visibleItems.sort((itemA, itemB) => itemA.element.x - itemB.element.x)
 
@@ -143,46 +142,47 @@ export async function flowRunArtifactsFactory() {
   }
 
   async function handleCollision(
-    prevItem: FlowRunArtifactFactory | ArtifactClusterFactory,
-    currentItem: FlowRunArtifactFactory | ArtifactClusterFactory,
+    prevItem: FlowRunArtifactFactory,
+    currentItem: FlowRunArtifactFactory,
   ): Promise<void> {
-    const isPrevItemCluster = 'getCurrentData' in prevItem
-    const isCurrentCluster = 'getCurrentData' in currentItem
-
-    const prevDate = isPrevItemCluster ? prevItem.getCurrentData()?.date : prevItem.data.created
-    const prevIds = isPrevItemCluster ? prevItem.getCurrentData()?.ids : [prevItem.data.id]
-    const currentDate = isCurrentCluster ? currentItem.getCurrentData()?.date : currentItem.data.created
-    const currentIds = isCurrentCluster ? currentItem.getCurrentData()?.ids : [currentItem.data.id]
+    const prevDate = prevItem.getDate()
+    const prevIds = prevItem.getIds()
+    const currentDate = currentItem.getDate()
+    const currentIds = currentItem.getIds()
 
     if (!prevDate || !currentDate || !prevIds || !currentIds) {
       console.error('flowRunArtifacts: visible item is missing date or ID data')
       return
     }
 
-    let clusterNode: ArtifactClusterFactory
+    let clusterNode: FlowRunArtifactFactory
 
-    if (isPrevItemCluster) {
+    if (prevItem.isCluster) {
       clusterNode = prevItem
-    } else if (isCurrentCluster) {
+    } else if (currentItem.isCluster) {
       clusterNode = currentItem
     } else {
       clusterNode = await getClusterNode()
     }
 
     const ids = [...prevIds, ...currentIds]
-    const date = new Date((prevDate.getTime() + currentDate.getTime()) / 2)
 
-    clusterNode.render({ ids, date })
+    const dates = ids.map(id => artifacts.get(id)?.getDate())
+    const minDate = new Date(Math.min(...dates.map(date => date?.getTime() ?? 0)))
+    const maxDate = new Date(Math.max(...dates.map(date => date?.getTime() ?? 0)))
+    const centeredDate = new Date((minDate.getTime() + maxDate.getTime()) / 2)
+
+    clusterNode.render({ ids, date: centeredDate })
     visibleItems.push(clusterNode)
     checkCollisions()
   }
 
-  async function getClusterNode(): Promise<ArtifactClusterFactory> {
+  async function getClusterNode(): Promise<FlowRunArtifactFactory> {
     if (availableClusterNodes.length > 0) {
       return availableClusterNodes.pop()!
     }
 
-    const newCluster = await artifactClusterFactory()
+    const newCluster = await flowRunArtifactFactory()
     container!.addChild(newCluster.element)
     clusterNodes.push(newCluster)
 

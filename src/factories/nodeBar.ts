@@ -5,6 +5,7 @@ import { barFactory } from '@/factories/bar'
 import { selectedBorderFactory } from '@/factories/selectedBorder'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
+import { isSelected } from '@/objects/selection'
 import { layout, getHorizontalColumnSize, waitForSettings } from '@/objects/settings'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -21,6 +22,7 @@ export async function nodeBarFactory() {
   async function render(node: RunGraphNode): Promise<Container> {
     const { background = '#fff' } = config.styles.node(node)
     const { nodeHeight: height, nodeRadius: radius } = config.styles
+    const selected = isSelected({ kind: node.kind, id: node.id })
     const width = getTotalWidth(node, radius)
 
     const capRight = node.state_type !== 'RUNNING' || settings.isDependency()
@@ -33,7 +35,7 @@ export async function nodeBarFactory() {
         background,
         capRight,
       }),
-      renderBorder({ item: node, width, height }),
+      renderBorder({ selected, width, height }),
     ])
 
     return bar

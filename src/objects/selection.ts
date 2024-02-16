@@ -1,5 +1,11 @@
 import { RunGraphNodeKind, runGraphNodeKinds } from '@/models'
-import { GraphItemSelection, NodeSelection, SelectableItem } from '@/models/selection'
+import {
+  GraphItemSelection,
+  NodeSelection,
+  isArtifactSelection,
+  isArtifactsSelection,
+  isNodeSelection
+} from '@/models/selection'
 import { emitter } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
 
@@ -35,7 +41,7 @@ export function selectItem(item: GraphItemSelection | null): void {
     return
   }
 
-  if (isSelected(item)) {
+  if (!item && !selected || item && isSelected(item)) {
     return
   }
 
@@ -49,8 +55,28 @@ export function selectItem(item: GraphItemSelection | null): void {
   emitter.emit('itemSelected', item)
 }
 
-export function isSelected(item: GraphItemSelection | SelectableItem | null): boolean {
-  return item?.id === selected?.id
+export function isSelected(item: GraphItemSelection): boolean {
+  if (selected === null) {
+    return false
+  }
+
+  const { kind } = item
+
+  switch (kind) {
+    case 'task-run':
+      return isNodeSelection(selected) && selected.id === item.id
+    case 'flow-run':
+      return isNodeSelection(selected) && selected.id === item.id
+    case 'artifact':
+      return isArtifactSelection(selected) && selected.id === item.id
+    case 'artifacts':
+      return isArtifactsSelection(selected)
+        && selected.ids.length === item.ids.length
+        && selected.ids.every(id => item.ids.includes(id))
+    default:
+      const exhaustive: never = kind
+      throw new Error(`switch does not have case for value: ${exhaustive}`)
+  }
 }
 
 export function getSelectedRunGraphNode(): NodeSelection | null {

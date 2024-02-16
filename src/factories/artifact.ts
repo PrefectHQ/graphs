@@ -1,9 +1,6 @@
-import { BitmapText, Container } from 'pixi.js'
-import { artifactBarFactory } from '@/factories/artifactBar'
-import { iconFactory } from '@/factories/icon'
-import { nodeLabelFactory } from '@/factories/label'
-import { Artifact, artifactTypeIconMap } from '@/models/artifact'
-import { waitForConfig } from '@/objects/config'
+import { Container } from 'pixi.js'
+import { artifactNodeFactory } from '@/factories/artifactNode'
+import { Artifact } from '@/models/artifact'
 import { emitter } from '@/objects/events'
 import { isSelected, selectItem } from '@/objects/selection'
 
@@ -15,21 +12,9 @@ type ArtifactFactoryOptions = {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function artifactFactory(artifact: Artifact, { cullAtZoomThreshold = true }: ArtifactFactoryOptions = {}) {
-  const element = new Container()
-  const content = new Container()
-  const config = await waitForConfig()
+  const { element, render: renderArtifactNode } = await artifactNodeFactory({ cullAtZoomThreshold })
 
-  const { element: icon, render: renderIcon } = await iconFactory({ cullAtZoomThreshold })
-  const { element: label, render: renderLabel } = await nodeLabelFactory({ cullAtZoomThreshold })
-  const { element: bar, render: renderBar } = await artifactBarFactory(artifact)
-
-  let isArtifactSelected = false
-
-  element.addChild(bar)
-
-  content.addChild(icon)
-  content.addChild(label)
-  element.addChild(content)
+  let selected = false
 
   element.eventMode = 'static'
   element.cursor = 'pointer'
@@ -40,82 +25,18 @@ export async function artifactFactory(artifact: Artifact, { cullAtZoomThreshold 
   })
 
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected(artifact)
+    const isCurrentlySelected = isSelected({ kind: 'artifact', id: artifact.id })
 
-    if (isCurrentlySelected !== isArtifactSelected) {
-      isArtifactSelected = isCurrentlySelected
+    if (isCurrentlySelected !== selected) {
+      selected = isCurrentlySelected
       render()
     }
   })
 
   async function render(): Promise<Container> {
-    await Promise.all([
-      renderArtifactIcon(),
-      renderLabelText(),
-    ])
-
-    await renderBg()
+    await renderArtifactNode({ selected, name: artifact.key, type: artifact.type })
 
     return element
-  }
-
-  async function renderArtifactIcon(): Promise<Container> {
-    const iconName = artifactTypeIconMap[artifact.type]
-    const {
-      artifactIconSize,
-      artifactIconColor,
-      artifactPaddingLeft,
-      artifactPaddingY,
-    } = config.styles
-
-    const newIcon = await renderIcon(iconName)
-
-    newIcon.position = { x: artifactPaddingLeft, y: artifactPaddingY }
-    newIcon.width = artifactIconSize
-    newIcon.height = artifactIconSize
-    newIcon.tint = artifactIconColor
-
-    return newIcon
-  }
-
-  async function renderLabelText(): Promise<BitmapText> {
-    if (!artifact.key) {
-      return label
-    }
-
-    await renderLabel(artifact.key)
-
-    const {
-      artifactPaddingLeft,
-      artifactPaddingY,
-      artifactTextColor,
-      artifactIconSize,
-      artifactContentGap,
-    } = config.styles
-
-    const x = artifactPaddingLeft + artifactIconSize + artifactContentGap
-    const y = artifactPaddingY
-
-    label.tint = artifactTextColor
-    label.scale.set(0.75)
-    label.position = { x, y }
-
-    return label
-  }
-
-  async function renderBg(): Promise<Container> {
-    const {
-      artifactPaddingLeft,
-      artifactPaddingRight,
-      artifactPaddingY,
-    } = config.styles
-
-    const barStyle = {
-      width: content.width + artifactPaddingLeft + artifactPaddingRight,
-      height: content.height + artifactPaddingY * 2,
-    }
-
-    return await renderBar(barStyle)
   }
 
   return {
