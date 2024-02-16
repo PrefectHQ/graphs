@@ -51,8 +51,24 @@ export async function artifactClusterFactory() {
     return ids
   }
 
+  function getSelected(): boolean {
+    return selected
+  }
+
+  function getDate(): Date | null {
+    return currentDate
+  }
+
+  function getIds(): string[] {
+    return currentIds
+  }
+
   return {
     element,
     render,
+    getSelected,
+    getDate,
+    getIds,
+    isCluster: true,
   }
 }
