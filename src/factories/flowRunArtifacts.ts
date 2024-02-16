@@ -7,13 +7,14 @@ import { BoundsContainer } from '@/models/boundsContainer'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
-import { layout } from '@/objects/settings'
+import { layout, waitForSettings } from '@/objects/settings'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunArtifactsFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
+  const settings = await waitForSettings()
 
   const artifacts: Map<string, FlowRunArtifactFactory> = new Map()
   const clusterNodes: FlowRunArtifactFactory[] = []
@@ -25,6 +26,14 @@ export async function flowRunArtifactsFactory() {
   emitter.on('viewportMoved', () => update())
 
   async function render(newData?: Artifact[]): Promise<void> {
+    if (container) {
+      container.visible = !settings.disableArtifacts
+    }
+
+    if (settings.disableArtifacts) {
+      return
+    }
+
     if (newData) {
       internalData = newData
     }
@@ -67,7 +76,7 @@ export async function flowRunArtifactsFactory() {
   }
 
   function update(): void {
-    if (!container) {
+    if (!container || settings.disableArtifacts) {
       return
     }
 
