@@ -62,7 +62,7 @@ export async function flowRunArtifactsFactory() {
       return artifacts.get(artifact.id)!.render()
     }
 
-    const factory = await flowRunArtifactFactory({ type: 'artifact', artifact }) as ArtifactFactory
+    const factory = await flowRunArtifactFactory({ type: 'artifact', artifact })
 
     artifacts.set(artifact.id, factory)
 
@@ -175,7 +175,7 @@ export async function flowRunArtifactsFactory() {
     } else if (availableClusterNodes.length > 0) {
       clusterNode = availableClusterNodes.pop()!
     } else {
-      const newCluster = await flowRunArtifactFactory({ type: 'cluster' }) as ArtifactClusterFactory
+      const newCluster = await flowRunArtifactFactory({ type: 'cluster' })
       container!.addChild(newCluster.element)
       clusterNodes.push(newCluster)
 

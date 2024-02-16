@@ -12,7 +12,13 @@ export type FlowRunArtifactFactory = Awaited<ReturnType<typeof flowRunArtifactFa
 
 type ArtifactFactoryOptions = { type: 'artifact', artifact: Artifact } | { type: 'cluster' }
 
-export async function flowRunArtifactFactory(options: ArtifactFactoryOptions): Promise<ArtifactFactory | ArtifactClusterFactory> {
+type FactoryType<T> = T extends { type: 'artifact' }
+  ? ArtifactFactory
+  : T extends { type: 'cluster' }
+    ? ArtifactClusterFactory
+    : never
+
+export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(options: T): Promise<FactoryType<T>> {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
@@ -62,5 +68,5 @@ export async function flowRunArtifactFactory(options: ArtifactFactoryOptions): P
     element.position.set(centeredX, y)
   }
 
-  return factory
+  return factory as FactoryType<T>
 }
