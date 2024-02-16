@@ -13,7 +13,7 @@ import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { isSelected, selectItem } from '@/objects/selection'
-import { layout } from '@/objects/settings'
+import { layout, waitForSettings } from '@/objects/settings'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
@@ -22,6 +22,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
+  const settings = await waitForSettings()
   let artifactsContainer: Container | null = null
   const artifacts: Map<string, ArtifactFactory> = new Map()
   const { animate } = await animationFactory()
@@ -72,6 +73,10 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       createArtifacts(node.artifacts),
     ])
 
+    if (artifactsContainer) {
+      artifactsContainer.visible = !settings.disableArtifacts
+    }
+
     if (node.end_time) {
       stopTicking()
     }
@@ -80,7 +85,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   async function createArtifacts(artifactsData?: Artifact[]): Promise<void> {
-    if (!artifactsData) {
+    if (!artifactsData || settings.disableArtifacts) {
       return
     }
 

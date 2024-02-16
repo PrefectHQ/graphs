@@ -8,7 +8,7 @@ import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { isSelected } from '@/objects/selection'
-import { layout } from '@/objects/settings'
+import { layout, waitForSettings } from '@/objects/settings'
 
 export type FlowRunArtifactFactory = Awaited<ReturnType<typeof flowRunArtifactFactory>>
 
@@ -17,6 +17,7 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
+  const settings = await waitForSettings()
   let scale = await waitForScale()
 
   const { element, render: renderArtifact } = await getFactory()
@@ -74,7 +75,7 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
   }
 
   function updatePosition(): void {
-    if (!date || !layout.isTemporal()) {
+    if (!date || !layout.isTemporal() || settings.disableArtifacts) {
       return
     }
 
