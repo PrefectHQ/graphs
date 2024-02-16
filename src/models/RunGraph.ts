@@ -51,6 +51,10 @@ export type RunGraphNodeStyles = {
   background?: ColorSource,
 }
 
+export type RunGraphStateStyles = {
+  background?: ColorSource,
+}
+
 export type RunGraphStyles = {
   colorMode: 'dark' | 'light',
   rowGap?: number,
@@ -83,6 +87,7 @@ export type RunGraphStyles = {
   artifactContentGap?: number,
   artifactIconSize?: number,
   artifactIconColor?: ColorSource,
+  flowStateSolidBarHeight?: number,
   guideLineWidth?: number,
   guideLineColor?: ColorSource,
   guideTextTopPadding?: number,
@@ -92,6 +97,7 @@ export type RunGraphStyles = {
   playheadWidth?: number,
   playheadColor?: ColorSource,
   node?: (node: RunGraphNode) => RunGraphNodeStyles,
+  state?: (state: StateEvent) => RunGraphStateStyles,
 }
 
 export type RunGraphConfig = {

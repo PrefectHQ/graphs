@@ -41,6 +41,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     artifactContentGap: 4,
     artifactIconSize: 16,
     artifactIconColor: '#ffffff',
+    flowStateSolidBarHeight: 6,
     edgeColor: '#51525C',
     guideLineWidth: 1,
     guideLineColor: '#51525C',
@@ -51,6 +52,9 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     playheadWidth: 2,
     playheadColor: '#6272FF',
     node: () => ({
+      background: '#ffffff',
+    }),
+    state: () => ({
       background: '#ffffff',
     }),
   },
