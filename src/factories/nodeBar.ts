@@ -2,14 +2,11 @@ import { differenceInMilliseconds } from 'date-fns'
 import { millisecondsInSecond } from 'date-fns/constants'
 import { Container } from 'pixi.js'
 import { barFactory } from '@/factories/bar'
-import { borderFactory } from '@/factories/border'
+import { selectedBorderFactory } from '@/factories/selectedBorder'
 import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { isSelected } from '@/objects/selection'
 import { layout, getHorizontalColumnSize, waitForSettings } from '@/objects/settings'
-
-const borderOffset = 4
-const borderStroke = 2
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeBarFactory() {
@@ -17,47 +14,31 @@ export async function nodeBarFactory() {
   const settings = await waitForSettings()
   const container = new Container()
   const { element: bar, render: renderBar } = await barFactory()
-  const { element: border, render: renderBorder } = await borderFactory()
+  const { element: border, render: renderBorder } = await selectedBorderFactory()
 
   container.addChild(bar)
-
-  border.position.set(-borderOffset, -borderOffset)
+  container.addChild(border)
 
   async function render(node: RunGraphNode): Promise<Container> {
     const { background = '#fff' } = config.styles.node(node)
     const { nodeHeight: height, nodeRadius: radius } = config.styles
+    const selected = isSelected({ kind: node.kind, id: node.id })
     const width = getTotalWidth(node, radius)
 
     const capRight = node.state_type !== 'RUNNING' || settings.isDependency()
 
-    await renderBar({
-      width,
-      height,
-      radius,
-      background,
-      capRight,
-    })
-
-    await renderSelectedBorder(node, width, height)
+    await Promise.all([
+      renderBar({
+        width,
+        height,
+        radius,
+        background,
+        capRight,
+      }),
+      renderBorder({ selected, width, height }),
+    ])
 
     return bar
-  }
-
-  async function renderSelectedBorder(node: RunGraphNode, width: number, height: number): Promise<void> {
-    if (!isSelected(node)) {
-      container.removeChild(border)
-      return
-    }
-
-    container.addChild(border)
-
-    await renderBorder({
-      stroke: borderStroke,
-      radius: config.styles.nodeBorderRadius,
-      width: width + borderOffset * 2,
-      height: height + borderOffset * 2,
-      color: config.styles.nodeSelectedBorderColor,
-    })
   }
 
   function getTotalWidth(node: RunGraphNode, borderRadius: number): number {

@@ -1,7 +1,10 @@
+import { Container } from 'pixi.js'
 import { DEFAULT_NODE_CONTAINER_NAME } from '@/consts'
 import { animationFactory } from '@/factories/animation'
+import { artifactFactory, ArtifactFactory } from '@/factories/artifact'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
+import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
@@ -9,8 +12,8 @@ import { waitForApplication } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
-import { isSelected, selectNode } from '@/objects/selection'
-import { layout } from '@/objects/settings'
+import { isSelected, selectItem } from '@/objects/selection'
+import { layout, waitForSettings } from '@/objects/settings'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
@@ -19,6 +22,9 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
+  const settings = await waitForSettings()
+  let artifactsContainer: Container | null = null
+  const artifacts: Map<string, ArtifactFactory> = new Map()
   const { animate } = await animationFactory()
   const { element: container, render: renderNode, bar } = await getNodeFactory(node)
 
@@ -35,15 +41,15 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   container.on('click', event => {
     event.stopPropagation()
-    selectNode(internalNode)
+    selectItem({ kind: internalNode.kind, id: internalNode.id })
   })
 
   if (!node.end_time) {
     startTicking()
   }
 
-  emitter.on('nodeSelected', () => {
-    const isCurrentlySelected = isSelected(node)
+  emitter.on('itemSelected', () => {
+    const isCurrentlySelected = isSelected({ kind: internalNode.kind, id: internalNode.id })
 
     if (isCurrentlySelected !== nodeIsSelected) {
       nodeIsSelected = isCurrentlySelected
@@ -62,13 +68,79 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
     cacheKey = currentCacheKey
 
-    await renderNode(node)
+    await Promise.all([
+      renderNode(node),
+      createArtifacts(node.artifacts),
+    ])
+
+    if (artifactsContainer) {
+      artifactsContainer.visible = !settings.disableArtifacts
+    }
 
     if (node.end_time) {
       stopTicking()
     }
 
     return container
+  }
+
+  async function createArtifacts(artifactsData?: Artifact[]): Promise<void> {
+    if (!artifactsData || settings.disableArtifacts) {
+      return
+    }
+
+    if (!artifactsContainer) {
+      createArtifactsContainer()
+    }
+
+    const promises: Promise<BoundsContainer>[] = []
+
+    for (const artifact of artifactsData) {
+      promises.push(createArtifact(artifact))
+    }
+
+    await Promise.all(promises)
+
+    alignArtifacts()
+  }
+
+  async function createArtifact(artifact: Artifact): Promise<BoundsContainer> {
+    if (artifacts.has(artifact.id)) {
+      return artifacts.get(artifact.id)!.render()
+    }
+
+    const factory = await artifactFactory(artifact)
+
+    artifacts.set(artifact.id, factory)
+
+    artifactsContainer!.addChild(factory.element)
+
+    return factory.render()
+  }
+
+  function createArtifactsContainer(): void {
+    artifactsContainer = new Container()
+    container.addChild(artifactsContainer)
+  }
+
+  function alignArtifacts(): void {
+    if (!artifactsContainer) {
+      return
+    }
+
+    const { artifactsGap, artifactsNodeOverlap } = config.styles
+    let x = 0
+
+    for (const artifact of artifacts.values()) {
+      artifact.element.position.x = x
+      x += artifact.element.width + artifactsGap
+    }
+
+    artifactsContainer.position.y = -artifactsContainer.height + artifactsNodeOverlap
+
+    if (artifactsContainer.width < bar.width) {
+      artifactsContainer.position.x = bar.width - artifactsContainer!.width
+    }
   }
 
   function startTicking(): void {
@@ -99,9 +171,11 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   function getNodeCacheKey(node: RunGraphNode): string {
     const endTime = node.end_time ?? new Date()
+    const artifactCount = node.artifacts?.length ?? 0
     const values = [
       node.state_type,
       endTime.getTime(),
+      artifactCount,
       layout.horizontal,
       layout.horizontalScaleMultiplier,
       config.styles.colorMode,

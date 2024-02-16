@@ -1,5 +1,6 @@
 import { ColorSource } from 'pixi.js'
-import { NodeSelection } from '@/models/selection'
+import { Artifact } from '@/models'
+import { GraphItemSelection } from '@/models/selection'
 import { StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
 
@@ -7,7 +8,7 @@ export type RunGraphProps = {
   config: RunGraphConfig,
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
-  selected?: NodeSelection | null,
+  selected?: GraphItemSelection | null,
 }
 
 export type RunGraphData = {
@@ -15,6 +16,7 @@ export type RunGraphData = {
   start_time: Date,
   end_time: Date | null,
   nodes: RunGraphNodes,
+  artifacts?: Artifact[],
 }
 
 export type RunGraphNodes = Map<string, RunGraphNode>
@@ -28,6 +30,7 @@ export type RunGraphNode = {
   end_time: Date | null,
   parents: RunGraphEdge[],
   children: RunGraphEdge[],
+  artifacts?: Artifact[],
 }
 
 export type RunGraphEdge = {
@@ -53,6 +56,10 @@ export type RunGraphStyles = {
   columnGap?: number,
   textDefault?: ColorSource,
   textInverse?: ColorSource,
+  selectedBorderColor?: ColorSource,
+  selectedBorderWidth?: number,
+  selectedBorderOffset?: number,
+  selectedBorderRadius?: number,
   nodesPadding?: number,
   nodeHeight?: number,
   nodePadding?: number,
@@ -62,9 +69,19 @@ export type RunGraphStyles = {
   nodeToggleSize?: number,
   nodeToggleBorderRadius?: number,
   nodeToggleBorderColor?: ColorSource,
-  nodeSelectedBorderColor?: ColorSource,
   nodeUnselectedAlpha?: number,
   edgeColor?: ColorSource,
+  artifactsGap?: number,
+  artifactsNodeOverlap?: number,
+  artifactPaddingLeft?: number,
+  artifactPaddingRight?: number,
+  artifactPaddingY?: number,
+  artifactTextColor?: ColorSource,
+  artifactBgColor?: ColorSource,
+  artifactBorderRadius?: number,
+  artifactContentGap?: number,
+  artifactIconSize?: number,
+  artifactIconColor?: ColorSource,
   guideLineWidth?: number,
   guideLineColor?: ColorSource,
   guideTextTopPadding?: number,

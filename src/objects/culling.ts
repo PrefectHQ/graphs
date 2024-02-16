@@ -1,5 +1,10 @@
 import { Cull } from '@pixi-essentials/cull'
-import { DEFAULT_EDGE_CULLING_THRESHOLD, DEFAULT_LABEL_CULLING_THRESHOLD, DEFAULT_TOGGLE_CULLING_THRESHOLD } from '@/consts'
+import {
+  DEFAULT_EDGE_CULLING_THRESHOLD,
+  DEFAULT_LABEL_CULLING_THRESHOLD,
+  DEFAULT_TOGGLE_CULLING_THRESHOLD,
+  DEFAULT_ICON_CULLING_THRESHOLD
+} from '@/consts'
 import { waitForApplication } from '@/objects/application'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForViewport } from '@/objects/viewport'
@@ -7,6 +12,7 @@ import { VisibilityCull } from '@/services/visibilityCull'
 
 let viewportCuller: Cull | null = null
 let labelCuller: VisibilityCull | null = null
+let iconCuller: VisibilityCull | null = null
 let toggleCuller: VisibilityCull | null = null
 let edgeCuller: VisibilityCull | null = null
 
@@ -21,6 +27,7 @@ export async function startCulling(): Promise<void> {
   })
 
   labelCuller = new VisibilityCull()
+  iconCuller = new VisibilityCull()
   edgeCuller = new VisibilityCull()
   toggleCuller = new VisibilityCull()
 
@@ -28,10 +35,12 @@ export async function startCulling(): Promise<void> {
     if (viewport.dirty) {
       const edgesVisible = viewport.scale.x > DEFAULT_EDGE_CULLING_THRESHOLD
       const labelsVisible = viewport.scale.x > DEFAULT_LABEL_CULLING_THRESHOLD
+      const iconsVisible = viewport.scale.x > DEFAULT_ICON_CULLING_THRESHOLD
       const togglesVisible = viewport.scale.x > DEFAULT_TOGGLE_CULLING_THRESHOLD
 
       edgeCuller?.toggle(edgesVisible)
       labelCuller?.toggle(labelsVisible)
+      iconCuller?.toggle(iconsVisible)
       toggleCuller?.toggle(togglesVisible)
       viewportCuller?.cull(application.renderer.screen)
 
@@ -41,6 +50,7 @@ export async function startCulling(): Promise<void> {
 
   emitter.emit('cullCreated', viewportCuller)
   emitter.emit('labelCullCreated', labelCuller)
+  emitter.emit('iconCullCreated', labelCuller)
   emitter.emit('edgeCullCreated', edgeCuller)
   emitter.emit('toggleCullCreated', toggleCuller)
 }
@@ -49,6 +59,8 @@ export function stopCulling(): void {
   viewportCuller = null
   labelCuller?.clear()
   labelCuller = null
+  iconCuller?.clear()
+  iconCuller = null
   edgeCuller?.clear()
   edgeCuller = null
   toggleCuller?.clear()
@@ -89,6 +101,14 @@ export async function waitForLabelCull(): Promise<VisibilityCull> {
   }
 
   return await waitForEvent('labelCullCreated')
+}
+
+export async function waitForIconCull(): Promise<VisibilityCull> {
+  if (iconCuller) {
+    return iconCuller
+  }
+
+  return await waitForEvent('iconCullCreated')
 }
 
 export async function waitForToggleCull(): Promise<VisibilityCull> {

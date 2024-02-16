@@ -6,7 +6,7 @@ import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
 import { LayoutSettings } from '@/models/layout'
 import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
-import { NodeSelection } from '@/models/selection'
+import { GraphItemSelection } from '@/models/selection'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
 import { VisibilityCull } from '@/services/visibilityCull'
@@ -20,6 +20,7 @@ type Events = {
   stageUpdated: HTMLDivElement,
   viewportCreated: Viewport,
   viewportDateRangeUpdated: ViewportDateRange,
+  viewportMoved: null,
   configCreated: RequiredGraphConfig,
   configUpdated: RequiredGraphConfig,
   scopeCreated: EffectScope,
@@ -29,10 +30,11 @@ type Events = {
   layoutSettingsCreated: LayoutSettings,
   cullCreated: Cull,
   labelCullCreated: VisibilityCull,
+  iconCullCreated: VisibilityCull,
   edgeCullCreated: VisibilityCull,
   runDataCreated: RunGraphData,
   runDataUpdated: RunGraphData,
-  nodeSelected: NodeSelection | null,
+  itemSelected: GraphItemSelection | null,
   layoutUpdated: void,
   toggleCullCreated: VisibilityCull,
 }

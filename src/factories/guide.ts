@@ -31,8 +31,7 @@ export async function guideFactory() {
   let currentLabelFormatter: FormatDate
 
   emitter.on('scaleUpdated', updated => scale = updated)
-
-  application.ticker.add(() => {
+  emitter.on('viewportMoved', () => {
     if (settings.disableGuides) {
       return
     }
