@@ -43,9 +43,8 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
     }
 
     selected = isCurrentlySelected
-    const options = isCluster && date ? { date, ids } : undefined
 
-    render(options)
+    render()
   })
 
   async function render(clusterOptions?: ArtifactClusterFactoryRenderProps): Promise<Container> {
@@ -59,7 +58,7 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
       return element
     }
 
-    await renderArtifact(clusterOptions)
+    await renderArtifact(isCluster ? { date, ids } : undefined)
 
     updatePosition()
 
@@ -93,6 +92,14 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
     element.position.set(centeredX, y)
   }
 
+  function hideCluster(): void {
+    if (!isCluster) {
+      return
+    }
+
+    renderArtifact()
+  }
+
   function getDate(): Date | null {
     return date
   }
@@ -104,6 +111,7 @@ export async function flowRunArtifactFactory(artifact?: Artifact) {
   return {
     element,
     isCluster,
+    hideCluster,
     getDate,
     getIds,
     render,
