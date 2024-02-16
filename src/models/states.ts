@@ -11,3 +11,9 @@ export const stateType = [
 ] as const
 
 export type StateType = typeof stateType[number]
+
+export type StateEvent = {
+  id: string,
+  occurred: Date,
+  type: StateType,
+}

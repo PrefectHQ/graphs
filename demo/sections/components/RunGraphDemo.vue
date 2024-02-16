@@ -89,6 +89,9 @@
       node: node => ({
         background: stateTypeColors[node.state_type],
       }),
+      state: state => ({
+        background: stateTypeColors[state.type],
+      }),
     },
   }))
 </script>
