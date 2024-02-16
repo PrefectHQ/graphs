@@ -33,12 +33,12 @@ export async function artifactClusterFactory() {
     }
   })
 
-  async function render(props?: ArtifactClusterFactoryRenderProps): Promise<string[]> {
+  async function render(props?: ArtifactClusterFactoryRenderProps): Promise<void> {
     if (!props) {
       currentDate = null
       currentIds = []
       element.visible = false
-      return []
+      return
     }
 
     const { ids, date } = props
@@ -47,8 +47,6 @@ export async function artifactClusterFactory() {
 
     await renderArtifactNode({ selected, type: 'unknown', name: ids.length.toString() })
     element.visible = true
-
-    return ids
   }
 
   function getSelected(): boolean {

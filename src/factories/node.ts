@@ -93,7 +93,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       createArtifactsContainer()
     }
 
-    const promises: Promise<BoundsContainer>[] = []
+    const promises: Promise<void>[] = []
 
     for (const artifact of artifactsData) {
       promises.push(createArtifact(artifact))
@@ -104,7 +104,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     alignArtifacts()
   }
 
-  async function createArtifact(artifact: Artifact): Promise<BoundsContainer> {
+  async function createArtifact(artifact: Artifact): Promise<void> {
     if (artifacts.has(artifact.id)) {
       return artifacts.get(artifact.id)!.render()
     }
