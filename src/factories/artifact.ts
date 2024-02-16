@@ -39,8 +39,23 @@ export async function artifactFactory(artifact: Artifact, { cullAtZoomThreshold 
     return element
   }
 
+  function getSelected(): boolean {
+    return selected
+  }
+
+  function getDate(): Date {
+    return artifact.created
+  }
+
+  function getId(): string {
+    return artifact.id
+  }
+
   return {
     element,
     render,
+    getSelected,
+    getDate,
+    getId,
   }
 }
