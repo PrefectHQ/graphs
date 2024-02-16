@@ -35,9 +35,7 @@
       </template>
       <p-divider />
       <p-checkbox v-model="hideEdges" label="Hide dependency arrows" />
-      <template v-if="hasArtifacts">
-        <p-checkbox v-model="hideArtifacts" label="Hide artifacts" />
-      </template>
+      <p-checkbox v-model="hideArtifacts" label="Hide artifacts" />
     </p-overflow-menu>
   </p-pop-over>
 </template>
@@ -48,7 +46,7 @@
   import { computed } from 'vue'
   import { DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
-  import { layout, resetHorizontalScaleMultiplier, setDisabledEdges, setDisabledArtifacts, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
+  import { layout, resetHorizontalScaleMultiplier, setDisabledArtifacts, setDisabledEdges, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
   import { eventTargetIsInput } from '@/utilities/keyboard'
 
   defineProps<{

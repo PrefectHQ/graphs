@@ -1,7 +1,8 @@
-import debounce from 'lodash.debounce'
+import throttle from 'lodash.throttle'
 import { Container } from 'pixi.js'
-import { DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE, DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
-import { ArtifactClusterFactory, artifactClusterFactory } from '@/factories/artifactCluster'
+import { DEFAULT_ROOT_ARTIFACT_COLLISION_THROTTLE, DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
+import { ArtifactFactory } from '@/factories/artifact'
+import { ArtifactClusterFactory } from '@/factories/artifactCluster'
 import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { Artifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
@@ -17,13 +18,11 @@ export async function flowRunArtifactsFactory() {
   const config = await waitForConfig()
   const settings = await waitForSettings()
 
-  const artifacts: Map<string, FlowRunArtifactFactory> = new Map()
+  const artifacts: Map<string, ArtifactFactory> = new Map()
   const clusterNodes: ArtifactClusterFactory[] = []
 
   let container: Container | null = null
   let internalData: Artifact[] | null = null
-  let availableClusterNodes: ArtifactClusterFactory[] = []
-  let visibleItems: (FlowRunArtifactFactory | ArtifactClusterFactory)[] = []
   let nonTemporalAlignmentEngaged = false
 
   emitter.on('viewportMoved', () => update())
@@ -63,7 +62,7 @@ export async function flowRunArtifactsFactory() {
       return artifacts.get(artifact.id)!.render()
     }
 
-    const factory = await flowRunArtifactFactory(artifact)
+    const factory = await flowRunArtifactFactory({ type: 'artifact', artifact })
 
     artifacts.set(artifact.id, factory)
 
@@ -85,7 +84,7 @@ export async function flowRunArtifactsFactory() {
 
     if (!layout.isTemporal()) {
       if (!nonTemporalAlignmentEngaged) {
-        clearClustering()
+        clearClusters()
         alignNonTemporal()
         nonTemporalAlignmentEngaged = true
       }
@@ -99,16 +98,123 @@ export async function flowRunArtifactsFactory() {
     checkLayout()
   }
 
-  const checkLayout = debounce(async () => {
-    visibleItems = [...artifacts.values()]
-    availableClusterNodes = [...clusterNodes]
+  const checkLayout = throttle(async () => {
+    const visibleItems = [...artifacts.values()]
+    const availableClusterNodes = [...clusterNodes]
+    visibleItems.sort((itemA, itemB) => itemA.element.x - itemB.element.x)
 
-    await checkCollisions()
+    await checkCollisions(visibleItems, availableClusterNodes)
 
     for (const cluster of availableClusterNodes) {
       cluster.render()
     }
-  }, DEFAULT_ROOT_ARTIFACT_COLLISION_DEBOUNCE)
+  }, DEFAULT_ROOT_ARTIFACT_COLLISION_THROTTLE)
+
+  async function checkCollisions(
+    visibleItems: FlowRunArtifactFactory[],
+    availableClusterNodes: ArtifactClusterFactory[],
+    startIndex?: number,
+  ): Promise<void> {
+    let checkpoint
+    let prevIndex: number | null = null
+    let collisionIndex: number | null = null
+
+    for (let i = startIndex ?? 0; i < visibleItems.length; i++) {
+      const item = visibleItems[i]
+      const itemX = item.element.x
+      item.element.visible = true
+
+      if (prevIndex !== null && checkpoint && itemX < checkpoint) {
+        collisionIndex = i
+        break
+      }
+
+      prevIndex = i
+      checkpoint = itemX + item.element.width
+    }
+
+    if (collisionIndex !== null && prevIndex !== null) {
+      const prevItem = visibleItems[prevIndex]
+      const collisionItem = visibleItems[collisionIndex]
+
+      prevItem.element.visible = false
+      collisionItem.element.visible = false
+
+      const cluster = await clusterItems(prevItem, collisionItem, availableClusterNodes)
+
+      if (cluster) {
+        visibleItems.splice(prevIndex, 1, cluster)
+        visibleItems.splice(collisionIndex, 1)
+      }
+
+      checkCollisions(visibleItems, availableClusterNodes, prevIndex)
+    }
+  }
+
+  async function clusterItems(
+    prevItem: ArtifactFactory | ArtifactClusterFactory,
+    currentItem: ArtifactFactory | ArtifactClusterFactory,
+    availableClusterNodes: ArtifactClusterFactory[],
+  ): Promise<FlowRunArtifactFactory | null> {
+    const prevDate = prevItem.getDate()
+    const currentDate = currentItem.getDate()
+    const prevIds = 'getId' in prevItem ? [prevItem.getId()] : prevItem.getIds()
+    const currentIds = 'getId' in currentItem ? [currentItem.getId()] : currentItem.getIds()
+
+    if (!prevDate || !currentDate) {
+      console.error('flowRunArtifacts: visible item is missing date')
+      return null
+    }
+
+    let clusterNode: FlowRunArtifactFactory
+
+    if ('isCluster' in prevItem) {
+      clusterNode = prevItem
+    } else if ('isCluster' in currentItem) {
+      clusterNode = currentItem
+    } else if (availableClusterNodes.length > 0) {
+      clusterNode = availableClusterNodes.pop()!
+    } else {
+      const newCluster = await flowRunArtifactFactory({ type: 'cluster' })
+      container!.addChild(newCluster.element)
+      clusterNodes.push(newCluster)
+
+      clusterNode = newCluster
+    }
+
+    const ids = [...prevIds, ...currentIds]
+    const date = getCenteredDate(ids)
+
+    clusterNode.render({ ids, date })
+
+    return clusterNode
+  }
+
+  function getCenteredDate(ids: string[]): Date {
+    const times = ids.reduce((acc: number[], id) => {
+      const artifact = artifacts.get(id)
+
+      if (artifact) {
+        acc.push(artifact.getDate().getTime())
+      }
+
+      return acc
+    }, [])
+
+    const min = Math.min(...times)
+    const max = Math.max(...times)
+
+    return new Date((min + max) / 2)
+  }
+
+  function clearClusters(): void {
+    for (const cluster of clusterNodes) {
+      cluster.render()
+    }
+    for (const artifact of artifacts.values()) {
+      artifact.element.visible = true
+    }
+  }
 
   function alignNonTemporal(): void {
     const { artifactContentGap } = config.styles
@@ -118,92 +224,6 @@ export async function flowRunArtifactsFactory() {
 
       artifact.element.x = x
       x += artifact.element.width + artifactContentGap
-    }
-  }
-
-  async function checkCollisions(): Promise<void> {
-    let lastEndX
-    let prevItem: FlowRunArtifactFactory | ArtifactClusterFactory | undefined
-    let collisionItem: FlowRunArtifactFactory | ArtifactClusterFactory | undefined
-
-    visibleItems.sort((itemA, itemB) => itemA.element.x - itemB.element.x)
-
-    for (const item of visibleItems) {
-      const itemX = item.element.x
-      item.element.visible = true
-
-      if (prevItem && lastEndX && itemX < lastEndX) {
-        collisionItem = item
-        break
-      }
-
-      prevItem = item
-      lastEndX = itemX + item.element.width
-    }
-
-    if (collisionItem && prevItem) {
-      visibleItems = visibleItems.filter((item) => item !== prevItem && item !== collisionItem)
-
-      collisionItem.element.visible = false
-      prevItem.element.visible = false
-
-      await handleCollision(prevItem, collisionItem)
-    }
-  }
-
-  async function handleCollision(
-    prevItem: FlowRunArtifactFactory | ArtifactClusterFactory,
-    currentItem: FlowRunArtifactFactory | ArtifactClusterFactory,
-  ): Promise<void> {
-    const isPrevItemCluster = 'getCurrentData' in prevItem
-    const isCurrentCluster = 'getCurrentData' in currentItem
-
-    const prevDate = isPrevItemCluster ? prevItem.getCurrentData()?.date : prevItem.data.created
-    const prevIds = isPrevItemCluster ? prevItem.getCurrentData()?.ids : [prevItem.data.id]
-    const currentDate = isCurrentCluster ? currentItem.getCurrentData()?.date : currentItem.data.created
-    const currentIds = isCurrentCluster ? currentItem.getCurrentData()?.ids : [currentItem.data.id]
-
-    if (!prevDate || !currentDate || !prevIds || !currentIds) {
-      console.error('flowRunArtifacts: visible item is missing date or ID data')
-      return
-    }
-
-    let clusterNode: ArtifactClusterFactory
-
-    if (isPrevItemCluster) {
-      clusterNode = prevItem
-    } else if (isCurrentCluster) {
-      clusterNode = currentItem
-    } else {
-      clusterNode = await getClusterNode()
-    }
-
-    const ids = [...prevIds, ...currentIds]
-    const date = new Date((prevDate.getTime() + currentDate.getTime()) / 2)
-
-    clusterNode.render({ ids, date })
-    visibleItems.push(clusterNode)
-    checkCollisions()
-  }
-
-  async function getClusterNode(): Promise<ArtifactClusterFactory> {
-    if (availableClusterNodes.length > 0) {
-      return availableClusterNodes.pop()!
-    }
-
-    const newCluster = await artifactClusterFactory()
-    container!.addChild(newCluster.element)
-    clusterNodes.push(newCluster)
-
-    return newCluster
-  }
-
-  function clearClustering(): void {
-    for (const cluster of clusterNodes) {
-      cluster.render()
-    }
-    for (const artifact of artifacts.values()) {
-      artifact.element.visible = true
     }
   }
 

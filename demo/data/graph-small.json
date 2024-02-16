@@ -15,29 +15,6 @@
     "68ba2fce-caac-4b07-9f1c-4cb25ff6a3ec",
     "be920a79-18e9-4521-9c39-0f4883de34af"
   ],
-  "state_events": [
-    {
-      "id": "9bb2d2fb-6534-4810-a8d0-c41af83f80b4",
-      "occurred": "2023-07-27T15:50:39.425118+00:00",
-      "type": "SCHEDULED",
-      "from": null
-    }, {
-      "id": "eab2f3de-91f2-4b29-b9de-1a8f83deaec4",
-      "occurred": "2023-09-27T15:50:30.425118+00:00",
-      "type": "PENDING",
-      "from": "SCHEDULED"
-    }, {
-      "id": "003d4c00-c30a-41c9-bb49-daed6dc80a3f",
-      "occurred": "2023-09-27T15:50:39.425118+00:00",
-      "type": "RUNNING",
-      "from": "PENDING"
-    }, {
-      "id": "56912bb1-e172-4ea8-9be7-c4f2fe9aaa54",
-      "occurred": "2023-09-27T15:51:08.999871+00:00",
-      "type": "COMPLETED",
-      "from": "RUNNING"
-    }
-  ],
   "artifacts": [
     {
       "id": "ae8aab85-b3bd-44b7-90d0-8afc95bf1ba5",

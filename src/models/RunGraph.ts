@@ -1,7 +1,7 @@
 import { ColorSource } from 'pixi.js'
 import { Artifact } from '@/models'
 import { GraphItemSelection } from '@/models/selection'
-import { StateEvent, StateType } from '@/models/states'
+import { StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
 
 export type RunGraphProps = {
@@ -9,7 +9,6 @@ export type RunGraphProps = {
   viewport?: ViewportDateRange,
   fullscreen?: boolean | null,
   selected?: GraphItemSelection | null,
-  hasArtifacts?: boolean,
 }
 
 export type RunGraphData = {
@@ -18,7 +17,6 @@ export type RunGraphData = {
   end_time: Date | null,
   nodes: RunGraphNodes,
   artifacts?: Artifact[],
-  state_events?: StateEvent[],
 }
 
 export type RunGraphNodes = Map<string, RunGraphNode>

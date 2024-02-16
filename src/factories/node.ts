@@ -49,7 +49,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected(node)
+    const isCurrentlySelected = isSelected({ kind: internalNode.kind, id: internalNode.id })
 
     if (isCurrentlySelected !== nodeIsSelected) {
       nodeIsSelected = isCurrentlySelected
@@ -77,6 +77,10 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       createArtifacts(node.artifacts),
     ])
 
+    if (artifactsContainer) {
+      artifactsContainer.visible = !settings.disableArtifacts
+    }
+
     if (node.end_time) {
       stopTicking()
     }
@@ -85,7 +89,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   async function createArtifacts(artifactsData?: Artifact[]): Promise<void> {
-    if (settings.disableArtifacts || !artifactsData) {
+    if (!artifactsData || settings.disableArtifacts) {
       return
     }
 

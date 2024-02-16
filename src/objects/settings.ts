@@ -35,8 +35,9 @@ export function stopSettings(): void {
   layout.horizontalScaleMultiplierDefault = 0
   layout.horizontalScaleMultiplier = 0
   layout.disableAnimations = false
-  layout.disableEdges = false
   layout.disableGuides = false
+  layout.disableEdges = false
+  layout.disableArtifacts = false
 }
 
 export const layout = reactive<LayoutSettings>({
@@ -45,8 +46,8 @@ export const layout = reactive<LayoutSettings>({
   horizontalScaleMultiplierDefault: 0,
   horizontalScaleMultiplier: 0,
   disableAnimations: false,
-  disableEdges: false,
   disableGuides: false,
+  disableEdges: false,
   disableArtifacts: false,
   isTemporal() {
     return this.horizontal === 'temporal'
