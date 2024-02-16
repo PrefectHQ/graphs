@@ -1,7 +1,6 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_ROOT_FLOW_STATE_Z_INDEX } from '@/consts'
 import { FlowRunStateFactory, flowRunStateFactory } from '@/factories/flowRunState'
-import { BoundsContainer } from '@/models/boundsContainer'
 import { StateEvent } from '@/models/states'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -22,7 +21,7 @@ export function flowRunStatesFactory() {
       return
     }
 
-    const promises: Promise<BoundsContainer>[] = []
+    const promises: Promise<void>[] = []
 
     for (let i = 0; i < internalData.length; i++) {
       promises.push(createState(internalData[i], i))
@@ -31,15 +30,15 @@ export function flowRunStatesFactory() {
     await Promise.all(promises)
   }
 
-  async function createState(state: StateEvent, currIndex: number): Promise<BoundsContainer> {
-    const nextState = internalData![currIndex + 1]
-    const end = nextState.occurred
+  async function createState(state: StateEvent, currIndex: number): Promise<void> {
+    const nextState = internalData && internalData.length >= currIndex + 1 && internalData[currIndex + 1]
+    const options = nextState ? { end: nextState.occurred } : undefined
 
     if (states.has(state.id)) {
-      return states.get(state.id)!.render({ end })
+      return states.get(state.id)!.render(options)
     }
 
-    const stateFactory = await flowRunStateFactory(state, { end })
+    const stateFactory = await flowRunStateFactory(state, options)
 
     states.set(state.id, stateFactory)
 

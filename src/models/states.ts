@@ -16,5 +16,4 @@ export type StateEvent = {
   id: string,
   occurred: Date,
   type: StateType,
-  from: StateType | null,
 }

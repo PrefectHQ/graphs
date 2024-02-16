@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js'
+import { ColorSource, Container } from 'pixi.js'
 import { rectangleFactory } from '@/factories/rectangle'
 import { StateEvent } from '@/models/states'
 import { waitForApplication, waitForViewport } from '@/objects'
@@ -13,6 +13,12 @@ type FlowRunStateFactoryOptions = {
   end: Date,
 }
 
+type StateRectangleRenderProps = {
+  x: number,
+  width: number,
+  background: ColorSource,
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunStateFactory(state: StateEvent, options?: FlowRunStateFactoryOptions) {
   const application = await waitForApplication()
@@ -21,11 +27,13 @@ export async function flowRunStateFactory(state: StateEvent, options?: FlowRunSt
   let scale = await waitForScale()
 
   const element = new Container()
-  const solidBar = await rectangleFactory()
+  const bar = await rectangleFactory()
+  const area = await rectangleFactory()
 
   let end: Date | null = options?.end ?? null
 
-  element.addChild(solidBar)
+  element.addChild(area)
+  element.addChild(bar)
 
   emitter.on('viewportMoved', () => render())
   emitter.on('scaleUpdated', updated => {
@@ -33,7 +41,7 @@ export async function flowRunStateFactory(state: StateEvent, options?: FlowRunSt
     render()
   })
 
-  function render(newOptions?: FlowRunStateFactoryOptions): Container {
+  function render(newOptions?: FlowRunStateFactoryOptions): void {
     if (newOptions) {
       const { end: newEnd } = newOptions
       end = newEnd
@@ -41,28 +49,55 @@ export async function flowRunStateFactory(state: StateEvent, options?: FlowRunSt
 
     if (!layout.isTemporal()) {
       element.visible = false
-      return element
+      return
     }
 
-    renderSolidBar()
+    const options = getRenderStyles()
 
-    return element
+    renderBar(options)
+    renderArea(options)
   }
 
-  function renderSolidBar(): void {
-    const { flowStateSolidBarHeight } = config.styles
+  function getRenderStyles(): StateRectangleRenderProps {
     const { background = '#fff' } = config.styles.state(state)
 
-    const x = scale(state.occurred) * viewport.scale._x + viewport.worldTransform.tx
+    const x = Math.max(scale(state.occurred) * viewport.scale._x + viewport.worldTransform.tx, 0)
+
     const width = end
       ? scale(end) * viewport.scale._x + viewport.worldTransform.tx - x
       : application.screen.width - x
 
-    solidBar.x = x > 0 ? x : 0
-    solidBar.y = application.screen.height - flowStateSolidBarHeight
-    solidBar.width = width > 0 ? width : 0
-    solidBar.height = flowStateSolidBarHeight
-    solidBar.tint = background
+    return {
+      x,
+      width: Math.max(width, 0),
+      background,
+    }
+  }
+
+  function renderBar({ x, width, background }: StateRectangleRenderProps): void {
+    const { flowStateBarHeight } = config.styles
+
+    bar.x = x
+    bar.y = application.screen.height - flowStateBarHeight
+    bar.width = width
+    bar.height = flowStateBarHeight
+    bar.tint = background
+  }
+
+  function renderArea({ x, width, background }: StateRectangleRenderProps): void {
+    if (state.type === 'RUNNING') {
+      area.visible = false
+      return
+    }
+
+    const { flowStateBarHeight, flowStateAreaAlpha } = config.styles
+
+    area.x = x
+    area.y = 0
+    area.width = width
+    area.height = application.screen.height - flowStateBarHeight
+    area.tint = background
+    area.alpha = flowStateAreaAlpha
   }
 
   return {
