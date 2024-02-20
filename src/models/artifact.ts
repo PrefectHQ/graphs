@@ -14,7 +14,6 @@ export type Artifact = {
   created: Date,
   key: string,
   type: ArtifactType,
-  isLatest: boolean,
 }
 
 export const artifactTypeIconMap = {
