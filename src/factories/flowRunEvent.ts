@@ -1,4 +1,3 @@
-import { DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET } from '@/consts'
 import { EventFactory, eventFactory } from '@/factories/event'
 import { EventClusterFactory, EventClusterFactoryRenderProps, eventClusterFactory } from '@/factories/eventCluster'
 import { Event } from '@/models'
@@ -57,11 +56,10 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
 
     const { element } = factory
 
-    const selectedOffset = 0
-
     const x = scale(date) * viewport.scale._x + viewport.worldTransform.tx
-    const centeredX = x - (element.width - selectedOffset) / 2
-    const y = application.screen.height - (element.height - selectedOffset) - DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET
+    const centeredX = x - element.width / 2
+    console.log(element.height)
+    const y = application.screen.height - element.height
 
     element.position.set(centeredX, y)
   }
