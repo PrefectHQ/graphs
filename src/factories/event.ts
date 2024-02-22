@@ -20,8 +20,13 @@ export async function eventFactory(event: Event) {
     // todo
   }
 
+  function getDate(): Date {
+    return event.occurred
+  }
+
   return {
     element,
     render,
+    getDate,
   }
 }

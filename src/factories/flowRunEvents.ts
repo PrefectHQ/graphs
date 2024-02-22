@@ -1,6 +1,8 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_ROOT_EVENT_Z_INDEX } from '@/consts'
-import { EventFactory, eventFactory } from '@/factories/event'
+import { EventFactory } from '@/factories/event'
+import { EventClusterFactory } from '@/factories/eventCluster'
+import { flowRunEventFactory } from '@/factories/flowRunEvent'
 import { Event } from '@/models'
 import { waitForApplication } from '@/objects'
 import { emitter } from '@/objects/events'
@@ -10,7 +12,7 @@ export async function flowRunEventsFactory() {
   const application = await waitForApplication()
 
   const events = new Map<string, EventFactory>()
-  const clusterNodes: Event[] = []
+  const clusterNodes: EventClusterFactory[] = []
 
   let container: Container | null = null
   let internalData: Event[] | null = null
@@ -61,7 +63,7 @@ export async function flowRunEventsFactory() {
       return events.get(event.id)!.render()
     }
 
-    const factory = await eventFactory(event)
+    const factory = await flowRunEventFactory({ type: 'event', event })
 
     events.set(event.id, factory)
 
