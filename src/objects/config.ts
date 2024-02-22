@@ -43,6 +43,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     artifactIconColor: '#ffffff',
     flowStateBarHeight: 6,
     flowStateAreaAlpha: 0.1,
+    eventRadiusDefault: 8,
     edgeColor: '#51525C',
     guideLineWidth: 1,
     guideLineColor: '#51525C',
