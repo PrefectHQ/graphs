@@ -1,4 +1,3 @@
-import { DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET } from '@/consts'
 import { ArtifactFactory, artifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
 import { Artifact } from '@/models'
@@ -59,6 +58,7 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
 
     const selected = factory.getSelected()
     const { element } = factory
+    const { eventTargetSize } = config.styles
 
     let selectedOffset = 0
 
@@ -69,7 +69,9 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
 
     const x = scale(date) * viewport.scale._x + viewport.worldTransform.tx
     const centeredX = x - (element.width - selectedOffset) / 2
-    const y = application.screen.height - (element.height - selectedOffset) - DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET
+    const y = application.screen.height
+      - (element.height - selectedOffset)
+      - eventTargetSize
 
     element.position.set(centeredX, y)
   }
