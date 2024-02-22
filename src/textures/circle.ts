@@ -1,4 +1,5 @@
-import { Graphics, RenderTexture, WRAP_MODES } from 'pixi.js'
+import { Graphics, RenderTexture } from 'pixi.js'
+import { DEFAULT_TEXTURE_RESOLUTION } from '@/consts'
 import { waitForApplication } from '@/objects/application'
 import { cache } from '@/objects/cache'
 
@@ -15,7 +16,7 @@ async function texture({ radius }: CircleStyle): Promise<RenderTexture> {
   circle.endFill()
 
   const texture = application.renderer.generateTexture(circle, {
-    wrapMode: WRAP_MODES.REPEAT,
+    resolution: DEFAULT_TEXTURE_RESOLUTION,
   })
 
   return texture

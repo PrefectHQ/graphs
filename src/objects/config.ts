@@ -44,7 +44,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     flowStateBarHeight: 6,
     flowStateSelectedBarHeight: 8,
     flowStateAreaAlpha: 0.1,
-    eventRadiusDefault: 8,
+    eventRadiusDefault: 4,
     edgeColor: '#51525C',
     guideLineWidth: 1,
     guideLineColor: '#51525C',
