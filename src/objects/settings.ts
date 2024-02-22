@@ -38,6 +38,7 @@ export function stopSettings(): void {
   layout.disableGuides = false
   layout.disableEdges = false
   layout.disableArtifacts = false
+  layout.disableEvents = false
 }
 
 export const layout = reactive<LayoutSettings>({
@@ -49,6 +50,7 @@ export const layout = reactive<LayoutSettings>({
   disableGuides: false,
   disableEdges: false,
   disableArtifacts: false,
+  disableEvents: false,
   isTemporal() {
     return this.horizontal === 'temporal'
   },
@@ -177,6 +179,18 @@ export function setDisabledArtifacts(value: boolean): void {
   const emit = emitFactory()
 
   layout.disableArtifacts = value
+
+  emit()
+}
+
+export function setDisabledEvents(value: boolean): void {
+  if (layout.disableEvents === value) {
+    return
+  }
+
+  const emit = emitFactory()
+
+  layout.disableEvents = value
 
   emit()
 }

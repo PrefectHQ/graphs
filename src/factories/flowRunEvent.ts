@@ -4,7 +4,7 @@ import { Event } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
-import { layout } from '@/objects/settings'
+import { layout, waitForSettings } from '@/objects/settings'
 
 export type FlowRunEventFactory = Awaited<ReturnType<typeof flowRunEventFactory>>
 
@@ -23,6 +23,7 @@ type RenderPropsType<T> = T extends { type: 'cluster' }
 export async function flowRunEventFactory<T extends EventFactoryOptions>(options: T): Promise<EventFactoryType<T>> {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
+  const settings = await waitForSettings()
   let scale = await waitForScale()
 
   const factory = await getFactory() as EventFactoryType<T>
@@ -49,8 +50,7 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
   function updatePosition(): void {
     const date = factory.getDate()
 
-    // TODO: || settings.disableEvents
-    if (!date || !layout.isTemporal()) {
+    if (!date || !layout.isTemporal() || settings.disableEvents) {
       return
     }
 
