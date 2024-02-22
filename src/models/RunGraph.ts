@@ -1,5 +1,5 @@
 import { ColorSource } from 'pixi.js'
-import { RunGraphArtifact } from '@/models'
+import { RunGraphArtifact, Event } from '@/models'
 import { GraphItemSelection } from '@/models/selection'
 import { RunGraphStateEvent, StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
@@ -18,6 +18,7 @@ export type RunGraphData = {
   nodes: RunGraphNodes,
   artifacts?: RunGraphArtifact[],
   states?: RunGraphStateEvent[],
+  events?: Event[],
 }
 
 export type RunGraphNodes = Map<string, RunGraphNode>
@@ -90,6 +91,7 @@ export type RunGraphStyles = {
   flowStateBarHeight?: number,
   flowStateSelectedBarHeight?: number,
   flowStateAreaAlpha?: number,
+  eventRadiusDefault?: number,
   guideLineWidth?: number,
   guideLineColor?: ColorSource,
   guideTextTopPadding?: number,

@@ -38,6 +38,21 @@
       "name": "Completed"
     }
   ],
+  "events": [
+    {
+      "id": "flow-event-001",
+      "occurred": "2023-09-27T15:50:40.425118+00:00"
+    }, {
+      "id": "flow-event-001",
+      "occurred": "2023-09-27T15:50:41.425118+00:00"
+    }, {
+      "id": "flow-event-001",
+      "occurred": "2023-09-27T15:50:42.425118+00:00"
+    }, {
+      "id": "flow-event-001",
+      "occurred": "2023-09-27T15:51:04.425118+00:00"
+    }
+  ],
   "artifacts": [
     {
       "id": "ae8aab85-b3bd-44b7-90d0-8afc95bf1ba5",
