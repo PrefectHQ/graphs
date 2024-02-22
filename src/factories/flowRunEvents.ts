@@ -6,10 +6,12 @@ import { flowRunEventFactory } from '@/factories/flowRunEvent'
 import { Event } from '@/models'
 import { waitForApplication } from '@/objects'
 import { emitter } from '@/objects/events'
+import { waitForSettings } from '@/objects/settings'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunEventsFactory() {
   const application = await waitForApplication()
+  const settings = await waitForSettings()
 
   const events = new Map<string, EventFactory>()
   const clusterNodes: EventClusterFactory[] = []
@@ -22,14 +24,13 @@ export async function flowRunEventsFactory() {
   emitter.on('viewportMoved', () => update())
 
   async function render(newData?: Event[]): Promise<void> {
-    // TODO: Add hide events setting
-    // if (container) {
-    //   container.visible = !settings.disableEvents
-    // }
+    if (container) {
+      container.visible = !settings.disableEvents
+    }
 
-    // if (settings.disableEvents) {
-    //   return
-    // }
+    if (settings.disableEvents) {
+      return
+    }
 
     if (newData) {
       internalData = newData
