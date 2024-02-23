@@ -1,4 +1,3 @@
-import { Container } from 'pixi.js'
 import { artifactNodeFactory } from '@/factories/artifactNode'
 import { Artifact } from '@/models/artifact'
 import { emitter } from '@/objects/events'
