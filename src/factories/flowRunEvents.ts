@@ -1,12 +1,14 @@
+import throttle from 'lodash.throttle'
 import { Container } from 'pixi.js'
-import { DEFAULT_ROOT_EVENT_Z_INDEX } from '@/consts'
+import { DEFAULT_ROOT_COLLISION_THROTTLE, DEFAULT_ROOT_EVENT_Z_INDEX } from '@/consts'
 import { EventFactory } from '@/factories/event'
 import { EventClusterFactory } from '@/factories/eventCluster'
 import { flowRunEventFactory } from '@/factories/flowRunEvent'
 import { Event } from '@/models'
 import { waitForApplication } from '@/objects'
 import { emitter } from '@/objects/events'
-import { waitForSettings } from '@/objects/settings'
+import { layout, waitForSettings } from '@/objects/settings'
+import { clusterHorizontalCollisions } from '@/utilities/detectHorizontalCollisions'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunEventsFactory() {
@@ -15,20 +17,19 @@ export async function flowRunEventsFactory() {
 
   const events = new Map<string, EventFactory>()
   const clusterNodes: EventClusterFactory[] = []
+  let availableClusterNodes: EventClusterFactory[] = []
 
   let container: Container | null = null
   let internalData: Event[] | null = null
-
-  // TODO: Handle on non temporal layouts
 
   emitter.on('viewportMoved', () => update())
 
   async function render(newData?: Event[]): Promise<void> {
     if (container) {
-      container.visible = !settings.disableEvents
+      container.visible = !settings.disableEvents || layout.isTemporal()
     }
 
-    if (settings.disableEvents) {
+    if (settings.disableEvents || !layout.isTemporal()) {
       return
     }
 
@@ -65,7 +66,6 @@ export async function flowRunEventsFactory() {
     }
 
     const factory = await flowRunEventFactory({ type: 'event', event })
-
     events.set(event.id, factory)
 
     container!.addChild(factory.element)
@@ -74,7 +74,36 @@ export async function flowRunEventsFactory() {
   }
 
   function update(): void {
-    // TODO: Update
+    if (!container || settings.disableEvents || !layout.isTemporal()) {
+      return
+    }
+
+    checkLayout()
+  }
+
+  const checkLayout = throttle(async () => {
+    availableClusterNodes = [...clusterNodes]
+
+    await clusterHorizontalCollisions({
+      items: events,
+      createCluster,
+    })
+
+    for (const cluster of availableClusterNodes) {
+      cluster.render()
+    }
+  }, DEFAULT_ROOT_COLLISION_THROTTLE)
+
+  async function createCluster(): Promise<EventClusterFactory> {
+    if (availableClusterNodes.length > 0) {
+      return availableClusterNodes.pop()!
+    }
+
+    const newCluster = await flowRunEventFactory({ type: 'cluster' })
+    container!.addChild(newCluster.element)
+    clusterNodes.push(newCluster)
+
+    return newCluster
   }
 
   return {

@@ -50,7 +50,7 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
   function updatePosition(): void {
     const date = factory.getDate()
 
-    if (!date || !layout.isTemporal() || settings.disableEvents) {
+    if (!date || settings.disableEvents || !layout.isTemporal()) {
       return
     }
 
@@ -58,7 +58,6 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
 
     const x = scale(date) * viewport.scale._x + viewport.worldTransform.tx
     const centeredX = x - element.width / 2
-    console.log(element.height)
     const y = application.screen.height - element.height
 
     element.position.set(centeredX, y)
