@@ -9,20 +9,26 @@ import { isSelected, selectItem } from '@/objects/selection'
 
 export type EventClusterFactory = Awaited<ReturnType<typeof eventClusterFactory>>
 
+type EventClusterFactoryOptions = {
+  cullAtZoomThreshold?: boolean,
+}
+
 export type EventClusterFactoryRenderProps = {
   ids: string[],
   date: Date,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function eventClusterFactory() {
+export async function eventClusterFactory(options?: EventClusterFactoryOptions) {
   const element = new Container()
   const config = await waitForConfig()
 
   const targetArea = await rectangleFactory()
   const circle = await circleFactory({ radius: config.styles.eventClusterRadiusDefault })
   const { element: border, render: renderSelectedBorder } = await selectedBorderFactory()
-  const { element: label, render: renderLabelText } = await nodeLabelFactory({ cullAtZoomThreshold: false })
+  const { element: label, render: renderLabelText } = await nodeLabelFactory({
+    cullAtZoomThreshold: options?.cullAtZoomThreshold ?? undefined,
+  })
 
   let currentDate: Date | null = null
   let currentIds: string[] = []

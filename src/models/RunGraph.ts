@@ -33,6 +33,7 @@ export type RunGraphNode = {
   parents: RunGraphEdge[],
   children: RunGraphEdge[],
   artifacts?: Artifact[],
+  events?: Event[],
 }
 
 export type RunGraphEdge = {

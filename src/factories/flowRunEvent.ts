@@ -44,7 +44,7 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
       return await eventFactory(options.event)
     }
 
-    return await eventClusterFactory()
+    return await eventClusterFactory({ cullAtZoomThreshold: false })
   }
 
   function updatePosition(): void {

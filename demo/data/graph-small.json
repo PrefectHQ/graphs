@@ -80,6 +80,15 @@
         "state_type": "COMPLETED",
         "start_time": "2023-09-27T15:50:39.995728+00:00",
         "end_time": "2023-09-27T15:50:40.532868+00:00",
+        "events": [
+          {
+            "id": "task-event-001",
+            "occurred": "2023-09-27T15:50:40.000000+00:00"
+          }, {
+            "id": "task-event-002",
+            "occurred": "2023-09-27T15:50:40.500000+00:00"
+          }
+        ],
         "parents": [],
         "children": [
           {
