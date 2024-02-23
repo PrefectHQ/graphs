@@ -25,8 +25,10 @@ export async function flowRunEventsFactory() {
   emitter.on('viewportMoved', () => update())
 
   async function render(newData?: Event[]): Promise<void> {
-    if (container) {
-      container.visible = !settings.disableEvents || layout.isTemporal()
+    if (container && !layout.isTemporal()) {
+      container.visible = false
+    } else if (container) {
+      container.visible = !settings.disableEvents
     }
 
     if (settings.disableEvents || !layout.isTemporal()) {
