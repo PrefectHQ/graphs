@@ -11,23 +11,31 @@ export async function eventFactory(event: Event) {
   const element = new Container()
   const config = await waitForConfig()
 
-  const { eventColor, eventRadiusDefault, eventTargetSize } = config.styles
-
   const targetArea = await rectangleFactory()
-  const circle = await circleFactory({ radius: eventRadiusDefault })
+  const circle = await circleFactory({ radius: config.styles.eventRadiusDefault })
 
-  targetArea.alpha = 0
-  targetArea.width = eventTargetSize
-  targetArea.height = eventTargetSize
   element.addChild(targetArea)
-
-  circle.tint = eventColor
-  circle.anchor.set(0.5)
-  circle.position.set(eventTargetSize / 2, eventTargetSize / 2)
   element.addChild(circle)
 
   function render(): void {
-    // nothing to do
+    renderTargetArea()
+    renderCircle()
+  }
+
+  function renderTargetArea(): void {
+    const { eventTargetSize } = config.styles
+
+    targetArea.alpha = 0
+    targetArea.width = eventTargetSize
+    targetArea.height = eventTargetSize
+  }
+
+  function renderCircle(): void {
+    const { eventColor, eventTargetSize } = config.styles
+
+    circle.tint = eventColor
+    circle.anchor.set(0.5)
+    circle.position.set(eventTargetSize / 2, eventTargetSize / 2)
   }
 
   function getId(): string {

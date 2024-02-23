@@ -16,26 +16,12 @@ export async function eventClusterFactory() {
   const element = new Container()
   const config = await waitForConfig()
 
-  const {
-    eventClusterColor,
-    eventRadiusEventDefault,
-    eventTargetSize,
-  } = config.styles
-
   const targetArea = await rectangleFactory()
-  const circle = await circleFactory({ radius: eventRadiusEventDefault })
+  const circle = await circleFactory({ radius: config.styles.eventClusterRadiusDefault })
   const { element: label, render: renderLabelText } = await nodeLabelFactory({ cullAtZoomThreshold: false })
 
-  targetArea.alpha = 0
-  targetArea.width = eventTargetSize
-  targetArea.height = eventTargetSize
   element.addChild(targetArea)
-
-  circle.tint = eventClusterColor
-  circle.anchor.set(0.5)
-  circle.position.set(eventTargetSize / 2, eventTargetSize / 2)
   element.addChild(circle)
-
   element.addChild(label)
 
   let currentDate: Date | null = null
@@ -53,9 +39,27 @@ export async function eventClusterFactory() {
     currentDate = date
     currentIds = ids
 
+    renderTargetArea()
+    renderCircle()
     await renderLabel(ids.length.toString())
 
     element.visible = true
+  }
+
+  function renderTargetArea(): void {
+    const { eventTargetSize } = config.styles
+
+    targetArea.alpha = 0
+    targetArea.width = eventTargetSize
+    targetArea.height = eventTargetSize
+  }
+
+  function renderCircle(): void {
+    const { eventClusterColor, eventTargetSize } = config.styles
+
+    circle.tint = eventClusterColor
+    circle.anchor.set(0.5)
+    circle.position.set(eventTargetSize / 2, eventTargetSize / 2)
   }
 
   async function renderLabel(labelText: string): Promise<void> {
@@ -63,6 +67,7 @@ export async function eventClusterFactory() {
       return
     }
 
+    const { eventTargetSize } = config.styles
     const labelYNudge = -1
 
     label.scale.set(0.6)
