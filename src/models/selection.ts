@@ -24,7 +24,16 @@ export function isArtifactsSelection(selection: GraphItemSelection): selection i
   return selection.kind === 'artifacts'
 }
 
+export type EventSelection = {
+  kind: 'event',
+  id: string,
+}
+export function isEventSelection(selection: GraphItemSelection): selection is EventSelection {
+  return selection.kind === 'event'
+}
+
 export type GraphItemSelection =
   | NodeSelection
   | ArtifactSelection
   | ArtifactsSelection
+  | EventSelection

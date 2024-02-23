@@ -44,6 +44,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     flowStateBarHeight: 6,
     flowStateAreaAlpha: 0.1,
     eventTargetSize: 30,
+    eventSelectedBorderInset: 8,
     eventRadiusDefault: 4,
     eventColor: '#A564F9',
     eventClusterRadiusDefault: 6,

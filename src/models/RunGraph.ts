@@ -91,6 +91,7 @@ export type RunGraphStyles = {
   flowStateBarHeight?: number,
   flowStateAreaAlpha?: number,
   eventTargetSize?: number,
+  eventSelectedBorderInset?: number,
   eventRadiusDefault?: number,
   eventColor?: ColorSource,
   eventClusterRadiusDefault?: number,
