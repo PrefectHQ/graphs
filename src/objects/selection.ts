@@ -5,6 +5,7 @@ import {
   isArtifactSelection,
   isArtifactsSelection,
   isEventSelection,
+  isEventsSelection,
   isNodeSelection
 } from '@/models/selection'
 import { emitter } from '@/objects/events'
@@ -76,6 +77,10 @@ export function isSelected(item: GraphItemSelection): boolean {
         && selected.ids.every(id => item.ids.includes(id))
     case 'event':
       return isEventSelection(selected) && selected.id === item.id
+    case 'events':
+      return isEventsSelection(selected)
+        && selected.ids.length === item.ids.length
+        && selected.ids.every(id => item.ids.includes(id))
     default:
       const exhaustive: never = kind
       throw new Error(`switch does not have case for value: ${exhaustive}`)
