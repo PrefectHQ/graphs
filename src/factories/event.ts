@@ -27,7 +27,11 @@ export async function eventFactory(event: Event) {
   element.addChild(circle)
 
   function render(): void {
-    // todo
+    // nothing to do
+  }
+
+  function getId(): string {
+    return event.id
   }
 
   function getDate(): Date {
@@ -37,6 +41,7 @@ export async function eventFactory(event: Event) {
   return {
     element,
     render,
+    getId,
     getDate,
   }
 }
