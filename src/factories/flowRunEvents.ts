@@ -23,6 +23,7 @@ export async function flowRunEventsFactory() {
   let internalData: Event[] | null = null
 
   emitter.on('viewportMoved', () => update())
+  emitter.on('scaleUpdated', () => update())
 
   async function render(newData?: Event[]): Promise<void> {
     if (container && !layout.isTemporal()) {

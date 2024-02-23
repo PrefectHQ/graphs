@@ -27,6 +27,7 @@ export async function flowRunArtifactsFactory() {
   let nonTemporalAlignmentEngaged = false
 
   emitter.on('viewportMoved', () => update())
+  emitter.on('scaleUpdated', () => update())
 
   async function render(newData?: Artifact[]): Promise<void> {
     if (container) {
