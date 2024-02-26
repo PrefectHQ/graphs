@@ -11,7 +11,7 @@ export async function startFlowRunEvents(): Promise<void> {
     renderEvents(newData?.events)
   }
 
-  if (data.artifacts) {
+  if (data.events) {
     render(data)
   }
 
