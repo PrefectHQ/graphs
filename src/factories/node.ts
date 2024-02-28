@@ -4,7 +4,7 @@ import { animationFactory } from '@/factories/animation'
 import { artifactFactory, ArtifactFactory } from '@/factories/artifact'
 import { FlowRunContainer, flowRunContainerFactory } from '@/factories/nodeFlowRun'
 import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskRun'
-import { Artifact } from '@/models'
+import { RunGraphArtifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
@@ -84,7 +84,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     return container
   }
 
-  async function createArtifacts(artifactsData?: Artifact[]): Promise<void> {
+  async function createArtifacts(artifactsData?: RunGraphArtifact[]): Promise<void> {
     if (!artifactsData || settings.disableArtifacts) {
       return
     }
@@ -104,7 +104,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     alignArtifacts()
   }
 
-  async function createArtifact(artifact: Artifact): Promise<void> {
+  async function createArtifact(artifact: RunGraphArtifact): Promise<void> {
     if (artifacts.has(artifact.id)) {
       return artifacts.get(artifact.id)!.render()
     }

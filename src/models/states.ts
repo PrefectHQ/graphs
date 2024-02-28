@@ -12,7 +12,7 @@ export const stateType = [
 
 export type StateType = typeof stateType[number]
 
-export type StateEvent = {
+export type RunGraphStateEvent = {
   id: string,
   occurred: Date,
   type: StateType,

@@ -4,7 +4,7 @@ import { DEFAULT_ROOT_ARTIFACT_COLLISION_THROTTLE, DEFAULT_ROOT_ARTIFACT_Z_INDEX
 import { ArtifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory } from '@/factories/artifactCluster'
 import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
-import { Artifact } from '@/models'
+import { RunGraphArtifact } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
@@ -21,12 +21,12 @@ export async function flowRunArtifactsFactory() {
   const clusterNodes: ArtifactClusterFactory[] = []
 
   let container: Container | null = null
-  let internalData: Artifact[] | null = null
+  let internalData: RunGraphArtifact[] | null = null
   let nonTemporalAlignmentEngaged = false
 
   emitter.on('viewportMoved', () => update())
 
-  async function render(newData?: Artifact[]): Promise<void> {
+  async function render(newData?: RunGraphArtifact[]): Promise<void> {
     if (container) {
       container.visible = !settings.disableArtifacts
     }
@@ -56,7 +56,7 @@ export async function flowRunArtifactsFactory() {
     await Promise.all(promises)
   }
 
-  async function createArtifact(artifact: Artifact): Promise<void> {
+  async function createArtifact(artifact: RunGraphArtifact): Promise<void> {
     if (artifacts.has(artifact.id)) {
       return artifacts.get(artifact.id)!.render()
     }

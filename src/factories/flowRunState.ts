@@ -1,6 +1,6 @@
 import { ColorSource, Container } from 'pixi.js'
 import { rectangleFactory } from '@/factories/rectangle'
-import { StateEvent } from '@/models/states'
+import { RunGraphStateEvent } from '@/models/states'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
@@ -20,7 +20,7 @@ type StateRectangleRenderProps = {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function flowRunStateFactory(state: StateEvent, options?: FlowRunStateFactoryOptions) {
+export async function flowRunStateFactory(state: RunGraphStateEvent, options?: FlowRunStateFactoryOptions) {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
