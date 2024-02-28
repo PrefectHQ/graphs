@@ -1,7 +1,7 @@
 import { DEFAULT_ROOT_ARTIFACT_BOTTOM_OFFSET } from '@/consts'
 import { ArtifactFactory, artifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
-import { Artifact } from '@/models'
+import { RunGraphArtifact } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
@@ -10,7 +10,7 @@ import { layout, waitForSettings } from '@/objects/settings'
 
 export type FlowRunArtifactFactory = Awaited<ReturnType<typeof flowRunArtifactFactory>>
 
-type ArtifactFactoryOptions = { type: 'artifact', artifact: Artifact } | { type: 'cluster' }
+type ArtifactFactoryOptions = { type: 'artifact', artifact: RunGraphArtifact } | { type: 'cluster' }
 
 type FactoryType<T> = T extends { type: 'artifact' }
   ? ArtifactFactory

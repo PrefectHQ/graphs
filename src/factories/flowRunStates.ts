@@ -1,18 +1,18 @@
 import { Container } from 'pixi.js'
 import { DEFAULT_ROOT_FLOW_STATE_Z_INDEX } from '@/consts'
 import { FlowRunStateFactory, flowRunStateFactory } from '@/factories/flowRunState'
-import { StateEvent } from '@/models/states'
+import { RunGraphStateEvent } from '@/models/states'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function flowRunStatesFactory() {
   const element = new Container()
 
   const states = new Map<string, FlowRunStateFactory>()
-  let internalData: StateEvent[] | null = null
+  let internalData: RunGraphStateEvent[] | null = null
 
   element.zIndex = DEFAULT_ROOT_FLOW_STATE_Z_INDEX
 
-  async function render(newStateData?: StateEvent[]): Promise<void> {
+  async function render(newStateData?: RunGraphStateEvent[]): Promise<void> {
     if (newStateData) {
       internalData = newStateData
     }
@@ -30,7 +30,7 @@ export function flowRunStatesFactory() {
     await Promise.all(promises)
   }
 
-  async function createState(state: StateEvent, currIndex: number): Promise<void> {
+  async function createState(state: RunGraphStateEvent, currIndex: number): Promise<void> {
     const nextState = internalData && internalData.length >= currIndex + 1 && internalData[currIndex + 1]
     const options = nextState ? { end: nextState.occurred } : undefined
 

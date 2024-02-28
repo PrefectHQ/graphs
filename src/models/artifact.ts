@@ -9,7 +9,7 @@ export const artifactTypes = [
 
 export type ArtifactType = typeof artifactTypes[number]
 
-export type Artifact = {
+export type RunGraphArtifact = {
   id: string,
   created: Date,
   key: string,

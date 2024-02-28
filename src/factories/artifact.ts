@@ -1,6 +1,5 @@
-import { Container } from 'pixi.js'
 import { artifactNodeFactory } from '@/factories/artifactNode'
-import { Artifact } from '@/models/artifact'
+import { RunGraphArtifact } from '@/models/artifact'
 import { emitter } from '@/objects/events'
 import { isSelected, selectItem } from '@/objects/selection'
 
@@ -11,7 +10,7 @@ type ArtifactFactoryOptions = {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function artifactFactory(artifact: Artifact, { cullAtZoomThreshold = true }: ArtifactFactoryOptions = {}) {
+export async function artifactFactory(artifact: RunGraphArtifact, { cullAtZoomThreshold = true }: ArtifactFactoryOptions = {}) {
   const { element, render: renderArtifactNode } = await artifactNodeFactory({ cullAtZoomThreshold })
 
   let selected = false
