@@ -12,7 +12,7 @@ export type ArtifactType = typeof artifactTypes[number]
 export type RunGraphArtifact = {
   id: string,
   created: Date,
-  key: string,
+  key?: string,
   type: ArtifactType,
 }
 

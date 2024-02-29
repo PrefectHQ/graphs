@@ -22,7 +22,13 @@ export async function artifactClusterFactory() {
 
   element.on('click', event => {
     event.stopPropagation()
-    selectItem({ kind: 'artifacts', ids: currentIds })
+
+    const position = {
+      x: element.position.x + element.width / 2,
+      y: element.position.y + element.height,
+    }
+
+    selectItem({ kind: 'artifacts', ids: currentIds, position })
   })
   emitter.on('itemSelected', () => {
     const isCurrentlySelected = isSelected({ kind: 'artifacts', ids: currentIds })
