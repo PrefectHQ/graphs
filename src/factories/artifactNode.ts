@@ -78,6 +78,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
 
   async function renderArtifactNode(): Promise<Container> {
     if (!name) {
+      label.visible = false
       return label
     }
 
@@ -97,6 +98,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
     label.tint = artifactTextColor
     label.scale.set(0.75)
     label.position = { x, y }
+    label.visible = true
 
     return label
   }

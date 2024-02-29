@@ -19,6 +19,7 @@ export function isArtifactSelection(selection: GraphItemSelection): selection is
 export type ArtifactsSelection = {
   kind: 'artifacts',
   ids: string[],
+  position?: { x: number, y: number },
 }
 export function isArtifactsSelection(selection: GraphItemSelection): selection is ArtifactsSelection {
   return selection.kind === 'artifacts'
