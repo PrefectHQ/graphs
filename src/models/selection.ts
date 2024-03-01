@@ -1,5 +1,12 @@
 import { RunGraphNode, RunGraphNodeKind, runGraphNodeKinds } from '@/models'
 
+export type GraphSelectionPosition = {
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+}
+
 export type NodeSelection = {
   kind: RunGraphNode['kind'],
   id: string,
@@ -19,7 +26,7 @@ export function isArtifactSelection(selection: GraphItemSelection): selection is
 export type ArtifactsSelection = {
   kind: 'artifacts',
   ids: string[],
-  position?: { x: number, y: number },
+  position?: GraphSelectionPosition,
 }
 export function isArtifactsSelection(selection: GraphItemSelection): selection is ArtifactsSelection {
   return selection.kind === 'artifacts'

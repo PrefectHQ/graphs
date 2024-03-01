@@ -24,8 +24,10 @@ export async function artifactClusterFactory() {
     event.stopPropagation()
 
     const position = {
-      x: element.position.x + element.width / 2,
-      y: element.position.y + element.height,
+      x: element.position.x,
+      y: element.position.y,
+      width: element.width,
+      height: element.height,
     }
 
     selectItem({ kind: 'artifacts', ids: currentIds, position })
