@@ -17,7 +17,7 @@ export type RunGraphData = {
   end_time: Date | null,
   nodes: RunGraphNodes,
   artifacts?: RunGraphArtifact[],
-  state_events?: RunGraphStateEvent[],
+  states?: RunGraphStateEvent[],
 }
 
 export type RunGraphNodes = Map<string, RunGraphNode>
@@ -88,6 +88,7 @@ export type RunGraphStyles = {
   artifactIconSize?: number,
   artifactIconColor?: ColorSource,
   flowStateBarHeight?: number,
+  flowStateSelectedBarHeight?: number,
   flowStateAreaAlpha?: number,
   guideLineWidth?: number,
   guideLineColor?: ColorSource,

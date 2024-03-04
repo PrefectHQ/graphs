@@ -20,7 +20,6 @@ export async function dataFactory(runId: string, callback: DataCallback) {
       console.error(error)
     }
 
-
     if (data && !data.end_time) {
       interval = setTimeout(() => start(), getIntervalForDataSize(data))
     }

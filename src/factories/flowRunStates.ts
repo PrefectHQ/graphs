@@ -32,7 +32,7 @@ export function flowRunStatesFactory() {
 
   async function createState(state: RunGraphStateEvent, currIndex: number): Promise<void> {
     const nextState = internalData && internalData.length >= currIndex + 1 && internalData[currIndex + 1]
-    const options = nextState ? { end: nextState.occurred } : undefined
+    const options = nextState ? { end: nextState.timestamp } : undefined
 
     if (states.has(state.id)) {
       return states.get(state.id)!.render(options)

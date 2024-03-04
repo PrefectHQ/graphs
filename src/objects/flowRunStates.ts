@@ -12,10 +12,10 @@ export async function startFlowRunStates(): Promise<void> {
   application.stage.addChild(element)
 
   function render(newData?: RunGraphData): void {
-    renderStates(newData?.state_events)
+    renderStates(newData?.states)
   }
 
-  if (data.state_events) {
+  if (data.states) {
     render(data)
   }
 

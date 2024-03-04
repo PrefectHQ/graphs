@@ -128,8 +128,7 @@
 
 .run-graph__actions {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  padding: theme('spacing.2');
+  bottom: theme('spacing.2');
+  right: theme('spacing.2');
 }
 </style>

@@ -14,6 +14,7 @@ export type StateType = typeof stateType[number]
 
 export type RunGraphStateEvent = {
   id: string,
-  occurred: Date,
+  timestamp: Date,
   type: StateType,
+  name: string,
 }
