@@ -18,20 +18,24 @@
   "state_events": [
     {
       "id": "9bb2d2fb-6534-4810-a8d0-scheduled",
-      "occurred": "2023-07-27T15:50:39.425118+00:00",
-      "type": "SCHEDULED"
+      "timestamp": "2023-07-27T15:50:39.425118+00:00",
+      "type": "SCHEDULED",
+      "name": "Scheduled"
     }, {
       "id": "eab2f3de-91f2-4b29-b9de-pending",
-      "occurred": "2023-09-27T15:50:38.000000+00:00",
-      "type": "PENDING"
+      "timestamp": "2023-09-27T15:50:38.000000+00:00",
+      "type": "PENDING",
+      "name": "Pending"
     }, {
       "id": "003d4c00-c30a-41c9-bb49-running",
-      "occurred": "2023-09-27T15:50:39.425118+00:00",
-      "type": "RUNNING"
+      "timestamp": "2023-09-27T15:50:39.425118+00:00",
+      "type": "RUNNING",
+      "name": "Running"
     }, {
       "id": "56912bb1-e172-4ea8-9be7-completed",
-      "occurred": "2023-09-27T15:51:08.999871+00:00",
-      "type": "COMPLETED"
+      "timestamp": "2023-09-27T15:51:08.999871+00:00",
+      "type": "COMPLETED",
+      "name": "Completed"
     }
   ],
   "artifacts": [

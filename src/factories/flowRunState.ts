@@ -5,6 +5,7 @@ import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
+import { selectItem } from '@/objects/selection'
 import { layout } from '@/objects/settings'
 
 export type FlowRunStateFactory = Awaited<ReturnType<typeof flowRunStateFactory>>
@@ -31,6 +32,7 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
   const area = await rectangleFactory()
 
   let end: Date | null = options?.end ?? null
+  let isHovered = false
 
   element.addChild(area)
   element.addChild(bar)
@@ -39,6 +41,28 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
   emitter.on('scaleUpdated', updated => {
     scale = updated
     render()
+  })
+
+  bar.eventMode = 'static'
+  bar.cursor = 'pointer'
+  bar.on('mouseover', () => {
+    isHovered = true
+    render()
+  })
+  bar.on('mouseleave', () => {
+    isHovered = false
+    render()
+  })
+  bar.on('click', clickEvent => {
+    clickEvent.stopPropagation()
+    const position = {
+      x: bar.position.x,
+      y: bar.position.y,
+      width: bar.width,
+      height: bar.height,
+    }
+
+    selectItem({ ...state, kind: 'state', position })
   })
 
   function render(newOptions?: FlowRunStateFactoryOptions): void {
@@ -61,7 +85,7 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
   function getRenderStyles(): StateRectangleRenderProps {
     const { background = '#fff' } = config.styles.state(state)
 
-    const x = Math.max(scale(state.occurred) * viewport.scale._x + viewport.worldTransform.tx, 0)
+    const x = Math.max(scale(state.timestamp) * viewport.scale._x + viewport.worldTransform.tx, 0)
 
     const width = end
       ? scale(end) * viewport.scale._x + viewport.worldTransform.tx - x
@@ -75,12 +99,14 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
   }
 
   function renderBar({ x, width, background }: StateRectangleRenderProps): void {
-    const { flowStateBarHeight } = config.styles
+    const { flowStateBarHeight, flowStateSelectedBarHeight } = config.styles
+
+    const height = isHovered ? flowStateSelectedBarHeight : flowStateBarHeight
 
     bar.x = x
-    bar.y = application.screen.height - flowStateBarHeight
+    bar.y = application.screen.height - height
     bar.width = width
-    bar.height = flowStateBarHeight
+    bar.height = height
     bar.tint = background
   }
 
