@@ -5,7 +5,7 @@ import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
-import { selectItem } from '@/objects/selection'
+import { isSelected, selectItem } from '@/objects/selection'
 import { layout } from '@/objects/settings'
 
 export type FlowRunStateFactory = Awaited<ReturnType<typeof flowRunStateFactory>>
@@ -32,29 +32,23 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
   const area = await rectangleFactory()
 
   let end: Date | null = options?.end ?? null
-  let isHovered = false
+  let hovered = false
+  let selected = false
 
   element.addChild(area)
   element.addChild(bar)
 
-  emitter.on('viewportMoved', () => render())
-  emitter.on('scaleUpdated', updated => {
-    scale = updated
-    render()
-  })
-
   bar.eventMode = 'static'
   bar.cursor = 'pointer'
   bar.on('mouseover', () => {
-    isHovered = true
+    hovered = true
     render()
   })
   bar.on('mouseleave', () => {
-    isHovered = false
+    hovered = false
     render()
   })
-  bar.on('click', clickEvent => {
-    clickEvent.stopPropagation()
+  bar.on('click', () => {
     const position = {
       x: bar.position.x,
       y: bar.position.y,
@@ -63,6 +57,20 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
     }
 
     selectItem({ ...state, kind: 'state', position })
+  })
+
+  emitter.on('viewportMoved', () => render())
+  emitter.on('scaleUpdated', updated => {
+    scale = updated
+    render()
+  })
+  emitter.on('itemSelected', item => {
+    const isCurrentlySelected = isSelected({ kind: 'state', ...state })
+
+    if (isCurrentlySelected !== selected) {
+      selected = isCurrentlySelected
+      render()
+    }
   })
 
   function render(newOptions?: FlowRunStateFactoryOptions): void {
@@ -101,7 +109,7 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
   function renderBar({ x, width, background }: StateRectangleRenderProps): void {
     const { flowStateBarHeight, flowStateSelectedBarHeight } = config.styles
 
-    const height = isHovered ? flowStateSelectedBarHeight : flowStateBarHeight
+    const height = hovered || selected ? flowStateSelectedBarHeight : flowStateBarHeight
 
     bar.x = x
     bar.y = application.screen.height - height
