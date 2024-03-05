@@ -130,30 +130,26 @@ async function centerViewportOnStartAndEnd({ animate }: CenterViewportParameters
   const viewport = await waitForViewport()
   const graphScale = await waitForScale()
 
-  console.log({
-    startDate: data.start_time.getTime(),
-    endDate: data.end_time?.getTime(),
-    state: data.states?.map((state) => {
-      return { time: state.timestamp.getTime(), name: state.name }
-    }),
-  })
+  let startX = graphScale(data.start_time) - config.styles.columnGap
+  let endX = graphScale(data.end_time ?? new Date()) + config.styles.columnGap
 
-  let x = 0
+  if (startX > endX) {
+    const temp = startX
 
-  if (data.end_time) {
-    const startX = graphScale(data.start_time)
-    const endX = graphScale(data.end_time)
-
-    x = startX + (endX - startX) / 2
-  } else {
-    x = graphScale(data.start_time) + viewport.width / 2
+    startX = endX
+    endX = temp
   }
+
+  const width = endX - startX
+  const x = startX + width / 2
+  const scale = viewport.findFit(width, 0)
 
   viewport.animate({
     position: {
       x,
       y: 0,
     },
+    scale,
     time: animate ? config.animationDuration : 0,
     ease: 'easeInOutQuad',
     removeOnInterrupt: true,
