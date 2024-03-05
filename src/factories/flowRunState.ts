@@ -4,6 +4,7 @@ import { RunGraphStateEvent } from '@/models/states'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
+import { waitForRunData } from '@/objects/nodes'
 import { waitForScale } from '@/objects/scale'
 import { isSelected, selectItem } from '@/objects/selection'
 import { layout } from '@/objects/settings'
@@ -25,6 +26,7 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
+  const data = await waitForRunData()
   let scale = await waitForScale()
 
   const element = new Container()
@@ -73,10 +75,18 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
     }
   })
 
+  if (state.type === 'RUNNING' && !data.end_time) {
+    startTicking()
+  }
+
   function render(newOptions?: FlowRunStateFactoryOptions): void {
     if (newOptions) {
       const { end: newEnd } = newOptions
       end = newEnd
+    }
+
+    if (data.end_time) {
+      stopTicking()
     }
 
     if (!layout.isTemporal()) {
@@ -95,9 +105,15 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
 
     const x = Math.max(scale(state.timestamp) * viewport.scale._x + viewport.worldTransform.tx, 0)
 
-    const width = end
-      ? scale(end) * viewport.scale._x + viewport.worldTransform.tx - x
-      : application.screen.width - x
+    let width = 0
+
+    if (state.type === 'RUNNING' && !data.end_time) {
+      width = scale(new Date()) * viewport.scale._x + viewport.worldTransform.tx - x
+    } else if (end) {
+      width = scale(end) * viewport.scale._x + viewport.worldTransform.tx - x
+    } else {
+      width = application.screen.width - x
+    }
 
     return {
       x,
@@ -132,6 +148,18 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
     area.height = application.screen.height - flowStateBarHeight
     area.tint = background
     area.alpha = flowStateAreaAlpha
+  }
+
+  function startTicking(): void {
+    application.ticker.add(tick)
+  }
+
+  function stopTicking(): void {
+    application.ticker.remove(tick)
+  }
+
+  function tick(): void {
+    render()
   }
 
   return {
