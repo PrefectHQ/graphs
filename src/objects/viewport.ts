@@ -6,6 +6,7 @@ import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { cull, uncull } from '@/objects/culling'
 import { emitter, waitForEvent } from '@/objects/events'
+import { waitForRunData } from '@/objects/nodes'
 import { waitForScale } from '@/objects/scale'
 import { waitForSettings } from '@/objects/settings'
 import { waitForStage } from '@/objects/stage'
@@ -70,25 +71,42 @@ type CenterViewportParameters = {
 
 export async function centerViewport({ animate }: CenterViewportParameters = {}): Promise<void> {
   const viewport = await waitForViewport()
-  const config = await waitForConfig()
+
   const container = viewport.getChildByName(DEFAULT_NODES_CONTAINER_NAME)
 
   if (!container) {
     throw new Error('Nodes container not found')
   }
 
-  const guidesOffset = config.styles.guideTextSize + config.styles.guideTextTopPadding
-
   uncull()
   const { x, y, width, height } = container.getLocalBounds()
+
+  // if the container doesn't have a size attempt to center to flow state
+  if (!width || !height) {
+    centerViewportOnStartAndEnd({ animate })
+
+    return
+  }
+
+  centerViewportOnNodes({ x, y, width, height, animate })
+}
+
+type CenterViewportOnNodesParameters = {
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  animate?: boolean,
+}
+
+async function centerViewportOnNodes({ x, y, width, height, animate }: CenterViewportOnNodesParameters): Promise<void> {
+  const config = await waitForConfig()
+  const viewport = await waitForViewport()
+
+  const guidesOffset = config.styles.guideTextSize + config.styles.guideTextTopPadding
   const widthWithGap = width + config.styles.columnGap * 2
   const heightWithGap = height + config.styles.rowGap * 2 + guidesOffset * 2
   const scale = viewport.findFit(widthWithGap, heightWithGap)
-
-  // if the container doesn't have a size we cannot do anything here
-  if (!width || !height) {
-    return
-  }
 
   viewport.animate({
     position: {
@@ -104,7 +122,42 @@ export async function centerViewport({ animate }: CenterViewportParameters = {})
       updateViewportDateRange()
     },
   })
+}
 
+async function centerViewportOnStartAndEnd({ animate }: CenterViewportParameters): Promise<void> {
+  const data = await waitForRunData()
+  const config = await waitForConfig()
+  const viewport = await waitForViewport()
+  const graphScale = await waitForScale()
+
+  let startX = graphScale(data.start_time) - config.styles.columnGap
+  let endX = graphScale(data.end_time ?? new Date()) + config.styles.columnGap
+
+  if (startX > endX) {
+    const temp = startX
+
+    startX = endX
+    endX = temp
+  }
+
+  const width = endX - startX
+  const x = startX + width / 2
+  const scale = viewport.findFit(width, 0)
+
+  viewport.animate({
+    position: {
+      x,
+      y: 0,
+    },
+    scale,
+    time: animate ? config.animationDuration : 0,
+    ease: 'easeInOutQuad',
+    removeOnInterrupt: true,
+    callbackOnComplete: () => {
+      cull()
+      updateViewportDateRange()
+    },
+  })
 }
 
 export async function waitForViewport(): Promise<Viewport> {

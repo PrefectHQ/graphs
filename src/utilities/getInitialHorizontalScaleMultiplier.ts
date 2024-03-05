@@ -7,8 +7,12 @@ export function getInitialHorizontalScaleMultiplier({ start_time, end_time, node
 
   const nodeHeight = config.styles.nodeHeight + config.styles.rowGap
   const apxConcurrencyFactor = 0.5
+  const emptyNodesHeightMultiplier = 4
 
-  const apxNodesHeight = nodes.size * nodeHeight * apxConcurrencyFactor
+  const apxNodesHeight = nodes.size > 0
+    ? nodes.size * nodeHeight * apxConcurrencyFactor
+    : nodeHeight * emptyNodesHeightMultiplier
+
   const widthWeWant = apxNodesHeight * aspectRatio
 
   const idealMultiplier = widthWeWant / (seconds * DEFAULT_TIME_COLUMN_SIZE_PIXELS)
