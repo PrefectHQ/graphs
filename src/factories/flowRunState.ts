@@ -64,11 +64,14 @@ export async function flowRunStateFactory(state: RunGraphStateEvent, options?: F
     scale = updated
     render()
   })
-  emitter.on('itemSelected', item => {
+  emitter.on('itemSelected', () => {
     const isCurrentlySelected = isSelected({ kind: 'state', ...state })
 
     if (isCurrentlySelected !== selected) {
       selected = isCurrentlySelected
+      // clear the hovered state to account for the popover div
+      // that prevents the mouseleave event in prefect-ui-library
+      hovered = false
       render()
     }
   })
