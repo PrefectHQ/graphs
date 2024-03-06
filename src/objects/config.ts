@@ -10,6 +10,7 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
   animationDuration: 500,
   disableAnimationsThreshold: 500,
   disableEdgesThreshold: 500,
+  fetchEvents: () => [],
   styles: {
     colorMode: 'dark',
     rowGap: 24,

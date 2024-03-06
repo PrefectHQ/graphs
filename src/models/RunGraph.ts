@@ -1,5 +1,5 @@
 import { ColorSource } from 'pixi.js'
-import { RunGraphArtifact, Event } from '@/models'
+import { RunGraphArtifact, RunGraphEvent } from '@/models'
 import { GraphItemSelection } from '@/models/selection'
 import { RunGraphStateEvent, StateType } from '@/models/states'
 import { ViewportDateRange } from '@/models/viewport'
@@ -18,7 +18,7 @@ export type RunGraphData = {
   nodes: RunGraphNodes,
   artifacts?: RunGraphArtifact[],
   states?: RunGraphStateEvent[],
-  events?: Event[],
+  events?: RunGraphEvent[],
 }
 
 export type RunGraphNodes = Map<string, RunGraphNode>
@@ -47,6 +47,7 @@ export function isRunGraphNodeType(value: unknown): value is RunGraphNodeKind {
 }
 
 export type RunGraphFetch = (runId: string) => RunGraphData | Promise<RunGraphData>
+export type RunGraphFetchEvents = (runId: string) => RunGraphEvent[] | Promise<RunGraphEvent[]>
 
 export type RunGraphNodeStyles = {
   background?: ColorSource,
@@ -112,6 +113,7 @@ export type RunGraphStyles = {
 export type RunGraphConfig = {
   runId: string,
   fetch: RunGraphFetch,
+  fetchEvents?: RunGraphFetchEvents,
   animationDuration?: number,
   styles?: RunGraphStyles,
   disableAnimationsThreshold?: number,

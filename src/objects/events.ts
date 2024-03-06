@@ -4,6 +4,7 @@ import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
+import { RunGraphEvent } from '@/models'
 import { LayoutSettings } from '@/models/layout'
 import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
 import { GraphItemSelection } from '@/models/selection'
@@ -34,6 +35,8 @@ type Events = {
   edgeCullCreated: VisibilityCull,
   runDataCreated: RunGraphData,
   runDataUpdated: RunGraphData,
+  eventDataCreated: RunGraphEvent[],
+  eventDataUpdated: RunGraphEvent[],
   itemSelected: GraphItemSelection | null,
   layoutUpdated: void,
   toggleCullCreated: VisibilityCull,

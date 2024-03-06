@@ -2,7 +2,7 @@ import { Container } from 'pixi.js'
 import { circleFactory } from '@/factories/circle'
 import { rectangleFactory } from '@/factories/rectangle'
 import { selectedBorderFactory } from '@/factories/selectedBorder'
-import { Event } from '@/models'
+import { RunGraphEvent } from '@/models'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { isSelected, selectItem } from '@/objects/selection'
@@ -10,7 +10,7 @@ import { isSelected, selectItem } from '@/objects/selection'
 export type EventFactory = Awaited<ReturnType<typeof eventFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function eventFactory(event: Event) {
+export async function eventFactory(event: RunGraphEvent) {
   const element = new Container()
   const config = await waitForConfig()
 
@@ -27,19 +27,39 @@ export async function eventFactory(event: Event) {
   element.eventMode = 'static'
   element.cursor = 'pointer'
 
-  element.on('mouseenter', () => circle.scale.set(1.5))
-  element.on('mouseleave', () => circle.scale.set(1))
+  element.on('mouseenter', () => {
+    if (!selected) {
+      circle.scale.set(1.5)
+    }
+  })
+  element.on('mouseleave', () => {
+    if (!selected) {
+      circle.scale.set(1)
+    }
+  })
 
   element.on('click', clickEvent => {
     clickEvent.stopPropagation()
-    selectItem({ kind: 'event', id: event.id })
+
+    const position = {
+      x: element.position.x,
+      y: element.position.y,
+      width: element.width,
+      height: element.height,
+    }
+
+    selectItem({ kind: 'event', position, ...event })
   })
 
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected({ kind: 'event', id: event.id })
+    const isCurrentlySelected = isSelected({ kind: 'event', ...event })
 
     if (isCurrentlySelected !== selected) {
       selected = isCurrentlySelected
+
+      // reset hover affect as the downstream popover prevents the mouseleave event
+      circle.scale.set(isCurrentlySelected ? 1.5 : 1)
+
       render()
     }
   })

@@ -36,12 +36,28 @@ export async function eventClusterFactory() {
   element.eventMode = 'static'
   element.cursor = 'pointer'
 
-  element.on('mouseenter', () => circle.scale.set(1.5))
-  element.on('mouseleave', () => circle.scale.set(1))
+  element.on('mouseenter', () => {
+    if (!selected) {
+      circle.scale.set(1.5)
+    }
+  })
+  element.on('mouseleave', () => {
+    if (!selected) {
+      circle.scale.set(1)
+    }
+  })
 
   element.on('click', clickEvent => {
     clickEvent.stopPropagation()
-    selectItem({ kind: 'events', ids: currentIds })
+
+    const position = {
+      x: element.position.x,
+      y: element.position.y,
+      width: element.width,
+      height: element.height,
+    }
+
+    selectItem({ kind: 'events', ids: currentIds, position })
   })
 
   emitter.on('itemSelected', () => {
@@ -49,6 +65,9 @@ export async function eventClusterFactory() {
 
     if (isCurrentlySelected !== selected) {
       selected = isCurrentlySelected
+
+      // reset hover affect as the downstream popover prevents the mouseleave event
+      circle.scale.set(isCurrentlySelected ? 1.5 : 1)
 
       if (currentDate) {
         render({ ids: currentIds, date: currentDate })

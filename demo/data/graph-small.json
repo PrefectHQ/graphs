@@ -15,7 +15,7 @@
     "68ba2fce-caac-4b07-9f1c-4cb25ff6a3ec",
     "be920a79-18e9-4521-9c39-0f4883de34af"
   ],
-  "state_events": [
+  "states": [
     {
       "id": "9bb2d2fb-6534-4810-a8d0-scheduled",
       "timestamp": "2023-07-27T15:50:39.425118+00:00",
@@ -36,21 +36,6 @@
       "timestamp": "2023-09-27T15:51:08.999871+00:00",
       "type": "COMPLETED",
       "name": "Completed"
-    }
-  ],
-  "events": [
-    {
-      "id": "flow-event-001",
-      "occurred": "2023-09-27T15:50:40.425118+00:00"
-    }, {
-      "id": "flow-event-002",
-      "occurred": "2023-09-27T15:50:41.425118+00:00"
-    }, {
-      "id": "flow-event-003",
-      "occurred": "2023-09-27T15:50:42.425118+00:00"
-    }, {
-      "id": "flow-event-004",
-      "occurred": "2023-09-27T15:51:04.425118+00:00"
     }
   ],
   "artifacts": [

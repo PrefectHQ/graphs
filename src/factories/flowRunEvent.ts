@@ -1,6 +1,6 @@
 import { EventFactory, eventFactory } from '@/factories/event'
 import { EventClusterFactory, EventClusterFactoryRenderProps, eventClusterFactory } from '@/factories/eventCluster'
-import { Event } from '@/models'
+import { RunGraphEvent } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
@@ -8,7 +8,7 @@ import { layout, waitForSettings } from '@/objects/settings'
 
 export type FlowRunEventFactory = Awaited<ReturnType<typeof flowRunEventFactory>>
 
-type EventFactoryOptions = { type: 'event', event: Event } | { type: 'cluster' }
+type EventFactoryOptions = { type: 'event', event: RunGraphEvent } | { type: 'cluster' }
 
 type EventFactoryType<T> = T extends { type: 'event' }
   ? EventFactory

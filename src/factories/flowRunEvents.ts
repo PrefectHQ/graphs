@@ -4,7 +4,7 @@ import { DEFAULT_ROOT_COLLISION_THROTTLE, DEFAULT_ROOT_EVENT_Z_INDEX } from '@/c
 import { EventFactory } from '@/factories/event'
 import { EventClusterFactory } from '@/factories/eventCluster'
 import { flowRunEventFactory } from '@/factories/flowRunEvent'
-import { Event } from '@/models'
+import { RunGraphEvent } from '@/models'
 import { waitForApplication } from '@/objects'
 import { emitter } from '@/objects/events'
 import { layout, waitForSettings } from '@/objects/settings'
@@ -20,12 +20,13 @@ export async function flowRunEventsFactory() {
   let availableClusterNodes: EventClusterFactory[] = []
 
   let container: Container | null = null
-  let internalData: Event[] | null = null
+  let internalData: RunGraphEvent[] | null = null
 
   emitter.on('viewportMoved', () => update())
   emitter.on('scaleUpdated', () => update())
+  emitter.on('layoutSettingsUpdated', () => render())
 
-  async function render(newData?: Event[]): Promise<void> {
+  async function render(newData?: RunGraphEvent[]): Promise<void> {
     if (container && !layout.isTemporal()) {
       container.visible = false
     } else if (container) {
@@ -55,6 +56,8 @@ export async function flowRunEventsFactory() {
     }
 
     await Promise.all(promises)
+
+    update()
   }
 
   function createContainer(): void {
@@ -63,7 +66,7 @@ export async function flowRunEventsFactory() {
     application.stage.addChild(container)
   }
 
-  async function createEvent(event: Event): Promise<void> {
+  async function createEvent(event: RunGraphEvent): Promise<void> {
     if (events.has(event.id)) {
       return events.get(event.id)!.render()
     }

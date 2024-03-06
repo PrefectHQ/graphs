@@ -19,7 +19,8 @@
   import { computed, ref } from 'vue'
   import RunGraph from '@/components/RunGraph.vue'
   import json from '@/demo/data/graph-small.json'
-  import { GraphItemSelection, RunGraphConfig, RunGraphData } from '@/models'
+  import eventsJson from '@/demo/data/graph-small_events.json'
+  import { GraphItemSelection, RunGraphConfig, RunGraphData, RunGraphEvent } from '@/models'
   import { StateType } from '@/models/states'
   import { ViewportDateRange } from '@/models/viewport'
 
@@ -43,6 +44,7 @@
   }
 
   const data: RunGraphData = JSON.parse(JSON.stringify(json), reviver)
+  const eventsData: RunGraphEvent[] = JSON.parse(JSON.stringify(eventsJson), reviver)
   const visibleDateRange = ref<ViewportDateRange>()
   const selected = ref<GraphItemSelection | null>(null)
 
@@ -77,6 +79,7 @@
   const config = computed<RunGraphConfig>(() => ({
     runId: 'foo',
     fetch: () => data,
+    fetchEvents: () => eventsData,
     styles: {
       colorMode: colorThemeValue.value,
       textDefault: getColorToken('--p-color-text-default'),
