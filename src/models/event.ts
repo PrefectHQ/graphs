@@ -18,6 +18,6 @@ export type RunGraphEvent = {
   payload: unknown,
   received: Date,
   related: EventRelatedResource[],
-  resource: EventRelatedResource,
+  resource: RunGraphEventResource,
   workspace: string | null,
 }
