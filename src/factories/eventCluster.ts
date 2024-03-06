@@ -57,11 +57,11 @@ export async function eventClusterFactory() {
       height: element.height,
     }
 
-    selectItem({ kind: 'events', ids: currentIds, position })
+    selectItem({ kind: 'events', ids: currentIds, occurred: currentDate, position })
   })
 
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected({ kind: 'events', ids: currentIds })
+    const isCurrentlySelected = isSelected({ kind: 'events', occurred: currentDate, ids: currentIds })
 
     if (isCurrentlySelected !== selected) {
       selected = isCurrentlySelected

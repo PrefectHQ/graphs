@@ -42,6 +42,7 @@ export function isStateSelection(selection: GraphItemSelection): selection is St
 
 export type EventSelection = {
   id: string,
+  occurred: Date,
   kind: 'event',
   position?: GraphSelectionPosition,
 }
@@ -51,6 +52,7 @@ export function isEventSelection(selection: GraphItemSelection): selection is Ev
 
 export type EventsSelection = {
   kind: 'events',
+  occurred: Date | null,
   ids: string[],
   position?: GraphSelectionPosition,
 }
