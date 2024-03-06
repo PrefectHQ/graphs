@@ -1,4 +1,5 @@
 import { ColorSource, Container } from 'pixi.js'
+import { FlowRunStateFactory } from '@/factories/flowRunState'
 import { rectangleFactory } from '@/factories/rectangle'
 import { RunGraphStateEvent } from '@/models/states'
 import { waitForApplication, waitForViewport } from '@/objects'
@@ -9,10 +10,19 @@ import { waitForScale } from '@/objects/scale'
 import { isSelected, selectItem } from '@/objects/selection'
 import { layout } from '@/objects/settings'
 
-export type FlowRunStateFactory = Awaited<ReturnType<typeof flowRunStateFactory>>
+export type NodesFlowRunStateFactory = Awaited<ReturnType<typeof nodesFlowRunStateFactory>>
 
-type FlowRunStateFactoryRenderProps = {
-  end: Date,
+export function isNodesFlowRunStateFactory(
+  factory: NodesFlowRunStateFactory | FlowRunStateFactory,
+): factory is NodesFlowRunStateFactory {
+  return 'isNodesFlowRunStateFactory' in factory
+}
+
+export type NodeFlowRunStateFactoryRenderProps = {
+  end?: Date,
+  parentStartDate?: Date,
+  width?: number,
+  height?: number,
 }
 
 type StateRectangleRenderProps = {
@@ -22,7 +32,7 @@ type StateRectangleRenderProps = {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function flowRunStateFactory(state: RunGraphStateEvent) {
+export async function nodesFlowRunStateFactory(state: RunGraphStateEvent) {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
@@ -34,12 +44,14 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
   const area = await rectangleFactory()
 
   let end: Date | null = null
+  let parentStart: Date | null = null
+  let parentWidth = 0
+  let parentHeight = 0
   let hovered = false
   let selected = false
 
-  // The area is added to the stage so it sits behind other content.
-  application.stage.addChild(area)
-
+  element.visible = false
+  element.addChild(area)
   element.addChild(bar)
 
   bar.eventMode = 'static'
@@ -52,18 +64,23 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
     hovered = false
     render()
   })
-  bar.on('click', () => {
+  bar.on('click', clickEvent => {
+    clickEvent.stopPropagation()
+    const barPosition = bar.getGlobalPosition()
+
     const position = {
-      x: bar.position.x,
-      y: bar.position.y,
-      width: bar.width,
-      height: bar.height,
+      x: barPosition.x,
+      y: barPosition.y,
+      width: bar.width * viewport.scale.x,
+      height: bar.height * viewport.scale.y,
     }
 
     selectItem({ ...state, kind: 'state', position })
   })
 
-  emitter.on('viewportMoved', () => render())
+  area.eventMode = 'none'
+  area.cursor = 'default'
+
   emitter.on('scaleUpdated', updated => {
     scale = updated
     render()
@@ -84,11 +101,20 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
     startTicking()
   }
 
-  function render(newOptions?: FlowRunStateFactoryRenderProps): void {
-    const { end: newEnd } = newOptions ?? {}
+  function render(props?: NodeFlowRunStateFactoryRenderProps): void {
+    const { end: newEnd, parentStartDate, width, height } = props ?? {}
 
     if (newEnd) {
       end = newEnd
+    }
+    if (parentStartDate) {
+      parentStart = parentStartDate
+    }
+    if (width) {
+      parentWidth = width
+    }
+    if (height) {
+      parentHeight = height
     }
 
     if (data.end_time) {
@@ -100,29 +126,37 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
       return
     }
 
+    if (!end && state.type !== 'RUNNING') {
+      return
+    }
+
+    if (!parentStart || parentWidth <= 0) {
+      element.visible = false
+      return
+    }
+
     const options = getRenderStyles()
 
     renderBar(options)
     renderArea(options)
+
+    element.visible = true
   }
 
   function getRenderStyles(): StateRectangleRenderProps {
     const { background = '#fff' } = config.styles.state(state)
 
-    const x = Math.max(scale(state.timestamp) * viewport.scale._x + viewport.worldTransform.tx, 0)
+    let startX = scale(state.timestamp) - scale(parentStart!)
 
-    let width = 0
-
-    if (state.type === 'RUNNING' && !data.end_time) {
-      width = scale(new Date()) * viewport.scale._x + viewport.worldTransform.tx - x
-    } else if (end) {
-      width = scale(end) * viewport.scale._x + viewport.worldTransform.tx - x
-    } else {
-      width = application.screen.width - x
+    if (startX < 0) {
+      startX = 0
     }
 
+    const endX = end ? scale(end) - scale(parentStart!) : parentWidth - startX
+    const width = endX - startX
+
     return {
-      x,
+      x: startX,
       width: Math.max(width, 0),
       background,
     }
@@ -134,24 +168,21 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
     const height = hovered || selected ? flowStateSelectedBarHeight : flowStateBarHeight
 
     bar.x = x
-    bar.y = application.screen.height - height
+    bar.y = parentHeight - height
     bar.width = width
     bar.height = height
     bar.tint = background
   }
 
   function renderArea({ x, width, background }: StateRectangleRenderProps): void {
-    if (state.type === 'RUNNING') {
-      area.visible = false
-      return
-    }
+    const { flowStateBarHeight, flowStateAreaAlpha, nodeHeight } = config.styles
 
-    const { flowStateBarHeight, flowStateAreaAlpha } = config.styles
+    const topOffset = nodeHeight / 2
 
     area.x = x
-    area.y = 0
+    area.y = topOffset
     area.width = width
-    area.height = application.screen.height - flowStateBarHeight
+    area.height = parentHeight - flowStateBarHeight - topOffset
     area.tint = background
     area.alpha = flowStateAreaAlpha
   }
@@ -171,5 +202,6 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
   return {
     element,
     render,
+    isNodesFlowRunStateFactory: true,
   }
 }
