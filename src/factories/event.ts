@@ -48,11 +48,11 @@ export async function eventFactory(event: RunGraphEvent) {
       height: element.height,
     }
 
-    selectItem({ kind: 'event', position, ...event })
+    selectItem({ kind: 'event', id: event.id, position })
   })
 
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected({ kind: 'event', ...event })
+    const isCurrentlySelected = isSelected({ kind: 'event', id: event.id })
 
     if (isCurrentlySelected !== selected) {
       selected = isCurrentlySelected

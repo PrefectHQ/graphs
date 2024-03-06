@@ -40,7 +40,8 @@ export function isStateSelection(selection: GraphItemSelection): selection is St
   return selection.kind === 'state'
 }
 
-export interface EventSelection extends RunGraphEvent {
+export type EventSelection = {
+  id: string,
   kind: 'event',
   position?: GraphSelectionPosition,
 }
