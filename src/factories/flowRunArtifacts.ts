@@ -1,14 +1,15 @@
 import throttle from 'lodash.throttle'
 import { Container } from 'pixi.js'
-import { DEFAULT_ROOT_ARTIFACT_COLLISION_THROTTLE, DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
+import { DEFAULT_ROOT_COLLISION_THROTTLE, DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
 import { ArtifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory } from '@/factories/artifactCluster'
-import { flowRunArtifactFactory, FlowRunArtifactFactory } from '@/factories/flowRunArtifact'
+import { flowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { RunGraphArtifact } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { layout, waitForSettings } from '@/objects/settings'
+import { clusterHorizontalCollisions } from '@/utilities/detectHorizontalCollisions'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function flowRunArtifactsFactory() {
@@ -19,12 +20,14 @@ export async function flowRunArtifactsFactory() {
 
   const artifacts: Map<string, ArtifactFactory> = new Map()
   const clusterNodes: ArtifactClusterFactory[] = []
+  let availableClusterNodes: ArtifactClusterFactory[] = []
 
   let container: Container | null = null
   let internalData: RunGraphArtifact[] | null = null
   let nonTemporalAlignmentEngaged = false
 
   emitter.on('viewportMoved', () => update())
+  emitter.on('scaleUpdated', () => update())
 
   async function render(newData?: RunGraphArtifact[]): Promise<void> {
     if (container) {
@@ -98,112 +101,28 @@ export async function flowRunArtifactsFactory() {
   }
 
   const checkLayout = throttle(async () => {
-    const visibleItems = [...artifacts.values()]
-    const availableClusterNodes = [...clusterNodes]
-    visibleItems.sort((itemA, itemB) => itemA.element.x - itemB.element.x)
+    availableClusterNodes = [...clusterNodes]
 
-    await checkCollisions(visibleItems, availableClusterNodes)
+    await clusterHorizontalCollisions({
+      items: artifacts,
+      createCluster,
+    })
 
     for (const cluster of availableClusterNodes) {
       cluster.render()
     }
-  }, DEFAULT_ROOT_ARTIFACT_COLLISION_THROTTLE)
+  }, DEFAULT_ROOT_COLLISION_THROTTLE)
 
-  async function checkCollisions(
-    visibleItems: FlowRunArtifactFactory[],
-    availableClusterNodes: ArtifactClusterFactory[],
-    startIndex?: number,
-  ): Promise<void> {
-    let checkpoint
-    let prevIndex: number | null = null
-    let collisionIndex: number | null = null
-
-    for (let i = startIndex ?? 0; i < visibleItems.length; i++) {
-      const item = visibleItems[i]
-      const itemX = item.element.x
-      item.element.visible = true
-
-      if (prevIndex !== null && checkpoint && itemX < checkpoint) {
-        collisionIndex = i
-        break
-      }
-
-      prevIndex = i
-      checkpoint = itemX + item.element.width
+  async function createCluster(): Promise<ArtifactClusterFactory> {
+    if (availableClusterNodes.length > 0) {
+      return availableClusterNodes.pop()!
     }
 
-    if (collisionIndex !== null && prevIndex !== null) {
-      const prevItem = visibleItems[prevIndex]
-      const collisionItem = visibleItems[collisionIndex]
+    const newCluster = await flowRunArtifactFactory({ type: 'cluster' })
+    container!.addChild(newCluster.element)
+    clusterNodes.push(newCluster)
 
-      prevItem.element.visible = false
-      collisionItem.element.visible = false
-
-      const cluster = await clusterItems(prevItem, collisionItem, availableClusterNodes)
-
-      if (cluster) {
-        visibleItems.splice(prevIndex, 1, cluster)
-        visibleItems.splice(collisionIndex, 1)
-      }
-
-      checkCollisions(visibleItems, availableClusterNodes, prevIndex)
-    }
-  }
-
-  async function clusterItems(
-    prevItem: ArtifactFactory | ArtifactClusterFactory,
-    currentItem: ArtifactFactory | ArtifactClusterFactory,
-    availableClusterNodes: ArtifactClusterFactory[],
-  ): Promise<FlowRunArtifactFactory | null> {
-    const prevDate = prevItem.getDate()
-    const currentDate = currentItem.getDate()
-    const prevIds = 'getId' in prevItem ? [prevItem.getId()] : prevItem.getIds()
-    const currentIds = 'getId' in currentItem ? [currentItem.getId()] : currentItem.getIds()
-
-    if (!prevDate || !currentDate) {
-      console.error('flowRunArtifacts: visible item is missing date')
-      return null
-    }
-
-    let clusterNode: FlowRunArtifactFactory
-
-    if ('isCluster' in prevItem) {
-      clusterNode = prevItem
-    } else if ('isCluster' in currentItem) {
-      clusterNode = currentItem
-    } else if (availableClusterNodes.length > 0) {
-      clusterNode = availableClusterNodes.pop()!
-    } else {
-      const newCluster = await flowRunArtifactFactory({ type: 'cluster' })
-      container!.addChild(newCluster.element)
-      clusterNodes.push(newCluster)
-
-      clusterNode = newCluster
-    }
-
-    const ids = [...prevIds, ...currentIds]
-    const date = getCenteredDate(ids)
-
-    clusterNode.render({ ids, date })
-
-    return clusterNode
-  }
-
-  function getCenteredDate(ids: string[]): Date {
-    const times = ids.reduce((acc: number[], id) => {
-      const artifact = artifacts.get(id)
-
-      if (artifact) {
-        acc.push(artifact.getDate().getTime())
-      }
-
-      return acc
-    }, [])
-
-    const min = Math.min(...times)
-    const max = Math.max(...times)
-
-    return new Date((min + max) / 2)
+    return newCluster
   }
 
   function clearClusters(): void {

@@ -1,4 +1,4 @@
-import { RunGraphNode, RunGraphNodeKind, runGraphNodeKinds, RunGraphStateEvent } from '@/models'
+import { RunGraphEvent, RunGraphNode, RunGraphNodeKind, runGraphNodeKinds, RunGraphStateEvent } from '@/models'
 
 export type GraphSelectionPosition = {
   x: number,
@@ -40,8 +40,30 @@ export function isStateSelection(selection: GraphItemSelection): selection is St
   return selection.kind === 'state'
 }
 
+export type EventSelection = {
+  id: string,
+  occurred: Date,
+  kind: 'event',
+  position?: GraphSelectionPosition,
+}
+export function isEventSelection(selection: GraphItemSelection): selection is EventSelection {
+  return selection.kind === 'event'
+}
+
+export type EventsSelection = {
+  kind: 'events',
+  occurred: Date | null,
+  ids: string[],
+  position?: GraphSelectionPosition,
+}
+export function isEventsSelection(selection: GraphItemSelection): selection is EventsSelection {
+  return selection.kind === 'events'
+}
+
 export type GraphItemSelection =
   | NodeSelection
   | ArtifactSelection
   | ArtifactsSelection
   | StateSelection
+  | EventSelection
+  | EventsSelection

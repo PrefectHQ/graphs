@@ -37,7 +37,7 @@ export async function dataFactory(runId: string, callback: DataCallback) {
 
 }
 
-function getIntervalForDataSize(data: RunGraphData): number {
+export function getIntervalForDataSize(data: RunGraphData): number {
   const intervalBasedOnNodeCount = Math.floor(data.nodes.size / millisecondsInSecond) * millisecondsInSecond
 
   return Math.max(millisecondsInSecond, intervalBasedOnNodeCount)

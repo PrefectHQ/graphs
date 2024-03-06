@@ -15,7 +15,7 @@
     "68ba2fce-caac-4b07-9f1c-4cb25ff6a3ec",
     "be920a79-18e9-4521-9c39-0f4883de34af"
   ],
-  "state_events": [
+  "states": [
     {
       "id": "9bb2d2fb-6534-4810-a8d0-scheduled",
       "timestamp": "2023-07-27T15:50:39.425118+00:00",

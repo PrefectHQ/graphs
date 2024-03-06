@@ -36,6 +36,7 @@
       <p-divider />
       <p-checkbox v-model="hideEdges" label="Hide dependency arrows" />
       <p-checkbox v-model="hideArtifacts" label="Hide artifacts" />
+      <p-checkbox v-model="hideEvents" label="Hide Events" />
     </p-overflow-menu>
   </p-pop-over>
 </template>
@@ -46,7 +47,7 @@
   import { computed } from 'vue'
   import { DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
-  import { layout, resetHorizontalScaleMultiplier, setDisabledArtifacts, setDisabledEdges, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
+  import { layout, resetHorizontalScaleMultiplier, setDisabledArtifacts, setDisabledEdges, setDisabledEvents, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
   import { eventTargetIsInput } from '@/utilities/keyboard'
 
   type Option<T extends string> = {
@@ -104,6 +105,15 @@
     },
     set(value) {
       setDisabledArtifacts(value)
+    },
+  })
+
+  const hideEvents = computed({
+    get() {
+      return layout.disableEvents
+    },
+    set(value) {
+      setDisabledEvents(value)
     },
   })
 
