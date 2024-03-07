@@ -1,16 +1,22 @@
 import { EventFactory, eventFactory } from '@/factories/event'
 import { EventClusterFactory, EventClusterFactoryRenderProps, eventClusterFactory } from '@/factories/eventCluster'
 import { EventSelection, EventsSelection, RunGraphEvent } from '@/models'
-import { waitForApplication, waitForViewport } from '@/objects'
+import { waitForViewport } from '@/objects'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { selectItem } from '@/objects/selection'
 import { layout, waitForSettings } from '@/objects/settings'
 import { itemIsClusterFactory } from '@/utilities/detectHorizontalCollisions'
 
-export type FlowRunEventFactory = Awaited<ReturnType<typeof flowRunEventFactory>>
+export type NodeFlowRunEventFactory = Awaited<ReturnType<typeof nodeFlowRunEventFactory>>
 
-type EventFactoryOptions = { type: 'event', event: RunGraphEvent } | { type: 'cluster' }
+type NodeEventFactorySharedOptions = {
+  parentStartDate?: Date,
+}
+
+type NodeEventFactoryOptions =
+  NodeEventFactorySharedOptions
+  & ({ type: 'event', event: RunGraphEvent } | { type: 'cluster' })
 
 type EventFactoryType<T> = T extends { type: 'event' }
   ? EventFactory
@@ -22,8 +28,7 @@ type RenderPropsType<T> = T extends { type: 'cluster' }
   ? EventClusterFactoryRenderProps
   : undefined
 
-export async function flowRunEventFactory<T extends EventFactoryOptions>(options: T): Promise<EventFactoryType<T>> {
-  const application = await waitForApplication()
+export async function nodeFlowRunEventFactory<T extends NodeEventFactoryOptions>(options: T): Promise<EventFactoryType<T>> {
   const viewport = await waitForViewport()
   const settings = await waitForSettings()
   let scale = await waitForScale()
@@ -35,11 +40,13 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
 
     const { element } = factory
 
+    const globalPosition = element.getGlobalPosition()
+
     const position = {
-      x: element.position.x,
-      y: element.position.y,
-      width: element.width,
-      height: element.height,
+      x: globalPosition.x,
+      y: globalPosition.y,
+      width: element.width * viewport.scale.x,
+      height: element.height * viewport.scale.y,
     }
 
     const selectSettings: EventSelection | EventsSelection = itemIsClusterFactory(factory)
@@ -53,7 +60,6 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
     scale = updated
     updatePosition()
   })
-  emitter.on('viewportMoved', () => updatePosition())
 
   async function render(props?: RenderPropsType<T>): Promise<void> {
     await factory.render(props)
@@ -70,16 +76,17 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
 
   function updatePosition(): void {
     const date = factory.getDate()
+    const { parentStartDate } = options
 
-    if (!date || settings.disableEvents || !layout.isTemporal()) {
+    if (!date || settings.disableEvents || !layout.isTemporal() || !parentStartDate) {
       return
     }
 
     const { element } = factory
 
-    const x = scale(date) * viewport.scale._x + viewport.worldTransform.tx
+    const x = scale(date) - scale(parentStartDate)
     const centeredX = x - element.width / 2
-    const y = application.screen.height - element.height
+    const y = -element.height
 
     element.position.set(centeredX, y)
   }

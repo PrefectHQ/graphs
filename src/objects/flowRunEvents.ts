@@ -1,6 +1,8 @@
+import { DEFAULT_ROOT_EVENT_Z_INDEX } from '@/consts'
 import { eventDataFactory } from '@/factories/eventData'
-import { flowRunEventsFactory } from '@/factories/flowRunEvents'
+import { runEventsFactory } from '@/factories/runEvents'
 import { RunGraphEvent } from '@/models'
+import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter } from '@/objects/events'
 import { waitForSettings } from '@/objects/settings'
@@ -9,9 +11,13 @@ let stopEventData: (() => void) | null = null
 let rootGraphEvents: RunGraphEvent[] | null = null
 
 export async function startFlowRunEvents(): Promise<void> {
+  const application = await waitForApplication()
   const config = await waitForConfig()
 
-  const { render } = await flowRunEventsFactory()
+  const { element, render, update } = await runEventsFactory({ isRoot: true })
+
+  element.zIndex = DEFAULT_ROOT_EVENT_Z_INDEX
+  application.stage.addChild(element)
 
   const response = await eventDataFactory(config.runId, async data => {
     const event: EventKey = rootGraphEvents ? 'eventDataUpdated' : 'eventDataCreated'
@@ -27,13 +33,9 @@ export async function startFlowRunEvents(): Promise<void> {
     render(data)
   })
 
-  emitter.on('configUpdated', () => {
-    if (!rootGraphEvents) {
-      return
-    }
-
-    render()
-  })
+  emitter.on('configUpdated', () => render())
+  emitter.on('viewportMoved', () => update())
+  emitter.on('scaleUpdated', () => update())
 
   stopEventData = response.stop
 

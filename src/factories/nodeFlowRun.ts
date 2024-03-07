@@ -1,13 +1,15 @@
 import { dataFactory } from '@/factories/data'
+import { eventDataFactory } from '@/factories/eventData'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
+import { runEventsFactory } from '@/factories/runEvents'
 import { runStatesFactory } from '@/factories/runStates'
-import { RunGraphStateEvent } from '@/models'
+import { RunGraphEvent, RunGraphStateEvent } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodeSize } from '@/models/layout'
-import { RunGraphNode } from '@/models/RunGraph'
+import { RunGraphFetchEventsOptions, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { cull } from '@/objects/culling'
 
@@ -24,6 +26,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   const { element: nodesContainer, render: renderNodes, getSize: getNodesSize, stopWorker: stopNodesWorker } = await nodesContainerFactory()
   const { element: nodesState, render: renderNodesState } = await runStatesFactory()
+  const { element: nodesEvents, render: renderNodesEvents, update: updateNodesEvents } = await runEventsFactory({ parentStartDate: node.start_time })
 
   container.sortableChildren = true
   bar.zIndex = 2
@@ -31,11 +34,22 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   arrowButton.zIndex = 3
   nodesContainer.zIndex = 1
   nodesState.zIndex = 1
+  nodesEvents.zIndex = 2
 
   const { start: startData, stop: stopData } = await dataFactory(node.id, data => {
     renderNodes(data)
     renderStates(data.states)
   })
+
+  function getEventFactoryOptions(): RunGraphFetchEventsOptions {
+    return {
+      since: node.start_time,
+      until: node.end_time ?? new Date(),
+    }
+  }
+  const { start: startEventsData, stop: stopEventsData } = await eventDataFactory(node.id, data => {
+    renderEvents(data)
+  }, getEventFactoryOptions)
 
   let internalNode = node
   let isOpen = false
@@ -76,9 +90,10 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function renderStates(data?: RunGraphStateEvent[]): Promise<void> {
     const { width: nodesWidth, height: nodesHeight } = getNodesSize()
+    const { nodeHeight, nodesPadding, flowStateBarHeight } = config.styles
 
     const width = Math.max(bar.width, nodesWidth)
-    const height = nodesHeight + config.styles.nodeHeight + config.styles.nodesPadding * 2
+    const height = nodeHeight + nodesHeight + flowStateBarHeight + nodesPadding * 2
 
     await renderNodesState(data ?? undefined, {
       parentStartDate: internalNode.start_time,
@@ -87,13 +102,30 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     })
   }
 
+  async function renderEvents(data?: RunGraphEvent[]): Promise<void> {
+    const { height: nodesHeight } = getNodesSize()
+    const { nodeHeight, nodesPadding, flowStateBarHeight } = config.styles
+
+    const y = nodeHeight + nodesHeight + flowStateBarHeight + nodesPadding * 2
+    nodesEvents.position = { x: 0, y }
+
+    if (data) {
+      await renderNodesEvents(data)
+      return
+    }
+
+    await updateNodesEvents()
+  }
+
   async function open(): Promise<void> {
     isOpen = true
     container.addChild(nodesState)
+    container.addChild(nodesEvents)
     container.addChild(nodesContainer)
 
     await Promise.all([
       startData(),
+      startEventsData(),
       render(internalNode),
     ])
 
@@ -103,11 +135,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function close(): Promise<void> {
     isOpen = false
     container.removeChild(nodesState)
+    container.removeChild(nodesEvents)
     container.removeChild(nodesContainer)
     stopNodesWorker()
 
     await Promise.all([
       stopData(),
+      stopEventsData(),
       render(internalNode),
     ])
 
@@ -153,6 +187,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   function resized(): void {
     if (isOpen) {
       renderStates()
+      renderEvents()
     }
 
     const size = getSize()
