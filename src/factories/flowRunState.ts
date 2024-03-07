@@ -37,7 +37,8 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
   let hovered = false
   let selected = false
 
-  // The area is added to the stage so it sits behind other content.
+  // The area is added to the stage so it sits behind other content,
+  // where we otherwise want the bar to be on top.
   application.stage.addChild(area)
 
   element.addChild(bar)
