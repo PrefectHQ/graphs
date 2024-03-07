@@ -1,6 +1,6 @@
 import { Container } from 'pixi.js'
 import { FlowRunStateFactory, flowRunStateFactory } from '@/factories/flowRunState'
-import { NodeFlowRunStateFactoryRenderProps, NodesFlowRunStateFactory, isNodesFlowRunStateFactory, nodesFlowRunStateFactory } from '@/factories/nodesFlowRunState'
+import { NodeFlowRunStateFactoryRenderProps, NodeFlowRunStateFactory, isNodeFlowRunStateFactory, nodeFlowRunStateFactory } from '@/factories/nodeFlowRunState'
 import { RunGraphStateEvent } from '@/models/states'
 
 type FlowRunStatesFactoryProps = {
@@ -11,7 +11,7 @@ type FlowRunStatesFactoryProps = {
 export function runStatesFactory({ isRoot }: FlowRunStatesFactoryProps = {}) {
   const element = new Container()
 
-  const states = new Map<string, FlowRunStateFactory | NodesFlowRunStateFactory>()
+  const states = new Map<string, FlowRunStateFactory | NodeFlowRunStateFactory>()
   const stateCreationPromises = new Map<string, Promise<void>>()
   let internalData: RunGraphStateEvent[] | null = null
 
@@ -59,7 +59,7 @@ export function runStatesFactory({ isRoot }: FlowRunStatesFactoryProps = {}) {
       const stateCreationPromise = (async () => {
         const newFactory = isRoot
           ? await flowRunStateFactory(state)
-          : await nodesFlowRunStateFactory(state)
+          : await nodeFlowRunStateFactory(state)
 
         states.set(state.id, newFactory)
 
@@ -75,7 +75,7 @@ export function runStatesFactory({ isRoot }: FlowRunStatesFactoryProps = {}) {
       factory = states.get(state.id)!
     }
 
-    if (isNodesFlowRunStateFactory(factory)) {
+    if (isNodeFlowRunStateFactory(factory)) {
       await factory.render({ end, ...nodesStateOptions })
     } else {
       await factory.render(end ? { end } : undefined)

@@ -10,11 +10,11 @@ import { waitForScale } from '@/objects/scale'
 import { isSelected, selectItem } from '@/objects/selection'
 import { layout } from '@/objects/settings'
 
-export type NodesFlowRunStateFactory = Awaited<ReturnType<typeof nodesFlowRunStateFactory>>
+export type NodeFlowRunStateFactory = Awaited<ReturnType<typeof nodeFlowRunStateFactory>>
 
-export function isNodesFlowRunStateFactory(
-  factory: NodesFlowRunStateFactory | FlowRunStateFactory,
-): factory is NodesFlowRunStateFactory {
+export function isNodeFlowRunStateFactory(
+  factory: NodeFlowRunStateFactory | FlowRunStateFactory,
+): factory is NodeFlowRunStateFactory {
   return 'isNodesFlowRunStateFactory' in factory
 }
 
@@ -32,7 +32,7 @@ type StateRectangleRenderProps = {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function nodesFlowRunStateFactory(state: RunGraphStateEvent) {
+export async function nodeFlowRunStateFactory(state: RunGraphStateEvent) {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const config = await waitForConfig()
