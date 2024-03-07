@@ -47,7 +47,15 @@ export function isRunGraphNodeType(value: unknown): value is RunGraphNodeKind {
 }
 
 export type RunGraphFetch = (runId: string) => RunGraphData | Promise<RunGraphData>
-export type RunGraphFetchEvents = (runId: string) => RunGraphEvent[] | Promise<RunGraphEvent[]>
+
+export type RunGraphFetchEventsOptions = {
+  since?: Date,
+  until?: Date,
+}
+export type RunGraphFetchEvents = (
+  runId: string,
+  options?: RunGraphFetchEventsOptions,
+) => RunGraphEvent[] | Promise<RunGraphEvent[]>
 
 export type RunGraphNodeStyles = {
   background?: ColorSource,

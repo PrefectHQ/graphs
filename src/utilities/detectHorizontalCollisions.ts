@@ -13,7 +13,7 @@ type ClusterFactory = {
   render: (props: { ids: string[], date: Date }) => void,
 } & Record<string, unknown>
 
-function itemIsClusterFactory(item: ItemFactory | ClusterFactory): item is ClusterFactory {
+export function itemIsClusterFactory(item: ItemFactory | ClusterFactory): item is ClusterFactory {
   return 'getIds' in item
 }
 

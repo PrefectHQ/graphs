@@ -5,7 +5,7 @@ import { rectangleFactory } from '@/factories/rectangle'
 import { selectedBorderFactory } from '@/factories/selectedBorder'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
-import { isSelected, selectItem } from '@/objects/selection'
+import { isSelected } from '@/objects/selection'
 
 export type EventClusterFactory = Awaited<ReturnType<typeof eventClusterFactory>>
 
@@ -45,19 +45,6 @@ export async function eventClusterFactory() {
     if (!selected) {
       circle.scale.set(1)
     }
-  })
-
-  element.on('click', clickEvent => {
-    clickEvent.stopPropagation()
-
-    const position = {
-      x: element.position.x,
-      y: element.position.y,
-      width: element.width,
-      height: element.height,
-    }
-
-    selectItem({ kind: 'events', ids: currentIds, occurred: currentDate, position })
   })
 
   emitter.on('itemSelected', () => {

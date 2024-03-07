@@ -1,12 +1,17 @@
+import { MaybeRefOrGetter, toValue } from 'vue'
 import { getIntervalForDataSize } from '@/factories/data'
-import { RunGraphEvent } from '@/models'
+import { RunGraphEvent, RunGraphFetchEventsOptions } from '@/models'
 import { waitForConfig } from '@/objects/config'
 import { waitForRunData } from '@/objects/nodes'
 
 type EventDataCallback = (data: RunGraphEvent[]) => void
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function eventDataFactory(runId: string, callback: EventDataCallback) {
+export async function eventDataFactory(
+  runId: string,
+  callback: EventDataCallback,
+  options?: MaybeRefOrGetter<RunGraphFetchEventsOptions>,
+) {
   const runGraphData = await waitForRunData()
   const config = await waitForConfig()
 
@@ -15,7 +20,7 @@ export async function eventDataFactory(runId: string, callback: EventDataCallbac
 
   async function start(): Promise<void> {
     try {
-      data = await config.fetchEvents(runId)
+      data = await config.fetchEvents(runId, toValue(options))
 
       callback(data)
     } catch (error) {

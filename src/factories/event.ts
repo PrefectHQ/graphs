@@ -5,7 +5,7 @@ import { selectedBorderFactory } from '@/factories/selectedBorder'
 import { RunGraphEvent } from '@/models'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
-import { isSelected, selectItem } from '@/objects/selection'
+import { isSelected } from '@/objects/selection'
 
 export type EventFactory = Awaited<ReturnType<typeof eventFactory>>
 
@@ -36,19 +36,6 @@ export async function eventFactory(event: RunGraphEvent) {
     if (!selected) {
       circle.scale.set(1)
     }
-  })
-
-  element.on('click', clickEvent => {
-    clickEvent.stopPropagation()
-
-    const position = {
-      x: element.position.x,
-      y: element.position.y,
-      width: element.width,
-      height: element.height,
-    }
-
-    selectItem({ kind: 'event', id: event.id, occurred: event.occurred, position })
   })
 
   emitter.on('itemSelected', () => {

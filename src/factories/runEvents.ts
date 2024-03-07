@@ -1,35 +1,37 @@
 import throttle from 'lodash.throttle'
 import { Container } from 'pixi.js'
-import { DEFAULT_ROOT_COLLISION_THROTTLE, DEFAULT_ROOT_EVENT_Z_INDEX } from '@/consts'
+import { DEFAULT_ROOT_COLLISION_THROTTLE } from '@/consts'
 import { EventFactory } from '@/factories/event'
 import { EventClusterFactory } from '@/factories/eventCluster'
 import { flowRunEventFactory } from '@/factories/flowRunEvent'
+import { nodeFlowRunEventFactory } from '@/factories/nodeFlowRunEvent'
 import { RunGraphEvent } from '@/models'
-import { waitForApplication } from '@/objects'
 import { emitter } from '@/objects/events'
 import { layout, waitForSettings } from '@/objects/settings'
 import { clusterHorizontalCollisions } from '@/utilities/detectHorizontalCollisions'
 
+type RunEventsFactoryProps = {
+  isRoot?: boolean,
+  parentStartDate?: Date,
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function flowRunEventsFactory() {
-  const application = await waitForApplication()
+export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFactoryProps = {}) {
   const settings = await waitForSettings()
 
   const events = new Map<string, EventFactory>()
   const clusterNodes: EventClusterFactory[] = []
   let availableClusterNodes: EventClusterFactory[] = []
 
-  let container: Container | null = null
+  const container = new Container()
   let internalData: RunGraphEvent[] | null = null
 
-  emitter.on('viewportMoved', () => update())
-  emitter.on('scaleUpdated', () => update())
   emitter.on('layoutSettingsUpdated', () => render())
 
   async function render(newData?: RunGraphEvent[]): Promise<void> {
-    if (container && !layout.isTemporal()) {
+    if (!layout.isTemporal()) {
       container.visible = false
-    } else if (container) {
+    } else {
       container.visible = !settings.disableEvents
     }
 
@@ -45,10 +47,6 @@ export async function flowRunEventsFactory() {
       return
     }
 
-    if (!container) {
-      createContainer()
-    }
-
     const promises: Promise<void>[] = []
 
     for (const artifact of internalData) {
@@ -60,18 +58,14 @@ export async function flowRunEventsFactory() {
     update()
   }
 
-  function createContainer(): void {
-    container = new Container()
-    container.zIndex = DEFAULT_ROOT_EVENT_Z_INDEX
-    application.stage.addChild(container)
-  }
-
   async function createEvent(event: RunGraphEvent): Promise<void> {
     if (events.has(event.id)) {
       return events.get(event.id)!.render()
     }
 
-    const factory = await flowRunEventFactory({ type: 'event', event })
+    const factory = isRoot
+      ? await flowRunEventFactory({ type: 'event', event })
+      : await nodeFlowRunEventFactory({ type: 'event', event, parentStartDate })
     events.set(event.id, factory)
 
     container!.addChild(factory.element)
@@ -80,7 +74,7 @@ export async function flowRunEventsFactory() {
   }
 
   function update(): void {
-    if (!container || settings.disableEvents || !layout.isTemporal()) {
+    if (settings.disableEvents || !layout.isTemporal()) {
       return
     }
 
@@ -105,7 +99,10 @@ export async function flowRunEventsFactory() {
       return availableClusterNodes.pop()!
     }
 
-    const newCluster = await flowRunEventFactory({ type: 'cluster' })
+    const newCluster = isRoot
+      ? await flowRunEventFactory({ type: 'cluster' })
+      : await nodeFlowRunEventFactory({ type: 'cluster', parentStartDate })
+
     container!.addChild(newCluster.element)
     clusterNodes.push(newCluster)
 
@@ -113,6 +110,8 @@ export async function flowRunEventsFactory() {
   }
 
   return {
+    element: container,
     render,
+    update,
   }
 }
