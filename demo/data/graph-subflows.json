@@ -1,6 +1,24 @@
 {
   "start_time": "2023-09-27T15:50:39.425118+00:00",
   "end_time": "2023-09-27T15:51:08.999871+00:00",
+  "states": [
+    {
+      "id": "eab2f3de-91f2-4b29-b9de-pending",
+      "timestamp": "2023-09-27T15:50:39.205118+00:00",
+      "type": "PENDING",
+      "name": "Pending"
+    }, {
+      "id": "003d4c00-c30a-41c9-bb49-running",
+      "timestamp": "2023-09-27T15:50:39.425118+00:00",
+      "type": "RUNNING",
+      "name": "Running"
+    }, {
+      "id": "56912bb1-e172-4ea8-9be7-completed",
+      "timestamp": "2023-09-27T15:51:08.999871+00:00",
+      "type": "COMPLETED",
+      "name": "Completed"
+    }
+  ],
   "root_node_ids": [
     "ea9d7c12-7418-4ea9-b33d-189f22f737af",
     "7d93e182-e17f-40a2-a0c3-784d1d0e7ff5",
