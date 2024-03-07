@@ -35,7 +35,6 @@ export async function startFlowRunEvents(): Promise<void> {
 
   emitter.on('configUpdated', () => render())
   emitter.on('viewportMoved', () => update())
-  emitter.on('scaleUpdated', () => update())
 
   stopEventData = response.stop
 

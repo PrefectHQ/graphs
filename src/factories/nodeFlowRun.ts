@@ -4,9 +4,10 @@ import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
+import { runArtifactsFactory } from '@/factories/runArtifacts'
 import { runEventsFactory } from '@/factories/runEvents'
 import { runStatesFactory } from '@/factories/runStates'
-import { RunGraphEvent, RunGraphStateEvent } from '@/models'
+import { RunGraphArtifact, RunGraphEvent, RunGraphStateEvent } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodeSize } from '@/models/layout'
 import { RunGraphFetchEventsOptions, RunGraphNode } from '@/models/RunGraph'
@@ -27,6 +28,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const { element: nodesContainer, render: renderNodes, getSize: getNodesSize, stopWorker: stopNodesWorker } = await nodesContainerFactory()
   const { element: nodesState, render: renderNodesState } = await runStatesFactory()
   const { element: nodesEvents, render: renderNodesEvents, update: updateNodesEvents } = await runEventsFactory({ parentStartDate: node.start_time })
+  const { element: nodesArtifacts, render: renderNodesArtifacts, update: updateNodesArtifacts } = await runArtifactsFactory({ parentStartDate: node.start_time })
 
   container.sortableChildren = true
   bar.zIndex = 2
@@ -35,10 +37,12 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   nodesContainer.zIndex = 1
   nodesState.zIndex = 1
   nodesEvents.zIndex = 2
+  nodesArtifacts.zIndex = 2
 
   const { start: startData, stop: stopData } = await dataFactory(node.id, data => {
     renderNodes(data)
     renderStates(data.states)
+    renderArtifacts(data.artifacts)
   })
 
   function getEventFactoryOptions(): RunGraphFetchEventsOptions {
@@ -89,11 +93,9 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderStates(data?: RunGraphStateEvent[]): Promise<void> {
-    const { width: nodesWidth, height: nodesHeight } = getNodesSize()
-    const { nodeHeight, nodesPadding, flowStateBarHeight } = config.styles
+    const { width: nodesWidth, height } = getSize()
 
     const width = Math.max(bar.width, nodesWidth)
-    const height = nodeHeight + nodesHeight + flowStateBarHeight + nodesPadding * 2
 
     await renderNodesState(data ?? undefined, {
       parentStartDate: internalNode.start_time,
@@ -103,11 +105,9 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderEvents(data?: RunGraphEvent[]): Promise<void> {
-    const { height: nodesHeight } = getNodesSize()
-    const { nodeHeight, nodesPadding, flowStateBarHeight } = config.styles
+    const { height } = getSize()
 
-    const y = nodeHeight + nodesHeight + flowStateBarHeight + nodesPadding * 2
-    nodesEvents.position = { x: 0, y }
+    nodesEvents.position = { x: 0, y: height }
 
     if (data) {
       await renderNodesEvents(data)
@@ -117,10 +117,25 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     await updateNodesEvents()
   }
 
+  async function renderArtifacts(data?: RunGraphArtifact[]): Promise<void> {
+    const { height } = getSize()
+
+    const y = height - config.styles.eventTargetSize
+    nodesArtifacts.position = { x: 0, y }
+
+    if (data) {
+      await renderNodesArtifacts(data)
+      return
+    }
+
+    await updateNodesArtifacts()
+  }
+
   async function open(): Promise<void> {
     isOpen = true
     container.addChild(nodesState)
     container.addChild(nodesEvents)
+    container.addChild(nodesArtifacts)
     container.addChild(nodesContainer)
 
     await Promise.all([
@@ -136,6 +151,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     isOpen = false
     container.removeChild(nodesState)
     container.removeChild(nodesEvents)
+    container.removeChild(nodesArtifacts)
     container.removeChild(nodesContainer)
     stopNodesWorker()
 
@@ -188,6 +204,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     if (isOpen) {
       renderStates()
       renderEvents()
+      renderArtifacts()
     }
 
     const size = getSize()
@@ -197,9 +214,21 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   function getSize(): NodeSize {
     const nodes = getNodesSize()
-    const nodesHeight = isOpen ? nodes.height + config.styles.nodesPadding * 2 : 0
+    const {
+      nodeHeight,
+      nodesPadding,
+      eventTargetSize,
+      artifactPaddingY,
+      artifactIconSize,
+    } = config.styles
+
+    const artifactsHeight = artifactIconSize + artifactPaddingY * 2
+
+    const nodesHeight = isOpen
+      ? nodes.height + artifactsHeight + eventTargetSize + nodesPadding * 2
+      : 0
     const nodesWidth = isOpen ? nodes.width : 0
-    const flowRunNodeHeight = config.styles.nodeHeight
+    const flowRunNodeHeight = nodeHeight
 
     return {
       height: flowRunNodeHeight + nodesHeight,

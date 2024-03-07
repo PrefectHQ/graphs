@@ -7,10 +7,14 @@ export type ArtifactFactory = Awaited<ReturnType<typeof artifactFactory>>
 
 type ArtifactFactoryOptions = {
   cullAtZoomThreshold?: boolean,
+  enableLocalClickHandling?: boolean,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function artifactFactory(artifact: RunGraphArtifact, { cullAtZoomThreshold = true }: ArtifactFactoryOptions = {}) {
+export async function artifactFactory(artifact: RunGraphArtifact, {
+  cullAtZoomThreshold = true,
+  enableLocalClickHandling = false,
+}: ArtifactFactoryOptions = {}) {
   const { element, render: renderArtifactNode } = await artifactNodeFactory({ cullAtZoomThreshold })
 
   let selected = false
@@ -18,10 +22,12 @@ export async function artifactFactory(artifact: RunGraphArtifact, { cullAtZoomTh
   element.eventMode = 'static'
   element.cursor = 'pointer'
 
-  element.on('click', event => {
-    event.stopPropagation()
-    selectItem({ kind: 'artifact', id: artifact.id })
-  })
+  if (enableLocalClickHandling) {
+    element.on('click', event => {
+      event.stopPropagation()
+      selectItem({ kind: 'artifact', id: artifact.id })
+    })
+  }
 
   emitter.on('itemSelected', () => {
     const isCurrentlySelected = isSelected({ kind: 'artifact', id: artifact.id })

@@ -1,6 +1,6 @@
 import { artifactNodeFactory } from '@/factories/artifactNode'
 import { emitter } from '@/objects/events'
-import { isSelected, selectItem } from '@/objects/selection'
+import { isSelected } from '@/objects/selection'
 
 export type ArtifactClusterFactory = Awaited<ReturnType<typeof artifactClusterFactory>>
 
@@ -20,18 +20,6 @@ export async function artifactClusterFactory() {
   element.eventMode = 'static'
   element.cursor = 'pointer'
 
-  element.on('click', event => {
-    event.stopPropagation()
-
-    const position = {
-      x: element.position.x,
-      y: element.position.y,
-      width: element.width,
-      height: element.height,
-    }
-
-    selectItem({ kind: 'artifacts', ids: currentIds, position })
-  })
   emitter.on('itemSelected', () => {
     const isCurrentlySelected = isSelected({ kind: 'artifacts', ids: currentIds })
 

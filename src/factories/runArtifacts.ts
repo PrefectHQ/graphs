@@ -1,40 +1,41 @@
 import throttle from 'lodash.throttle'
 import { Container } from 'pixi.js'
-import { DEFAULT_ROOT_COLLISION_THROTTLE, DEFAULT_ROOT_ARTIFACT_Z_INDEX } from '@/consts'
+import { DEFAULT_ROOT_COLLISION_THROTTLE } from '@/consts'
 import { ArtifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory } from '@/factories/artifactCluster'
 import { flowRunArtifactFactory } from '@/factories/flowRunArtifact'
+import { nodeFlowRunArtifactFactory } from '@/factories/nodeFlowRunArtifact'
 import { RunGraphArtifact } from '@/models'
-import { waitForApplication, waitForViewport } from '@/objects'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { layout, waitForSettings } from '@/objects/settings'
 import { clusterHorizontalCollisions } from '@/utilities/detectHorizontalCollisions'
 
+type RunEventsFactoryProps = {
+  isRoot?: boolean,
+  parentStartDate?: Date,
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function flowRunArtifactsFactory() {
-  const application = await waitForApplication()
-  const viewport = await waitForViewport()
-  const config = await waitForConfig()
+export async function runArtifactsFactory({ isRoot, parentStartDate }: RunEventsFactoryProps = {}) {
   const settings = await waitForSettings()
 
   const artifacts: Map<string, ArtifactFactory> = new Map()
   const clusterNodes: ArtifactClusterFactory[] = []
   let availableClusterNodes: ArtifactClusterFactory[] = []
 
-  let container: Container | null = null
+  const container = new Container()
   let internalData: RunGraphArtifact[] | null = null
-  let nonTemporalAlignmentEngaged = false
 
-  emitter.on('viewportMoved', () => update())
-  emitter.on('scaleUpdated', () => update())
+  emitter.on('layoutSettingsUpdated', () => render())
 
   async function render(newData?: RunGraphArtifact[]): Promise<void> {
-    if (container) {
-      container.visible = !settings.disableArtifacts
+    if (!layout.isTemporal()) {
+      container.visible = false
+    } else {
+      container.visible = !settings.disableEvents
     }
 
-    if (settings.disableArtifacts) {
+    if (settings.disableArtifacts || !layout.isTemporal()) {
       return
     }
 
@@ -46,10 +47,6 @@ export async function flowRunArtifactsFactory() {
       return
     }
 
-    if (!container) {
-      createContainer()
-    }
-
     const promises: Promise<void>[] = []
 
     for (const artifact of internalData) {
@@ -57,6 +54,8 @@ export async function flowRunArtifactsFactory() {
     }
 
     await Promise.all(promises)
+
+    update()
   }
 
   async function createArtifact(artifact: RunGraphArtifact): Promise<void> {
@@ -64,7 +63,9 @@ export async function flowRunArtifactsFactory() {
       return artifacts.get(artifact.id)!.render()
     }
 
-    const factory = await flowRunArtifactFactory({ type: 'artifact', artifact })
+    const factory = isRoot
+      ? await flowRunArtifactFactory({ type: 'artifact', artifact })
+      : await nodeFlowRunArtifactFactory({ type: 'artifact', artifact, parentStartDate })
 
     artifacts.set(artifact.id, factory)
 
@@ -73,29 +74,17 @@ export async function flowRunArtifactsFactory() {
     return factory.render()
   }
 
-  function createContainer(): void {
-    container = new Container()
-    container.zIndex = DEFAULT_ROOT_ARTIFACT_Z_INDEX
-    application.stage.addChild(container)
-  }
-
   function update(): void {
-    if (!container || settings.disableArtifacts) {
+    if (settings.disableArtifacts || !layout.isTemporal()) {
       return
     }
 
     if (!layout.isTemporal()) {
-      if (!nonTemporalAlignmentEngaged) {
-        clearClusters()
-        alignNonTemporal()
-        nonTemporalAlignmentEngaged = true
-      }
-
-      container.position.x = viewport.scale._x + viewport.worldTransform.tx
+      container.visible = false
       return
     }
 
-    nonTemporalAlignmentEngaged = false
+    container.visible = true
     container.position.x = 0
     checkLayout()
   }
@@ -118,34 +107,19 @@ export async function flowRunArtifactsFactory() {
       return availableClusterNodes.pop()!
     }
 
-    const newCluster = await flowRunArtifactFactory({ type: 'cluster' })
+    const newCluster = isRoot
+      ? await flowRunArtifactFactory({ type: 'cluster' })
+      : await nodeFlowRunArtifactFactory({ type: 'cluster', parentStartDate })
+
     container!.addChild(newCluster.element)
     clusterNodes.push(newCluster)
 
     return newCluster
   }
 
-  function clearClusters(): void {
-    for (const cluster of clusterNodes) {
-      cluster.render()
-    }
-    for (const artifact of artifacts.values()) {
-      artifact.element.visible = true
-    }
-  }
-
-  function alignNonTemporal(): void {
-    const { artifactContentGap } = config.styles
-    let x = 0
-
-    for (const artifact of artifacts.values()) {
-
-      artifact.element.x = x
-      x += artifact.element.width + artifactContentGap
-    }
-  }
-
   return {
+    element: container,
     render,
+    update,
   }
 }
