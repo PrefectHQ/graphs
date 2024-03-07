@@ -95,8 +95,8 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
     if (data.end_time) {
       stopTicking()
     }
-
     if (!layout.isTemporal()) {
+      area.visible = false
       element.visible = false
       return
     }
@@ -105,6 +105,9 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
 
     renderBar(options)
     renderArea(options)
+
+    area.visible = true
+    element.visible = true
   }
 
   function getRenderStyles(): StateRectangleRenderProps {
