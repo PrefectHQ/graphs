@@ -1,7 +1,7 @@
 import { ArtifactFactory, artifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
 import { ArtifactSelection, ArtifactsSelection, RunGraphArtifact } from '@/models'
-import { waitForApplication, waitForViewport } from '@/objects'
+import { waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
@@ -9,9 +9,15 @@ import { selectItem } from '@/objects/selection'
 import { layout, waitForSettings } from '@/objects/settings'
 import { itemIsClusterFactory } from '@/utilities/detectHorizontalCollisions'
 
-export type FlowRunArtifactFactory = Awaited<ReturnType<typeof flowRunArtifactFactory>>
+export type NodeFlowRunArtifactFactory = Awaited<ReturnType<typeof nodeFlowRunArtifactFactory>>
 
-type ArtifactFactoryOptions = { type: 'artifact', artifact: RunGraphArtifact } | { type: 'cluster' }
+type NodeFlowRunArtifactFactorySharedOptions = {
+  parentStartDate?: Date,
+}
+
+type NodeFlowRunArtifactFactoryOptions =
+  NodeFlowRunArtifactFactorySharedOptions
+  & ({ type: 'artifact', artifact: RunGraphArtifact } | { type: 'cluster' })
 
 type FactoryType<T> = T extends { type: 'artifact' }
   ? ArtifactFactory
@@ -23,8 +29,7 @@ type RenderPropsType<T> = T extends { type: 'cluster' }
   ? ArtifactClusterFactoryRenderProps
   : undefined
 
-export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(options: T): Promise<FactoryType<T>> {
-  const application = await waitForApplication()
+export async function nodeFlowRunArtifactFactory<T extends NodeFlowRunArtifactFactoryOptions>(options: T): Promise<FactoryType<T>> {
   const viewport = await waitForViewport()
   const config = await waitForConfig()
   const settings = await waitForSettings()
@@ -33,6 +38,7 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
   const factory = await getFactory() as FactoryType<T>
 
   factory.element.on('click', clickEvent => {
+    console.log('artifact click')
     clickEvent.stopPropagation()
 
     const { element } = factory
@@ -57,7 +63,6 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
     scale = updated
     updatePosition()
   })
-  emitter.on('viewportMoved', () => updatePosition())
 
   async function render(props?: RenderPropsType<T>): Promise<void> {
     await factory.render(props)
@@ -66,7 +71,7 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
 
   async function getFactory(): Promise<ArtifactFactory | ArtifactClusterFactory> {
     if (options.type === 'artifact') {
-      return await artifactFactory(options.artifact, { cullAtZoomThreshold: false })
+      return await artifactFactory(options.artifact)
     }
 
     return await artifactClusterFactory()
@@ -74,14 +79,14 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
 
   function updatePosition(): void {
     const date = factory.getDate()
+    const { parentStartDate } = options
 
-    if (!date || !layout.isTemporal() || settings.disableArtifacts) {
+    if (!date || !layout.isTemporal() || settings.disableArtifacts || !parentStartDate) {
       return
     }
 
     const selected = factory.getSelected()
     const { element } = factory
-    const { eventTargetSize } = config.styles
 
     let selectedOffset = 0
 
@@ -90,11 +95,9 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
       selectedOffset = selectedBorderOffset + selectedBorderWidth * 2
     }
 
-    const x = scale(date) * viewport.scale._x + viewport.worldTransform.tx
+    const x = scale(date) - scale(parentStartDate)
     const centeredX = x - (element.width - selectedOffset) / 2
-    const y = application.screen.height
-      - (element.height - selectedOffset)
-      - eventTargetSize
+    const y = -(element.height - selectedOffset)
 
     element.position.set(centeredX, y)
   }

@@ -74,7 +74,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     ])
 
     if (artifactsContainer) {
-      artifactsContainer.visible = !settings.disableArtifacts
+      artifactsContainer.visible = layout.isTemporal() ? !settings.disableArtifacts : false
     }
 
     if (node.end_time) {
@@ -85,7 +85,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   async function createArtifacts(artifactsData?: RunGraphArtifact[]): Promise<void> {
-    if (!artifactsData || settings.disableArtifacts) {
+    if (!artifactsData || settings.disableArtifacts || !layout.isTemporal()) {
       return
     }
 
@@ -109,7 +109,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       return artifacts.get(artifact.id)!.render()
     }
 
-    const factory = await artifactFactory(artifact)
+    const factory = await artifactFactory(artifact, { enableLocalClickHandling: true })
 
     artifacts.set(artifact.id, factory)
 

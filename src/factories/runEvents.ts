@@ -27,6 +27,7 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
   let internalData: RunGraphEvent[] | null = null
 
   emitter.on('layoutSettingsUpdated', () => render())
+  emitter.on('scaleUpdated', () => update())
 
   async function render(newData?: RunGraphEvent[]): Promise<void> {
     if (!layout.isTemporal()) {
