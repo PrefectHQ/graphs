@@ -8,6 +8,7 @@ export type BorderStyle = {
   stroke: number,
   radius?: number,
   color?: ColorSource,
+  roundedTop?: boolean,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -50,7 +51,7 @@ export function borderFactory() {
   container.addChild(bottom)
 
   async function render(style: BorderStyle): Promise<Container> {
-    const { radius = 0, color = '#fff', stroke, width, height } = style
+    const { radius = 0, color = '#fff', stroke, width, height, roundedTop } = style
     const maxSize = Math.min(width, height)
     const size = radius * 2 > maxSize ? maxSize / 2 : radius
 
@@ -68,6 +69,7 @@ export function borderFactory() {
       width,
       height,
       size,
+      roundedTop,
     })
 
     updateBorders({
@@ -76,6 +78,7 @@ export function borderFactory() {
       height,
       size,
       stroke,
+      roundedTop,
     })
 
     setTint(color)
@@ -88,9 +91,18 @@ export function borderFactory() {
     width: number,
     height: number,
     size: number,
+    roundedTop?: boolean,
   }
 
-  function updateCorners({ texture, width, height, size }: UpdateCorners): void {
+  function updateCorners({ texture, width, height, size, roundedTop }: UpdateCorners): void {
+    if (roundedTop) {
+      bottomLeft.visible = false
+      bottomRight.visible = false
+    } else {
+      bottomLeft.visible = true
+      bottomRight.visible = true
+    }
+
     topLeft.texture = texture
     topRight.texture = texture
     bottomLeft.texture = texture
@@ -108,9 +120,10 @@ export function borderFactory() {
     height: number,
     size: number,
     stroke: number,
+    roundedTop?: boolean,
   }
 
-  function updateBorders({ texture, size, width, height, stroke }: UpdateBorders): void {
+  function updateBorders({ texture, size, width, height, stroke, roundedTop }: UpdateBorders): void {
     const sidesHeight = Math.max(height - size * 2, 0)
     const topAndBottomWidth = Math.max(width - size * 2, 0)
 
@@ -120,19 +133,19 @@ export function borderFactory() {
     bottom.texture = texture
 
     left.position.set(0, size)
-    left.height = sidesHeight
+    left.height = roundedTop ? Math.max(height - size, 0) : sidesHeight
     left.width = stroke
 
     right.position.set(width - stroke, size)
-    right.height = sidesHeight
+    right.height = roundedTop ? Math.max(height - size, 0) : sidesHeight
     right.width = stroke
 
     top.position.set(size, 0)
     top.width = topAndBottomWidth
     top.height = stroke
 
-    bottom.position.set(size, height - stroke)
-    bottom.width = topAndBottomWidth
+    bottom.position.set(roundedTop ? 0 : size, height - stroke)
+    bottom.width = roundedTop ? Math.max(width, 0) : topAndBottomWidth
     bottom.height = stroke
   }
 
