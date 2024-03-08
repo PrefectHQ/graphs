@@ -1,3 +1,4 @@
+import { borderFactory } from '@/factories/border'
 import { dataFactory } from '@/factories/data'
 import { eventDataFactory } from '@/factories/eventData'
 import { nodeLabelFactory } from '@/factories/label'
@@ -13,6 +14,7 @@ import { NodeSize } from '@/models/layout'
 import { RunGraphFetchEventsOptions, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { cull } from '@/objects/culling'
+import { layout } from '@/objects/settings'
 
 export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory>>
 
@@ -24,6 +26,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const { element: bar, render: renderBar } = await nodeBarFactory()
   const { element: label, render: renderLabelText } = await nodeLabelFactory()
   const { element: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
+  const { element: border, render: renderBorderContainer } = await borderFactory()
 
   const { element: nodesContainer, render: renderNodes, getSize: getNodesSize, stopWorker: stopNodesWorker } = await nodesContainerFactory()
   const { element: nodesState, render: renderNodesState } = await runStatesFactory()
@@ -34,15 +37,21 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   bar.zIndex = 2
   label.zIndex = 3
   arrowButton.zIndex = 3
+  border.zIndex = 0
+
   nodesContainer.zIndex = 1
   nodesState.zIndex = 1
   nodesEvents.zIndex = 2
   nodesArtifacts.zIndex = 2
 
+  border.eventMode = 'none'
+  border.cursor = 'default'
+
   const { start: startData, stop: stopData } = await dataFactory(node.id, data => {
     renderNodes(data)
     renderStates(data.states)
     renderArtifacts(data.artifacts)
+    renderBorder()
   })
 
   function getEventFactoryOptions(): RunGraphFetchEventsOptions {
@@ -92,6 +101,28 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     }
   }
 
+  async function renderBorder(): Promise<void> {
+    const { background = '#fff' } = config.styles.node(node)
+    const { width, height: nodeHeights } = getNodesSize()
+    const { height: nodeLayersHeight } = getSize()
+    const { nodeBorderRadius } = config.styles
+
+    const strokeWidth = 2
+    border.position = { x: -strokeWidth, y: -strokeWidth }
+
+    const height = layout.isTemporal()
+      ? nodeLayersHeight + strokeWidth * 2
+      : nodeHeights + strokeWidth * 2
+
+    await renderBorderContainer({
+      width: width + strokeWidth * 2,
+      height,
+      stroke: strokeWidth,
+      radius: [nodeBorderRadius, nodeBorderRadius, 0, 0],
+      color: background,
+    })
+  }
+
   async function renderStates(data?: RunGraphStateEvent[]): Promise<void> {
     const { width: nodesWidth, height } = getSize()
 
@@ -137,6 +168,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     container.addChild(nodesEvents)
     container.addChild(nodesArtifacts)
     container.addChild(nodesContainer)
+    container.addChild(border)
 
     await Promise.all([
       startData(),
@@ -153,6 +185,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     container.removeChild(nodesEvents)
     container.removeChild(nodesArtifacts)
     container.removeChild(nodesContainer)
+    container.removeChild(border)
     stopNodesWorker()
 
     await Promise.all([
@@ -205,6 +238,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       renderStates()
       renderEvents()
       renderArtifacts()
+      renderBorder()
     }
 
     const size = getSize()
