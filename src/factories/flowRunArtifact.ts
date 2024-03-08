@@ -4,6 +4,7 @@ import { ArtifactSelection, ArtifactsSelection, RunGraphArtifact } from '@/model
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
+import { waitForRunEvents } from '@/objects/flowRunEvents'
 import { waitForScale } from '@/objects/scale'
 import { selectItem } from '@/objects/selection'
 import { layout, waitForSettings } from '@/objects/settings'
@@ -28,7 +29,11 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
   const viewport = await waitForViewport()
   const config = await waitForConfig()
   const settings = await waitForSettings()
+  const events = await waitForRunEvents()
+
   let scale = await waitForScale()
+
+  let flowHasEvents = events && events.length > 0
 
   const factory = await getFactory() as FactoryType<T>
 
@@ -58,6 +63,14 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
     updatePosition()
   })
   emitter.on('viewportMoved', () => updatePosition())
+  emitter.on('eventDataCreated', (data) => {
+    flowHasEvents = data.length > 0
+    updatePosition()
+  })
+  emitter.on('eventDataUpdated', (data) => {
+    flowHasEvents = data.length > 0
+    updatePosition()
+  })
 
   async function render(props?: RenderPropsType<T>): Promise<void> {
     await factory.render(props)
@@ -81,7 +94,7 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
 
     const selected = factory.getSelected()
     const { element } = factory
-    const { eventTargetSize } = config.styles
+    const { eventTargetSize, flowStateSelectedBarHeight } = config.styles
 
     let selectedOffset = 0
 
@@ -94,7 +107,7 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
     const centeredX = x - (element.width - selectedOffset) / 2
     const y = application.screen.height
       - (element.height - selectedOffset)
-      - eventTargetSize
+      - (flowHasEvents ? eventTargetSize : flowStateSelectedBarHeight)
 
     element.position.set(centeredX, y)
   }

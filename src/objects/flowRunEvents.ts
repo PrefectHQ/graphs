@@ -4,7 +4,7 @@ import { runEventsFactory } from '@/factories/runEvents'
 import { RunGraphEvent } from '@/models'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
-import { EventKey, emitter } from '@/objects/events'
+import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForSettings } from '@/objects/settings'
 
 let stopEventData: (() => void) | null = null
@@ -45,4 +45,12 @@ export function stopFlowRunEvents(): void {
   stopEventData?.()
   stopEventData = null
   rootGraphEvents = null
+}
+
+export async function waitForRunEvents(): Promise<RunGraphEvent[] | null> {
+  if (rootGraphEvents) {
+    return rootGraphEvents
+  }
+
+  return await waitForEvent('eventDataCreated')
 }
