@@ -105,6 +105,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const { background = '#fff' } = config.styles.node(node)
     const { width, height: nodeHeights } = getNodesSize()
     const { height: nodeLayersHeight } = getSize()
+    const { nodeBorderRadius } = config.styles
 
     const strokeWidth = 2
     border.position = { x: -strokeWidth, y: -strokeWidth }
@@ -117,9 +118,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       width: width + strokeWidth * 2,
       height,
       stroke: strokeWidth,
-      radius: config.styles.nodeBorderRadius,
+      radius: [nodeBorderRadius, nodeBorderRadius, 0, 0],
       color: background,
-      roundedTop: true,
     })
   }
 

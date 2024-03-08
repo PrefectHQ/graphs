@@ -1,14 +1,25 @@
-import { ColorSource, Container, Sprite, Texture } from 'pixi.js'
-import { CornerStyle, getCornerTexture } from '@/textures/corner'
+import { ColorSource, Container, Sprite } from 'pixi.js'
+import { getCornerTexture } from '@/textures/corner'
 import { getPixelTexture } from '@/textures/pixel'
 
 export type BorderStyle = {
   width: number,
   height: number,
   stroke: number,
-  radius?: number,
+  radius?: number | [number, number, number, number],
   color?: ColorSource,
-  roundedTop?: boolean,
+}
+
+type CornerMeasurement = {
+  size: number,
+  radius: number,
+}
+
+type CornerMeasurements = {
+  topLeft: CornerMeasurement,
+  topRight: CornerMeasurement,
+  bottomLeft: CornerMeasurement,
+  bottomRight: CornerMeasurement,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -51,34 +62,29 @@ export function borderFactory() {
   container.addChild(bottom)
 
   async function render(style: BorderStyle): Promise<Container> {
-    const { radius = 0, color = '#fff', stroke, width, height, roundedTop } = style
-    const maxSize = Math.min(width, height)
-    const size = radius * 2 > maxSize ? maxSize / 2 : radius
+    const { radius = 0, color = '#fff', stroke, width, height } = style
 
-    const cornerStyle: CornerStyle = {
-      size,
-      radius,
-      stroke,
+    const fixedRadius = typeof radius === 'number'
+
+    const cornerSizes: CornerMeasurements = {
+      topLeft: getCornerDimensions(fixedRadius ? radius : radius[0], width, height),
+      topRight: getCornerDimensions(fixedRadius ? radius : radius[1], width, height),
+      bottomLeft: getCornerDimensions(fixedRadius ? radius : radius[2], width, height),
+      bottomRight: getCornerDimensions(fixedRadius ? radius : radius[3], width, height),
     }
 
-    const corner = await getCornerTexture(cornerStyle)
-    const pixel = await getPixelTexture()
-
-    updateCorners({
-      texture: corner,
+    await updateCorners({
       width,
       height,
-      size,
-      roundedTop,
+      stroke,
+      cornerSizes,
     })
 
-    updateBorders({
-      texture: pixel,
+    await updateBorders({
       width,
       height,
-      size,
       stroke,
-      roundedTop,
+      cornerSizes,
     })
 
     setTint(color)
@@ -86,66 +92,80 @@ export function borderFactory() {
     return container
   }
 
-  type UpdateCorners = {
-    texture: Texture,
-    width: number,
-    height: number,
-    size: number,
-    roundedTop?: boolean,
+  function getCornerDimensions(radius: number, width: number, height: number): CornerMeasurement {
+    const maxSize = Math.min(width, height)
+    const size = radius * 2 > maxSize ? maxSize / 2 : radius
+
+    return {
+      size,
+      radius,
+    }
   }
 
-  function updateCorners({ texture, width, height, size, roundedTop }: UpdateCorners): void {
-    if (roundedTop) {
-      bottomLeft.visible = false
-      bottomRight.visible = false
-    } else {
-      bottomLeft.visible = true
-      bottomRight.visible = true
-    }
+  type UpdateCorners = {
+    width: number,
+    height: number,
+    stroke: number,
+    cornerSizes: CornerMeasurements,
+  }
 
-    topLeft.texture = texture
-    topRight.texture = texture
-    bottomLeft.texture = texture
-    bottomRight.texture = texture
+  async function updateCorners({ width, height, stroke, cornerSizes }: UpdateCorners): Promise<void> {
+    const {
+      topLeft: topLeftSize,
+      topRight: topRightSize,
+      bottomLeft: bottomLeftSize,
+      bottomRight: bottomRightSize,
+    } = cornerSizes
+
+    const [topLeftTexture, topRightTexture, bottomRightText, bottomLeftTexture] = await Promise.all([
+      getCornerTexture({ ...topLeftSize, stroke }),
+      getCornerTexture({ ...topRightSize, stroke }),
+      getCornerTexture({ ...bottomLeftSize, stroke }),
+      getCornerTexture({ ...bottomRightSize, stroke }),
+    ])
+
+    topLeft.texture = topLeftTexture
+    topRight.texture = topRightTexture
+    bottomLeft.texture = bottomLeftTexture
+    bottomRight.texture = bottomRightText
 
     topLeft.position.set(0, 0)
-    topRight.position.set(width - size, 0)
-    bottomLeft.position.set(0, height - size)
-    bottomRight.position.set(width - size, height - size)
+    topRight.position.set(width - topRightSize.size, 0)
+    bottomLeft.position.set(0, height - bottomLeftSize.size)
+    bottomRight.position.set(width - bottomRightSize.size, height - bottomRightSize.size)
   }
 
   type UpdateBorders = {
-    texture: Texture,
     width: number,
     height: number,
-    size: number,
     stroke: number,
-    roundedTop?: boolean,
+    cornerSizes: CornerMeasurements,
   }
 
-  function updateBorders({ texture, size, width, height, stroke, roundedTop }: UpdateBorders): void {
-    const sidesHeight = Math.max(height - size * 2, 0)
-    const topAndBottomWidth = Math.max(width - size * 2, 0)
+  async function updateBorders({ width, height, stroke, cornerSizes }: UpdateBorders): Promise<void> {
+    const texture = await getPixelTexture()
+
+    const { topLeft, topRight, bottomLeft, bottomRight } = cornerSizes
 
     top.texture = texture
     left.texture = texture
     right.texture = texture
     bottom.texture = texture
 
-    left.position.set(0, size)
-    left.height = roundedTop ? Math.max(height - size, 0) : sidesHeight
+    left.position.set(0, topLeft.size)
+    left.height = Math.max(height - topLeft.size - bottomLeft.size, 0)
     left.width = stroke
 
-    right.position.set(width - stroke, size)
-    right.height = roundedTop ? Math.max(height - size, 0) : sidesHeight
+    right.position.set(width - stroke, topRight.size)
+    right.height = Math.max(height - topRight.size - bottomRight.size, 0)
     right.width = stroke
 
-    top.position.set(size, 0)
-    top.width = topAndBottomWidth
+    top.position.set(topLeft.size, 0)
+    top.width = Math.max(width - topLeft.size - topRight.size, 0)
     top.height = stroke
 
-    bottom.position.set(roundedTop ? 0 : size, height - stroke)
-    bottom.width = roundedTop ? Math.max(width, 0) : topAndBottomWidth
+    bottom.position.set(bottomLeft.size, height - stroke)
+    bottom.width = Math.max(width - bottomLeft.size - bottomRight.size, 0)
     bottom.height = stroke
   }
 
