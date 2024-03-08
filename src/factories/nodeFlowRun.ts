@@ -33,6 +33,9 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   const { element: nodesEvents, render: renderNodesEvents, update: updateNodesEvents } = await runEventsFactory({ parentStartDate: node.start_time })
   const { element: nodesArtifacts, render: renderNodesArtifacts, update: updateNodesArtifacts } = await runArtifactsFactory({ parentStartDate: node.start_time })
 
+  let hasEvents = false
+  let hasArtifacts = false
+
   container.sortableChildren = true
   bar.zIndex = 2
   label.zIndex = 3
@@ -48,6 +51,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   border.cursor = 'default'
 
   const { start: startData, stop: stopData } = await dataFactory(node.id, data => {
+    hasArtifacts = !!data.artifacts && data.artifacts.length > 0
+
     renderNodes(data)
     renderStates(data.states)
     renderArtifacts(data.artifacts)
@@ -61,6 +66,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     }
   }
   const { start: startEventsData, stop: stopEventsData } = await eventDataFactory(node.id, data => {
+    hasEvents = data.length > 0
+
     renderEvents(data)
   }, getEventFactoryOptions)
 
@@ -149,9 +156,11 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderArtifacts(data?: RunGraphArtifact[]): Promise<void> {
+    const { eventTargetSize, flowStateSelectedBarHeight } = config.styles
     const { height } = getSize()
 
-    const y = height - config.styles.eventTargetSize
+    const y = height - (hasEvents ? eventTargetSize : flowStateSelectedBarHeight)
+
     nodesArtifacts.position = { x: 0, y }
 
     if (data) {
@@ -256,10 +265,11 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       artifactIconSize,
     } = config.styles
 
-    const artifactsHeight = artifactIconSize + artifactPaddingY * 2
+    const artifactsHeight = hasArtifacts ? artifactIconSize + artifactPaddingY * 2 : 0
+    const eventsHeight = hasEvents ? eventTargetSize : 0
 
     const nodesHeight = isOpen
-      ? nodes.height + artifactsHeight + eventTargetSize + nodesPadding * 2
+      ? nodes.height + artifactsHeight + eventsHeight + nodesPadding * 2
       : 0
     const nodesWidth = isOpen ? nodes.width : 0
     const flowRunNodeHeight = nodeHeight
