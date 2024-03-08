@@ -89,7 +89,7 @@ export async function clusterHorizontalCollisions({ items, createCluster }: Clus
     const ids = [...prevIds, ...currentIds]
     const date = getCenteredDate(ids)
 
-    clusterNode.render({ ids, date })
+    await clusterNode.render({ ids, date })
 
     return clusterNode
   }
