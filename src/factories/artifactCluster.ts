@@ -1,4 +1,3 @@
-import { ArtifactFactory } from '@/factories/artifact'
 import { artifactNodeFactory } from '@/factories/artifactNode'
 import { emitter } from '@/objects/events'
 import { isSelected } from '@/objects/selection'
@@ -8,12 +7,6 @@ export type ArtifactClusterFactory = Awaited<ReturnType<typeof artifactClusterFa
 export type ArtifactClusterFactoryRenderProps = {
   ids: string[],
   date: Date,
-}
-
-export function isArtifactClusterFactory(
-  factory: ArtifactFactory | ArtifactClusterFactory,
-): factory is ArtifactClusterFactory {
-  return 'isCluster' in factory
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
