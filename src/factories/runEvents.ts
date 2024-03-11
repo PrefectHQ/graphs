@@ -20,6 +20,7 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
   const settings = await waitForSettings()
 
   const events = new Map<string, EventFactory>()
+  const eventsCreationPromises = new Map<string, Promise<void>>()
   const clusterNodes: EventClusterFactory[] = []
   let availableClusterNodes: EventClusterFactory[] = []
 
@@ -64,14 +65,27 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
       return events.get(event.id)!.render()
     }
 
-    const factory = isRoot
-      ? await flowRunEventFactory({ type: 'event', event })
-      : await nodeFlowRunEventFactory({ type: 'event', event, parentStartDate })
-    events.set(event.id, factory)
+    if (eventsCreationPromises.has(event.id)) {
+      await eventsCreationPromises.get(event.id)
+    }
 
-    container!.addChild(factory.element)
+    const eventCreationPromise = (async () => {
+      const factory = isRoot
+        ? await flowRunEventFactory({ type: 'event', event })
+        : await nodeFlowRunEventFactory({ type: 'event', event, parentStartDate })
 
-    return factory.render()
+      events.set(event.id, factory)
+
+      container!.addChild(factory.element)
+    })()
+
+    eventsCreationPromises.set(event.id, eventCreationPromise)
+
+    await eventCreationPromise
+
+    eventsCreationPromises.delete(event.id)
+
+    return events.get(event.id)!.render()
   }
 
   function update(): void {
