@@ -47,8 +47,8 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
     const position = {
       x: globalPosition.x,
       y: globalPosition.y,
-      width: element.width * viewport.scale.x,
-      height: element.height * viewport.scale.y,
+      width: element.width,
+      height: element.height,
     }
 
     const selectSettings: ArtifactSelection | ArtifactsSelection = itemIsClusterFactory(factory)
