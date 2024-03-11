@@ -2,6 +2,7 @@ import { EventFactory, eventFactory } from '@/factories/event'
 import { EventClusterFactory, EventClusterFactoryRenderProps, eventClusterFactory } from '@/factories/eventCluster'
 import { EventSelection, EventsSelection, RunGraphEvent } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
+import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { selectItem } from '@/objects/selection'
@@ -25,6 +26,7 @@ type RenderPropsType<T> = T extends { type: 'cluster' }
 export async function flowRunEventFactory<T extends EventFactoryOptions>(options: T): Promise<EventFactoryType<T>> {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
+  const config = await waitForConfig()
   const settings = await waitForSettings()
   let scale = await waitForScale()
 
@@ -79,7 +81,7 @@ export async function flowRunEventFactory<T extends EventFactoryOptions>(options
 
     const x = scale(date) * viewport.scale._x + viewport.worldTransform.tx
     const centeredX = x - element.width / 2
-    const y = application.screen.height - element.height
+    const y = application.screen.height - element.height - config.styles.eventBottomMargin
 
     element.position.set(centeredX, y)
   }
