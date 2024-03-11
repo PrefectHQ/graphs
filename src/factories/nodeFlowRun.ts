@@ -1,3 +1,4 @@
+import { DEFAULT_ROOT_ARTIFACT_Z_INDEX, DEFAULT_ROOT_EVENT_Z_INDEX, DEFAULT_ROOT_FLOW_STATE_Z_INDEX } from '@/consts'
 import { borderFactory } from '@/factories/border'
 import { dataFactory } from '@/factories/data'
 import { eventDataFactory } from '@/factories/eventData'
@@ -43,9 +44,9 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   border.zIndex = 0
 
   nodesContainer.zIndex = 1
-  nodesState.zIndex = 1
-  nodesEvents.zIndex = 2
-  nodesArtifacts.zIndex = 2
+  nodesEvents.zIndex = DEFAULT_ROOT_EVENT_Z_INDEX
+  nodesState.zIndex = DEFAULT_ROOT_FLOW_STATE_Z_INDEX
+  nodesArtifacts.zIndex = DEFAULT_ROOT_ARTIFACT_Z_INDEX
 
   border.eventMode = 'none'
   border.cursor = 'default'
@@ -145,7 +146,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function renderEvents(data?: RunGraphEvent[]): Promise<void> {
     const { height } = getSize()
 
-    nodesEvents.position = { x: 0, y: height }
+    nodesEvents.position = { x: 0, y: height - config.styles.eventBottomMargin }
 
     if (data) {
       await renderNodesEvents(data)
@@ -261,12 +262,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       nodeHeight,
       nodesPadding,
       eventTargetSize,
+      eventBottomMargin,
       artifactPaddingY,
       artifactIconSize,
     } = config.styles
 
     const artifactsHeight = hasArtifacts ? artifactIconSize + artifactPaddingY * 2 : 0
-    const eventsHeight = hasEvents ? eventTargetSize : 0
+    const eventsHeight = hasEvents ? eventTargetSize + eventBottomMargin : 0
 
     const nodesHeight = isOpen
       ? nodes.height + artifactsHeight + eventsHeight + nodesPadding * 2
