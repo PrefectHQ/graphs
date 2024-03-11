@@ -344,7 +344,7 @@ export async function nodesContainerFactory() {
     const settings = await waitForSettings()
     const selected = getSelectedRunGraphNode()
 
-    if (!selected || settings.disableEdges) {
+    if (settings.disableEdges || !selected || !runData?.nodes.has(selected.id)) {
       highlightPath([])
       return
     }

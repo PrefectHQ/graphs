@@ -1,4 +1,3 @@
-import { RunGraphNodeKind, runGraphNodeKinds } from '@/models'
 import {
   GraphItemSelection,
   NodeSelection,
@@ -91,7 +90,7 @@ export function isSelected(item: GraphItemSelection): boolean {
 }
 
 export function getSelectedRunGraphNode(): NodeSelection | null {
-  if (!!selected && runGraphNodeKinds.includes(selected.kind as RunGraphNodeKind)) {
+  if (!!selected && isNodeSelection(selected)) {
     return selected as NodeSelection
   }
 
