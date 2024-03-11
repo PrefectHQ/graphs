@@ -103,15 +103,23 @@ async function centerViewportOnNodes({ x, y, width, height, animate }: CenterVie
   const config = await waitForConfig()
   const viewport = await waitForViewport()
 
-  const guidesOffset = config.styles.guideTextSize + config.styles.guideTextTopPadding
-  const widthWithGap = width + config.styles.columnGap * 2
-  const heightWithGap = height + config.styles.rowGap * 2 + guidesOffset * 2
+  const {
+    guideTextSize,
+    guideTextTopPadding,
+    columnGap,
+    rowGap,
+    eventTargetSize,
+  } = config.styles
+
+  const guidesOffset = guideTextSize + guideTextTopPadding
+  const widthWithGap = width + columnGap * 2
+  const heightWithGap = height + rowGap * 4 + guidesOffset + eventTargetSize
   const scale = viewport.findFit(widthWithGap, heightWithGap)
 
   viewport.animate({
     position: {
       x: x + width / 2,
-      y: y + height / 2 - guidesOffset,
+      y: y + height / 2 + guidesOffset,
     },
     scale: Math.min(scale, 1),
     time: animate ? config.animationDuration : 0,
