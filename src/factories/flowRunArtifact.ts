@@ -1,5 +1,5 @@
 import { ArtifactFactory, artifactFactory } from '@/factories/artifact'
-import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
+import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory, isArtifactClusterFactory } from '@/factories/artifactCluster'
 import { ArtifactSelection, ArtifactsSelection, RunGraphArtifact } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
 import { waitForConfig } from '@/objects/config'
@@ -44,11 +44,13 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
 
     const globalPosition = element.getGlobalPosition()
 
+    const isCluster = isArtifactClusterFactory(factory)
+
     const position = {
       x: globalPosition.x,
       y: globalPosition.y,
-      width: element.width * viewport.scale.x,
-      height: element.height * viewport.scale.y,
+      width: isCluster ? element.width : element.width * viewport.scale.x,
+      height: isCluster ? element.height : element.height * viewport.scale.y,
     }
 
     const selectSettings: ArtifactSelection | ArtifactsSelection = itemIsClusterFactory(factory)
