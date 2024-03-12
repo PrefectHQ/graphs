@@ -1,7 +1,7 @@
 {
   "name": "@prefecthq/graphs",
   "private": false,
-  "version": "2.2.9",
+  "version": "2.2.10",
   "description": "Large scale graphs designed for Prefect",
   "scripts": {
     "serve": "vite --host --mode=demo",
