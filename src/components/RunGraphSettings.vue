@@ -36,7 +36,7 @@
       <p-divider />
       <p-checkbox v-model="hideEdges" label="Hide dependency arrows" />
       <p-checkbox v-model="hideArtifacts" label="Hide artifacts" />
-      <p-checkbox v-model="hideEvents" label="Hide Events" />
+      <p-checkbox v-model="hideEvents" label="Hide events" />
     </p-overflow-menu>
   </p-pop-over>
 </template>
