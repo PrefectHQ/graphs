@@ -59,6 +59,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   async function render(newNodeData: RunGraphNode): Promise<BoundsContainer> {
     internalNode = newNodeData
+    checkArtifactsContainerVisibility()
 
     const currentCacheKey = getNodeCacheKey(newNodeData)
 
@@ -72,10 +73,6 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       renderNode(newNodeData),
       createArtifacts(newNodeData.artifacts),
     ])
-
-    if (artifactsContainer) {
-      artifactsContainer.visible = layout.isTemporal() ? !settings.disableArtifacts : false
-    }
 
     if (newNodeData.end_time) {
       stopTicking()
@@ -121,6 +118,13 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   function createArtifactsContainer(): void {
     artifactsContainer = new Container()
     container.addChild(artifactsContainer)
+    checkArtifactsContainerVisibility()
+  }
+
+  function checkArtifactsContainerVisibility(): void {
+    if (artifactsContainer) {
+      artifactsContainer.visible = layout.isTemporal() ? !settings.disableArtifacts : false
+    }
   }
 
   function alignArtifacts(): void {

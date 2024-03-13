@@ -30,13 +30,10 @@ export async function runArtifactsFactory({ isRoot, parentStartDate }: RunEvents
   emitter.on('layoutSettingsUpdated', () => render())
 
   async function render(newData?: RunGraphArtifact[]): Promise<void> {
-    if (!layout.isTemporal()) {
-      container.visible = false
-    } else {
-      container.visible = !settings.disableEvents
-    }
+    container.visible = !settings.disableEvents
 
     if (settings.disableArtifacts || !layout.isTemporal()) {
+      container.visible = false
       return
     }
 
