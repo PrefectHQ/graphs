@@ -147,7 +147,15 @@ export async function nodeFlowRunStateFactory(state: RunGraphStateEvent) {
   function getRenderStyles(): StateRectangleRenderProps {
     const { background = '#fff' } = config.styles.state(state)
 
-    const parentStartX = scale(parentStart!)
+    if (!parentStart) {
+      return {
+        x: 0,
+        width: 0,
+        background,
+      }
+    }
+
+    const parentStartX = scale(parentStart)
     let startX = scale(state.timestamp) - parentStartX
 
     if (startX >= parentWidth) {
