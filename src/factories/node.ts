@@ -44,7 +44,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     selectItem({ kind: internalNode.kind, id: internalNode.id })
   })
 
-  if (!node.end_time) {
+  if (!internalNode.end_time) {
     startTicking()
   }
 
@@ -57,10 +57,10 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     }
   })
 
-  async function render(node: RunGraphNode): Promise<BoundsContainer> {
-    internalNode = node
+  async function render(newNodeData: RunGraphNode): Promise<BoundsContainer> {
+    internalNode = newNodeData
 
-    const currentCacheKey = getNodeCacheKey(node)
+    const currentCacheKey = getNodeCacheKey(newNodeData)
 
     if (currentCacheKey === cacheKey) {
       return container
@@ -69,15 +69,15 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     cacheKey = currentCacheKey
 
     await Promise.all([
-      renderNode(node),
-      createArtifacts(node.artifacts),
+      renderNode(newNodeData),
+      createArtifacts(newNodeData.artifacts),
     ])
 
     if (artifactsContainer) {
       artifactsContainer.visible = layout.isTemporal() ? !settings.disableArtifacts : false
     }
 
-    if (node.end_time) {
+    if (newNodeData.end_time) {
       stopTicking()
     }
 
@@ -152,28 +152,28 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   function tick(): void {
-    render(node)
+    render(internalNode)
   }
 
-  async function getNodeFactory(node: RunGraphNode): Promise<TaskRunContainer | FlowRunContainer> {
-    const { kind } = node
+  async function getNodeFactory(nodeData: RunGraphNode): Promise<TaskRunContainer | FlowRunContainer> {
+    const { kind } = nodeData
 
     switch (kind) {
       case 'task-run':
         return await taskRunContainerFactory()
       case 'flow-run':
-        return await flowRunContainerFactory(node)
+        return await flowRunContainerFactory(nodeData)
       default:
         const exhaustive: never = kind
         throw new Error(`switch does not have case for value: ${exhaustive}`)
     }
   }
 
-  function getNodeCacheKey(node: RunGraphNode): string {
-    const endTime = node.end_time ?? new Date()
-    const artifactCount = node.artifacts?.length ?? 0
+  function getNodeCacheKey(nodeData: RunGraphNode): string {
+    const endTime = nodeData.end_time ?? new Date()
+    const artifactCount = nodeData.artifacts?.length ?? 0
     const values = [
-      node.state_type,
+      nodeData.state_type,
       endTime.getTime(),
       artifactCount,
       layout.horizontal,

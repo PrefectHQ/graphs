@@ -1,4 +1,12 @@
-import { DEFAULT_ROOT_ARTIFACT_Z_INDEX, DEFAULT_ROOT_EVENT_Z_INDEX, DEFAULT_ROOT_FLOW_STATE_Z_INDEX } from '@/consts'
+import {
+  DEFAULT_SUBFLOW_ARTIFACT_Z_INDEX,
+  DEFAULT_SUBFLOW_BORDER_Z_INDEX,
+  DEFAULT_SUBFLOW_EVENT_Z_INDEX,
+  DEFAULT_SUBFLOW_LABEL_Z_INDEX,
+  DEFAULT_SUBFLOW_NODE_Z_INDEX,
+  DEFAULT_SUBFLOW_NODES_Z_INDEX,
+  DEFAULT_SUBFLOW_STATE_Z_INDEX
+} from '@/consts'
 import { borderFactory } from '@/factories/border'
 import { dataFactory } from '@/factories/data'
 import { eventDataFactory } from '@/factories/eventData'
@@ -37,21 +45,25 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   let hasEvents = false
   let hasArtifacts = false
 
-  container.sortableChildren = true
-  bar.zIndex = 2
-  label.zIndex = 3
-  arrowButton.zIndex = 3
-  border.zIndex = 0
+  let internalNode = node
+  let isOpen = false
 
-  nodesContainer.zIndex = 1
-  nodesEvents.zIndex = DEFAULT_ROOT_EVENT_Z_INDEX
-  nodesState.zIndex = DEFAULT_ROOT_FLOW_STATE_Z_INDEX
-  nodesArtifacts.zIndex = DEFAULT_ROOT_ARTIFACT_Z_INDEX
+  container.sortableChildren = true
+
+  border.zIndex = DEFAULT_SUBFLOW_BORDER_Z_INDEX
+  bar.zIndex = DEFAULT_SUBFLOW_NODE_Z_INDEX
+  label.zIndex = DEFAULT_SUBFLOW_LABEL_Z_INDEX
+  arrowButton.zIndex = DEFAULT_SUBFLOW_LABEL_Z_INDEX
+
+  nodesContainer.zIndex = DEFAULT_SUBFLOW_NODES_Z_INDEX
+  nodesEvents.zIndex = DEFAULT_SUBFLOW_EVENT_Z_INDEX
+  nodesState.zIndex = DEFAULT_SUBFLOW_STATE_Z_INDEX
+  nodesArtifacts.zIndex = DEFAULT_SUBFLOW_ARTIFACT_Z_INDEX
 
   border.eventMode = 'none'
   border.cursor = 'default'
 
-  const { start: startData, stop: stopData } = await dataFactory(node.id, data => {
+  const { start: startData, stop: stopData } = await dataFactory(internalNode.id, data => {
     hasArtifacts = !!data.artifacts && data.artifacts.length > 0
 
     renderNodes(data)
@@ -62,18 +74,15 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   function getEventFactoryOptions(): RunGraphFetchEventsOptions {
     return {
-      since: node.start_time,
-      until: node.end_time ?? new Date(),
+      since: internalNode.start_time,
+      until: internalNode.end_time ?? new Date(),
     }
   }
-  const { start: startEventsData, stop: stopEventsData } = await eventDataFactory(node.id, data => {
+  const { start: startEventsData, stop: stopEventsData } = await eventDataFactory(internalNode.id, data => {
     hasEvents = data.length > 0
 
     renderEvents(data)
   }, getEventFactoryOptions)
-
-  let internalNode = node
-  let isOpen = false
 
   container.addChild(bar)
   container.addChild(label)
@@ -91,12 +100,19 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     resized()
   })
 
-  async function render(node: RunGraphNode): Promise<BoundsContainer> {
-    internalNode = node
+  async function render(newNodeData: RunGraphNode): Promise<BoundsContainer> {
+    internalNode = newNodeData
 
-    await renderBar(node)
+    await renderBar(newNodeData)
     await renderArrowButton()
-    await renderLabel(node)
+    await renderLabel()
+
+    if (isOpen) {
+      await renderStates()
+      await renderEvents()
+      await renderArtifacts()
+      await renderBorder()
+    }
 
     return container
   }
@@ -110,7 +126,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderBorder(): Promise<void> {
-    const { background = '#fff' } = config.styles.node(node)
+    const { background = '#fff' } = config.styles.node(internalNode)
     const { width, height: nodeHeights } = getNodesSize()
     const { height: nodeLayersHeight } = getSize()
     const { nodeBorderRadius } = config.styles
@@ -132,9 +148,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderStates(data?: RunGraphStateEvent[]): Promise<void> {
-    const { width: nodesWidth, height } = getSize()
-
-    const width = Math.max(bar.width, nodesWidth)
+    const { height } = getSize()
+    const { width } = bar
 
     await renderNodesState(data ?? undefined, {
       parentStartDate: internalNode.start_time,
@@ -223,8 +238,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     return container
   }
 
-  async function renderLabel(node: RunGraphNode): Promise<BoundsContainer> {
-    const label = await renderLabelText(node.label)
+  async function renderLabel(): Promise<BoundsContainer> {
+    const label = await renderLabelText(internalNode.label)
     const colorOnNode = config.styles.colorMode === 'dark'
       ? config.styles.textDefault
       : config.styles.textInverse

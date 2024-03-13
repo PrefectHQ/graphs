@@ -126,16 +126,17 @@ export async function nodeFlowRunStateFactory(state: RunGraphStateEvent) {
       return
     }
 
-    if (!end && state.type !== 'RUNNING') {
-      return
-    }
-
     if (!parentStart || parentWidth <= 0) {
       element.visible = false
       return
     }
 
     const options = getRenderStyles()
+
+    if (options.width <= 0) {
+      element.visible = false
+      return
+    }
 
     renderBar(options)
     renderArea(options)
@@ -146,18 +147,40 @@ export async function nodeFlowRunStateFactory(state: RunGraphStateEvent) {
   function getRenderStyles(): StateRectangleRenderProps {
     const { background = '#fff' } = config.styles.state(state)
 
-    let startX = scale(state.timestamp) - scale(parentStart!)
+    if (!parentStart) {
+      return {
+        x: 0,
+        width: 0,
+        background,
+      }
+    }
+
+    const parentStartX = scale(parentStart)
+    let startX = scale(state.timestamp) - parentStartX
+
+    if (startX >= parentWidth) {
+      return {
+        x: parentWidth,
+        width: 0,
+        background,
+      }
+    }
 
     if (startX < 0) {
       startX = 0
     }
 
-    const endX = end ? scale(end) - scale(parentStart!) : parentWidth - startX
-    const width = endX - startX
+    let endX = scale(end ?? new Date()) - parentStartX
+
+    if (endX > parentWidth) {
+      endX = parentWidth
+    }
+
+    const width = Math.max(endX - startX, 0)
 
     return {
       x: startX,
-      width: Math.max(width, 0),
+      width,
       background,
     }
   }
