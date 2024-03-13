@@ -1,4 +1,12 @@
-import { DEFAULT_ROOT_ARTIFACT_Z_INDEX, DEFAULT_ROOT_EVENT_Z_INDEX, DEFAULT_ROOT_FLOW_STATE_Z_INDEX } from '@/consts'
+import {
+  DEFAULT_SUBFLOW_ARTIFACT_Z_INDEX,
+  DEFAULT_SUBFLOW_BORDER_Z_INDEX,
+  DEFAULT_SUBFLOW_EVENT_Z_INDEX,
+  DEFAULT_SUBFLOW_LABEL_Z_INDEX,
+  DEFAULT_SUBFLOW_NODE_Z_INDEX,
+  DEFAULT_SUBFLOW_NODES_Z_INDEX,
+  DEFAULT_SUBFLOW_STATE_Z_INDEX
+} from '@/consts'
 import { borderFactory } from '@/factories/border'
 import { dataFactory } from '@/factories/data'
 import { eventDataFactory } from '@/factories/eventData'
@@ -41,21 +49,16 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   let isOpen = false
 
   container.sortableChildren = true
-  const maxContentZIndex = Math.max(
-    DEFAULT_ROOT_EVENT_Z_INDEX,
-    DEFAULT_ROOT_FLOW_STATE_Z_INDEX,
-    DEFAULT_ROOT_ARTIFACT_Z_INDEX,
-  )
 
-  bar.zIndex = maxContentZIndex + 1
-  label.zIndex = maxContentZIndex + 2
-  arrowButton.zIndex = maxContentZIndex + 2
-  border.zIndex = 0
+  border.zIndex = DEFAULT_SUBFLOW_BORDER_Z_INDEX
+  bar.zIndex = DEFAULT_SUBFLOW_NODE_Z_INDEX
+  label.zIndex = DEFAULT_SUBFLOW_LABEL_Z_INDEX
+  arrowButton.zIndex = DEFAULT_SUBFLOW_LABEL_Z_INDEX
 
-  nodesContainer.zIndex = 1
-  nodesEvents.zIndex = DEFAULT_ROOT_EVENT_Z_INDEX
-  nodesState.zIndex = DEFAULT_ROOT_FLOW_STATE_Z_INDEX
-  nodesArtifacts.zIndex = DEFAULT_ROOT_ARTIFACT_Z_INDEX
+  nodesContainer.zIndex = DEFAULT_SUBFLOW_NODES_Z_INDEX
+  nodesEvents.zIndex = DEFAULT_SUBFLOW_EVENT_Z_INDEX
+  nodesState.zIndex = DEFAULT_SUBFLOW_STATE_Z_INDEX
+  nodesArtifacts.zIndex = DEFAULT_SUBFLOW_ARTIFACT_Z_INDEX
 
   border.eventMode = 'none'
   border.cursor = 'default'
