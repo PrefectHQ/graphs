@@ -20,6 +20,7 @@ export async function runArtifactsFactory({ isRoot, parentStartDate }: RunEvents
   const settings = await waitForSettings()
 
   const artifacts: Map<string, ArtifactFactory> = new Map()
+  const artifactCreationPromises = new Map<string, Promise<void>>()
   const clusterNodes: ArtifactClusterFactory[] = []
   let availableClusterNodes: ArtifactClusterFactory[] = []
 
@@ -63,15 +64,27 @@ export async function runArtifactsFactory({ isRoot, parentStartDate }: RunEvents
       return artifacts.get(artifact.id)!.render()
     }
 
-    const factory = isRoot
-      ? await flowRunArtifactFactory({ type: 'artifact', artifact })
-      : await nodeFlowRunArtifactFactory({ type: 'artifact', artifact, parentStartDate })
+    if (artifactCreationPromises.has(artifact.id)) {
+      await artifactCreationPromises.get(artifact.id)
+    }
 
-    artifacts.set(artifact.id, factory)
+    const artifactCreationPromise = (async () => {
+      const factory = isRoot
+        ? await flowRunArtifactFactory({ type: 'artifact', artifact })
+        : await nodeFlowRunArtifactFactory({ type: 'artifact', artifact, parentStartDate })
 
-    container!.addChild(factory.element)
+      artifacts.set(artifact.id, factory)
 
-    return factory.render()
+      container!.addChild(factory.element)
+    })()
+
+    artifactCreationPromises.set(artifact.id, artifactCreationPromise)
+
+    await artifactCreationPromise
+
+    artifactCreationPromises.delete(artifact.id)
+
+    return artifacts.get(artifact.id)!.render()
   }
 
   function update(): void {
