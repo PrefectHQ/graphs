@@ -59,7 +59,6 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   async function render(newNodeData: RunGraphNode): Promise<BoundsContainer> {
     internalNode = newNodeData
-    checkArtifactsContainerVisibility()
 
     const currentCacheKey = getNodeCacheKey(newNodeData)
 
@@ -82,12 +81,14 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   async function createArtifacts(artifactsData?: RunGraphArtifact[]): Promise<void> {
-    if (!artifactsData || settings.disableArtifacts || !layout.isTemporal()) {
+    if (!artifactsData) {
       return
     }
 
-    if (!artifactsContainer) {
-      createArtifactsContainer()
+    createArtifactsContainer()
+
+    if (settings.disableArtifacts || !layout.isTemporal()) {
+      return
     }
 
     const promises: Promise<void>[] = []
@@ -116,14 +117,17 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   function createArtifactsContainer(): void {
-    artifactsContainer = new Container()
-    container.addChild(artifactsContainer)
-    checkArtifactsContainerVisibility()
-  }
+    if (layout.isTemporal() && !settings.disableArtifacts) {
+      if (!artifactsContainer) {
+        artifactsContainer = new Container()
+      }
 
-  function checkArtifactsContainerVisibility(): void {
+      container.addChild(artifactsContainer)
+      return
+    }
+
     if (artifactsContainer) {
-      artifactsContainer.visible = layout.isTemporal() ? !settings.disableArtifacts : false
+      container.removeChild(artifactsContainer)
     }
   }
 
@@ -183,6 +187,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       layout.horizontal,
       layout.horizontalScaleMultiplier,
       config.styles.colorMode,
+      artifactCount > 0 && settings.disableArtifacts,
     ]
 
     return values.join('-')
