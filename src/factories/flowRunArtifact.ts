@@ -107,7 +107,7 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
     const centeredX = x - (element.width - selectedOffset) / 2
     const y = application.screen.height
       - (element.height - selectedOffset)
-      - (flowHasEvents ? eventTargetSize : flowStateSelectedBarHeight)
+      - (flowHasEvents && !settings.disableEvents ? eventTargetSize : flowStateSelectedBarHeight)
 
     element.position.set(centeredX, y)
   }
