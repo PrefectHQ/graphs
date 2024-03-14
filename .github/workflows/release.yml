@@ -22,4 +22,7 @@ jobs:
         with:
           NPM_TOKEN: ${{ secrets.PREFECT_UI_COMPONENTS_NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPDATE_DOWNSTREAM_REPOS: "false"
+          PREFECT_UI_LIBRARY_ACTIONS_RW_TOKEN: ${{ secrets.PREFECT_UI_LIBRARY_ACTIONS_RW }}
+          UPDATE_DOWNSTREAM_NEBULA_UI_REPO: "false"
+          UPDATE_DOWNSTREAM_OSS_REPO: "false"
+          UPDATE_DOWNSTREAM_PREFECT_UI_LIBRARY_REPO: "true"
