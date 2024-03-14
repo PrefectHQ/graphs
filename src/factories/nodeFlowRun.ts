@@ -180,6 +180,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderArtifacts(data?: RunGraphArtifact[]): Promise<void> {
+    console.log('render artifacts', isOpen)
     if (!isOpen || !layout.isTemporal() || settings.disableArtifacts) {
       container.removeChild(nodesArtifacts)
       return
@@ -222,6 +223,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     container.removeChild(nodesState)
     container.removeChild(nodesContainer)
     container.removeChild(border)
+    container.removeChild(nodesEvents)
+    container.removeChild(nodesArtifacts)
     stopNodesWorker()
 
     await Promise.all([
