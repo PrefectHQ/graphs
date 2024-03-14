@@ -23,7 +23,7 @@ import { NodeSize } from '@/models/layout'
 import { RunGraphFetchEventsOptions, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { cull } from '@/objects/culling'
-import { layout } from '@/objects/settings'
+import { layout, waitForSettings } from '@/objects/settings'
 
 export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory>>
 
@@ -31,6 +31,7 @@ export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory
 export async function flowRunContainerFactory(node: RunGraphNode) {
   const container = new BoundsContainer()
   const config = await waitForConfig()
+  const settings = await waitForSettings()
 
   const { element: bar, render: renderBar } = await nodeBarFactory()
   const { element: label, render: renderLabelText } = await nodeLabelFactory()
@@ -159,6 +160,13 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderEvents(data?: RunGraphEvent[]): Promise<void> {
+    if (!isOpen || !layout.isTemporal() || settings.disableEvents) {
+      container.removeChild(nodesEvents)
+      return
+    }
+
+    container.addChild(nodesEvents)
+
     const { height } = getSize()
 
     nodesEvents.position = { x: 0, y: height - config.styles.eventBottomMargin }
@@ -172,10 +180,17 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderArtifacts(data?: RunGraphArtifact[]): Promise<void> {
+    if (!isOpen || !layout.isTemporal() || settings.disableArtifacts) {
+      container.removeChild(nodesArtifacts)
+      return
+    }
+
+    container.addChild(nodesArtifacts)
+
     const { eventTargetSize, flowStateSelectedBarHeight } = config.styles
     const { height } = getSize()
 
-    const y = height - (hasEvents ? eventTargetSize : flowStateSelectedBarHeight)
+    const y = height - (hasEvents && !settings.disableEvents ? eventTargetSize : flowStateSelectedBarHeight)
 
     nodesArtifacts.position = { x: 0, y }
 
@@ -190,8 +205,6 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function open(): Promise<void> {
     isOpen = true
     container.addChild(nodesState)
-    container.addChild(nodesEvents)
-    container.addChild(nodesArtifacts)
     container.addChild(nodesContainer)
     container.addChild(border)
 
@@ -207,10 +220,10 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   async function close(): Promise<void> {
     isOpen = false
     container.removeChild(nodesState)
-    container.removeChild(nodesEvents)
-    container.removeChild(nodesArtifacts)
     container.removeChild(nodesContainer)
     container.removeChild(border)
+    container.removeChild(nodesEvents)
+    container.removeChild(nodesArtifacts)
     stopNodesWorker()
 
     await Promise.all([
@@ -282,8 +295,11 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       artifactIconSize,
     } = config.styles
 
-    const artifactsHeight = hasArtifacts ? artifactIconSize + artifactPaddingY * 2 : 0
-    const eventsHeight = hasEvents ? eventTargetSize + eventBottomMargin : 0
+    const showArtifacts = hasArtifacts && layout.isTemporal() && !settings.disableArtifacts
+    const artifactsHeight = showArtifacts ? artifactIconSize + artifactPaddingY * 2 : 0
+
+    const showEvents = hasEvents && layout.isTemporal() && !settings.disableEvents
+    const eventsHeight = showEvents ? eventTargetSize + eventBottomMargin : 0
 
     const nodesHeight = isOpen
       ? nodes.height + artifactsHeight + eventsHeight + nodesPadding * 2

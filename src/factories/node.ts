@@ -73,10 +73,6 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       createArtifacts(newNodeData.artifacts),
     ])
 
-    if (artifactsContainer) {
-      artifactsContainer.visible = layout.isTemporal() ? !settings.disableArtifacts : false
-    }
-
     if (newNodeData.end_time) {
       stopTicking()
     }
@@ -85,12 +81,14 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   async function createArtifacts(artifactsData?: RunGraphArtifact[]): Promise<void> {
-    if (!artifactsData || settings.disableArtifacts || !layout.isTemporal()) {
+    if (!artifactsData) {
       return
     }
 
-    if (!artifactsContainer) {
-      createArtifactsContainer()
+    createArtifactsContainer()
+
+    if (settings.disableArtifacts || !layout.isTemporal()) {
+      return
     }
 
     const promises: Promise<void>[] = []
@@ -119,8 +117,18 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   function createArtifactsContainer(): void {
-    artifactsContainer = new Container()
-    container.addChild(artifactsContainer)
+    if (layout.isTemporal() && !settings.disableArtifacts) {
+      if (!artifactsContainer) {
+        artifactsContainer = new Container()
+      }
+
+      container.addChild(artifactsContainer)
+      return
+    }
+
+    if (artifactsContainer) {
+      container.removeChild(artifactsContainer)
+    }
   }
 
   function alignArtifacts(): void {
@@ -179,6 +187,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       layout.horizontal,
       layout.horizontalScaleMultiplier,
       config.styles.colorMode,
+      artifactCount > 0 && settings.disableArtifacts,
     ]
 
     return values.join('-')

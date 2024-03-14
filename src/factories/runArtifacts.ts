@@ -6,7 +6,6 @@ import { ArtifactClusterFactory } from '@/factories/artifactCluster'
 import { flowRunArtifactFactory } from '@/factories/flowRunArtifact'
 import { nodeFlowRunArtifactFactory } from '@/factories/nodeFlowRunArtifact'
 import { RunGraphArtifact } from '@/models'
-import { emitter } from '@/objects/events'
 import { layout, waitForSettings } from '@/objects/settings'
 import { clusterHorizontalCollisions } from '@/utilities/detectHorizontalCollisions'
 
@@ -27,19 +26,7 @@ export async function runArtifactsFactory({ isRoot, parentStartDate }: RunEvents
   const container = new Container()
   let internalData: RunGraphArtifact[] | null = null
 
-  emitter.on('layoutSettingsUpdated', () => render())
-
   async function render(newData?: RunGraphArtifact[]): Promise<void> {
-    if (!layout.isTemporal()) {
-      container.visible = false
-    } else {
-      container.visible = !settings.disableEvents
-    }
-
-    if (settings.disableArtifacts || !layout.isTemporal()) {
-      return
-    }
-
     if (newData) {
       internalData = newData
     }

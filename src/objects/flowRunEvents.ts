@@ -5,7 +5,7 @@ import { RunGraphEvent } from '@/models'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
-import { waitForSettings } from '@/objects/settings'
+import { layout, waitForSettings } from '@/objects/settings'
 
 let stopEventData: (() => void) | null = null
 let rootGraphEvents: RunGraphEvent[] | null = null
@@ -13,28 +13,36 @@ let rootGraphEvents: RunGraphEvent[] | null = null
 export async function startFlowRunEvents(): Promise<void> {
   const application = await waitForApplication()
   const config = await waitForConfig()
+  const settings = await waitForSettings()
 
-  const { element, render, update } = await runEventsFactory({ isRoot: true })
+  const { element, render: renderEvents, update } = await runEventsFactory({ isRoot: true })
 
   element.zIndex = DEFAULT_ROOT_EVENT_Z_INDEX
-  application.stage.addChild(element)
 
-  const response = await eventDataFactory(config.runId, async data => {
+  async function render(data?: RunGraphEvent[]): Promise<void> {
+    if (!layout.isTemporal() || settings.disableEvents) {
+      application.stage.removeChild(element)
+      return
+    }
+
+    application.stage.addChild(element)
+
+    await renderEvents(data)
+  }
+
+  const response = await eventDataFactory(config.runId, data => {
     const event: EventKey = rootGraphEvents ? 'eventDataUpdated' : 'eventDataCreated'
 
     rootGraphEvents = data
 
     emitter.emit(event, rootGraphEvents)
 
-    // this makes sure the layout settings are initialized prior to rendering
-    // important to prevent double rendering on the first render
-    await waitForSettings()
-
     render(data)
   })
 
   emitter.on('configUpdated', () => render())
   emitter.on('viewportMoved', () => update())
+  emitter.on('layoutSettingsUpdated', () => render())
 
   stopEventData = response.stop
 
