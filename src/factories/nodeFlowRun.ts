@@ -180,7 +180,6 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderArtifacts(data?: RunGraphArtifact[]): Promise<void> {
-    console.log('render artifacts', isOpen)
     if (!isOpen || !layout.isTemporal() || settings.disableArtifacts) {
       container.removeChild(nodesArtifacts)
       return
