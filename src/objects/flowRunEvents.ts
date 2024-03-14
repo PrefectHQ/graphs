@@ -19,7 +19,7 @@ export async function startFlowRunEvents(): Promise<void> {
 
   element.zIndex = DEFAULT_ROOT_EVENT_Z_INDEX
 
-  const render = async (data?: RunGraphEvent[]): Promise<void> => {
+  async function render(data?: RunGraphEvent[]): Promise<void> {
     if (!layout.isTemporal() || settings.disableEvents) {
       application.stage.removeChild(element)
       return
