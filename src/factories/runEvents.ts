@@ -55,7 +55,7 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
     }
 
     if (eventsCreationPromises.has(event.id)) {
-      await eventsCreationPromises.get(event.id)
+      return await eventsCreationPromises.get(event.id)
     }
 
     const eventCreationPromise = (async () => {
