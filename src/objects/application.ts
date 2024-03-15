@@ -29,7 +29,7 @@ function createApplication(stage: HTMLDivElement): void {
     backgroundAlpha: 0,
     resizeTo: stage,
     antialias: true,
-    resolution: window.devicePixelRatio,
+    resolution: Math.ceil(window.devicePixelRatio),
   })
 
   // for setting the viewport above the guides
