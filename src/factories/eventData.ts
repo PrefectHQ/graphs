@@ -1,5 +1,4 @@
 import { MaybeRefOrGetter, toValue } from 'vue'
-import { getIntervalForDataSize } from '@/factories/data'
 import { RunGraphEvent, RunGraphFetchEventsOptions } from '@/models'
 import { waitForConfig } from '@/objects/config'
 import { waitForRunData } from '@/objects/nodes'
@@ -28,7 +27,7 @@ export async function eventDataFactory(
     }
 
     if (!runGraphData.end_time) {
-      interval = setTimeout(() => start(), getIntervalForDataSize(runGraphData))
+      interval = setTimeout(() => start(), config.fetchEventsInterval)
     }
   }
 
