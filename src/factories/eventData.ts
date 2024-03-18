@@ -33,7 +33,7 @@ export async function eventDataFactory(
 
   // todo: need a global way of stopping this when the graph is stopped
   function stop(): void {
-    clearInterval(interval)
+    clearTimeout(interval)
   }
 
   return {
