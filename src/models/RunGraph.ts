@@ -123,6 +123,7 @@ export type RunGraphConfig = {
   runId: string,
   fetch: RunGraphFetch,
   fetchEvents?: RunGraphFetchEvents,
+  fetchEventsInterval?: number,
   animationDuration?: number,
   styles?: RunGraphStyles,
   disableAnimationsThreshold?: number,
