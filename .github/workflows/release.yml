@@ -26,8 +26,8 @@ jobs:
 
       - uses: prefecthq/actions-trigger-downstream-npm-package-updates@main
         id: trigger-downstream-npm-package-update-prefect-ui-library
-        if: ${{ steps.release-ui-components.publish.outputs.type }}
+        if: ${{ steps.release-ui-components.outputs.type }}
         with:
           GITHUB_TOKEN: ${{ secrets.PREFECT_UI_LIBRARY_ACTIONS_RW }}
           DOWNSTREAM_REPO_NAME: prefect-ui-library
-          RELEASE_TAG: ${{ steps.release-ui-components.publish.outputs.version}}
+          RELEASE_TAG: ${{ steps.release-ui-components.outputs.version}}
