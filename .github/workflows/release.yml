@@ -30,3 +30,4 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.PREFECT_UI_LIBRARY_ACTIONS_RW }}
           DOWNSTREAM_REPO_NAME: prefect-ui-library
+          RELEASE_TAG: ${{ steps.release-ui-components.publish.outputs.version}}
