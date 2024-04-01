@@ -20,7 +20,7 @@ import { runStatesFactory } from '@/factories/runStates'
 import { RunGraphArtifact, RunGraphEvent, RunGraphStateEvent } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodeSize } from '@/models/layout'
-import { RunGraphFetchEventsOptions, RunGraphNode } from '@/models/RunGraph'
+import { RunGraphFetchEventsContext, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { cull } from '@/objects/culling'
 import { layout, waitForSettings } from '@/objects/settings'
@@ -73,17 +73,15 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     renderBorder()
   })
 
-  function getEventFactoryOptions(): RunGraphFetchEventsOptions {
-    return {
-      since: internalNode.start_time,
-      until: internalNode.end_time ?? new Date(),
-    }
-  }
-  const { start: startEventsData, stop: stopEventsData } = await eventDataFactory(internalNode.id, data => {
+  const { start: startEventsData, stop: stopEventsData } = await eventDataFactory(() => ({
+    nodeId: internalNode.id,
+    since: internalNode.start_time,
+    until: internalNode.end_time ?? new Date(),
+  }), data => {
     hasEvents = data.length > 0
 
     renderEvents(data)
-  }, getEventFactoryOptions)
+  })
 
   container.addChild(bar)
   container.addChild(label)
