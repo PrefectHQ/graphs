@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/PrefectHQ/graphs#readme",
   "devDependencies": {
-    "@prefecthq/eslint-config": "1.0.31",
+    "@prefecthq/eslint-config": "1.0.32",
     "@types/d3": "7.4.3",
     "@types/fontfaceobserver": "^2.1.2",
     "@types/lodash.isequal": "4.5.8",
