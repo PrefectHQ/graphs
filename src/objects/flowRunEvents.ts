@@ -5,6 +5,7 @@ import { RunGraphEvent } from '@/models'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
+import { waitForRunData } from '@/objects/nodes'
 import { layout, waitForSettings } from '@/objects/settings'
 
 let stopEventData: (() => void) | null = null
@@ -14,6 +15,7 @@ export async function startFlowRunEvents(): Promise<void> {
   const application = await waitForApplication()
   const config = await waitForConfig()
   const settings = await waitForSettings()
+  const data = await waitForRunData()
 
   const { element, render: renderEvents, update } = await runEventsFactory({ isRoot: true })
 
@@ -30,7 +32,11 @@ export async function startFlowRunEvents(): Promise<void> {
     await renderEvents(data)
   }
 
-  const response = await eventDataFactory(config.runId, data => {
+  const response = await eventDataFactory(() => ({
+    nodeId: config.runId,
+    since: data.start_time,
+    until: data.end_time ?? new Date(),
+  }), data => {
     const event: EventKey = rootGraphEvents ? 'eventDataUpdated' : 'eventDataCreated'
 
     rootGraphEvents = data
