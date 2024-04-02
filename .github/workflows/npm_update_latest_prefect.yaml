@@ -60,4 +60,4 @@ jobs:
             Release information can be found at https://github.com/${{ inputs.package_name }}/releases/tag/${{ inputs.package_version }}." \
             --label maintenance
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.PREFECT_CONTENTS_PR_RW }}
