@@ -12,7 +12,7 @@
     "lint:fix": "eslint src --fix",
     "changelog": "auto-changelog --package --commit-limit 0",
     "version": "npm run changelog && git add CHANGELOG.md",
-    "release": "./prefect-design-release"
+    "release": "./graphs-release"
   },
   "main": "./dist/graphs.umd.js",
   "module": "./dist/graphs.mjs",
