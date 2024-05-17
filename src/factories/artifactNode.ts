@@ -3,7 +3,7 @@ import { artifactBarFactory } from '@/factories/artifactBar'
 import { circularProgressBarFactory } from '@/factories/circularProgressBar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
-import { ArtifactType, artifactTypeIconMap } from '@/models'
+import { ArtifactType, RunGraphArtifactProgressData, artifactTypeIconMap } from '@/models'
 import { waitForConfig } from '@/objects/config'
 
 type ArtifactNodeFactoryOptions = {
@@ -15,6 +15,11 @@ type ArtifactNodeFactoryRenderOptions = {
   name?: string,
   type?: ArtifactType,
   data?: Record<string, unknown>,
+} | {
+  selected?: boolean,
+  name?: string,
+  type: 'progress',
+  data: RunGraphArtifactProgressData,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -35,6 +40,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
 
   content.addChild(icon)
   content.addChild(label)
+  content.addChild(circularProgressBar)
 
   element.addChild(bar)
   element.addChild(content)
@@ -48,13 +54,17 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       data = newData ?? data
     }
 
-    const promises = [renderArtifactNode()]
     if (type !== 'progress') {
-      promises.push(renderArtifactIcon())
+      await Promise.all([
+        renderArtifactIcon(),
+        renderArtifactNode(),
+      ])
     } else {
-      promises.push(renderDynamicArtifact({ data: options?.data }))
+      await Promise.all([
+        renderProgressArtifact(data),
+        renderArtifactNode(),
+      ])
     }
-    await Promise.all(promises)
 
     await renderBg()
 
@@ -85,19 +95,29 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   }
 
   // eslint-disable-next-line require-await
-  async function renderDynamicArtifact(data): Promise<Container> {
+  async function renderProgressArtifact(data: RunGraphArtifactProgressData): Promise<Container> {
+    // FIXME: hacky workaround. the unrendered icon element is increasing the content's height
+    content.removeChild(icon)
     const {
       artifactPaddingLeft,
+      // artifactPaddingRight,
       artifactPaddingY,
       artifactIconSize,
     } = config.styles
 
-    const newDynamicArtifact = await renderCircularProgressbar(data)
+    const lineWidth = 2
+    const radius = (artifactIconSize - lineWidth * 2) / 2
+    const newDynamicArtifact = await renderCircularProgressbar({
+      value: data.progress,
+      radius,
+      lineWidth,
+    })
+    console.log('width', newDynamicArtifact.width, 'height', newDynamicArtifact.height)
 
-    // newDynamicArtifact.position = { x: artifactPaddingLeft, y: artifactPaddingY }
-    newDynamicArtifact.position = { x: 10, y: 10 }
-    // newDynamicArtifact.width = artifactIconSize
-    // newDynamicArtifact.height = artifactIconSize
+    newDynamicArtifact.position.x += artifactPaddingLeft
+    // to horizontally center with uneven horizontal padding (if only rendering the progress bar)
+    // newDynamicArtifact.position.x += (artifactPaddingLeft + artifactPaddingRight) / 2
+    newDynamicArtifact.position.y += artifactPaddingY
 
     return circularProgressBar
   }

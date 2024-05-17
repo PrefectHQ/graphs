@@ -10,12 +10,22 @@ export const artifactTypes = [
 
 export type ArtifactType = typeof artifactTypes[number]
 
+export type RunGraphArtifactProgressData = {
+  progress: number,
+}
+
 export type RunGraphArtifact = {
   id: string,
   created: Date,
   key?: string,
   type: ArtifactType,
   data?: Record<string, unknown>,
+} | {
+  id: string,
+  created: Date,
+  key?: string,
+  type: 'progress',
+  data: RunGraphArtifactProgressData,
 }
 
 export const artifactTypeIconMap = {
