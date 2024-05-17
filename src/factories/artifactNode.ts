@@ -1,5 +1,6 @@
 import { Container } from 'pixi.js'
 import { artifactBarFactory } from '@/factories/artifactBar'
+import { circularProgressBarFactory } from '@/factories/circularProgressBar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
 import { ArtifactType, artifactTypeIconMap } from '@/models'
@@ -13,6 +14,7 @@ type ArtifactNodeFactoryRenderOptions = {
   selected?: boolean,
   name?: string,
   type?: ArtifactType,
+  data?: Record<string, unknown>,
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -22,12 +24,14 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   const element = new Container()
   const content = new Container()
   const { element: icon, render: renderIcon } = await iconFactory({ cullAtZoomThreshold })
+  const { element: circularProgressBar, render: renderCircularProgressbar } = await circularProgressBarFactory()
   const { element: label, render: renderLabel } = await nodeLabelFactory({ cullAtZoomThreshold })
   const { element: bar, render: renderBar } = await artifactBarFactory()
 
   let selected = false
   let name: string | null = null
   let type: ArtifactType | null = null
+  let data: Record<string, unknown> | null = null
 
   content.addChild(icon)
   content.addChild(label)
@@ -37,16 +41,20 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
 
   async function render(options?: ArtifactNodeFactoryRenderOptions): Promise<Container> {
     if (options) {
-      const { selected: newSelected, name: newName, type: newType } = options
+      const { selected: newSelected, name: newName, type: newType, data: newData } = options
       selected = newSelected ?? selected
       name = newName ?? name
       type = newType ?? type
+      data = newData ?? data
     }
 
-    await Promise.all([
-      renderArtifactIcon(),
-      renderArtifactNode(),
-    ])
+    const promises = [renderArtifactNode()]
+    if (type !== 'progress') {
+      promises.push(renderArtifactIcon())
+    } else {
+      promises.push(renderDynamicArtifact({ data: options?.data }))
+    }
+    await Promise.all(promises)
 
     await renderBg()
 
@@ -74,6 +82,24 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
     newIcon.tint = artifactIconColor
 
     return newIcon
+  }
+
+  // eslint-disable-next-line require-await
+  async function renderDynamicArtifact(data): Promise<Container> {
+    const {
+      artifactPaddingLeft,
+      artifactPaddingY,
+      artifactIconSize,
+    } = config.styles
+
+    const newDynamicArtifact = await renderCircularProgressbar(data)
+
+    // newDynamicArtifact.position = { x: artifactPaddingLeft, y: artifactPaddingY }
+    newDynamicArtifact.position = { x: 10, y: 10 }
+    // newDynamicArtifact.width = artifactIconSize
+    // newDynamicArtifact.height = artifactIconSize
+
+    return circularProgressBar
   }
 
   async function renderArtifactNode(): Promise<Container> {

@@ -39,7 +39,7 @@ export async function artifactFactory(artifact: RunGraphArtifact, {
   })
 
   async function render(): Promise<void> {
-    await renderArtifactNode({ selected, name: artifact.key, type: artifact.type })
+    await renderArtifactNode({ selected, name: artifact.key, type: artifact.type, data: artifact.data })
   }
 
   function getSelected(): boolean {
