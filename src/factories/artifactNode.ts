@@ -94,7 +94,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
     content.removeChild(icon)
     const {
       artifactPaddingLeft,
-      // artifactPaddingRight,
+      artifactPaddingRight,
       artifactPaddingY,
       artifactIconSize,
     } = config.styles
@@ -108,9 +108,13 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
     })
     console.log('width', newDynamicArtifact.width, 'height', newDynamicArtifact.height)
 
-    newDynamicArtifact.position.x += artifactPaddingLeft
-    // to horizontally center with uneven horizontal padding (if only rendering the progress bar)
-    // newDynamicArtifact.position.x += (artifactPaddingLeft + artifactPaddingRight) / 2
+    if (name) {
+      newDynamicArtifact.position.x += artifactPaddingLeft
+    } else {
+      // Without a name/text label, uneven left/right padding should be normalized
+      // so that the progress bar is centered
+      newDynamicArtifact.position.x += (artifactPaddingLeft + artifactPaddingRight) / 2
+    }
     newDynamicArtifact.position.y += artifactPaddingY
 
     return circularProgressBar
