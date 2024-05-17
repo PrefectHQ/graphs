@@ -71,7 +71,7 @@
     'xsmall': getData(graphXsmallJson),
     'xsmall (w/ progress artifacts)': getData(graphXsmallProgressArtifactsJson),
   }
-  const selectedDataset = ref<DatasetOption>('xsmall')
+  const selectedDataset = ref<DatasetOption>('xsmall (w/ progress artifacts)')
 
   // force remounting the graph when the dataset changes
   const remountKey = ref(0)
