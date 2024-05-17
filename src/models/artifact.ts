@@ -10,16 +10,12 @@ export const artifactTypes = [
 
 export type ArtifactType = typeof artifactTypes[number]
 
-export type RunGraphArtifactProgressData = {
-  progress: number,
-}
-
 export type RunGraphArtifactTypeAndData = {
   type: Exclude<ArtifactType, 'progress'>,
   data?: Record<string, unknown>,
 } | {
   type: 'progress',
-  data: { progress: number },
+  data: number,
 }
 
 export type RunGraphArtifact = {
@@ -32,6 +28,6 @@ export const artifactTypeIconMap = {
   markdown: 'ArtifactMarkdown',
   table: 'ArtifactTable',
   result: 'ArtifactResult',
-  progress: 'ArtifactProgress',
+  progress: 'Artifact',
   unknown: 'Artifact',
 } as const satisfies Record<ArtifactType, IconName>

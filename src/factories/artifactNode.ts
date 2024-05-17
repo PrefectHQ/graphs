@@ -3,7 +3,7 @@ import { artifactBarFactory } from '@/factories/artifactBar'
 import { circularProgressBarFactory } from '@/factories/circularProgressBar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
-import { ArtifactType, RunGraphArtifactProgressData, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
+import { ArtifactType, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
 import { waitForConfig } from '@/objects/config'
 
 type ArtifactNodeFactoryOptions = {
@@ -30,7 +30,6 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   let selected = false
   let name: string | null = null
   let type: ArtifactType | null = null
-  let data: Record<string, unknown> | null = null
 
   content.addChild(icon)
   content.addChild(label)
@@ -41,11 +40,10 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
 
   async function render(options?: ArtifactNodeFactoryRenderOptions): Promise<Container> {
     if (options) {
-      const { selected: newSelected, name: newName, type: newType, data: newData } = options
+      const { selected: newSelected, name: newName, type: newType } = options
       selected = newSelected ?? selected
       name = newName ?? name
       type = newType
-      data = newData ?? data
     }
 
     if (options?.type === 'progress') {
@@ -66,7 +64,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   }
 
   async function renderArtifactIcon(): Promise<Container> {
-    if (!type) {
+    if (!type || type === 'progress') {
       return icon
     }
 
@@ -89,7 +87,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   }
 
   // eslint-disable-next-line require-await
-  async function renderProgressArtifact(data: RunGraphArtifactProgressData): Promise<Container> {
+  async function renderProgressArtifact(data: number): Promise<Container> {
     // FIXME: hacky workaround. the unrendered icon element is increasing the content's height
     content.removeChild(icon)
     const {
@@ -102,7 +100,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
     const lineWidth = 2
     const radius = (artifactIconSize - lineWidth * 2) / 2
     const newDynamicArtifact = await renderCircularProgressbar({
-      value: data.progress,
+      value: data,
       radius,
       lineWidth,
     })

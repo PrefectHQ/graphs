@@ -1,7 +1,7 @@
 <template>
   <p-layout-default class="run-graph-demo">
     <p-label label="Choose a Dataset">
-      <p-button-group v-model="selectedDataset" :options="datasetOptions" small />
+      <p-button-group v-model="selectedDataset" :options="datasetOptions as unknown as Array<string>" small />
     </p-label>
 
     <RunGraph :key="remountKey" v-model:viewport="visibleDateRange" v-model:selected="selected" :config="config" class="run-graph-demo__graph p-background" />
