@@ -62,7 +62,7 @@ export async function runArtifactsFactory({ isRoot, parentStartDate }: RunEvents
 
       artifacts.set(artifact.id, factory)
 
-      container!.addChild(factory.element)
+      container.addChild(factory.element)
     })()
 
     artifactCreationPromises.set(artifact.id, artifactCreationPromise)
