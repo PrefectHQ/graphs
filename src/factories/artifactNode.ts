@@ -106,7 +106,6 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       radius,
       lineWidth,
     })
-    console.log('width', newDynamicArtifact.width, 'height', newDynamicArtifact.height)
 
     if (name) {
       newDynamicArtifact.position.x += artifactPaddingLeft

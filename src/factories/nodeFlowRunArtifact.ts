@@ -38,7 +38,6 @@ export async function nodeFlowRunArtifactFactory<T extends NodeFlowRunArtifactFa
   const factory = await getFactory() as FactoryType<T>
 
   factory.element.on('click', clickEvent => {
-    console.log('artifact click')
     clickEvent.stopPropagation()
 
     const { element } = factory
