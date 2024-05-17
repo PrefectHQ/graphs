@@ -14,19 +14,19 @@ export type RunGraphArtifactProgressData = {
   progress: number,
 }
 
+export type RunGraphArtifactTypeAndData = {
+  type: Exclude<ArtifactType, 'progress'>,
+  data?: Record<string, unknown>,
+} | {
+  type: 'progress',
+  data: { progress: number },
+}
+
 export type RunGraphArtifact = {
   id: string,
   created: Date,
   key?: string,
-  type: ArtifactType,
-  data?: Record<string, unknown>,
-} | {
-  id: string,
-  created: Date,
-  key?: string,
-  type: 'progress',
-  data: RunGraphArtifactProgressData,
-}
+} & RunGraphArtifactTypeAndData
 
 export const artifactTypeIconMap = {
   markdown: 'ArtifactMarkdown',

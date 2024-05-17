@@ -3,7 +3,7 @@ import { artifactBarFactory } from '@/factories/artifactBar'
 import { circularProgressBarFactory } from '@/factories/circularProgressBar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
-import { ArtifactType, RunGraphArtifactProgressData, artifactTypeIconMap } from '@/models'
+import { ArtifactType, RunGraphArtifactProgressData, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
 import { waitForConfig } from '@/objects/config'
 
 type ArtifactNodeFactoryOptions = {
@@ -13,14 +13,8 @@ type ArtifactNodeFactoryOptions = {
 type ArtifactNodeFactoryRenderOptions = {
   selected?: boolean,
   name?: string,
-  type?: ArtifactType,
-  data?: Record<string, unknown>,
-} | {
-  selected?: boolean,
-  name?: string,
-  type: 'progress',
-  data: RunGraphArtifactProgressData,
-}
+  type: ArtifactType,
+} & RunGraphArtifactTypeAndData
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeFactoryOptions) {
@@ -50,18 +44,18 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       const { selected: newSelected, name: newName, type: newType, data: newData } = options
       selected = newSelected ?? selected
       name = newName ?? name
-      type = newType ?? type
+      type = newType
       data = newData ?? data
     }
 
-    if (type !== 'progress') {
+    if (options?.type === 'progress') {
       await Promise.all([
-        renderArtifactIcon(),
+        renderProgressArtifact(options.data),
         renderArtifactNode(),
       ])
     } else {
       await Promise.all([
-        renderProgressArtifact(data),
+        renderArtifactIcon(),
         renderArtifactNode(),
       ])
     }
