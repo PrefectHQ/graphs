@@ -12,7 +12,6 @@ export type ArtifactType = typeof artifactTypes[number]
 
 export type RunGraphArtifactTypeAndData = {
   type: Exclude<ArtifactType, 'progress'>,
-  data?: Record<string, unknown>,
 } | {
   type: 'progress',
   data: number,
