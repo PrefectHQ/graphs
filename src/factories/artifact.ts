@@ -18,6 +18,7 @@ export async function artifactFactory(artifact: RunGraphArtifact, {
   const { element, render: renderArtifactNode } = await artifactNodeFactory({ cullAtZoomThreshold })
 
   let selected = false
+  let internalArtifact = artifact
 
   element.eventMode = 'static'
   element.cursor = 'pointer'
@@ -25,21 +26,22 @@ export async function artifactFactory(artifact: RunGraphArtifact, {
   if (enableLocalClickHandling) {
     element.on('click', event => {
       event.stopPropagation()
-      selectItem({ kind: 'artifact', id: artifact.id })
+      selectItem({ kind: 'artifact', id: internalArtifact.id })
     })
   }
 
   emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected({ kind: 'artifact', id: artifact.id })
+    const isCurrentlySelected = isSelected({ kind: 'artifact', id: internalArtifact.id })
 
     if (isCurrentlySelected !== selected) {
       selected = isCurrentlySelected
-      render()
+      render(internalArtifact)
     }
   })
 
-  async function render(): Promise<void> {
-    await renderArtifactNode({ selected, name: artifact.key, ...artifact })
+  async function render(artifact: RunGraphArtifact): Promise<void> {
+    internalArtifact = artifact
+    await renderArtifactNode({ selected, name: internalArtifact.key, ...internalArtifact })
   }
 
   function getSelected(): boolean {
@@ -47,11 +49,11 @@ export async function artifactFactory(artifact: RunGraphArtifact, {
   }
 
   function getDate(): Date {
-    return artifact.created
+    return internalArtifact.created
   }
 
   function getId(): string {
-    return artifact.id
+    return internalArtifact.id
   }
 
   return {
