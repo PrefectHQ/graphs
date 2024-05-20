@@ -172,18 +172,14 @@
             "created": "2023-09-27T15:50:42.014724+00:00",
             "key": "personalized-reachout",
             "type": "progress",
-            "data": {
-              "progress": 33
-            }
+            "data": 33
           },
           {
             "id": "cae8b622-6742-4615-a02f-700323eaeb42",
             "created": "2023-09-27T15:50:42.014724+00:00",
             "key": "personalized-reachout-2",
             "type": "progress",
-            "data": {
-              "progress": 66
-            }
+            "data": 66
           }
         ],
         "children": [
