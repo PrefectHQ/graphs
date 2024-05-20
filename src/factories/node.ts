@@ -104,7 +104,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   async function createArtifact(artifact: RunGraphArtifact): Promise<void> {
     if (artifacts.has(artifact.id)) {
-      return artifacts.get(artifact.id)!.render()
+      return artifacts.get(artifact.id)!.render(artifact)
     }
 
     const factory = await artifactFactory(artifact, { enableLocalClickHandling: true })
@@ -113,7 +113,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
     artifactsContainer!.addChild(factory.element)
 
-    return factory.render()
+    return factory.render(artifact)
   }
 
   function createArtifactsContainer(): void {
