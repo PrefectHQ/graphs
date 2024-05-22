@@ -44,7 +44,7 @@
     "./*.ts",
     "./*.d.ts",
     "./postcss.config.js",
-    "./tailwind.config.js",
+    "./tailwind.config.ts",
     "src/workers/tsconfig.json"
   ]
 }
