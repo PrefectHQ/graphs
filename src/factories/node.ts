@@ -104,7 +104,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   async function createArtifact(artifact: RunGraphArtifact): Promise<void> {
     if (artifacts.has(artifact.id)) {
-      return artifacts.get(artifact.id)!.render()
+      return artifacts.get(artifact.id)!.render(artifact)
     }
 
     const factory = await artifactFactory(artifact, { enableLocalClickHandling: true })
@@ -113,7 +113,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
     artifactsContainer!.addChild(factory.element)
 
-    return factory.render()
+    return factory.render(artifact)
   }
 
   function createArtifactsContainer(): void {
@@ -179,15 +179,20 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   function getNodeCacheKey(nodeData: RunGraphNode): string {
     const endTime = nodeData.end_time ?? new Date()
-    const artifactCount = nodeData.artifacts?.length ?? 0
+    const artifactCacheKey = nodeData.artifacts?.map(artifact => {
+      if (artifact.type === 'progress') {
+        return `${artifact.id}-${artifact.data}`
+      }
+      return artifact.id
+    }).join('|')
     const values = [
       nodeData.state_type,
       endTime.getTime(),
-      artifactCount,
       layout.horizontal,
       layout.horizontalScaleMultiplier,
       config.styles.colorMode,
-      artifactCount > 0 && settings.disableArtifacts,
+      artifactCacheKey && settings.disableArtifacts,
+      artifactCacheKey,
     ]
 
     return values.join('-')

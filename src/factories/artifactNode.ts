@@ -1,8 +1,9 @@
 import { Container } from 'pixi.js'
 import { artifactBarFactory } from '@/factories/artifactBar'
+import { circularProgressBarFactory } from '@/factories/circularProgressBar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
-import { ArtifactType, artifactTypeIconMap } from '@/models'
+import { ArtifactType, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
 import { waitForConfig } from '@/objects/config'
 
 type ArtifactNodeFactoryOptions = {
@@ -12,8 +13,8 @@ type ArtifactNodeFactoryOptions = {
 type ArtifactNodeFactoryRenderOptions = {
   selected?: boolean,
   name?: string,
-  type?: ArtifactType,
-}
+  type: ArtifactType,
+} & RunGraphArtifactTypeAndData
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeFactoryOptions) {
@@ -22,31 +23,41 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   const element = new Container()
   const content = new Container()
   const { element: icon, render: renderIcon } = await iconFactory({ cullAtZoomThreshold })
+  const { element: circularProgressBar, render: renderCircularProgressbar } = await circularProgressBarFactory()
   const { element: label, render: renderLabel } = await nodeLabelFactory({ cullAtZoomThreshold })
   const { element: bar, render: renderBar } = await artifactBarFactory()
 
   let selected = false
   let name: string | null = null
-  let type: ArtifactType | null = null
+  let type: ArtifactType
 
-  content.addChild(icon)
   content.addChild(label)
-
   element.addChild(bar)
   element.addChild(content)
 
-  async function render(options?: ArtifactNodeFactoryRenderOptions): Promise<Container> {
-    if (options) {
-      const { selected: newSelected, name: newName, type: newType } = options
-      selected = newSelected ?? selected
-      name = newName ?? name
-      type = newType ?? type
+  async function render(options: ArtifactNodeFactoryRenderOptions): Promise<Container> {
+    const { selected: newSelected, name: newName, type: newType } = options
+    selected = newSelected ?? selected
+    name = newName ?? name
+    type = newType
+    if (type === 'progress') {
+      content.addChild(circularProgressBar)
+    } else {
+      content.addChild(icon)
     }
 
-    await Promise.all([
-      renderArtifactIcon(),
-      renderArtifactNode(),
-    ])
+
+    if (options.type === 'progress') {
+      await Promise.all([
+        renderProgressArtifact(options.data),
+        renderArtifactNode(),
+      ])
+    } else {
+      await Promise.all([
+        renderArtifactIcon(),
+        renderArtifactNode(),
+      ])
+    }
 
     await renderBg()
 
@@ -54,7 +65,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   }
 
   async function renderArtifactIcon(): Promise<Container> {
-    if (!type) {
+    if (type === 'progress') {
       return icon
     }
 
@@ -76,6 +87,35 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
     return newIcon
   }
 
+  // eslint-disable-next-line require-await
+  async function renderProgressArtifact(data: number): Promise<Container> {
+    const {
+      artifactPaddingLeft,
+      artifactPaddingRight,
+      artifactPaddingY,
+      artifactIconSize,
+    } = config.styles
+
+    const lineWidth = 20
+    const radius = (artifactIconSize - lineWidth * 2) / 2
+    const newDynamicArtifact = renderCircularProgressbar({
+      value: data,
+      radius,
+      lineWidth,
+    })
+
+    if (name) {
+      newDynamicArtifact.position.x += artifactPaddingLeft
+    } else {
+      // Without a name/text label, uneven left/right padding should be normalized
+      // so that the progress bar is centered
+      newDynamicArtifact.position.x += (artifactPaddingLeft + artifactPaddingRight) / 2
+    }
+    newDynamicArtifact.position.y += artifactPaddingY
+
+    return circularProgressBar
+  }
+
   async function renderArtifactNode(): Promise<Container> {
     if (!name) {
       label.visible = false
@@ -92,7 +132,8 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       artifactContentGap,
     } = config.styles
 
-    const x = artifactPaddingLeft + artifactIconSize + artifactContentGap
+    const contentGap = name ? artifactContentGap : 0
+    const x = artifactPaddingLeft + artifactIconSize + contentGap
     const y = artifactPaddingY
 
     label.tint = artifactTextColor

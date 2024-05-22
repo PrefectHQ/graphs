@@ -1,4 +1,4 @@
-import { ArtifactFactory, artifactFactory } from '@/factories/artifact'
+import { ArtifactFactory, artifactFactory, isArtifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
 import { ArtifactSelection, ArtifactsSelection, RunGraphArtifact } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
@@ -73,7 +73,16 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
   })
 
   async function render(props?: RenderPropsType<T>): Promise<void> {
-    await factory.render(props)
+    if (isArtifactFactory(factory)) {
+      if (options.type !== 'artifact') {
+        throw new Error(`ArtifactFactory attempted to render a ${options.type}`)
+      }
+
+      await factory.render(options.artifact)
+    } else {
+      await factory.render(props)
+    }
+
     updatePosition()
   }
 

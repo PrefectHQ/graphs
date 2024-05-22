@@ -1,4 +1,4 @@
-import { ArtifactFactory, artifactFactory } from '@/factories/artifact'
+import { ArtifactFactory, artifactFactory, isArtifactFactory } from '@/factories/artifact'
 import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
 import { ArtifactSelection, ArtifactsSelection, RunGraphArtifact } from '@/models'
 import { waitForViewport } from '@/objects'
@@ -38,7 +38,6 @@ export async function nodeFlowRunArtifactFactory<T extends NodeFlowRunArtifactFa
   const factory = await getFactory() as FactoryType<T>
 
   factory.element.on('click', clickEvent => {
-    console.log('artifact click')
     clickEvent.stopPropagation()
 
     const { element } = factory
@@ -65,7 +64,16 @@ export async function nodeFlowRunArtifactFactory<T extends NodeFlowRunArtifactFa
   })
 
   async function render(props?: RenderPropsType<T>): Promise<void> {
-    await factory.render(props)
+    if (isArtifactFactory(factory)) {
+      if (options.type !== 'artifact') {
+        throw new Error(`ArtifactFactory attempted to render a ${options.type}`)
+      }
+
+      await factory.render(options.artifact)
+    } else {
+      await factory.render(props)
+    }
+
     updatePosition()
   }
 

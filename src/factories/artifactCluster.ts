@@ -58,6 +58,7 @@ export async function artifactClusterFactory() {
   }
 
   return {
+    isArtifactCluster: true,
     element,
     render,
     getSelected,
@@ -65,4 +66,8 @@ export async function artifactClusterFactory() {
     getIds,
     isCluster: true,
   }
+}
+
+export function isArtifactClusterFactory(value: Record<string, unknown>): value is ArtifactClusterFactory {
+  return value.isArtifactCluster === true
 }
