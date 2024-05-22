@@ -12,7 +12,7 @@ type BitmapFontStyle = {
 
 const fontStyles = {
   inter: {
-    fontFamily: 'InterVariable',
+    fontFamily: 'Inter',
     fontSize: 16,
     lineHeight: 20,
     fill: 0xFFFFFF,
