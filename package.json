@@ -1,7 +1,7 @@
 {
   "name": "@prefecthq/graphs",
   "private": false,
-  "version": "2.2.15",
+  "version": "2.2.17",
   "description": "Large scale graphs designed for Prefect",
   "scripts": {
     "serve": "vite --host --mode=demo",
@@ -58,7 +58,7 @@
     "vue-tsc": "2.0.7"
   },
   "peerDependencies": {
-    "@prefecthq/prefect-design": "^2.3.1",
+    "@prefecthq/prefect-design": "^2.10.10",
     "@prefecthq/vue-compositions": "^1.6.7",
     "vue": "^3.2.45",
     "vue-router": "^4.0.12"
