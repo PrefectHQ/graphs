@@ -3,12 +3,11 @@ import { artifactBarFactory } from '@/factories/artifactBar'
 import { circularProgressBarFactory } from '@/factories/circularProgressBar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
-import { ArtifactType, RunGraphArtifact, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
+import { ArtifactType, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
 import { waitForConfig } from '@/objects/config'
 
 type ArtifactNodeFactoryOptions = {
   cullAtZoomThreshold?: boolean,
-  artifact: RunGraphArtifact,
 }
 
 type ArtifactNodeFactoryRenderOptions = {
@@ -18,7 +17,7 @@ type ArtifactNodeFactoryRenderOptions = {
 } & RunGraphArtifactTypeAndData
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function artifactNodeFactory({ cullAtZoomThreshold, artifact }: ArtifactNodeFactoryOptions) {
+export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeFactoryOptions) {
   const config = await waitForConfig()
 
   const element = new Container()
@@ -29,14 +28,9 @@ export async function artifactNodeFactory({ cullAtZoomThreshold, artifact }: Art
   const { element: bar, render: renderBar } = await artifactBarFactory()
 
   let selected = false
-  let name = artifact.key
-  let { type } = artifact
+  let name: string | null = null
+  let type: ArtifactType
 
-  if (type === 'progress') {
-    content.addChild(circularProgressBar)
-  } else {
-    content.addChild(icon)
-  }
   content.addChild(label)
   element.addChild(bar)
   element.addChild(content)
@@ -47,6 +41,11 @@ export async function artifactNodeFactory({ cullAtZoomThreshold, artifact }: Art
       selected = newSelected ?? selected
       name = newName ?? name
       type = newType
+      if (type === 'progress') {
+        content.addChild(circularProgressBar)
+      } else {
+        content.addChild(icon)
+      }
     }
 
     if (options?.type === 'progress') {
@@ -61,7 +60,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold, artifact }: Art
       ])
     }
 
-    await renderBg(artifact)
+    await renderBg()
 
     return element
   }
