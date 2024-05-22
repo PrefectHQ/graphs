@@ -15,7 +15,7 @@ export async function artifactFactory(artifact: RunGraphArtifact, {
   cullAtZoomThreshold = true,
   enableLocalClickHandling = false,
 }: ArtifactFactoryOptions = {}) {
-  const { element, render: renderArtifactNode } = await artifactNodeFactory({ cullAtZoomThreshold })
+  const { element, render: renderArtifactNode } = await artifactNodeFactory({ cullAtZoomThreshold, artifact })
 
   let selected = false
   let internalArtifact = artifact

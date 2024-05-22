@@ -3,11 +3,12 @@ import { artifactBarFactory } from '@/factories/artifactBar'
 import { circularProgressBarFactory } from '@/factories/circularProgressBar'
 import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
-import { ArtifactType, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
+import { ArtifactType, RunGraphArtifact, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
 import { waitForConfig } from '@/objects/config'
 
 type ArtifactNodeFactoryOptions = {
   cullAtZoomThreshold?: boolean,
+  artifact: RunGraphArtifact,
 }
 
 type ArtifactNodeFactoryRenderOptions = {
@@ -17,7 +18,7 @@ type ArtifactNodeFactoryRenderOptions = {
 } & RunGraphArtifactTypeAndData
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeFactoryOptions) {
+export async function artifactNodeFactory({ cullAtZoomThreshold, artifact }: ArtifactNodeFactoryOptions) {
   const config = await waitForConfig()
 
   const element = new Container()
@@ -28,13 +29,15 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   const { element: bar, render: renderBar } = await artifactBarFactory()
 
   let selected = false
-  let name: string | null = null
-  let type: ArtifactType | null = null
+  let name = artifact.key
+  let { type } = artifact
 
-  content.addChild(icon)
+  if (type === 'progress') {
+    content.addChild(circularProgressBar)
+  } else {
+    content.addChild(icon)
+  }
   content.addChild(label)
-  content.addChild(circularProgressBar)
-
   element.addChild(bar)
   element.addChild(content)
 
@@ -58,13 +61,13 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       ])
     }
 
-    await renderBg()
+    await renderBg(artifact)
 
     return element
   }
 
   async function renderArtifactIcon(): Promise<Container> {
-    if (!type || type === 'progress') {
+    if (type === 'progress') {
       return icon
     }
 
@@ -88,8 +91,6 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
 
   // eslint-disable-next-line require-await
   async function renderProgressArtifact(data: number): Promise<Container> {
-    // FIXME: hacky workaround. the unrendered icon element is increasing the content's height
-    content.removeChild(icon)
     const {
       artifactPaddingLeft,
       artifactPaddingRight,
@@ -97,9 +98,9 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       artifactIconSize,
     } = config.styles
 
-    const lineWidth = 2
+    const lineWidth = 20
     const radius = (artifactIconSize - lineWidth * 2) / 2
-    const newDynamicArtifact = await renderCircularProgressbar({
+    const newDynamicArtifact = renderCircularProgressbar({
       value: data,
       radius,
       lineWidth,
@@ -133,7 +134,8 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       artifactContentGap,
     } = config.styles
 
-    const x = artifactPaddingLeft + artifactIconSize + artifactContentGap
+    const contentGap = name ? artifactContentGap : 0
+    const x = artifactPaddingLeft + artifactIconSize + contentGap
     const y = artifactPaddingY
 
     label.tint = artifactTextColor

@@ -48,7 +48,7 @@ export async function runArtifactsFactory({ isRoot, parentStartDate }: RunEvents
 
   async function createArtifact(artifact: RunGraphArtifact): Promise<void> {
     if (artifacts.has(artifact.id)) {
-      return artifacts.get(artifact.id)!.render()
+      return artifacts.get(artifact.id)!.render(artifact)
     }
 
     if (artifactCreationPromises.has(artifact.id)) {
@@ -71,7 +71,7 @@ export async function runArtifactsFactory({ isRoot, parentStartDate }: RunEvents
 
     artifactCreationPromises.delete(artifact.id)
 
-    return artifacts.get(artifact.id)!.render()
+    return artifacts.get(artifact.id)!.render(artifact)
   }
 
   function update(): void {
