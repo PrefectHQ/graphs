@@ -12,11 +12,11 @@ export async function circularProgressBarFactory(options: CircularProgressBarOpt
     fillColor: 0xFFFFFF,
     cullAtZoomThreshold: true,
     backgroundColor: 0x000000,
-    backgroundAlpha: 0.5,
+    backgroundAlpha: 1,
     value: 50,
     cap: 'round',
     fillAlpha: 1,
-    lineWidth: 10,
+    lineWidth: 20,
     radius: 50,
     ...options,
   })
