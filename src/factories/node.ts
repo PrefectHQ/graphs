@@ -179,21 +179,19 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
   function getNodeCacheKey(nodeData: RunGraphNode): string {
     const endTime = nodeData.end_time ?? new Date()
-    const artifactCount = nodeData.artifacts?.length ?? 0
     const artifactCacheKey = nodeData.artifacts?.map(artifact => {
       if (artifact.type === 'progress') {
         return `${artifact.id}-${artifact.data}`
       }
-      return ''
-    }).join()
+      return artifact.id
+    }).join('|')
     const values = [
       nodeData.state_type,
       endTime.getTime(),
-      artifactCount,
       layout.horizontal,
       layout.horizontalScaleMultiplier,
       config.styles.colorMode,
-      artifactCount > 0 && settings.disableArtifacts,
+      artifactCacheKey && settings.disableArtifacts,
       artifactCacheKey,
     ]
 
