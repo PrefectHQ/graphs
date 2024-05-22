@@ -41,6 +41,7 @@ export async function artifactFactory(artifact: RunGraphArtifact, {
 
   async function render(artifact: RunGraphArtifact): Promise<void> {
     internalArtifact = artifact
+
     await renderArtifactNode({ selected, name: internalArtifact.key, ...internalArtifact })
   }
 
@@ -57,10 +58,15 @@ export async function artifactFactory(artifact: RunGraphArtifact, {
   }
 
   return {
+    isArtifact: true,
     element,
     render,
     getSelected,
     getDate,
     getId,
   }
+}
+
+export function isArtifactFactory(value: Record<string, unknown>): value is ArtifactFactory {
+  return value.isArtifact === true
 }
