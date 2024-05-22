@@ -191,8 +191,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       layout.horizontal,
       layout.horizontalScaleMultiplier,
       config.styles.colorMode,
-      artifactCacheKey && settings.disableArtifacts,
-      artifactCacheKey,
+      settings.disableArtifacts || artifactCacheKey,
     ]
 
     return values.join('-')
