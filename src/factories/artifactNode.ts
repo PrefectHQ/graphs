@@ -35,20 +35,19 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
   element.addChild(bar)
   element.addChild(content)
 
-  async function render(options?: ArtifactNodeFactoryRenderOptions): Promise<Container> {
-    if (options) {
-      const { selected: newSelected, name: newName, type: newType } = options
-      selected = newSelected ?? selected
-      name = newName ?? name
-      type = newType
-      if (type === 'progress') {
-        content.addChild(circularProgressBar)
-      } else {
-        content.addChild(icon)
-      }
+  async function render(options: ArtifactNodeFactoryRenderOptions): Promise<Container> {
+    const { selected: newSelected, name: newName, type: newType } = options
+    selected = newSelected ?? selected
+    name = newName ?? name
+    type = newType
+    if (type === 'progress') {
+      content.addChild(circularProgressBar)
+    } else {
+      content.addChild(icon)
     }
 
-    if (options?.type === 'progress') {
+
+    if (options.type === 'progress') {
       await Promise.all([
         renderProgressArtifact(options.data),
         renderArtifactNode(),
