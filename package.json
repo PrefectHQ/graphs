@@ -58,7 +58,7 @@
     "vue-tsc": "2.0.7"
   },
   "peerDependencies": {
-    "@prefecthq/prefect-design": "^2.10.8",
+    "@prefecthq/prefect-design": "^2.10.10",
     "@prefecthq/vue-compositions": "^1.6.7",
     "vue": "^3.2.45",
     "vue-router": "^4.0.12"

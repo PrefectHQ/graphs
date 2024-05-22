@@ -1,3 +1,4 @@
+import { sansFontFamily } from '@prefecthq/prefect-design/src/tailwind.config'
 import FontFaceObserver from 'fontfaceobserver'
 import { BitmapFont, BitmapText, IBitmapTextStyle } from 'pixi.js'
 import { DEFAULT_TEXT_RESOLUTION } from '@/consts'
@@ -12,7 +13,7 @@ type BitmapFontStyle = {
 
 const fontStyles = {
   inter: {
-    fontFamily: 'Inter',
+    fontFamily: sansFontFamily,
     fontSize: 16,
     lineHeight: 20,
     fill: 0xFFFFFF,
