@@ -7,7 +7,7 @@ import { horizontalScaleFactory } from '@/factories/position'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
-import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
+import { RunGraphData, RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { getSelectedRunGraphNode } from '@/objects/selection'
@@ -107,8 +107,9 @@ export async function nodesContainerFactory() {
 
   async function createNode(node: RunGraphNode): Promise<BoundsContainer> {
     const { render } = await getNodeContainerFactory(node)
+    const nested = getNestedRunGraphData(node.id)
 
-    return await render(node)
+    return await render(node, nested)
   }
 
   async function createEdges(data: RunGraphData): Promise<void> {
@@ -244,7 +245,8 @@ export async function nodesContainerFactory() {
       return existing
     }
 
-    const response = await nodeContainerFactory(node)
+    const nested = getNestedRunGraphData(node.id)
+    const response = await nodeContainerFactory(node, nested)
 
     response.element.on('resized', size => resizeNode(node.id, size))
 
@@ -270,6 +272,10 @@ export async function nodesContainerFactory() {
     columns.setOffset({ nodeId, axis: nodeLayout.column, offset: size.width })
 
     setPositions()
+  }
+
+  function getNestedRunGraphData(nodeId: string): RunGraphNodes | undefined {
+    return runData?.nested_task_run_graphs.get(nodeId)
   }
 
   function getActualPosition(position: NodeLayoutResponse): Pixels {

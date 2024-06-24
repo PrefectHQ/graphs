@@ -1,7 +1,7 @@
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { BoundsContainer } from '@/models/boundsContainer'
-import { RunGraphNode } from '@/models/RunGraph'
+import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 
 export type TaskRunContainer = Awaited<ReturnType<typeof taskRunContainerFactory>>
@@ -16,10 +16,11 @@ export async function taskRunContainerFactory() {
   container.addChild(bar)
   container.addChild(label)
 
-  async function render(node: RunGraphNode): Promise<BoundsContainer> {
+  async function render(newNodeData: RunGraphNode, newNestedGraph: RunGraphNodes | undefined): Promise<BoundsContainer> {
+
     await Promise.all([
-      renderBar(node),
-      renderLabel(node.label),
+      renderBar(newNodeData),
+      renderLabel(newNodeData.label),
     ])
 
     updateLabel()
