@@ -7,7 +7,7 @@ import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskR
 import { RunGraphArtifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
-import { RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
+import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForApplication } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
@@ -18,7 +18,7 @@ import { layout, waitForSettings } from '@/objects/settings'
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function nodeContainerFactory(node: RunGraphNode, nested: RunGraphNodes | undefined) {
+export async function nodeContainerFactory(node: RunGraphNode, nested: RunGraphData | undefined) {
   const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
@@ -26,7 +26,7 @@ export async function nodeContainerFactory(node: RunGraphNode, nested: RunGraphN
   let artifactsContainer: Container | null = null
   const artifacts: Map<string, ArtifactFactory> = new Map()
   const { animate } = await animationFactory()
-  const { element: container, render: renderNode, bar } = await getNodeFactory(node)
+  const { element: container, render: renderNode, bar } = await getNodeFactory(node, nested)
 
   let internalNode = node
   let internalNested = nested
@@ -58,7 +58,7 @@ export async function nodeContainerFactory(node: RunGraphNode, nested: RunGraphN
     }
   })
 
-  async function render(newNodeData: RunGraphNode, newNested: RunGraphNodes | undefined): Promise<BoundsContainer> {
+  async function render(newNodeData: RunGraphNode, newNested: RunGraphData | undefined): Promise<BoundsContainer> {
     internalNode = newNodeData
     internalNested = newNested
 
@@ -165,12 +165,12 @@ export async function nodeContainerFactory(node: RunGraphNode, nested: RunGraphN
     render(internalNode, internalNested)
   }
 
-  async function getNodeFactory(nodeData: RunGraphNode): Promise<TaskRunContainer | FlowRunContainer> {
+  async function getNodeFactory(nodeData: RunGraphNode, nestedGraph: RunGraphData | undefined): Promise<TaskRunContainer | FlowRunContainer> {
     const { kind } = nodeData
 
     switch (kind) {
       case 'task-run':
-        return await taskRunContainerFactory()
+        return await taskRunContainerFactory(nodeData, nestedGraph)
       case 'flow-run':
         return await flowRunContainerFactory(nodeData)
       default:
@@ -188,7 +188,7 @@ export async function nodeContainerFactory(node: RunGraphNode, nested: RunGraphN
       return artifact.id
     }).join('|')
 
-    const hasNestedNodes = internalNested?.size ?? 0
+    const hasNestedNodes = Boolean(internalNested)
 
     const values = [
       nodeData.state_type,

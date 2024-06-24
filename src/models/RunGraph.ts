@@ -23,7 +23,7 @@ export type RunGraphData = {
   /**
    * A map of nested task run graphs keyed by the id of the task run with RunGraphNodes that were created
    */
-  nested_task_run_graphs: Map<string, RunGraphNodes>,
+  nested_task_run_graphs: Map<string, RunGraphData>,
 }
 
 export type RunGraphNodes = Map<string, RunGraphNode>

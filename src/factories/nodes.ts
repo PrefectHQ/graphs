@@ -274,7 +274,7 @@ export async function nodesContainerFactory() {
     setPositions()
   }
 
-  function getNestedRunGraphData(nodeId: string): RunGraphNodes | undefined {
+  function getNestedRunGraphData(nodeId: string): RunGraphData | undefined {
     return runData?.nested_task_run_graphs.get(nodeId)
   }
 
