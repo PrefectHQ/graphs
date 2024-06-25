@@ -1,4 +1,4 @@
-import { DEFAULT_SUBFLOW_BORDER_Z_INDEX, DEFAULT_SUBFLOW_LABEL_Z_INDEX, DEFAULT_SUBFLOW_NODES_Z_INDEX, DEFAULT_SUBFLOW_NODE_Z_INDEX } from '@/consts'
+import { DEFAULT_NESTED_GRAPH_BORDER_Z_INDEX, DEFAULT_NODE_LABEL_Z_INDEX, DEFAULT_NESTED_GRAPH_NODES_Z_INDEX, DEFAULT_NESTED_GRAPH_NODE_Z_INDEX } from '@/consts'
 import { borderFactory } from '@/factories/border'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
@@ -32,11 +32,11 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphDat
 
   container.sortableChildren = true
 
-  border.zIndex = DEFAULT_SUBFLOW_BORDER_Z_INDEX
-  bar.zIndex = DEFAULT_SUBFLOW_NODE_Z_INDEX
-  label.zIndex = DEFAULT_SUBFLOW_LABEL_Z_INDEX
-  arrowButton.zIndex = DEFAULT_SUBFLOW_LABEL_Z_INDEX
-  nodesContainer.zIndex = DEFAULT_SUBFLOW_NODES_Z_INDEX
+  border.zIndex = DEFAULT_NESTED_GRAPH_BORDER_Z_INDEX
+  bar.zIndex = DEFAULT_NESTED_GRAPH_NODE_Z_INDEX
+  label.zIndex = DEFAULT_NODE_LABEL_Z_INDEX
+  arrowButton.zIndex = DEFAULT_NODE_LABEL_Z_INDEX
+  nodesContainer.zIndex = DEFAULT_NESTED_GRAPH_NODES_Z_INDEX
 
   border.eventMode = 'none'
   border.cursor = 'default'
