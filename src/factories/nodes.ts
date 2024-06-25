@@ -7,7 +7,7 @@ import { horizontalScaleFactory } from '@/factories/position'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
-import { RunGraphData, RunGraphNode, RunGraphNodes } from '@/models/RunGraph'
+import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { getSelectedRunGraphNode } from '@/objects/selection'
@@ -22,6 +22,7 @@ export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodesContainerFactory() {
+  const nodePromises = new Map<string, Promise<NodeContainerFactory>>()
   const nodes = new Map<string, NodeContainerFactory>()
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
@@ -239,19 +240,24 @@ export async function nodesContainerFactory() {
   }
 
   async function getNodeContainerFactory(node: RunGraphNode): Promise<NodeContainerFactory> {
-    const existing = nodes.get(node.id)
+    const existingPromise = nodePromises.get(node.id)
 
-    if (existing) {
-      return existing
+    if (existingPromise) {
+      return existingPromise
     }
 
     const nested = getNestedRunGraphData(node.id)
-    const response = await nodeContainerFactory(node, nested)
+    const factory = nodeContainerFactory(node, nested)
+
+    nodePromises.set(node.id, factory)
+
+    const response = await factory
 
     response.element.on('resized', size => resizeNode(node.id, size))
 
-    nodes.set(node.id, response)
     container.addChild(response.element)
+
+    nodes.set(node.id, response)
 
     return response
   }
