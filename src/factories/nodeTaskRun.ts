@@ -14,7 +14,7 @@ import { layout } from '@/objects/settings'
 export type TaskRunContainer = Awaited<ReturnType<typeof taskRunContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: RunGraphData | undefined) {
+export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphData: RunGraphData | undefined) {
   const config = await waitForConfig()
   const container = new BoundsContainer()
   const { element: label, render: renderLabelText } = await nodeLabelFactory()
@@ -28,7 +28,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: R
 
   let isOpen = false
   let internalNode = node
-  let internalNestedGraph = nestedGraph
+  let internalNestedGraphData = nestedGraphData
 
   container.sortableChildren = true
 
@@ -55,7 +55,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: R
 
   async function render(newNodeData: RunGraphNode, newNestedGraph: RunGraphData | undefined): Promise<BoundsContainer> {
     internalNode = newNodeData
-    internalNestedGraph = newNestedGraph
+    internalNestedGraphData = newNestedGraph
 
     if (newNestedGraph) {
       container.addChild(arrowButton)
@@ -152,13 +152,13 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: R
     container.addChild(nodesContainer)
     container.addChild(border)
 
-    if (!internalNestedGraph) {
+    if (!internalNestedGraphData) {
       throw new Error('Attempted to open without nested graph data')
     }
 
     await Promise.all([
-      renderNodes(internalNestedGraph),
-      render(internalNode, internalNestedGraph),
+      renderNodes(internalNestedGraphData),
+      render(internalNode, internalNestedGraphData),
     ])
 
     resized()
@@ -171,7 +171,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: R
 
     stopNodesWorker()
 
-    await render(internalNode, internalNestedGraph)
+    await render(internalNode, internalNestedGraphData)
 
     resized()
   }
