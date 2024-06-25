@@ -7,7 +7,7 @@ import { TaskRunContainer, taskRunContainerFactory } from '@/factories/nodeTaskR
 import { RunGraphArtifact } from '@/models'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { Pixels } from '@/models/layout'
-import { RunGraphNode } from '@/models/RunGraph'
+import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForApplication } from '@/objects'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull } from '@/objects/culling'
@@ -18,7 +18,7 @@ import { layout, waitForSettings } from '@/objects/settings'
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function nodeContainerFactory(node: RunGraphNode) {
+export async function nodeContainerFactory(node: RunGraphNode, nestedGraphData: RunGraphData | undefined) {
   const config = await waitForConfig()
   const application = await waitForApplication()
   const cull = await waitForCull()
@@ -26,9 +26,10 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   let artifactsContainer: Container | null = null
   const artifacts: Map<string, ArtifactFactory> = new Map()
   const { animate } = await animationFactory()
-  const { element: container, render: renderNode, bar } = await getNodeFactory(node)
+  const { element: container, render: renderNode, bar } = await getNodeFactory(node, nestedGraphData)
 
   let internalNode = node
+  let internalNestedGraphData = nestedGraphData
   let cacheKey: string | null = null
   let nodeIsSelected = false
   let initialized = false
@@ -53,12 +54,13 @@ export async function nodeContainerFactory(node: RunGraphNode) {
 
     if (isCurrentlySelected !== nodeIsSelected) {
       nodeIsSelected = isCurrentlySelected
-      renderNode(internalNode)
+      renderNode(internalNode, internalNestedGraphData)
     }
   })
 
-  async function render(newNodeData: RunGraphNode): Promise<BoundsContainer> {
+  async function render(newNodeData: RunGraphNode, newNested: RunGraphData | undefined): Promise<BoundsContainer> {
     internalNode = newNodeData
+    internalNestedGraphData = newNested
 
     const currentCacheKey = getNodeCacheKey(newNodeData)
 
@@ -69,7 +71,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
     cacheKey = currentCacheKey
 
     await Promise.all([
-      renderNode(newNodeData),
+      renderNode(newNodeData, newNested),
       createArtifacts(newNodeData.artifacts),
     ])
 
@@ -160,15 +162,15 @@ export async function nodeContainerFactory(node: RunGraphNode) {
   }
 
   function tick(): void {
-    render(internalNode)
+    render(internalNode, internalNestedGraphData)
   }
 
-  async function getNodeFactory(nodeData: RunGraphNode): Promise<TaskRunContainer | FlowRunContainer> {
+  async function getNodeFactory(nodeData: RunGraphNode, nestedGraph: RunGraphData | undefined): Promise<TaskRunContainer | FlowRunContainer> {
     const { kind } = nodeData
 
     switch (kind) {
       case 'task-run':
-        return await taskRunContainerFactory()
+        return await taskRunContainerFactory(nodeData, nestedGraph)
       case 'flow-run':
         return await flowRunContainerFactory(nodeData)
       default:
@@ -185,6 +187,9 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       }
       return artifact.id
     }).join('|')
+
+    const hasNestedGraph = Boolean(internalNestedGraphData)
+
     const values = [
       nodeData.state_type,
       endTime.getTime(),
@@ -192,6 +197,7 @@ export async function nodeContainerFactory(node: RunGraphNode) {
       layout.horizontalScaleMultiplier,
       config.styles.colorMode,
       settings.disableArtifacts || artifactCacheKey,
+      hasNestedGraph,
     ]
 
     return values.join('-')

@@ -22,6 +22,7 @@ export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodesContainerFactory() {
+  const nodePromises = new Map<string, Promise<NodeContainerFactory>>()
   const nodes = new Map<string, NodeContainerFactory>()
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
@@ -107,8 +108,9 @@ export async function nodesContainerFactory() {
 
   async function createNode(node: RunGraphNode): Promise<BoundsContainer> {
     const { render } = await getNodeContainerFactory(node)
+    const nestedGraphData = getNestedRunGraphData(node.id)
 
-    return await render(node)
+    return await render(node, nestedGraphData)
   }
 
   async function createEdges(data: RunGraphData): Promise<void> {
@@ -238,18 +240,24 @@ export async function nodesContainerFactory() {
   }
 
   async function getNodeContainerFactory(node: RunGraphNode): Promise<NodeContainerFactory> {
-    const existing = nodes.get(node.id)
+    const existingPromise = nodePromises.get(node.id)
 
-    if (existing) {
-      return existing
+    if (existingPromise) {
+      return existingPromise
     }
 
-    const response = await nodeContainerFactory(node)
+    const nestedGraphRunData = getNestedRunGraphData(node.id)
+    const factory = nodeContainerFactory(node, nestedGraphRunData)
+
+    nodePromises.set(node.id, factory)
+
+    const response = await factory
 
     response.element.on('resized', size => resizeNode(node.id, size))
 
-    nodes.set(node.id, response)
     container.addChild(response.element)
+
+    nodes.set(node.id, response)
 
     return response
   }
@@ -270,6 +278,10 @@ export async function nodesContainerFactory() {
     columns.setOffset({ nodeId, axis: nodeLayout.column, offset: size.width })
 
     setPositions()
+  }
+
+  function getNestedRunGraphData(nodeId: string): RunGraphData | undefined {
+    return runData?.nested_task_run_graphs?.get(nodeId)
   }
 
   function getActualPosition(position: NodeLayoutResponse): Pixels {
