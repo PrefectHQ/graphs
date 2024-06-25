@@ -281,7 +281,7 @@ export async function nodesContainerFactory() {
   }
 
   function getNestedRunGraphData(nodeId: string): RunGraphData | undefined {
-    return runData?.nested_task_run_graphs.get(nodeId)
+    return runData?.nested_task_run_graphs?.get(nodeId)
   }
 
   function getActualPosition(position: NodeLayoutResponse): Pixels {
