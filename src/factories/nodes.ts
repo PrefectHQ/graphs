@@ -108,9 +108,9 @@ export async function nodesContainerFactory() {
 
   async function createNode(node: RunGraphNode): Promise<BoundsContainer> {
     const { render } = await getNodeContainerFactory(node)
-    const nested = getNestedRunGraphData(node.id)
+    const nestedGraphData = getNestedRunGraphData(node.id)
 
-    return await render(node, nested)
+    return await render(node, nestedGraphData)
   }
 
   async function createEdges(data: RunGraphData): Promise<void> {
@@ -246,8 +246,8 @@ export async function nodesContainerFactory() {
       return existingPromise
     }
 
-    const nested = getNestedRunGraphData(node.id)
-    const factory = nodeContainerFactory(node, nested)
+    const nestedGraphRunData = getNestedRunGraphData(node.id)
+    const factory = nodeContainerFactory(node, nestedGraphRunData)
 
     nodePromises.set(node.id, factory)
 
