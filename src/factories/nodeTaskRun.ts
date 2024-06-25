@@ -1,10 +1,12 @@
-import { DEFAULT_SUBFLOW_LABEL_Z_INDEX, DEFAULT_SUBFLOW_NODE_Z_INDEX } from '@/consts'
+import { DEFAULT_SUBFLOW_LABEL_Z_INDEX, DEFAULT_SUBFLOW_NODES_Z_INDEX, DEFAULT_SUBFLOW_NODE_Z_INDEX } from '@/consts'
 import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
+import { nodesContainerFactory } from '@/factories/nodes'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
+import { cull } from '@/objects/culling'
 
 export type TaskRunContainer = Awaited<ReturnType<typeof taskRunContainerFactory>>
 
@@ -15,6 +17,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: R
   const { element: label, render: renderLabelText } = await nodeLabelFactory()
   const { element: bar, render: renderBar } = await nodeBarFactory()
   const { element: arrowButton, render: renderArrowButtonContainer } = await nodeArrowButtonFactory()
+  const { element: nodesContainer, render: renderNodes, getSize: getNodesSize, stopWorker: stopNodesWorker } = await nodesContainerFactory()
 
   container.addChild(bar)
   container.addChild(label)
@@ -29,8 +32,14 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: R
   bar.zIndex = DEFAULT_SUBFLOW_NODE_Z_INDEX
   label.zIndex = DEFAULT_SUBFLOW_LABEL_Z_INDEX
   arrowButton.zIndex = DEFAULT_SUBFLOW_LABEL_Z_INDEX
+  nodesContainer.zIndex = DEFAULT_SUBFLOW_NODES_Z_INDEX
 
-  // nodesContainer.zIndex = DEFAULT_SUBFLOW_NODES_Z_INDEX
+  nodesContainer.position = { x: 0, y: config.styles.nodeHeight + config.styles.nodesPadding }
+
+  nodesContainer.on('rendered', () => {
+    cull()
+    resized()
+  })
 
   arrowButton.on('click', event => {
     event.stopPropagation()
@@ -49,7 +58,12 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: R
 
     if (newNestedGraph) {
       await renderArrowButton()
+
+      if (isOpen) {
+        renderNodes(newNestedGraph)
+      }
     }
+
 
     await renderLabel()
 
@@ -102,20 +116,27 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraph: R
 
   async function open(): Promise<void> {
     isOpen = true
-    // container.addChild(nodesState)
-    // container.addChild(nodesContainer)
+    container.addChild(nodesContainer)
     // container.addChild(border)
 
-    await render(internalNode, internalNestedGraph)
+    if (!internalNestedGraph) {
+      throw new Error('Attempted to open without nested graph data')
+    }
+
+    await Promise.all([
+      renderNodes(internalNestedGraph),
+      render(internalNode, internalNestedGraph),
+    ])
 
     resized()
   }
 
   async function close(): Promise<void> {
     isOpen = false
-    // container.removeChild(nodesState)
-    // container.removeChild(nodesContainer)
+    container.removeChild(nodesContainer)
     // container.removeChild(border)
+
+    stopNodesWorker()
 
     await render(internalNode, internalNestedGraph)
 
