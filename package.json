@@ -45,7 +45,7 @@
     "@types/lodash.merge": "4.6.9",
     "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^20.1.7",
-    "@vitejs/plugin-vue": "5.0.5",
+    "@vitejs/plugin-vue": "5.1.1",
     "auto-changelog": "^2.4.0",
     "autoprefixer": "10.4.19",
     "eslint": "8.57.0",
