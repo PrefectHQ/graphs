@@ -53,7 +53,7 @@
     "tailwindcss": "3.4.7",
     "tsc-alias": "1.8.10",
     "typescript": "5.5.3",
-    "vite": "5.3.3",
+    "vite": "5.3.5",
     "vite-svg-loader": "^5.1.0",
     "vue-tsc": "2.0.29"
   },
