@@ -21,14 +21,14 @@
   import { parseISO, isValid } from 'date-fns'
   import { computed, ref } from 'vue'
   import GraphRoot from '@/components/GraphRoot.vue'
-  import TraceData from '@/demo/data/graph-2k.json'
+  import demograph from '@/demo/data/graph.json'
   import { GraphConfig, GraphData } from '@/models/Graph'
   import { ViewportDateRange } from '@/models/viewport'
 
   const { value: colorThemeValue } = useColorTheme()
 
   // quick and dirty way to convert the iso strings into actual dates.
-  function reviver(key: string, value: unknown): unknown {
+  function reviver(key: string, value: any): unknown {
     if (typeof value === 'string') {
       const date = parseISO(value)
 
@@ -37,9 +37,9 @@
       }
     }
 
-    // if (key === 'nodes') {
-    //   return new Map(value)
-    // }
+    if (key === 'nodes' || key === 'events') {
+      return new Map(value)
+    }
 
     return value
   }
@@ -48,7 +48,7 @@
     return JSON.parse(JSON.stringify(json), reviver)
   }
 
-  const data = computed(() => mapJsonToGraphData(TraceData))
+  const data = computed(() => mapJsonToGraphData(demograph))
   const visibleDateRange = ref<ViewportDateRange>()
 
   const typeColors = {
