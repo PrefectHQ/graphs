@@ -1,16 +1,16 @@
 <template>
   <p-layout-resizable placement="bottom" class="graph-demo">
-    <GraphRoot v-model:viewport="visibleDateRange" :data :config="config" class="graph-demo__graph" />
+    <GraphRoot v-model:viewport="visibleDateRange" :data :config="config" class="graph-demo__graph p-background" />
 
     <template #aside>
-      <p-layout-resizable class="graph-demo__data" placement="right">
-        View 1
-
+      <p-layout-resizable class="graph-demo__data" placement="left">
         <template #aside>
-          <div>
-            {{ visibleDateRange }}
-          </div>
+          <div>View 1</div>
         </template>
+
+        <div>
+          {{ visibleDateRange }}
+        </div>
       </p-layout-resizable>
     </template>
   </p-layout-resizable>
@@ -102,12 +102,14 @@
   rounded-lg
   overflow-hidden
   px-4
+  py-4
 }
 
 .graph-demo__data .p-layout-resizable__main,
 .graph-demo__data .p-layout-resizable__aside { @apply
   rounded-lg
   p-4
+  border
 }
 
 .graph-demo.p-layout-resizable--top,
@@ -131,7 +133,7 @@
 
 .graph-demo__data.p-layout-resizable--left,
 .graph-demo__data.p-layout-resizable--right {
-  --p-layout-resizable-aside-size: 40vw;
+  --p-layout-resizable-aside-size: 30vw;
   --p-layout-resizable-aside-max-size: 60vw;
   --p-layout-resizable-aside-min-size: 350px;
 }
@@ -139,6 +141,11 @@
 .graph-demo__data .p-layout-resizable__aside,
 .graph-demo__data .p-layout-resizable__main {
   background-color: var(--p-color-bg-1);
+}
+
+.graph-demo__graph { @apply
+  rounded-lg
+  border
 }
 
 

@@ -24,22 +24,50 @@ type StartParameters = {
   props: GraphProps,
 }
 
+emitter.on('applicationCreated', () => console.log('applicationCreated'))
+emitter.on('stageCreated', () => console.log('stageCreated'))
+emitter.on('stageUpdated', () => console.log('stageUpdated'))
+emitter.on('viewportCreated', () => console.log('viewportCreated'))
+emitter.on('scaleCreated', () => console.log('scaleCreated'))
+emitter.on('scopeCreated', () => console.log('scopeCreated'))
+emitter.on('fontsLoaded', () => console.log('fontsLoaded'))
+emitter.on('containerCreated', () => console.log('containerCreated'))
+emitter.on('layoutSettingsUpdated', () => console.log('layoutSettingsUpdated'))
+emitter.on('cullCreated', () => console.log('cullCreated'))
+emitter.on('graphDataUpdated', (data) => console.log('graphDataUpdated', data))
+emitter.on('layoutUpdated', () => console.log('layoutUpdated'))
+emitter.on('toggleCullCreated', () => console.log('toggleCullCreated'))
+emitter.on('configCreated', () => console.log('configCreated'))
+emitter.on('configUpdated', () => console.log('configUpdated'))
+emitter.on('viewportDateRangeUpdated', () => console.log('viewportDateRangeUpdated'))
+emitter.on('labelCullCreated', () => console.log('labelCullCreated'))
+emitter.on('iconCullCreated', () => console.log('iconCullCreated'))
+emitter.on('edgeCullCreated', () => console.log('edgeCullCreated'))
+emitter.on('applicationResized', () => console.log('applicationResized'))
+emitter.on('scaleUpdated', () => console.log('scaleUpdated'))
+emitter.on('viewportMoved', () => console.log('viewportMoved'))
+emitter.on('layoutSettingsCreated', () => console.log('layoutSettingsCreated'))
+
+
 export function start({ stage, props }: StartParameters): void {
   console.log('starting')
+  startConfig(props)
+  startSettings(props.data) // data dependent
+  startScope()
+  startFonts()
   startStage(stage)
   startApplication()
   startViewport()
   startScale(props.data)
   startGuides()
-  startGraphNodes(props.data)
-  startGraphEvents()
-  startPlayhead(props.data) // requires data nodes
-  startScope()
-  startFonts() // TODO: applications should be able to provide their own fonts, even as part of callbacks
-  startConfig(props)
-  startCulling()
-  startSettings(props.data) // data dependent
-  startCache()
+  // startGraphNodes(props.data)
+  // startGraphEvents()
+  // startPlayhead(props.data) // requires data nodes
+
+  // TODO: applications should be able to provide their own fonts, even as part of callbacks
+  // startCulling()
+
+  // startCache()
 }
 
 export function stop(): void {
