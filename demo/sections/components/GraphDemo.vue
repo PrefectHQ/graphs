@@ -1,9 +1,9 @@
 <template>
-  <p-layout-resizable placement="bottom" class="trace-graph-demo">
-    <GraphRoot v-model:viewport="visibleDateRange" :data :config="config" class="trace-graph-demo__graph" />
+  <p-layout-resizable placement="bottom" class="graph-demo">
+    <GraphRoot v-model:viewport="visibleDateRange" :data :config="config" class="graph-demo__graph" />
 
     <template #aside>
-      <p-layout-resizable class="trace-graph-demo__data" placement="right">
+      <p-layout-resizable class="graph-demo__data" placement="right">
         View 1
 
         <template #aside>
@@ -93,63 +93,63 @@
 </script>
 
 <style>
-.trace-graph-demo {
+.graph-demo {
   height: calc(100vh - 64px);
   width: 100vw;
 }
 
-.trace-graph-demo { @apply
+.graph-demo { @apply
   rounded-lg
   overflow-hidden
   px-4
 }
 
-.trace-graph-demo__data .p-layout-resizable__main,
-.trace-graph-demo__data .p-layout-resizable__aside { @apply
+.graph-demo__data .p-layout-resizable__main,
+.graph-demo__data .p-layout-resizable__aside { @apply
   rounded-lg
   p-4
 }
 
-.trace-graph-demo.p-layout-resizable--top,
-.trace-graph-demo.p-layout-resizable--bottom {
+.graph-demo.p-layout-resizable--top,
+.graph-demo.p-layout-resizable--bottom {
   --p-layout-resizable-aside-size: 40vh;
   --p-layout-resizable-aside-max-size: 80vh;
   --p-layout-resizable-aside-min-size: 350px;
 }
 
-.trace-graph-demo .p-layout-resizable__handle--top,
-.trace-graph-demo .p-layout-resizable__handle--bottom { @apply
+.graph-demo .p-layout-resizable__handle--top,
+.graph-demo .p-layout-resizable__handle--bottom { @apply
   shadow-none
   h-2
 }
 
-.trace-graph-demo .p-layout-resizable__handle--left,
-.trace-graph-demo .p-layout-resizable__handle--right { @apply
+.graph-demo .p-layout-resizable__handle--left,
+.graph-demo .p-layout-resizable__handle--right { @apply
   shadow-none
   w-2
 }
 
-.trace-graph-demo__data.p-layout-resizable--left,
-.trace-graph-demo__data.p-layout-resizable--right {
+.graph-demo__data.p-layout-resizable--left,
+.graph-demo__data.p-layout-resizable--right {
   --p-layout-resizable-aside-size: 40vw;
   --p-layout-resizable-aside-max-size: 60vw;
   --p-layout-resizable-aside-min-size: 350px;
 }
 
-.trace-graph-demo__data .p-layout-resizable__aside,
-.trace-graph-demo__data .p-layout-resizable__main {
+.graph-demo__data .p-layout-resizable__aside,
+.graph-demo__data .p-layout-resizable__main {
   background-color: var(--p-color-bg-1);
 }
 
 
 @screen lg {
-  .trace-graph-demo {
+  .graph-demo {
     height: 100vh;
     width: 100vw;
   }
 }
 
-.trace-graph-demo__graph {
+.graph-demo__graph {
   width: 100%;
   height: 100%;
 }

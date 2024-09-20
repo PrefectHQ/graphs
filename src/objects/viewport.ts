@@ -6,7 +6,7 @@ import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { cull, uncull } from '@/objects/culling'
 import { emitter, waitForEvent } from '@/objects/events'
-import { waitForRunData } from '@/objects/nodes'
+import { waitForGraphData } from '@/objects/graphNodes'
 import { waitForScale } from '@/objects/scale'
 import { waitForSettings } from '@/objects/settings'
 import { waitForStage } from '@/objects/stage'
@@ -133,13 +133,13 @@ async function centerViewportOnNodes({ x, y, width, height, animate }: CenterVie
 }
 
 async function centerViewportOnStartAndEnd({ animate }: CenterViewportParameters): Promise<void> {
-  const data = await waitForRunData()
+  const data = await waitForGraphData()
   const config = await waitForConfig()
   const viewport = await waitForViewport()
   const graphScale = await waitForScale()
 
-  let startX = graphScale(data.start_time) - config.styles.columnGap
-  let endX = graphScale(data.end_time ?? new Date()) + config.styles.columnGap
+  let startX = graphScale(data.start) - config.styles.columnGap
+  let endX = graphScale(data.end ?? new Date()) + config.styles.columnGap
 
   if (startX > endX) {
     const temp = startX

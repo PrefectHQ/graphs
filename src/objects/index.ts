@@ -30,9 +30,9 @@ export function start({ stage, props }: StartParameters): void {
   startStage(stage)
   startApplication()
   startViewport()
-  startScale()
+  startScale(props.data)
   startGuides()
-  startGraphNodes()
+  startGraphNodes(props.data)
   startGraphEvents()
   startPlayhead(props.data) // requires data nodes
   startScope()

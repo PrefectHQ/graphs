@@ -1,21 +1,22 @@
 import { Container, Ticker } from 'pixi.js'
-import { nodesContainerFactory } from '@/factories/nodes'
+import { nodesContainerFactory } from '@/factories/graphNodes'
 import { GraphData } from '@/models/Graph'
 import { waitForConfig } from '@/objects/config'
-import { emitter } from '@/objects/events'
+import { emitter, waitForEvent } from '@/objects/events'
 import { waitForSettings } from '@/objects/settings'
 import { centerViewport, waitForViewport } from '@/objects/viewport'
 
 let nodesContainer: Container | null = null
+let graphData: GraphData | null = null
 
-export async function startGraphNodes(): Promise<void> {
+export async function startGraphNodes(data: GraphData): Promise<void> {
   const viewport = await waitForViewport()
   const { element, render } = await nodesContainerFactory()
 
+  graphData = data
   viewport.addChild(element)
 
   element.alpha = 0
-
 
   emitter.on('graphDataUpdated', async (data: GraphData) => {
     await waitForSettings()
@@ -42,6 +43,14 @@ function centerAfterFirstRender(): void {
 
     nodesContainer.alpha = 1
   })
+}
+
+export async function waitForGraphData(): Promise<GraphData> {
+  if (graphData) {
+    return graphData
+  }
+
+  return await waitForEvent('graphDataUpdated')
 }
 
 async function centerAfterRender(): Promise<void> {
