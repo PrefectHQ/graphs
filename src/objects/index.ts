@@ -1,15 +1,14 @@
-import { RunGraphProps } from '@/models/RunGraph'
+// import { RunGraphProps } from '@/models/RunGraph'
+import { GraphProps } from '@/models/Graph'
 import { startApplication, stopApplication } from '@/objects/application'
 import { startCache, stopCache } from '@/objects/cache'
 import { startConfig, stopConfig } from '@/objects/config'
 import { startCulling, stopCulling } from '@/objects/culling'
 import { emitter } from '@/objects/events'
-import { startFlowRunArtifacts, stopFlowRunArtifacts } from '@/objects/flowRunArtifacts'
-import { startFlowRunEvents, stopFlowRunEvents } from '@/objects/flowRunEvents'
-import { startFlowRunStates, stopFlowRunStates } from '@/objects/flowRunStates'
 import { startFonts, stopFonts } from '@/objects/fonts'
+import { startGraphEvents } from '@/objects/graphEvents'
+import { startGraphNodes, stopGraphNodes } from '@/objects/graphNodes'
 import { startGuides, stopGuides } from '@/objects/guides'
-import { startNodes, stopNodes } from '@/objects/nodes'
 import { startPlayhead, stopPlayhead } from '@/objects/playhead'
 import { startScale, stopScale } from '@/objects/scale'
 import { startScope, stopScope } from '@/objects/scope'
@@ -24,26 +23,24 @@ export * from './viewport'
 
 type StartParameters = {
   stage: HTMLDivElement,
-  props: RunGraphProps,
+  props: GraphProps,
 }
 
 export function start({ stage, props }: StartParameters): void {
+  startStage(stage)
   startApplication()
   startViewport()
   startScale()
   startGuides()
-  startNodes()
-  startFlowRunArtifacts()
-  startFlowRunEvents()
-  startFlowRunStates()
-  startPlayhead()
+  startGraphNodes()
+  startGraphEvents()
+  startPlayhead(props.data) // requires data nodes
   startScope()
-  startFonts()
-  startStage(stage)
+  startFonts() // TODO: applications should be able to provide their own fonts, even as part of callbacks
   startConfig(props)
   startCulling()
-  startSettings()
-  startSelection()
+  startSettings(props.data) // data dependent
+  startSelection() // remove selection concept, replace with events
   startCache()
 }
 
@@ -56,10 +53,8 @@ export function stop(): void {
     stopScale()
     stopGuides()
     stopStage()
-    stopNodes()
-    stopFlowRunArtifacts()
-    stopFlowRunEvents()
-    stopFlowRunStates()
+    stopGraphNodes()
+    // stopGraphEvents() // not needed?
     stopPlayhead()
     stopConfig()
     stopScope()

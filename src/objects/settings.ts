@@ -1,16 +1,15 @@
 import { addSeconds } from 'date-fns'
 import { reactive } from 'vue'
 import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SPAN_SECONDS } from '@/consts'
+import { GraphData } from '@/models/Graph'
 import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
 import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
-import { waitForRunData } from '@/objects/nodes'
 import { getEdgesCount } from '@/utilities/getEdgesCount'
 import { getInitialHorizontalScaleMultiplier } from '@/utilities/getInitialHorizontalScaleMultiplier'
 
-export async function startSettings(): Promise<void> {
-  const data = await waitForRunData()
+export async function startSettings(data: GraphData): Promise<void> {
   const config = await waitForConfig()
   const application = await waitForApplication()
 

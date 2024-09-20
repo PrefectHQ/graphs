@@ -26,7 +26,7 @@ export async function eventClusterFactory() {
 
   let currentDate: Date | null = null
   let currentIds: string[] = []
-  let selected = false
+  const selected = false
 
   element.addChild(targetArea)
   element.addChild(circle)
@@ -47,20 +47,20 @@ export async function eventClusterFactory() {
     }
   })
 
-  emitter.on('itemSelected', () => {
-    const isCurrentlySelected = isSelected({ kind: 'events', occurred: currentDate, ids: currentIds })
+  // emitter.on('itemSelected', () => {
+  //   const isCurrentlySelected = isSelected({ kind: 'events', occurred: currentDate, ids: currentIds })
 
-    if (isCurrentlySelected !== selected) {
-      selected = isCurrentlySelected
+  //   if (isCurrentlySelected !== selected) {
+  //     selected = isCurrentlySelected
 
-      // reset hover affect as the downstream popover prevents the mouseleave event
-      circle.scale.set(isCurrentlySelected ? 1.5 : 1)
+  //     // reset hover affect as the downstream popover prevents the mouseleave event
+  //     circle.scale.set(isCurrentlySelected ? 1.5 : 1)
 
-      if (currentDate) {
-        render({ ids: currentIds, date: currentDate })
-      }
-    }
-  })
+  //     if (currentDate) {
+  //       render({ ids: currentIds, date: currentDate })
+  //     }
+  //   }
+  // })
 
   async function render(props?: EventClusterFactoryRenderProps): Promise<void> {
     if (!props) {

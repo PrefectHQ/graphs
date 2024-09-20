@@ -6,22 +6,28 @@ import { offsetsFactory } from '@/factories/offsets'
 import { horizontalScaleFactory } from '@/factories/position'
 import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/settings'
 import { BoundsContainer } from '@/models/boundsContainer'
+import { GraphData, GraphNode } from '@/models/Graph'
 import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
-import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { getSelectedRunGraphNode } from '@/objects/selection'
 import { getHorizontalColumnSize, layout, waitForSettings } from '@/objects/settings'
 import { exhaustive } from '@/utilities/exhaustive'
-import { IRunGraphWorker, WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
+import { IGraphWorker, WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/graph'
 
 // parentId-childId
 type EdgeKey = `${string}_${string}`
 
-export type NodesContainer = Awaited<ReturnType<typeof nodesContainerFactory>>
+export type NodesContainer = Awaited<NodesContainerFactoryReturn>
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function nodesContainerFactory() {
+export type NodesContainerFactoryReturn = {
+  element: Container,
+  stopWorker: () => void,
+  getSize: () => { width: number, height: number },
+  render: (data: GraphData) => Promise<void>,
+}
+
+export async function nodesContainerFactory(): Promise<NodesContainerFactoryReturn> {
   const nodePromises = new Map<string, Promise<NodeContainerFactory>>()
   const nodes = new Map<string, NodeContainerFactory>()
   const edges = new Map<EdgeKey, EdgeFactory>()
@@ -29,7 +35,7 @@ export async function nodesContainerFactory() {
   const edgesContainer = new Container()
   const config = await waitForConfig()
 
-  let worker: IRunGraphWorker | null = null
+  let worker: IGraphWorker | null = null
 
   // used for both vertical layouts
   const rows = offsetsFactory({
@@ -44,7 +50,7 @@ export async function nodesContainerFactory() {
   })
 
   let nodesLayout: NodesLayoutResponse | null = null
-  let runData: RunGraphData | null = null
+  let graphData: GraphData | null = null
 
   container.name = DEFAULT_NODES_CONTAINER_NAME
 
@@ -53,30 +59,20 @@ export async function nodesContainerFactory() {
     columns.clear()
   })
 
-  emitter.on('layoutSettingsUpdated', () => {
-    if (runData && Boolean(container.parent)) {
-      render(runData)
-    }
+  emitter.on('layoutSettingsUpdated', () => graphData && render(graphData))
 
-    highlightSelectedNode()
-  })
-
-  emitter.on('itemSelected', () => {
-    highlightSelectedNode()
-  })
-
-  async function render(data: RunGraphData): Promise<void> {
+  async function render(data: GraphData): Promise<void> {
     startWorker()
 
-    runData = data
+    graphData = data
     nodesLayout = null
 
     await Promise.all([
-      createNodes(data),
-      createEdges(data),
+      createNodes(graphData),
+      createEdges(graphData),
     ])
 
-    getLayout(data)
+    getLayout(graphData)
   }
 
   function startWorker(): void {
@@ -96,7 +92,7 @@ export async function nodesContainerFactory() {
     worker = null
   }
 
-  async function createNodes(data: RunGraphData): Promise<void> {
+  async function createNodes(data: GraphData): Promise<void> {
     const promises: Promise<Container>[] = []
 
     for (const node of data.nodes.values()) {
@@ -106,14 +102,12 @@ export async function nodesContainerFactory() {
     await Promise.all(promises)
   }
 
-  async function createNode(node: RunGraphNode): Promise<BoundsContainer> {
+  async function createNode(node: GraphNode): Promise<BoundsContainer> {
     const { render } = await getNodeContainerFactory(node)
-    const nestedGraphData = getNestedRunGraphData(node.id)
-
-    return await render(node, nestedGraphData)
+    return await render(node)
   }
 
-  async function createEdges(data: RunGraphData): Promise<void> {
+  async function createEdges(data: GraphData): Promise<void> {
     const settings = await waitForSettings()
 
     if (settings.disableEdges) {
@@ -125,9 +119,9 @@ export async function nodesContainerFactory() {
 
     const promises: Promise<void>[] = []
 
-    for (const [nodeId, { children }] of data.nodes) {
+    for (const [parentId, { children }] of data.nodes) {
       for (const { id: childId } of children) {
-        promises.push(createEdge(nodeId, childId))
+        promises.push(createEdge(parentId, childId))
       }
     }
 
@@ -154,7 +148,7 @@ export async function nodesContainerFactory() {
     edgesContainer.addChild(edge.element)
   }
 
-  function getLayout(data: RunGraphData): void {
+  function getLayout(data: GraphData): void {
     if (!worker) {
       throw new Error('Layout worker not initialized')
     }
@@ -169,7 +163,7 @@ export async function nodesContainerFactory() {
       type: 'layout',
       data,
       widths,
-      horizontalSettings: horizontalSettingsFactory(data.start_time),
+      horizontalSettings: horizontalSettingsFactory(data.start),
       verticalSettings: verticalSettingsFactory(),
     })
   }
@@ -239,15 +233,14 @@ export async function nodesContainerFactory() {
     container.emit('resized', getSize())
   }
 
-  async function getNodeContainerFactory(node: RunGraphNode): Promise<NodeContainerFactory> {
+  async function getNodeContainerFactory(node: GraphNode): Promise<NodeContainerFactory> {
     const existingPromise = nodePromises.get(node.id)
 
     if (existingPromise) {
       return existingPromise
     }
 
-    const nestedGraphRunData = getNestedRunGraphData(node.id)
-    const factory = nodeContainerFactory(node, nestedGraphRunData)
+    const factory = nodeContainerFactory(node)
 
     nodePromises.set(node.id, factory)
 
@@ -280,10 +273,6 @@ export async function nodesContainerFactory() {
     setPositions()
   }
 
-  function getNestedRunGraphData(nodeId: string): RunGraphData | undefined {
-    return runData?.nested_task_run_graphs?.get(nodeId)
-  }
-
   function getActualPosition(position: NodeLayoutResponse): Pixels {
     const y = rows.getTotalOffset(position.y)
     const x = getActualXPosition(position)
@@ -311,7 +300,7 @@ export async function nodesContainerFactory() {
   }
 
   function getWidth(): number {
-    if (!nodesLayout || !runData) {
+    if (!nodesLayout || !graphData) {
       return 0
     }
 
@@ -319,10 +308,10 @@ export async function nodesContainerFactory() {
       return columns.getTotalValue(nodesLayout.maxColumn)
     }
 
-    const settings = horizontalSettingsFactory(runData.start_time)
+    const settings = horizontalSettingsFactory(graphData.start)
     const scale = horizontalScaleFactory(settings)
-    const end = scale(runData.end_time ?? new Date())
-    const start = scale(runData.start_time)
+    const end = scale(graphData.end ?? new Date())
+    const start = scale(graphData.start)
     const width = end - start
 
     return width
@@ -356,7 +345,7 @@ export async function nodesContainerFactory() {
     const settings = await waitForSettings()
     const selected = getSelectedRunGraphNode()
 
-    if (settings.disableEdges || !selected || !runData?.nodes.has(selected.id)) {
+    if (settings.disableEdges || !selected || !graphData?.nodes.has(selected.id)) {
       highlightPath([])
       return
     }
@@ -406,7 +395,7 @@ export async function nodesContainerFactory() {
   }
 
   function getAllSiblingIds(nodeId: string, direction: 'parents' | 'children'): string[] {
-    const node = runData?.nodes.get(nodeId)
+    const node = graphData?.nodes.get(nodeId)
 
     if (!node) {
       return []

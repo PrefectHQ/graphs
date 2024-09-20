@@ -72,7 +72,7 @@ export async function clusterHorizontalCollisions({ items, createCluster }: Clus
     const currentIds = itemIsClusterFactory(currentItem) ? currentItem.getIds() : [currentItem.getId()]
 
     if (!prevDate || !currentDate) {
-      console.error('flowRunArtifacts: visible item is missing date')
+      console.error('Visible item is missing date')
       return null
     }
 

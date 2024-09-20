@@ -1,7 +1,7 @@
-import { RunGraphNode } from '@/models'
+import { GraphNode } from '@/models/Graph'
+import { ClientLayoutMessage } from '@/workers/graph'
 import { HorizontalLayout } from '@/workers/layouts/horizontal'
 import { VerticalLayout } from '@/workers/layouts/vertical'
-import { ClientLayoutMessage } from '@/workers/runGraph'
 
 type NodeShoveDirection = 1 | -1
 
@@ -31,7 +31,7 @@ export async function getVerticalNearestParentLayout(message: ClientLayoutMessag
 
   return layout
 
-  async function getNearestParentPosition(node: RunGraphNode): Promise<number> {
+  async function getNearestParentPosition(node: GraphNode): Promise<number> {
     const { x: nodeStartX } = horizontal.get(node.id) ?? {}
 
     if (nodeStartX === undefined) {

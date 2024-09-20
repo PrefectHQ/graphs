@@ -1,7 +1,7 @@
 
 import { horizontalScaleFactory } from '@/factories/position'
 import { getColumns } from '@/utilities/columns'
-import { ClientLayoutMessage } from '@/workers/runGraph'
+import { ClientLayoutMessage } from '@/workers/graph'
 
 export type HorizontalLayout = Map<string, {
   x: number,
@@ -47,7 +47,7 @@ function getHorizontalTimeLayout({ data, horizontalSettings }: ClientLayoutMessa
   const layout: HorizontalLayout = new Map()
 
   for (const [nodeId, node] of data.nodes) {
-    const value = scale(node.start_time)
+    const value = scale(node.start)
 
     layout.set(nodeId, {
       column: value,
@@ -65,7 +65,7 @@ function getHorizontalLeftAlignedLayout({ data, horizontalSettings }: ClientLayo
   for (const [nodeId] of data.nodes) {
     layout.set(nodeId, {
       column: 0,
-      x: scale(data.start_time),
+      x: scale(data.start),
     })
   }
 

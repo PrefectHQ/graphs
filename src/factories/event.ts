@@ -2,7 +2,7 @@ import { Container } from 'pixi.js'
 import { circleFactory } from '@/factories/circle'
 import { rectangleFactory } from '@/factories/rectangle'
 import { selectedBorderFactory } from '@/factories/selectedBorder'
-import { RunGraphEvent } from '@/models'
+import { GraphEvent } from '@/models/Graph'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { isSelected } from '@/objects/selection'
@@ -10,7 +10,7 @@ import { isSelected } from '@/objects/selection'
 export type EventFactory = Awaited<ReturnType<typeof eventFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function eventFactory(event: RunGraphEvent) {
+export async function eventFactory(event: GraphEvent) {
   const element = new Container()
   const config = await waitForConfig()
 

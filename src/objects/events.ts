@@ -4,10 +4,8 @@ import { Application, Container } from 'pixi.js'
 import { EffectScope } from 'vue'
 import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
-import { RunGraphEvent } from '@/models'
+import { GraphData, RequiredGraphConfig } from '@/models/Graph'
 import { LayoutSettings } from '@/models/layout'
-import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
-import { GraphItemSelection } from '@/models/selection'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
 import { VisibilityCull } from '@/services/visibilityCull'
@@ -33,11 +31,7 @@ type Events = {
   labelCullCreated: VisibilityCull,
   iconCullCreated: VisibilityCull,
   edgeCullCreated: VisibilityCull,
-  runDataCreated: RunGraphData,
-  runDataUpdated: RunGraphData,
-  eventDataCreated: RunGraphEvent[],
-  eventDataUpdated: RunGraphEvent[],
-  itemSelected: GraphItemSelection | null,
+  graphDataUpdated: GraphData,
   layoutUpdated: void,
   toggleCullCreated: VisibilityCull,
 }

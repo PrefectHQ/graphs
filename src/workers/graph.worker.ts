@@ -1,8 +1,8 @@
 import { NodesLayoutResponse } from '@/models/layout'
 import { exhaustive } from '@/utilities/exhaustive'
+import { WorkerMessage, ClientMessage, ClientLayoutMessage } from '@/workers/graph'
 import { getHorizontalLayout } from '@/workers/layouts/horizontal'
 import { getVerticalLayout } from '@/workers/layouts/vertical'
-import { WorkerMessage, ClientMessage, ClientLayoutMessage } from '@/workers/runGraph'
 
 onmessage = onMessageHandler
 
@@ -36,12 +36,12 @@ async function handleLayoutMessage(message: ClientLayoutMessage): Promise<void> 
     const vertical = verticalLayout.get(nodeId)
 
     if (horizontal === undefined) {
-      console.warn(`NodeId not found in horizontal layout: Skipping ${node.label}`)
+      console.warn(`NodeId not found in horizontal layout: Skipping ${node.id}`)
       continue
     }
 
     if (vertical === undefined) {
-      console.warn(`NodeId not found in vertical layout: Skipping ${node.label}`)
+      console.warn(`NodeId not found in vertical layout: Skipping ${node.id}`)
       continue
     }
 

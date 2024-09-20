@@ -1,17 +1,15 @@
 import merge from 'lodash.merge'
 import { watch } from 'vue'
-import { RequiredGraphConfig, RunGraphConfig, RunGraphProps } from '@/models/RunGraph'
+import { RequiredGraphConfig, GraphConfig, GraphProps } from '@/models/Graph'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForScope } from '@/objects/scope'
 
 let config: RequiredGraphConfig | null = null
 
-const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
+const defaults: Omit<RequiredGraphConfig, 'id'> = {
   animationDuration: 500,
   disableAnimationsThreshold: 500,
   disableEdgesThreshold: 500,
-  fetchEvents: () => [],
-  fetchEventsInterval: 30000,
   styles: {
     colorMode: 'dark',
     rowGap: 24,
@@ -32,22 +30,11 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     nodeToggleBorderRadius: 6,
     nodeToggleBorderColor: '#51525C',
     nodeUnselectedAlpha: 0.2,
-    artifactsGap: 4,
-    artifactsNodeOverlap: 4,
-    artifactPaddingLeft: 2,
-    artifactPaddingRight: 4,
-    artifactPaddingY: 2,
-    artifactTextColor: '#ffffff',
-    artifactBgColor: '#35363b',
-    artifactBorderRadius: 4,
-    artifactContentGap: 4,
-    artifactIconSize: 16,
-    artifactIconColor: '#ffffff',
-    flowStateBarHeight: 8,
-    flowStateSelectedBarHeight: 10,
-    flowStateAreaAlpha: 0.1,
+    nodePosition: 'inline',
+    eventSize: 30,
     eventTargetSize: 30,
-    eventBottomMargin: 4,
+    eventMargin: 4,
+    eventPosition: 'bottom',
     eventSelectedBorderInset: 8,
     eventRadiusDefault: 4,
     eventColor: '#A564F9',
@@ -62,16 +49,13 @@ const defaults: Omit<RequiredGraphConfig, 'runId' | 'fetch'> = {
     guideTextColor: '#ADADAD',
     playheadWidth: 2,
     playheadColor: '#6272FF',
-    node: () => ({
-      background: '#ffffff',
-    }),
-    state: () => ({
-      background: '#ffffff',
-    }),
+    node: () => ({}),
+    event: () => ({}),
+    edge: () => ({}),
   },
 }
 
-function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
+function withDefaults(config: GraphConfig): RequiredGraphConfig {
   const value: RequiredGraphConfig = merge({}, defaults, config)
 
   value.styles.node = node => ({
@@ -82,7 +66,7 @@ function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
   return value
 }
 
-export async function startConfig(props: RunGraphProps): Promise<void> {
+export async function startConfig(props: GraphProps): Promise<void> {
   const scope = await waitForScope()
 
   scope.run(() => {

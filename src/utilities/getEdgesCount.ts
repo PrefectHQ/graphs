@@ -1,6 +1,6 @@
-import { RunGraphNodes } from '@/models/RunGraph'
+import { GraphNode } from '@/models/Graph'
 
-export function getEdgesCount(nodes: RunGraphNodes): number {
+export function getEdgesCount(nodes: Map<string, GraphNode>): number {
   let numberOfEdges = 0
 
   for (const [, { children }] of nodes) {

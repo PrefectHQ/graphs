@@ -1,6 +1,6 @@
+import { ClientLayoutMessage } from '@/workers/graph'
 import { HorizontalLayout } from '@/workers/layouts/horizontal'
 import { getVerticalNearestParentLayout } from '@/workers/layouts/nearestParentVertical'
-import { ClientLayoutMessage } from '@/workers/runGraph'
 
 export type VerticalLayout = Map<string, number>
 
@@ -32,8 +32,8 @@ function getVerticalDurationSortedLayout(message: ClientLayoutMessage): Vertical
   const layout: VerticalLayout = new Map()
 
   const nodes = [...message.data.nodes.values()].sort((nodeA, nodeB) => {
-    const aDuration = (nodeA.end_time ? nodeA.end_time.getTime() : new Date().getTime()) - nodeA.start_time.getTime()
-    const bDuration = (nodeB.end_time ? nodeB.end_time.getTime() : new Date().getTime()) - nodeB.start_time.getTime()
+    const aDuration = (nodeA.end ? nodeA.end.getTime() : new Date().getTime()) - nodeA.start.getTime()
+    const bDuration = (nodeB.end ? nodeB.end.getTime() : new Date().getTime()) - nodeB.start.getTime()
 
     return bDuration - aDuration
   })
