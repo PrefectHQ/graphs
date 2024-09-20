@@ -1,4 +1,3 @@
-// import { RunGraphProps } from '@/models/RunGraph'
 import { GraphProps } from '@/models/Graph'
 import { startApplication, stopApplication } from '@/objects/application'
 import { startCache, stopCache } from '@/objects/cache'
@@ -12,7 +11,6 @@ import { startGuides, stopGuides } from '@/objects/guides'
 import { startPlayhead, stopPlayhead } from '@/objects/playhead'
 import { startScale, stopScale } from '@/objects/scale'
 import { startScope, stopScope } from '@/objects/scope'
-import { startSelection, stopSelection } from '@/objects/selection'
 import { startSettings, stopSettings } from '@/objects/settings'
 import { startStage, stopStage } from '@/objects/stage'
 import { startViewport, stopViewport } from '@/objects/viewport'
@@ -40,7 +38,6 @@ export function start({ stage, props }: StartParameters): void {
   startConfig(props)
   startCulling()
   startSettings(props.data) // data dependent
-  startSelection() // remove selection concept, replace with events
   startCache()
 }
 
@@ -61,7 +58,6 @@ export function stop(): void {
     stopFonts()
     stopCulling()
     stopSettings()
-    stopSelection()
     stopCache()
   } catch (error) {
     console.error(error)

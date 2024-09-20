@@ -7,7 +7,6 @@
 <script lang="ts" setup>
   import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { GraphProps } from '@/models/Graph'
-  import { GraphItemSelection } from '@/models/selection'
   import { ViewportDateRange } from '@/models/viewport'
   import { start, stop, centerViewport, updateViewportFromDateRange } from '@/objects'
   import { emitter } from '@/objects/events'
@@ -17,7 +16,6 @@
   const emit = defineEmits<{
     (event: 'update:viewport', value: ViewportDateRange): void,
     (event: 'update:fullscreen', value: boolean): void,
-    (event: 'update:selected', value: GraphItemSelection | null): void,
   }>()
 
   const stage = ref<HTMLDivElement>()

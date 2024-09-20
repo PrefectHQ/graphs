@@ -2,10 +2,8 @@ import { Container } from 'pixi.js'
 import { circleFactory } from '@/factories/circle'
 import { nodeLabelFactory } from '@/factories/label'
 import { rectangleFactory } from '@/factories/rectangle'
-import { selectedBorderFactory } from '@/factories/selectedBorder'
 import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
-import { isSelected } from '@/objects/selection'
 
 export type EventClusterFactory = Awaited<ReturnType<typeof eventClusterFactory>>
 
@@ -21,7 +19,6 @@ export async function eventClusterFactory() {
 
   const targetArea = await rectangleFactory()
   const circle = await circleFactory({ radius: config.styles.eventClusterRadiusDefault })
-  const { element: border, render: renderSelectedBorder } = await selectedBorderFactory()
   const { element: label, render: renderLabelText } = await nodeLabelFactory({ cullAtZoomThreshold: false })
 
   let currentDate: Date | null = null
@@ -31,7 +28,6 @@ export async function eventClusterFactory() {
   element.addChild(targetArea)
   element.addChild(circle)
   element.addChild(label)
-  element.addChild(border)
 
   element.eventMode = 'static'
   element.cursor = 'pointer'
@@ -47,21 +43,6 @@ export async function eventClusterFactory() {
     }
   })
 
-  // emitter.on('itemSelected', () => {
-  //   const isCurrentlySelected = isSelected({ kind: 'events', occurred: currentDate, ids: currentIds })
-
-  //   if (isCurrentlySelected !== selected) {
-  //     selected = isCurrentlySelected
-
-  //     // reset hover affect as the downstream popover prevents the mouseleave event
-  //     circle.scale.set(isCurrentlySelected ? 1.5 : 1)
-
-  //     if (currentDate) {
-  //       render({ ids: currentIds, date: currentDate })
-  //     }
-  //   }
-  // })
-
   async function render(props?: EventClusterFactoryRenderProps): Promise<void> {
     if (!props) {
       currentDate = null
@@ -76,7 +57,6 @@ export async function eventClusterFactory() {
 
     renderTargetArea()
     renderCircle()
-    renderBorder()
     await renderLabel(ids.length.toString())
 
     element.visible = true
@@ -114,17 +94,6 @@ export async function eventClusterFactory() {
     )
 
     await renderLabelText(labelText)
-  }
-
-  function renderBorder(): void {
-    const { eventSelectedBorderInset, eventTargetSize } = config.styles
-
-    border.position.set(eventSelectedBorderInset, eventSelectedBorderInset)
-    renderSelectedBorder({
-      selected,
-      width: eventTargetSize - eventSelectedBorderInset * 2,
-      height: eventTargetSize - eventSelectedBorderInset * 2,
-    })
   }
 
   function getIds(): string[] {
