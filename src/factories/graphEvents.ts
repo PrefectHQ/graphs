@@ -1,22 +1,22 @@
 import throttle from 'lodash.throttle'
 import { Container } from 'pixi.js'
 import { DEFAULT_ROOT_COLLISION_THROTTLE } from '@/consts'
-import { EventFactory } from '@/factories/event'
-import { EventClusterFactory } from '@/factories/eventCluster'
-import { flowRunEventFactory } from '@/factories/flowRunEvent'
-import { nodeFlowRunEventFactory } from '@/factories/nodeFlowRunEvent'
-import { RunGraphEvent } from '@/models'
+import { eventFactory, EventFactory } from '@/factories/event'
+import { EventClusterFactory, eventClusterFactory } from '@/factories/eventCluster'
+import { GraphEvent } from '@/models/Graph'
 import { emitter } from '@/objects/events'
 import { layout, waitForSettings } from '@/objects/settings'
 import { clusterHorizontalCollisions } from '@/utilities/detectHorizontalCollisions'
 
-type RunEventsFactoryProps = {
-  isRoot?: boolean,
-  parentStartDate?: Date,
+export type GraphEventsFactory = Awaited<GraphEventsFactoryReturn>
+
+export type GraphEventsFactoryReturn = {
+  element: Container,
+  render: (data?: Map<string, GraphEvent>) => Promise<void>,
+  update: () => void,
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFactoryProps = {}) {
+export async function graphEventsFactory(): Promise<GraphEventsFactoryReturn> {
   const settings = await waitForSettings()
 
   const events = new Map<string, EventFactory>()
@@ -25,13 +25,13 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
   let availableClusterNodes: EventClusterFactory[] = []
 
   const container = new Container()
-  let internalData: RunGraphEvent[] | null = null
+  let internalData: Map<string, GraphEvent> | null = null
 
   emitter.on('scaleUpdated', () => update())
 
-  async function render(newData?: RunGraphEvent[]): Promise<void> {
-    if (newData) {
-      internalData = newData
+  async function render(data?: Map<string, GraphEvent>): Promise<void> {
+    if (data) {
+      internalData = data
     }
 
     if (!internalData) {
@@ -40,8 +40,8 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
 
     const promises: Promise<void>[] = []
 
-    for (const artifact of internalData) {
-      promises.push(createEvent(artifact))
+    for (const [, event] of internalData) {
+      promises.push(createEvent(event))
     }
 
     await Promise.all(promises)
@@ -49,7 +49,7 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
     update()
   }
 
-  async function createEvent(event: RunGraphEvent): Promise<void> {
+  async function createEvent(event: GraphEvent): Promise<void> {
     if (events.has(event.id)) {
       return events.get(event.id)!.render()
     }
@@ -59,12 +59,8 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
     }
 
     const eventCreationPromise = (async () => {
-      const factory = isRoot
-        ? await flowRunEventFactory({ type: 'event', event })
-        : await nodeFlowRunEventFactory({ type: 'event', event, parentStartDate })
-
+      const factory = await eventFactory(event)
       events.set(event.id, factory)
-
       container!.addChild(factory.element)
     })()
 
@@ -103,9 +99,7 @@ export async function runEventsFactory({ isRoot, parentStartDate }: RunEventsFac
       return availableClusterNodes.pop()!
     }
 
-    const newCluster = isRoot
-      ? await flowRunEventFactory({ type: 'cluster' })
-      : await nodeFlowRunEventFactory({ type: 'cluster', parentStartDate })
+    const newCluster = await eventClusterFactory()
 
     container!.addChild(newCluster.element)
     clusterNodes.push(newCluster)
