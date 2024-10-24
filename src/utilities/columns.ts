@@ -1,4 +1,4 @@
-import { RunGraphData, RunGraphNodes } from '@/models/RunGraph'
+import { GraphData, GraphNode } from '@/models/Graph'
 
 /**
  * A `Map` object that maps each node ID to its column.
@@ -13,12 +13,12 @@ export type NodeColumns = Map<string, number>
  * @param runGraphData - A `RunGraphData` object containing the root node IDs and nodes in the run graph.
  * @returns A `Map` object that maps each node ID to its column.
  */
-export function getColumns({ root_node_ids, nodes }: RunGraphData): NodeColumns {
+export function getColumns({ rootNodeIds, nodes }: GraphData): NodeColumns {
   try {
-    return getColumnsFaster(root_node_ids, nodes)
+    return getColumnsFaster(rootNodeIds, nodes)
   } catch (error) {
     console.error(error)
-    return getColumnsSlower(root_node_ids, nodes)
+    return getColumnsSlower(rootNodeIds, nodes)
   }
 }
 
@@ -34,7 +34,7 @@ export function getColumns({ root_node_ids, nodes }: RunGraphData): NodeColumns 
  * @param nodes - The nodes in the run graph.
  * @returns A `Map` object that maps each node ID to its column.
  */
-function getColumnsFaster(nodeIds: string[], nodes: RunGraphNodes): NodeColumns {
+function getColumnsFaster(nodeIds: string[], nodes: Map<string, GraphNode>): NodeColumns {
   const columns: NodeColumns = new Map()
   const childrenNodeIds: string[] = []
 
@@ -61,7 +61,7 @@ function getColumnsFaster(nodeIds: string[], nodes: RunGraphNodes): NodeColumns 
  * @returns A `Map` object that maps each node ID to its column.
  * @throws An error if a node ID in `nodeIds` is not found in `nodes`.
  */
-function getChildrenColumns(nodeIds: string[], nodes: RunGraphNodes, columns: NodeColumns): NodeColumns {
+function getChildrenColumns(nodeIds: string[], nodes: Map<string, GraphNode>, columns: NodeColumns): NodeColumns {
   for (const nodeId of nodeIds) {
     if (columns.has(nodeId)) {
       continue
@@ -124,7 +124,7 @@ function getChildrenColumns(nodeIds: string[], nodes: RunGraphNodes, columns: No
  * @throws An error if a node ID in `nodeIds` is not found in `nodes`.
  */
 // eslint-disable-next-line max-params
-function getColumnsSlower(nodeIds: string[], nodes: RunGraphNodes, currentColumn = 0, columns = new Map()): NodeColumns {
+function getColumnsSlower(nodeIds: string[], nodes: Map<string, GraphNode>, currentColumn = 0, columns = new Map()): NodeColumns {
   for (const nodeId of nodeIds) {
     const nodeColumnAssignment = columns.get(nodeId)
 

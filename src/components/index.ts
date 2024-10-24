@@ -1,1 +1,1 @@
-export { default as RunGraph } from './RunGraph.vue'
+export { default as GraphRoot } from './GraphRoot.vue'
