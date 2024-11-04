@@ -55,7 +55,7 @@
     "typescript": "5.6.3",
     "vite": "5.4.9",
     "vite-svg-loader": "^5.1.0",
-    "vue-tsc": "2.1.6"
+    "vue-tsc": "2.1.10"
   },
   "peerDependencies": {
     "@prefecthq/prefect-design": "^2.10.10",
