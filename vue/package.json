@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "main.ts",
   "scripts": {
-    "serve": "vite"
+    "serve": "vite",
+    "build": "vite build"
   },
   "author": "Craig Harshbarger",
   "license": "ISC",
