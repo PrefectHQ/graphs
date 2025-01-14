@@ -1,4 +1,4 @@
-import { RunGraphProps } from '@/models/RunGraph'
+import { RunGraphConfig } from '@/models/RunGraph'
 import { startApplication, stopApplication } from '@/objects/application'
 import { startCache, stopCache } from '@/objects/cache'
 import { startConfig, stopConfig } from '@/objects/config'
@@ -12,7 +12,6 @@ import { startGuides, stopGuides } from '@/objects/guides'
 import { startNodes, stopNodes } from '@/objects/nodes'
 import { startPlayhead, stopPlayhead } from '@/objects/playhead'
 import { startScale, stopScale } from '@/objects/scale'
-import { startScope, stopScope } from '@/objects/scope'
 import { startSelection, stopSelection } from '@/objects/selection'
 import { startSettings, stopSettings } from '@/objects/settings'
 import { startStage, stopStage } from '@/objects/stage'
@@ -24,10 +23,10 @@ export * from './viewport'
 
 type StartParameters = {
   stage: HTMLDivElement,
-  props: RunGraphProps,
+  config: RunGraphConfig,
 }
 
-export function start({ stage, props }: StartParameters): void {
+export function start({ stage, config }: StartParameters): void {
   startApplication()
   startViewport()
   startScale()
@@ -37,10 +36,9 @@ export function start({ stage, props }: StartParameters): void {
   startFlowRunEvents()
   startFlowRunStates()
   startPlayhead()
-  startScope()
   startFonts()
   startStage(stage)
-  startConfig(props)
+  startConfig(config)
   startCulling()
   startSettings()
   startSelection()
@@ -62,7 +60,6 @@ export function stop(): void {
     stopFlowRunStates()
     stopPlayhead()
     stopConfig()
-    stopScope()
     stopFonts()
     stopCulling()
     stopSettings()

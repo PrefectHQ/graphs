@@ -1,13 +1,14 @@
-import { MaybeRefOrGetter, toValue } from 'vue'
 import { RunGraphEvent, RunGraphFetchEventsContext } from '@/models'
+import { MaybeGetter } from '@/models/utilities'
 import { waitForConfig } from '@/objects/config'
 import { waitForRunData } from '@/objects/nodes'
+import { toValue } from '@/utilities'
 
 type EventDataCallback = (data: RunGraphEvent[]) => void
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function eventDataFactory(
-  context: MaybeRefOrGetter<RunGraphFetchEventsContext>,
+  context: MaybeGetter<RunGraphFetchEventsContext>,
   callback: EventDataCallback,
 ) {
   const runGraphData = await waitForRunData()

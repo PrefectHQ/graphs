@@ -15,7 +15,7 @@
 
     <p-overflow-menu class="run-graph-settings__menu">
       <p-label label="Layout">
-        <p-radio-group v-model="selectedLayoutOption" :options="layoutOptions">
+        <p-radio-group :model-value="selectedLayoutOption" :options="layoutOptions" @update:model-value="setSelectedLayoutOption">
           <template #label="{ option }">
             {{ option.label }}
           </template>
@@ -34,9 +34,9 @@
         </p-label>
       </template>
       <p-divider />
-      <p-checkbox v-model="hideEdges" label="Hide dependency arrows" />
-      <p-checkbox v-model="hideArtifacts" label="Hide artifacts" />
-      <p-checkbox v-model="hideEvents" label="Hide events" />
+      <p-checkbox :model-value="hideEdges" label="Hide dependency arrows" @update:model-value="setHideEdges" />
+      <p-checkbox :model-value="hideArtifacts" label="Hide artifacts" @update:model-value="setHideArtifacts" />
+      <p-checkbox :model-value="hideEvents" label="Hide events" @update:model-value="setHideEvents" />
     </p-overflow-menu>
   </p-pop-over>
 </template>
@@ -44,7 +44,7 @@
 <script lang="ts" setup>
   import { PButton, positions, PPopOver } from '@prefecthq/prefect-design'
   import { useKeyDown } from '@prefecthq/vue-compositions'
-  import { computed } from 'vue'
+  import { ref } from 'vue'
   import { DEFAULT_HORIZONTAL_SCALE_MULTIPLIER } from '@/consts'
   import { HorizontalMode, VerticalMode } from '@/models/layout'
   import { layout, resetHorizontalScaleMultiplier, setDisabledArtifacts, setDisabledEdges, setDisabledEvents, setHorizontalMode, setHorizontalScaleMultiplier, setVerticalMode } from '@/objects/settings'
@@ -78,44 +78,37 @@
     },
   ]
 
-  const selectedLayoutOption = computed({
-    get() {
-      return `${layout.horizontal}_${layout.vertical}`
-    },
-    set(value) {
-      const [horizontal, vertical] = value.split('_') as [HorizontalMode, VerticalMode]
+  const selectedLayoutOption = ref<LayoutOption>(`${layout.horizontal}_${layout.vertical}`)
 
-      setHorizontalMode(horizontal)
-      setVerticalMode(vertical)
-    },
-  })
+  function setSelectedLayoutOption(value: LayoutOption): void {
+    selectedLayoutOption.value = value
 
-  const hideEdges = computed({
-    get() {
-      return layout.disableEdges
-    },
-    set(value) {
-      setDisabledEdges(value)
-    },
-  })
+    const [horizontal, vertical] = value.split('_') as [HorizontalMode, VerticalMode]
 
-  const hideArtifacts = computed({
-    get() {
-      return layout.disableArtifacts
-    },
-    set(value) {
-      setDisabledArtifacts(value)
-    },
-  })
+    setHorizontalMode(horizontal)
+    setVerticalMode(vertical)
+  }
 
-  const hideEvents = computed({
-    get() {
-      return layout.disableEvents
-    },
-    set(value) {
-      setDisabledEvents(value)
-    },
-  })
+  const hideEdges = ref(layout.disableEdges)
+
+  function setHideEdges(value: boolean): void {
+    hideEdges.value = value
+    setDisabledEdges(value)
+  }
+
+  const hideArtifacts = ref(layout.disableArtifacts)
+
+  function setHideArtifacts(value: boolean): void {
+    hideArtifacts.value = value
+    setDisabledArtifacts(value)
+  }
+
+  const hideEvents = ref(layout.disableEvents)
+
+  function setHideEvents(value: boolean): void {
+    hideEvents.value = value
+    setDisabledEvents(value)
+  }
 
   function increaseScale(): void {
     const multiplier = DEFAULT_HORIZONTAL_SCALE_MULTIPLIER + 1

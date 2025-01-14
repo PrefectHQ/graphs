@@ -1,5 +1,4 @@
 import { addSeconds } from 'date-fns'
-import { reactive } from 'vue'
 import { DEFAULT_LINEAR_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SIZE_PIXELS, DEFAULT_TIME_COLUMN_SPAN_SECONDS } from '@/consts'
 import { HorizontalMode, LayoutSettings, VerticalMode } from '@/models/layout'
 import { waitForApplication } from '@/objects/application'
@@ -41,7 +40,7 @@ export function stopSettings(): void {
   layout.disableEvents = false
 }
 
-export const layout = reactive<LayoutSettings>({
+export const layout: LayoutSettings = {
   horizontal: 'temporal',
   vertical: 'nearest-parent',
   horizontalScaleMultiplierDefault: 0,
@@ -66,7 +65,7 @@ export const layout = reactive<LayoutSettings>({
   isLeftAligned() {
     return this.horizontal === 'left-aligned'
   },
-})
+}
 
 export async function waitForSettings(): Promise<LayoutSettings> {
   if (initialized()) {

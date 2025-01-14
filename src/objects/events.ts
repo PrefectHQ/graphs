@@ -1,7 +1,6 @@
 import { Cull } from '@pixi-essentials/cull'
 import { Viewport } from 'pixi-viewport'
 import { Application, Container } from 'pixi.js'
-import { EffectScope } from 'vue'
 import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
 import { RunGraphEvent } from '@/models'
@@ -24,7 +23,6 @@ type Events = {
   viewportMoved: null,
   configCreated: RequiredGraphConfig,
   configUpdated: RequiredGraphConfig,
-  scopeCreated: EffectScope,
   fontsLoaded: Fonts,
   containerCreated: Container,
   layoutSettingsUpdated: LayoutSettings,

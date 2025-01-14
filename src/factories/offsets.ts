@@ -1,4 +1,5 @@
-import { toValue } from 'vue'
+import { MaybeGetter } from '@/models/utilities'
+import { toValue } from '@/utilities'
 
 type SetOffsetParameters = {
   axis: number,
@@ -16,7 +17,6 @@ type RemoveOffsetParameters = {
   nodeId: string,
 }
 
-type MaybeGetter<T> = T | (() => T)
 
 export type Offsets = Awaited<ReturnType<typeof offsetsFactory>>
 
