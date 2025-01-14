@@ -20,6 +20,9 @@ import { startViewport, stopViewport } from '@/objects/viewport'
 export * from './application'
 export * from './stage'
 export * from './viewport'
+export * from './config'
+export * from './events'
+export * from './selection'
 
 type StartParameters = {
   stage: HTMLDivElement,

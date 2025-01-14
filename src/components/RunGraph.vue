@@ -13,13 +13,9 @@
   import { useKeyDown } from '@prefecthq/vue-compositions'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import RunGraphSettings from '@/components/RunGraphSettings.vue'
+  import { GraphItemSelection, ViewportDateRange } from '@/models'
   import { RunGraphProps } from '@/models/RunGraph'
-  import { GraphItemSelection } from '@/models/selection'
-  import { ViewportDateRange } from '@/models/viewport'
-  import { start, stop, centerViewport, updateViewportFromDateRange } from '@/objects'
-  import { setConfig } from '@/objects/config'
-  import { emitter } from '@/objects/events'
-  import { selectItem } from '@/objects/selection'
+  import { start, stop, centerViewport, updateViewportFromDateRange, setConfig, emitter, selectItem } from '@/objects'
   import { eventTargetIsInput } from '@/utilities/keyboard'
 
   // using the props object as a whole
