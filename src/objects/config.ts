@@ -84,25 +84,6 @@ export function startConfig(config: RunGraphConfig): void {
   setConfig(config)
 }
 
-// export async function startConfig(props: RunGraphProps): Promise<void> {
-//   const scope = await waitForScope()
-
-//   scope.run(() => {
-//     watch(() => props.config, value => {
-//       const newConfig = withDefaults(value)
-
-//       if (!config) {
-//         config = newConfig
-//         emitter.emit('configCreated', config)
-//         return
-//       }
-
-//       Object.assign(config, newConfig)
-//       emitter.emit('configUpdated', config)
-//     }, { immediate: true })
-//   })
-// }
-
 export function setConfig(value: RunGraphConfig): void {
   const newConfig = withDefaults(value)
 
