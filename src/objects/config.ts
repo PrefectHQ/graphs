@@ -1,8 +1,6 @@
 import merge from 'lodash.merge'
-import { watch } from 'vue'
-import { RequiredGraphConfig, RunGraphConfig, RunGraphProps } from '@/models/RunGraph'
+import { RequiredGraphConfig, RunGraphConfig } from '@/models/RunGraph'
 import { emitter, waitForEvent } from '@/objects/events'
-import { waitForScope } from '@/objects/scope'
 
 let config: RequiredGraphConfig | null = null
 
@@ -82,23 +80,21 @@ function withDefaults(config: RunGraphConfig): RequiredGraphConfig {
   return value
 }
 
-export async function startConfig(props: RunGraphProps): Promise<void> {
-  const scope = await waitForScope()
+export function startConfig(config: RunGraphConfig): void {
+  setConfig(config)
+}
 
-  scope.run(() => {
-    watch(() => props.config, value => {
-      const newConfig = withDefaults(value)
+export function setConfig(value: RunGraphConfig): void {
+  const newConfig = withDefaults(value)
 
-      if (!config) {
-        config = newConfig
-        emitter.emit('configCreated', config)
-        return
-      }
+  if (!config) {
+    config = newConfig
+    emitter.emit('configCreated', newConfig)
+    return
+  }
 
-      Object.assign(config, newConfig)
-      emitter.emit('configUpdated', config)
-    }, { immediate: true })
-  })
+  Object.assign(config, newConfig)
+  emitter.emit('configUpdated', newConfig)
 }
 
 export function stopConfig(): void {

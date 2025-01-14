@@ -17,6 +17,7 @@
   import { GraphItemSelection } from '@/models/selection'
   import { ViewportDateRange } from '@/models/viewport'
   import { start, stop, centerViewport, updateViewportFromDateRange } from '@/objects'
+  import { setConfig } from '@/objects/config'
   import { emitter } from '@/objects/events'
   import { selectItem } from '@/objects/selection'
   import { eventTargetIsInput } from '@/utilities/keyboard'
@@ -52,6 +53,7 @@
   emitter.on('itemSelected', nodeId => emit('update:selected', nodeId))
 
   watch(() => props.viewport, viewport => updateViewportFromDateRange(viewport))
+  watch(() => props.config, config => setConfig(config))
 
   const classes = computed(() => ({
     root: {
@@ -76,7 +78,7 @@
 
     start({
       stage: stage.value,
-      props,
+      config: props.config,
     })
   })
 
