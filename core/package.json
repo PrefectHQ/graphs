@@ -1,0 +1,72 @@
+{
+  "name": "@prefecthq/graphs",
+  "private": false,
+  "version": "2.4.1",
+  "description": "Large scale graphs designed for Prefect",
+  "scripts": {
+    "serve": "vite --host --mode=demo",
+    "dev": "tsc -w & tsc-alias -w & vite build -w",
+    "build": "tsc && tsc-alias && vite build",
+    "build:demo": "vite build --mode=demo",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "changelog": "auto-changelog --package --commit-limit 0",
+    "version": "npm run changelog && git add CHANGELOG.md",
+    "release": "./graphs-release"
+  },
+  "main": "./dist/graphs.umd.js",
+  "module": "./dist/graphs.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/graphs.mjs",
+      "require": "./dist/graphs.umd.js"
+    },
+    "./dist/style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/types/src/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PrefectHQ/graphs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PrefectHQ/graphs/issues"
+  },
+  "homepage": "https://github.com/PrefectHQ/graphs#readme",
+  "devDependencies": {
+    "@prefecthq/eslint-config": "1.0.32",
+    "@types/d3": "7.4.3",
+    "@types/fontfaceobserver": "^2.1.2",
+    "@types/lodash.isequal": "4.5.8",
+    "@types/lodash.merge": "4.6.9",
+    "@types/lodash.throttle": "^4.1.9",
+    "@types/node": "^22.0.0",
+    "@vitejs/plugin-vue": "5.2.1",
+    "auto-changelog": "^2.4.0",
+    "autoprefixer": "10.4.20",
+    "eslint": "8.57.1",
+    "postcss": "8.4.49",
+    "tailwindcss": "3.4.17",
+    "tsc-alias": "1.8.10",
+    "typescript": "5.7.3",
+    "vite": "5.4.11",
+    "vite-svg-loader": "^5.1.0"
+  },
+  "dependencies": {
+    "@pixi-essentials/cull": "2.0.0",
+    "@pixi/ui": "^1.0.1",
+    "d3": "7.9.0",
+    "date-fns": "4.1.0",
+    "fontfaceobserver": "^2.3.0",
+    "gsap": "^3.12.2",
+    "lodash.isequal": "4.5.0",
+    "lodash.merge": "4.6.2",
+    "lodash.throttle": "^4.1.1",
+    "pixi-viewport": "5.0.3",
+    "pixi.js": "7.3.2"
+  }
+}
