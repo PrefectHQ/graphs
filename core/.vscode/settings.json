@@ -1,0 +1,43 @@
+{
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.options": {
+    "extensions": [
+      "*.html",
+      "*.js",
+      "*.vue",
+      "*.jsx",
+      "*.json",
+      "*.ts"
+    ]
+  },
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "cSpell.words": [
+    "combobox",
+    "consts",
+    "fontfaceobserver",
+    "gsap",
+    "heroicons",
+    "isequal",
+    "pixi",
+    "playhead",
+    "prefecthq",
+    "renderable",
+    "subflow",
+    "tailwindcss",
+    "trackpad",
+    "uncull",
+    "unref",
+    "vite",
+    "vitejs"
+  ],
+  "files.exclude": {
+    "node_modules": true,
+    "dist": true
+  },
+  "css.customData": ["./.vscode/css-data.json"]
+}
