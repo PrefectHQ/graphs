@@ -4,10 +4,8 @@
   "version": "2.4.1",
   "description": "Large scale graphs designed for Prefect",
   "scripts": {
-    "serve": "vite --host --mode=demo",
     "dev": "tsc -w & tsc-alias -w & vite build -w",
     "build": "tsc && tsc-alias && vite build",
-    "build:demo": "vite build --mode=demo",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "changelog": "auto-changelog --package --commit-limit 0",

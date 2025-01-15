@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "main.ts",
   "scripts": {
-    "serve": "vite",
-    "build": "cd ../core && npm run build && cd ../vue && vite build",
-    "dev": "cd ../core && npm run dev & cd ../vue && npm run serve"
+    "dev": "vite",
+    "build": "vite build"
   },
   "author": "Craig Harshbarger",
   "license": "ISC",
