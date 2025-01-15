@@ -1,0 +1,14 @@
+{
+  "name": "prefect-graphs-monorepo",
+  "private": true,
+  "workspaces": [
+    "core",
+    "vue"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=core",
+    "build:vue": "npm run build --workspace=core && npm run build --workspace=vue",
+    "dev": "npm run dev --workspace=core",
+    "dev:vue": "npm run dev --workspace=core & npm run dev --workspace=vue"
+  }
+} 

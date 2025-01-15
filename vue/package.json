@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "main.ts",
   "scripts": {
-    "serve": "vite",
-    "build": "cd ../core && npm run build && cd ../vue && vite build",
-    "dev": "cd ../core && npm run dev & cd ../vue && npm run serve"
+    "dev": "vite",
+    "build": "vite build"
   },
   "author": "Craig Harshbarger",
   "license": "ISC",
@@ -22,5 +21,8 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "^5.7.3",
     "vite": "^6.0.7"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.30.1"
   }
 }
