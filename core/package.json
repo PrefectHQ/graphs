@@ -67,6 +67,6 @@
     "lodash.merge": "4.6.2",
     "lodash.throttle": "^4.1.1",
     "pixi-viewport": "5.0.3",
-    "pixi.js": "7.3.2"
+    "pixi.js": "8.6.6"
   }
 }
