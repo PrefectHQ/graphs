@@ -10,8 +10,6 @@ import graphXsmallProgressArtifactsJson from './data/graph-xsmall-progress-artif
 import graphXsmallJson from './data/graph-xsmall.json'
 import { RunGraph } from './components/RunGraph'
 import { ButtonGroup } from './components/ButtonGroup'
-import { Drawer } from './components/Drawer'
-import { Label } from './components/Label'
 import { GraphItemSelection, RunGraphConfig, RunGraphData, RunGraphEvent, StateType, ViewportDateRange } from '@prefecthq/graphs'
 
 // Helper functions
@@ -76,8 +74,6 @@ function App() {
     setRemountKey(prev => prev ^ 1)
   }, [])
 
-  const artifactDrawerOpen = selected?.kind === 'artifact'
-
   const getColorToken = (cssVariable: string): string => {
     return getComputedStyle(document.documentElement)
       .getPropertyValue(cssVariable)
@@ -108,14 +104,13 @@ function App() {
 
   return (
     <div className="run-graph-demo">
-      <Label label="Choose a Dataset">
-        <ButtonGroup
-          value={selectedDataset}
-          onChange={handleDatasetChange}
-          options={datasetOptions}
-          small
-        />
-      </Label>
+      <span>Choose a Dataset</span>
+      <ButtonGroup
+        value={selectedDataset}
+        onChange={handleDatasetChange}
+        options={datasetOptions}
+        small
+      />
 
       <RunGraph
         key={remountKey}
@@ -124,24 +119,17 @@ function App() {
         selected={selected}
         onSelectedChange={setSelected}
         config={config}
-        className="run-graph-demo__graph p-background"
+        className="run-graph-demo__graph"
       />
       
-      <div>{JSON.stringify(visibleDateRange)} {JSON.stringify(selected)}</div>
-
-      <Drawer
-        open={artifactDrawerOpen}
-        onOpenChange={() => setSelected(undefined)}
-        placement="right"
-        className="p-background p-4"
-      >
-        <span className="text-sm text-subdued">Inspecting</span>
-        <h2 className="mb-2">
-          {selected && 'id' in selected ? selected.id : selected?.ids?.join(', ')}
-        </h2>
-        <span className="text-sm text-subdued">Stuff</span>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Eaque recusandae ad, nam hic ipsam est dolor cumque optio nostrum quaerat?</p>
-      </Drawer>
+      <div>
+        <p>Visible Date Range:</p>
+        <span>{JSON.stringify(visibleDateRange)}</span>
+      </div>
+      <div>
+        <p>Selected:</p>
+        <span>{JSON.stringify(selected)}</span>
+      </div>
     </div>
   )
 }

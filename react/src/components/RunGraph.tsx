@@ -1,4 +1,4 @@
-import { CSSProperties, useEffect, useRef, useState } from 'react'
+import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
 import {
   GraphItemSelection,
   RunGraphConfig,
@@ -17,7 +17,7 @@ type RunGraphProps = {
   viewport?: ViewportDateRange
   onViewportChange?: (viewport: ViewportDateRange) => void
   selected?: GraphItemSelection
-  onSelectedChange?: (selected: GraphItemSelection | null) => void
+  onSelectedChange?: (selected: GraphItemSelection | undefined) => void
   config: RunGraphConfig
   className?: string
   style?: CSSProperties
@@ -41,10 +41,10 @@ export function RunGraph({
 
   const fullscreen = controlledFullscreen ?? internalFullscreen
 
-  const updateFullscreen = (value: boolean) => {
+  const updateFullscreen = useCallback((value: boolean) => {
     setInternalFullscreen(value)
     onFullscreenChange?.(value)
-  }
+  }, [onFullscreenChange])
 
   useEffect(() => {
     setConfig(config)
@@ -78,8 +78,8 @@ export function RunGraph({
   }, [viewport])
 
   useEffect(() => {
-    const handleItemSelected = (nodeId: GraphItemSelection) => {
-      onSelectedChange?.(nodeId)
+    const handleItemSelected = (nodeId: GraphItemSelection | null) => {
+      onSelectedChange?.(nodeId ?? undefined)
     }
 
     const handleViewportUpdate = (range: ViewportDateRange) => {
@@ -94,6 +94,10 @@ export function RunGraph({
       emitter.off('viewportDateRangeUpdated', handleViewportUpdate)
     }
   }, [onSelectedChange, onViewportChange])
+
+  const toggleFullscreen = useCallback(() => {
+    updateFullscreen(!fullscreen)
+  }, [fullscreen, updateFullscreen])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -122,14 +126,10 @@ export function RunGraph({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [fullscreen])
+  }, [fullscreen, toggleFullscreen])
 
   const center = () => {
     centerViewport({ animate: true })
-  }
-
-  const toggleFullscreen = () => {
-    updateFullscreen(!fullscreen)
   }
 
   const isEventTargetInput = (target: EventTarget | null): boolean => {
@@ -162,32 +162,6 @@ export function RunGraph({
         </button>
         <RunGraphSettings />
       </div>
-
-      <style>{`
-        .run-graph {
-          position: relative;
-        }
-
-        .run-graph--fullscreen {
-          position: fixed;
-          height: 100vh !important;
-          width: 100vw !important;
-          left: 0;
-          top: 0;
-        }
-
-        .run-graph__stage,
-        .run-graph__stage > canvas {
-          width: 100%;
-          height: 100%;
-        }
-
-        .run-graph__actions {
-          position: absolute;
-          bottom: 0.5rem;
-          right: 0.5rem;
-        }
-      `}</style>
     </div>
   )
 } 
