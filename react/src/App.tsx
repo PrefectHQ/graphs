@@ -11,6 +11,7 @@ import graphXsmallJson from './data/graph-xsmall.json'
 import { RunGraph } from './components/RunGraph'
 import { ButtonGroup } from './components/ButtonGroup'
 import { GraphItemSelection, RunGraphConfig, RunGraphData, RunGraphEvent, StateType, ViewportDateRange } from '@prefecthq/graphs'
+import { RunGraphSettings } from './components/RunGraphSettings'
 
 // Helper functions
 function reviver(key: string, value: any): any {
@@ -121,7 +122,11 @@ function App() {
         config={config}
         className="run-graph-demo__graph"
       />
-      
+
+      <div style={{ width: '300px' }}>
+        <RunGraphSettings />
+      </div>
+
       <div>
         <p>Visible Date Range:</p>
         <span>{JSON.stringify(visibleDateRange)}</span>

@@ -11,7 +11,6 @@ import {
   stop,
   updateViewportFromDateRange,
 } from '@prefecthq/graphs'
-import { RunGraphSettings } from './RunGraphSettings'
 
 type RunGraphProps = {
   viewport?: ViewportDateRange
@@ -160,7 +159,6 @@ export function RunGraph({
         >
           Fullscreen
         </button>
-        <RunGraphSettings />
       </div>
     </div>
   )
