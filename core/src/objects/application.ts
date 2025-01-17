@@ -25,6 +25,10 @@ export function stopApplication(): void {
 }
 
 function createApplication(stage: HTMLDivElement): void {
+  if (application) {
+    return
+  }
+
   application = new Application({
     backgroundAlpha: 0,
     resizeTo: stage,
