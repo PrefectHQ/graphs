@@ -8,7 +8,9 @@
   "scripts": {
     "build": "npm run build --workspace=core",
     "build:vue": "npm run build --workspace=core && npm run build --workspace=vue",
+    "build:react": "npm run build --workspace=core && npm run build --workspace=react",
     "dev": "npm run dev --workspace=core",
-    "dev:vue": "npm run dev --workspace=core & npm run dev --workspace=vue"
+    "dev:vue": "npm run dev --workspace=core & npm run dev --workspace=vue",
+    "dev:react": "npm run dev --workspace=core & npm run dev --workspace=react"
   }
 } 
