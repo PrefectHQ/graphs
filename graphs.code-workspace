@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "react"
+		},
+		{
+			"path": "core"
+		},
+		{
+			"path": "vue"
+		}
+	],
+	"settings": {}
+}

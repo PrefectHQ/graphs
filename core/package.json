@@ -17,7 +17,8 @@
   "exports": {
     ".": {
       "import": "./dist/graphs.mjs",
-      "require": "./dist/graphs.umd.js"
+      "require": "./dist/graphs.umd.js",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./dist/style.css": "./dist/style.css"
   },
@@ -55,6 +56,7 @@
     "vite-svg-loader": "^5.1.0"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.1.1",
     "@pixi-essentials/cull": "2.0.0",
     "@pixi/ui": "^1.0.1",
     "d3": "7.9.0",
