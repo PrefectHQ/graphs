@@ -9,7 +9,6 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "changelog": "auto-changelog --package --commit-limit 0",
-    "version": "npm run changelog && git add CHANGELOG.md",
     "release": "./graphs-release"
   },
   "main": "./dist/graphs.umd.js",
@@ -45,7 +44,6 @@
     "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^22.0.0",
     "@vitejs/plugin-vue": "5.2.1",
-    "auto-changelog": "^2.4.0",
     "autoprefixer": "10.4.20",
     "eslint": "8.57.1",
     "postcss": "8.4.49",
