@@ -169,7 +169,7 @@ export async function nodesContainerFactory() {
       type: 'layout',
       data,
       widths,
-      horizontalSettings: horizontalSettingsFactory(new Date(data.start_time)),
+      horizontalSettings: horizontalSettingsFactory(data.start_time),
       verticalSettings: verticalSettingsFactory(),
     })
   }
@@ -319,13 +319,10 @@ export async function nodesContainerFactory() {
       return columns.getTotalValue(nodesLayout.maxColumn)
     }
 
-    const startTime = new Date(runData.start_time)
-    const endTime = runData.end_time ? new Date(runData.end_time) : new Date()
-
-    const settings = horizontalSettingsFactory(startTime)
+    const settings = horizontalSettingsFactory(runData.start_time)
     const scale = horizontalScaleFactory(settings)
-    const end = scale(endTime)
-    const start = scale(startTime)
+    const end = scale(runData.end_time ?? new Date())
+    const start = scale(runData.start_time)
     const width = end - start
 
     return width

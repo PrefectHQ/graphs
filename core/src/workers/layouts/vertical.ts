@@ -32,8 +32,8 @@ function getVerticalDurationSortedLayout(message: ClientLayoutMessage): Vertical
   const layout: VerticalLayout = new Map()
 
   const nodes = [...message.data.nodes.values()].sort((nodeA, nodeB) => {
-    const aDuration = (nodeA.end_time ? new Date(nodeA.end_time).getTime() : new Date().getTime()) - new Date(nodeA.start_time).getTime()
-    const bDuration = (nodeB.end_time ? new Date(nodeB.end_time).getTime() : new Date().getTime()) - new Date(nodeB.start_time).getTime()
+    const aDuration = (nodeA.end_time ? nodeA.end_time.getTime() : new Date().getTime()) - nodeA.start_time.getTime()
+    const bDuration = (nodeB.end_time ? nodeB.end_time.getTime() : new Date().getTime()) - nodeB.start_time.getTime()
 
     return bDuration - aDuration
   })
