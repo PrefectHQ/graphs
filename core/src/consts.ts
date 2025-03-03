@@ -30,30 +30,3 @@ export const DEFAULT_SUBFLOW_STATE_Z_INDEX = 2
 export const DEFAULT_SUBFLOW_ARTIFACT_Z_INDEX = 3
 export const DEFAULT_NESTED_GRAPH_NODE_Z_INDEX = 4
 export const DEFAULT_NODE_LABEL_Z_INDEX = 5
-
-const textDefaultDark = '0.0, 0.0%, 100.0%'
-const textDefaultLight = '228 6%, 9.02%'
-
-// --p-color-text-inverse
-const textInverseDark = '0.0, 0.0%, 9.02%'
-const textInverseLight = '0.0, 0.0%, 100.0%'
-
-// --p-color-button-default-border
-const nodeToggleBorderColorDark = '228 6% 32%'
-const nodeToggleBorderColorLight = '228 11.3% 76%'
-
-// --p-color-flow-run-graph-node-selected-border
-const selectedBorderColorDark = '195.0, 52.38%, 50.59%'
-const selectedBorderColorLight = '195.1, 58.38%, 38.63%'
-
-// --p-color-flow-run-graph-edge
-const edgeColorDark = '0.0, 0.0%, 67.84%'
-const edgeColorLight = '228 6%, 48%'
-
-// --p-color-divider
-const guideLineColorDark = '228 6% 32%'
-const guideLineColorLight = '228 11.3% 76%'
-
-// --p-color-text-subdued
-const guideTextColorDark = '0.0, 0.0%, 67.84%'
-const guideTextColorLight = '228 6%, 48%'
