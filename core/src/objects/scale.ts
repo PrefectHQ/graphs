@@ -8,11 +8,10 @@ let scale: HorizontalScale | null = null
 
 export async function startScale(): Promise<void> {
   const data = await waitForRunData()
-  const startTime = new Date(data.start_time)
 
-  setHorizontalScale(startTime)
+  setHorizontalScale(data.start_time)
 
-  emitter.on('layoutSettingsUpdated', () => setHorizontalScale(startTime))
+  emitter.on('layoutSettingsUpdated', () => setHorizontalScale(data.start_time))
 }
 
 export function stopScale(): void {

@@ -182,7 +182,7 @@ export async function nodeContainerFactory(node: RunGraphNode, nestedGraphData: 
   }
 
   function getNodeCacheKey(nodeData: RunGraphNode): string {
-    const endTime = nodeData.end_time ? new Date(nodeData.end_time) : new Date()
+    const endTime = nodeData.end_time ?? new Date()
     const artifactCacheKey = nodeData.artifacts?.map(artifact => {
       if (artifact.type === 'progress') {
         return `${artifact.id}-${artifact.data}`
