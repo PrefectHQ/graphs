@@ -5,6 +5,7 @@ import { iconFactory } from '@/factories/icon'
 import { nodeLabelFactory } from '@/factories/label'
 import { ArtifactType, RunGraphArtifactTypeAndData, artifactTypeIconMap } from '@/models'
 import { waitForConfig } from '@/objects/config'
+import { waitForStyles } from '@/objects/styles'
 
 type ArtifactNodeFactoryOptions = {
   cullAtZoomThreshold?: boolean,
@@ -18,7 +19,7 @@ type ArtifactNodeFactoryRenderOptions = {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeFactoryOptions) {
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
 
   const element = new Container()
   const content = new Container()
@@ -75,7 +76,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       artifactIconColor,
       artifactPaddingLeft,
       artifactPaddingY,
-    } = config.styles
+    } = styles
 
     const newIcon = await renderIcon(iconName)
 
@@ -94,7 +95,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       artifactPaddingRight,
       artifactPaddingY,
       artifactIconSize,
-    } = config.styles
+    } = styles
 
     const lineWidth = 20
     const radius = (artifactIconSize - lineWidth * 2) / 2
@@ -130,7 +131,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       artifactTextColor,
       artifactIconSize,
       artifactContentGap,
-    } = config.styles
+    } = styles
 
     const contentGap = name ? artifactContentGap : 0
     const x = artifactPaddingLeft + artifactIconSize + contentGap
@@ -149,7 +150,7 @@ export async function artifactNodeFactory({ cullAtZoomThreshold }: ArtifactNodeF
       artifactPaddingLeft,
       artifactPaddingRight,
       artifactPaddingY,
-    } = config.styles
+    } = styles
 
     const options = {
       selected: selected,

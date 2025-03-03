@@ -5,16 +5,18 @@ import { waitForApplication } from '@/objects/application'
 import { waitForConfig } from '@/objects/config'
 import { EventKey, emitter, waitForEvent } from '@/objects/events'
 import { waitForRunData } from '@/objects/nodes'
+import { waitForStyles } from '@/objects/styles'
 import { getEdgesCount } from '@/utilities/getEdgesCount'
 import { getInitialHorizontalScaleMultiplier } from '@/utilities/getInitialHorizontalScaleMultiplier'
 
 export async function startSettings(): Promise<void> {
   const data = await waitForRunData()
   const config = await waitForConfig()
+  const styles = await waitForStyles()
   const application = await waitForApplication()
 
   const aspectRatio = application.view.width / application.view.height
-  const multiplier = getInitialHorizontalScaleMultiplier(data, config, aspectRatio)
+  const multiplier = getInitialHorizontalScaleMultiplier(data, styles, aspectRatio)
 
   setHorizontalScaleMultiplier(multiplier, true)
 

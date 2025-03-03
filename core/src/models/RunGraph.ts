@@ -71,7 +71,6 @@ export type RunGraphStateStyles = {
 }
 
 export type RunGraphStyles = {
-  colorMode: 'dark' | 'light',
   rowGap?: number,
   columnGap?: number,
   textDefault?: ColorSource,
@@ -124,17 +123,20 @@ export type RunGraphStyles = {
   state?: (state: RunGraphStateEvent) => RunGraphStateStyles,
 }
 
+export type RunGraphTheme = 'dark' | 'light'
+
 export type RunGraphConfig = {
   runId: string,
   fetch: RunGraphFetch,
   fetchEvents?: RunGraphFetchEvents,
+  theme: RunGraphTheme,
   fetchEventsInterval?: number,
   animationDuration?: number,
-  styles?: RunGraphStyles,
+  styles?: (theme: RunGraphTheme) => RunGraphStyles,
   disableAnimationsThreshold?: number,
   disableEdgesThreshold?: number,
 }
 
 export type RequiredGraphConfig = Omit<Required<RunGraphConfig>, 'styles'> & {
-  styles: Required<RunGraphStyles>,
+  styles?: (theme: RunGraphTheme) => RunGraphStyles,
 }

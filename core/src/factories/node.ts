@@ -14,12 +14,14 @@ import { waitForCull } from '@/objects/culling'
 import { emitter } from '@/objects/events'
 import { isSelected, selectItem } from '@/objects/selection'
 import { layout, waitForSettings } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 
 export type NodeContainerFactory = Awaited<ReturnType<typeof nodeContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeContainerFactory(node: RunGraphNode, nestedGraphData: RunGraphData | undefined) {
   const config = await waitForConfig()
+  const styles = await waitForStyles()
   const application = await waitForApplication()
   const cull = await waitForCull()
   const settings = await waitForSettings()
@@ -138,7 +140,7 @@ export async function nodeContainerFactory(node: RunGraphNode, nestedGraphData: 
       return
     }
 
-    const { artifactsGap, artifactsNodeOverlap } = config.styles
+    const { artifactsGap, artifactsNodeOverlap } = styles
     let x = 0
 
     for (const artifact of artifacts.values()) {
@@ -195,7 +197,7 @@ export async function nodeContainerFactory(node: RunGraphNode, nestedGraphData: 
       endTime.getTime(),
       layout.horizontal,
       layout.horizontalScaleMultiplier,
-      config.styles.colorMode,
+      config.theme,
       settings.disableArtifacts || artifactCacheKey,
       hasNestedGraph,
     ]

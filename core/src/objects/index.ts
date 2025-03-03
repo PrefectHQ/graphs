@@ -15,6 +15,7 @@ import { startScale, stopScale } from '@/objects/scale'
 import { startSelection, stopSelection } from '@/objects/selection'
 import { startSettings, stopSettings } from '@/objects/settings'
 import { startStage, stopStage } from '@/objects/stage'
+import { startStyles, stopStyles } from '@/objects/styles'
 import { startViewport, stopViewport } from '@/objects/viewport'
 
 export * from './application'
@@ -43,6 +44,7 @@ export function start({ stage, config }: StartParameters): void {
   startFonts()
   startStage(stage)
   startConfig(config)
+  startStyles()
   startCulling()
   startSettings()
   startSelection()
@@ -64,6 +66,7 @@ export function stop(): void {
     stopFlowRunStates()
     stopPlayhead()
     stopConfig()
+    stopStyles()
     stopFonts()
     stopCulling()
     stopSettings()

@@ -9,7 +9,8 @@
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "changelog": "auto-changelog --package --commit-limit 0",
-    "release": "./graphs-release"
+    "release": "./graphs-release",
+    "validate:types": "tsc --noEmit"
   },
   "main": "./dist/graphs.umd.js",
   "module": "./dist/graphs.mjs",
@@ -62,7 +63,6 @@
     "fontfaceobserver": "^2.3.0",
     "gsap": "^3.12.2",
     "lodash.isequal": "4.5.0",
-    "lodash.merge": "4.6.2",
     "lodash.throttle": "^4.1.1",
     "pixi-viewport": "5.0.3",
     "pixi.js": "7.3.2"

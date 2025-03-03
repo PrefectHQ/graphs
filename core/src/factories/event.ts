@@ -3,19 +3,19 @@ import { circleFactory } from '@/factories/circle'
 import { rectangleFactory } from '@/factories/rectangle'
 import { selectedBorderFactory } from '@/factories/selectedBorder'
 import { RunGraphEvent } from '@/models'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { isSelected } from '@/objects/selection'
+import { waitForStyles } from '@/objects/styles'
 
 export type EventFactory = Awaited<ReturnType<typeof eventFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function eventFactory(event: RunGraphEvent) {
   const element = new Container()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
 
   const targetArea = await rectangleFactory()
-  const circle = await circleFactory({ radius: config.styles.eventRadiusDefault })
+  const circle = await circleFactory({ radius: styles.eventRadiusDefault })
   const { element: border, render: renderBorder } = await selectedBorderFactory()
 
   let selected = false
@@ -52,7 +52,7 @@ export async function eventFactory(event: RunGraphEvent) {
   })
 
   function render(): void {
-    const { eventColor, eventTargetSize, eventSelectedBorderInset } = config.styles
+    const { eventColor, eventTargetSize, eventSelectedBorderInset } = styles
 
     targetArea.alpha = 0
     targetArea.width = eventTargetSize

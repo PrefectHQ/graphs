@@ -10,12 +10,14 @@ import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { cull } from '@/objects/culling'
 import { layout } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 
 export type TaskRunContainer = Awaited<ReturnType<typeof taskRunContainerFactory>>
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphData: RunGraphData | undefined) {
   const config = await waitForConfig()
+  const styles = await waitForStyles()
   const container = new BoundsContainer()
   const { element: label, render: renderLabelText } = await nodeLabelFactory()
   const { element: border, render: renderBorderContainer } = await borderFactory()
@@ -41,7 +43,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphDat
   border.eventMode = 'none'
   border.cursor = 'default'
 
-  nodesContainer.position = { x: 0, y: config.styles.nodeHeight + config.styles.nodesPadding }
+  nodesContainer.position = { x: 0, y: styles.nodeHeight + styles.nodesPadding }
 
   nodesContainer.on('rendered', () => {
     cull()
@@ -82,8 +84,8 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphDat
   }
 
   async function renderArrowButton(): Promise<BoundsContainer> {
-    const buttonSize = config.styles.nodeToggleSize
-    const offset = config.styles.nodeHeight - buttonSize
+    const buttonSize = styles.nodeToggleSize
+    const offset = styles.nodeHeight - buttonSize
     const inside = bar.width > buttonSize
 
     const container = await renderArrowButtonContainer({
@@ -91,7 +93,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphDat
       isOpen,
     })
 
-    container.x = inside ? offset / 2 : bar.width + config.styles.nodePadding
+    container.x = inside ? offset / 2 : bar.width + styles.nodePadding
     container.y = offset / 2
 
     return container
@@ -99,29 +101,29 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphDat
 
   async function renderLabel(): Promise<BoundsContainer> {
     const label = await renderLabelText(internalNode.label)
-    const colorOnNode = config.styles.colorMode === 'dark'
-      ? config.styles.textDefault
-      : config.styles.textInverse
+    const colorOnNode = config.theme === 'dark'
+      ? styles.textDefault
+      : styles.textInverse
 
-    const padding = config.styles.nodePadding
+    const padding = styles.nodePadding
     const rightOfButton = arrowButton.x + arrowButton.width + padding
     const rightOfBar = bar.width + padding
     const inside = bar.width > rightOfButton + label.width + padding
 
-    const y = config.styles.nodeHeight / 2 - label.height / 2
+    const y = styles.nodeHeight / 2 - label.height / 2
     const x = inside ? rightOfButton : Math.max(rightOfBar, rightOfButton)
 
     label.position = { x, y }
-    label.tint = inside ? colorOnNode : config.styles.textDefault
+    label.tint = inside ? colorOnNode : styles.textDefault
 
     return label
   }
 
   async function renderBorder(): Promise<void> {
-    const { background = '#fff' } = config.styles.node(internalNode)
+    const { background = '#fff' } = styles.node(internalNode)
     const { width, height: nodeHeights } = getNodesSize()
     const { height: nodeLayersHeight } = getSize()
-    const { nodeBorderRadius } = config.styles
+    const { nodeBorderRadius } = styles
 
     const strokeWidth = 2
     border.position = { x: -strokeWidth, y: -strokeWidth }
@@ -181,7 +183,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphDat
     const {
       nodeHeight,
       nodesPadding,
-    } = config.styles
+    } = styles
 
 
     const nodesHeight = isOpen

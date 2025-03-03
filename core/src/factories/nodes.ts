@@ -8,10 +8,10 @@ import { horizontalSettingsFactory, verticalSettingsFactory } from '@/factories/
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodesLayoutResponse, NodeSize, NodeWidths, Pixels, NodeLayoutResponse } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { getSelectedRunGraphNode } from '@/objects/selection'
 import { getHorizontalColumnSize, layout, waitForSettings } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 import { exhaustive } from '@/utilities/exhaustive'
 import { IRunGraphWorker, WorkerLayoutMessage, WorkerMessage, layoutWorkerFactory } from '@/workers/runGraph'
 
@@ -27,19 +27,19 @@ export async function nodesContainerFactory() {
   const edges = new Map<EdgeKey, EdgeFactory>()
   const container = new Container()
   const edgesContainer = new Container()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
 
   let worker: IRunGraphWorker | null = null
 
   // used for both vertical layouts
   const rows = offsetsFactory({
-    gap: () => config.styles.rowGap,
-    minimum: () => config.styles.nodeHeight,
+    gap: () => styles.rowGap,
+    minimum: () => styles.nodeHeight,
   })
 
   // used only for the dependency layout
   const columns = offsetsFactory({
-    gap: () => config.styles.columnGap,
+    gap: () => styles.columnGap,
     minimum: () => getHorizontalColumnSize(),
   })
 
@@ -200,12 +200,12 @@ export async function nodesContainerFactory() {
       const parentActualPosition = getActualPosition(parentPosition)
       const parentActualPositionOffset = {
         x: parentActualPosition.x + parentBarWidth,
-        y: parentActualPosition.y + config.styles.nodeHeight / 2,
+        y: parentActualPosition.y + styles.nodeHeight / 2,
       }
       const childActualPosition = getActualPosition(childPosition)
       const childActualPositionOffset = {
         x: childActualPosition.x - parentActualPositionOffset.x,
-        y: childActualPosition.y - parentActualPositionOffset.y + config.styles.nodeHeight / 2,
+        y: childActualPosition.y - parentActualPositionOffset.y + styles.nodeHeight / 2,
       }
 
       edge.setPosition(parentActualPositionOffset, childActualPositionOffset)
@@ -380,7 +380,7 @@ export async function nodesContainerFactory() {
         continue
       }
 
-      element.alpha = config.styles.nodeUnselectedAlpha
+      element.alpha = styles.nodeUnselectedAlpha
     }
   }
 
@@ -394,7 +394,7 @@ export async function nodesContainerFactory() {
         continue
       }
 
-      element.alpha = config.styles.nodeUnselectedAlpha
+      element.alpha = styles.nodeUnselectedAlpha
     }
   }
 

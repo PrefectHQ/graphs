@@ -109,8 +109,8 @@
     runId: 'foo',
     fetch: () => data.value,
     fetchEvents: () => eventsData,
-    styles: {
-      colorMode: 'dark',
+    theme: 'dark',
+    styles: () => ({
       textDefault: getColorToken('--p-color-text-default'),
       textInverse: getColorToken('--p-color-text-inverse'),
       nodeToggleBorderColor: getColorToken('--p-color-button-default-border'),
@@ -124,7 +124,7 @@
       state: state => ({
         background: stateTypeColors[state.type],
       }),
-    },
+    }),
   }))
 </script>
 

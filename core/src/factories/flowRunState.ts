@@ -2,12 +2,12 @@ import { ColorSource, Container } from 'pixi.js'
 import { rectangleFactory } from '@/factories/rectangle'
 import { RunGraphStateEvent } from '@/models/states'
 import { waitForApplication, waitForViewport } from '@/objects'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForRunData } from '@/objects/nodes'
 import { waitForScale } from '@/objects/scale'
 import { isSelected, selectItem } from '@/objects/selection'
 import { layout } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 
 export type FlowRunStateFactory = Awaited<ReturnType<typeof flowRunStateFactory>>
 
@@ -25,7 +25,7 @@ type StateRectangleRenderProps = {
 export async function flowRunStateFactory(state: RunGraphStateEvent) {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const data = await waitForRunData()
   let scale = await waitForScale()
 
@@ -111,7 +111,7 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
   }
 
   function getRenderStyles(): StateRectangleRenderProps {
-    const { background = '#fff' } = config.styles.state(state)
+    const { background = '#fff' } = styles.state(state)
 
     const x = Math.max(scale(state.timestamp) * viewport.scale._x + viewport.worldTransform.tx, 0)
 
@@ -133,7 +133,7 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
   }
 
   function renderBar({ x, width, background }: StateRectangleRenderProps): void {
-    const { flowStateBarHeight, flowStateSelectedBarHeight } = config.styles
+    const { flowStateBarHeight, flowStateSelectedBarHeight } = styles
 
     const height = hovered || selected ? flowStateSelectedBarHeight : flowStateBarHeight
 
@@ -150,7 +150,7 @@ export async function flowRunStateFactory(state: RunGraphStateEvent) {
       return
     }
 
-    const { flowStateBarHeight, flowStateAreaAlpha } = config.styles
+    const { flowStateBarHeight, flowStateAreaAlpha } = styles
 
     area.x = x
     area.y = 0

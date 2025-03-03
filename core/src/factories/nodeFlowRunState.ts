@@ -3,12 +3,12 @@ import { FlowRunStateFactory } from '@/factories/flowRunState'
 import { rectangleFactory } from '@/factories/rectangle'
 import { RunGraphStateEvent } from '@/models/states'
 import { waitForApplication, waitForViewport } from '@/objects'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForRunData } from '@/objects/nodes'
 import { waitForScale } from '@/objects/scale'
 import { isSelected, selectItem } from '@/objects/selection'
 import { layout } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 
 export type NodeFlowRunStateFactory = Awaited<ReturnType<typeof nodeFlowRunStateFactory>>
 
@@ -35,7 +35,7 @@ type StateRectangleRenderProps = {
 export async function nodeFlowRunStateFactory(state: RunGraphStateEvent) {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const data = await waitForRunData()
   let scale = await waitForScale()
 
@@ -145,7 +145,7 @@ export async function nodeFlowRunStateFactory(state: RunGraphStateEvent) {
   }
 
   function getRenderStyles(): StateRectangleRenderProps {
-    const { background = '#fff' } = config.styles.state(state)
+    const { background = '#fff' } = styles.state(state)
 
     if (!parentStart) {
       return {
@@ -186,7 +186,7 @@ export async function nodeFlowRunStateFactory(state: RunGraphStateEvent) {
   }
 
   function renderBar({ x, width, background }: StateRectangleRenderProps): void {
-    const { flowStateBarHeight, flowStateSelectedBarHeight } = config.styles
+    const { flowStateBarHeight, flowStateSelectedBarHeight } = styles
 
     const height = hovered || selected ? flowStateSelectedBarHeight : flowStateBarHeight
 
@@ -198,7 +198,7 @@ export async function nodeFlowRunStateFactory(state: RunGraphStateEvent) {
   }
 
   function renderArea({ x, width, background }: StateRectangleRenderProps): void {
-    const { flowStateBarHeight, flowStateAreaAlpha, nodeHeight } = config.styles
+    const { flowStateBarHeight, flowStateAreaAlpha, nodeHeight } = styles
 
     const topOffset = nodeHeight / 2
 

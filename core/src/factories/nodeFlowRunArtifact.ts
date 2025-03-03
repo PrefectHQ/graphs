@@ -2,11 +2,11 @@ import { ArtifactFactory, artifactFactory, isArtifactFactory } from '@/factories
 import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
 import { ArtifactSelection, ArtifactsSelection, RunGraphArtifact } from '@/models'
 import { waitForViewport } from '@/objects'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { selectItem } from '@/objects/selection'
 import { layout, waitForSettings } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 import { itemIsClusterFactory } from '@/utilities/detectHorizontalCollisions'
 
 export type NodeFlowRunArtifactFactory = Awaited<ReturnType<typeof nodeFlowRunArtifactFactory>>
@@ -31,7 +31,7 @@ type RenderPropsType<T> = T extends { type: 'cluster' }
 
 export async function nodeFlowRunArtifactFactory<T extends NodeFlowRunArtifactFactoryOptions>(options: T): Promise<FactoryType<T>> {
   const viewport = await waitForViewport()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const settings = await waitForSettings()
   let scale = await waitForScale()
 
@@ -99,7 +99,7 @@ export async function nodeFlowRunArtifactFactory<T extends NodeFlowRunArtifactFa
     let selectedOffset = 0
 
     if (selected) {
-      const { selectedBorderOffset, selectedBorderWidth } = config.styles
+      const { selectedBorderOffset, selectedBorderWidth } = styles
       selectedOffset = selectedBorderOffset + selectedBorderWidth * 2
     }
 
