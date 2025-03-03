@@ -13,8 +13,8 @@ export type RunGraphProps = {
 
 export type RunGraphData = {
   root_node_ids: string[],
-  start_time: Date,
-  end_time: Date | null,
+  start_time: string,
+  end_time: string | null,
   nodes: RunGraphNodes,
   artifacts?: RunGraphArtifact[],
   states?: RunGraphStateEvent[],
@@ -33,8 +33,8 @@ export type RunGraphNode = {
   id: string,
   label: string,
   state_type: StateType,
-  start_time: Date,
-  end_time: Date | null,
+  start_time: string,
+  end_time: string | null,
   parents: RunGraphEdge[],
   children: RunGraphEdge[],
   artifacts?: RunGraphArtifact[],

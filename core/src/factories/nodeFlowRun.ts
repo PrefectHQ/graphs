@@ -42,8 +42,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   const { element: nodesContainer, render: renderNodes, getSize: getNodesSize, stopWorker: stopNodesWorker } = await nodesContainerFactory()
   const { element: nodesState, render: renderNodesState } = await runStatesFactory()
-  const { element: nodesEvents, render: renderNodesEvents, update: updateNodesEvents } = await runEventsFactory({ parentStartDate: node.start_time })
-  const { element: nodesArtifacts, render: renderNodesArtifacts, update: updateNodesArtifacts } = await runArtifactsFactory({ parentStartDate: node.start_time })
+  const { element: nodesEvents, render: renderNodesEvents, update: updateNodesEvents } = await runEventsFactory({ parentStartDate: new Date(node.start_time) })
+  const { element: nodesArtifacts, render: renderNodesArtifacts, update: updateNodesArtifacts } = await runArtifactsFactory({ parentStartDate: new Date(node.start_time) })
 
   let hasEvents = false
   let hasArtifacts = false
@@ -77,8 +77,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   const { start: startEventsData, stop: stopEventsData } = await eventDataFactory(() => ({
     nodeId: internalNode.id,
-    since: internalNode.start_time,
-    until: internalNode.end_time ?? new Date(),
+    since: new Date(internalNode.start_time),
+    until: internalNode.end_time ? new Date(internalNode.end_time) : new Date(),
   }), data => {
     hasEvents = data.length > 0
 
@@ -153,7 +153,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const { width } = bar
 
     await renderNodesState(data ?? undefined, {
-      parentStartDate: internalNode.start_time,
+      parentStartDate: new Date(internalNode.start_time),
       width,
       height,
     })
