@@ -4,13 +4,13 @@ import { Container } from 'pixi.js'
 import { barFactory } from '@/factories/bar'
 import { selectedBorderFactory } from '@/factories/selectedBorder'
 import { RunGraphNode } from '@/models/RunGraph'
-import { waitForConfig } from '@/objects/config'
 import { isSelected } from '@/objects/selection'
 import { layout, getHorizontalColumnSize, waitForSettings } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeBarFactory() {
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const settings = await waitForSettings()
   const container = new Container()
   const { element: bar, render: renderBar } = await barFactory()
@@ -20,8 +20,8 @@ export async function nodeBarFactory() {
   container.addChild(border)
 
   async function render(node: RunGraphNode): Promise<Container> {
-    const { background = '#fff' } = config.styles.node(node)
-    const { nodeHeight: height, nodeRadius: radius } = config.styles
+    const { background = '#fff' } = styles.node(node)
+    const { nodeHeight: height, nodeRadius: radius } = styles
     const selected = isSelected({ kind: node.kind, id: node.id })
     const width = getTotalWidth(node, radius)
 

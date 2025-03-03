@@ -1,7 +1,7 @@
 import { Container } from 'pixi.js'
 import { barFactory } from '@/factories/bar'
 import { selectedBorderFactory } from '@/factories/selectedBorder'
-import { waitForConfig } from '@/objects/config'
+import { waitForStyles } from '@/objects/styles'
 
 type ArtifactBarFactoryRenderProps = {
   selected: boolean,
@@ -11,7 +11,7 @@ type ArtifactBarFactoryRenderProps = {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function artifactBarFactory() {
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const container = new Container()
   const { element: bar, render: renderBar } = await barFactory()
   const { element: border, render: renderBorder } = await selectedBorderFactory()
@@ -23,7 +23,7 @@ export async function artifactBarFactory() {
     const {
       artifactBgColor,
       artifactBorderRadius,
-    } = config.styles
+    } = styles
 
     const barStyle = {
       width,

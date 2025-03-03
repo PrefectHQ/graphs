@@ -3,9 +3,9 @@ import { circleFactory } from '@/factories/circle'
 import { nodeLabelFactory } from '@/factories/label'
 import { rectangleFactory } from '@/factories/rectangle'
 import { selectedBorderFactory } from '@/factories/selectedBorder'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { isSelected } from '@/objects/selection'
+import { waitForStyles } from '@/objects/styles'
 
 export type EventClusterFactory = Awaited<ReturnType<typeof eventClusterFactory>>
 
@@ -17,10 +17,10 @@ export type EventClusterFactoryRenderProps = {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function eventClusterFactory() {
   const element = new Container()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
 
   const targetArea = await rectangleFactory()
-  const circle = await circleFactory({ radius: config.styles.eventClusterRadiusDefault })
+  const circle = await circleFactory({ radius: styles.eventClusterRadiusDefault })
   const { element: border, render: renderSelectedBorder } = await selectedBorderFactory()
   const { element: label, render: renderLabelText } = await nodeLabelFactory({ cullAtZoomThreshold: false })
 
@@ -83,7 +83,7 @@ export async function eventClusterFactory() {
   }
 
   function renderTargetArea(): void {
-    const { eventTargetSize } = config.styles
+    const { eventTargetSize } = styles
 
     targetArea.alpha = 0
     targetArea.width = eventTargetSize
@@ -91,7 +91,7 @@ export async function eventClusterFactory() {
   }
 
   function renderCircle(): void {
-    const { eventClusterColor, eventTargetSize } = config.styles
+    const { eventClusterColor, eventTargetSize } = styles
 
     circle.tint = eventClusterColor
     circle.anchor.set(0.5)
@@ -103,7 +103,7 @@ export async function eventClusterFactory() {
       return
     }
 
-    const { eventTargetSize } = config.styles
+    const { eventTargetSize } = styles
     const labelYNudge = -1
 
     label.scale.set(0.6)
@@ -117,7 +117,7 @@ export async function eventClusterFactory() {
   }
 
   function renderBorder(): void {
-    const { eventSelectedBorderInset, eventTargetSize } = config.styles
+    const { eventSelectedBorderInset, eventTargetSize } = styles
 
     border.position.set(eventSelectedBorderInset, eventSelectedBorderInset)
     renderSelectedBorder({

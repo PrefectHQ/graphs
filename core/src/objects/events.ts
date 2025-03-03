@@ -5,7 +5,7 @@ import { eventsFactory } from '@/factories/events'
 import { HorizontalScale } from '@/factories/position'
 import { RunGraphEvent } from '@/models'
 import { LayoutSettings } from '@/models/layout'
-import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
+import { RequiredGraphConfig, RunGraphData, RunGraphStyles } from '@/models/RunGraph'
 import { GraphItemSelection } from '@/models/selection'
 import { ViewportDateRange } from '@/models/viewport'
 import { Fonts } from '@/objects/fonts'
@@ -38,6 +38,8 @@ type Events = {
   itemSelected: GraphItemSelection | null,
   layoutUpdated: void,
   toggleCullCreated: VisibilityCull,
+  stylesCreated: Required<RunGraphStyles>,
+  stylesUpdated: Required<RunGraphStyles>,
 }
 
 export type EventKey = keyof Events

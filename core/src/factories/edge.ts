@@ -5,6 +5,7 @@ import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { Pixels } from '@/models/layout'
 import { waitForConfig } from '@/objects/config'
 import { waitForCull, waitForEdgeCull } from '@/objects/culling'
+import { waitForStyles } from '@/objects/styles'
 import { getPixelTexture } from '@/textures/pixel'
 import { repeat } from '@/utilities/repeat'
 
@@ -15,7 +16,7 @@ const edgeTargetOffset = 2
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function edgeFactory() {
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const cull = await waitForCull()
   const edgeCull = await waitForEdgeCull()
   const { animate } = await animationFactory()
@@ -43,8 +44,8 @@ export async function edgeFactory() {
       rotate: ArrowDirection.Right,
     })
 
-    arrow.tint = config.styles.edgeColor
-    rope.tint = config.styles.edgeColor
+    arrow.tint = styles.edgeColor
+    rope.tint = styles.edgeColor
 
     return container
   }

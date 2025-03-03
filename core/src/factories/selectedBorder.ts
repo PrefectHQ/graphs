@@ -1,6 +1,6 @@
 import { Container } from 'pixi.js'
 import { borderFactory } from '@/factories/border'
-import { waitForConfig } from '@/objects/config'
+import { waitForStyles } from '@/objects/styles'
 
 type SelectedBorderFactoryRenderProps = {
   selected: boolean,
@@ -10,7 +10,7 @@ type SelectedBorderFactoryRenderProps = {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function selectedBorderFactory() {
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const container = new Container()
   const { element: border, render: renderBorder } = await borderFactory()
 
@@ -25,7 +25,7 @@ export async function selectedBorderFactory() {
       selectedBorderWidth,
       selectedBorderOffset,
       selectedBorderRadius,
-    } = config.styles
+    } = styles
 
     border.position.set(-selectedBorderOffset, -selectedBorderOffset)
     container.addChild(border)

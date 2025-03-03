@@ -2,8 +2,8 @@ import { Container } from 'pixi.js'
 import { ArrowDirection, arrowFactory } from '@/factories/arrow'
 import { barFactory } from '@/factories/bar'
 import { borderFactory } from '@/factories/border'
-import { waitForConfig } from '@/objects/config'
 import { waitForLabelCull } from '@/objects/culling'
+import { waitForStyles } from '@/objects/styles'
 
 type NodeArrowBarStyles = {
   inside: boolean,
@@ -12,7 +12,7 @@ type NodeArrowBarStyles = {
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function nodeArrowButtonFactory() {
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const cull = await waitForLabelCull()
   const container = new Container()
   const { element: arrow, render: renderArrow } = await arrowFactory()
@@ -44,10 +44,10 @@ export async function nodeArrowButtonFactory() {
     const arrow = await renderArrow(arrowStyles)
 
     const buttonStyles = {
-      width: config.styles.nodeToggleSize,
-      height: config.styles.nodeToggleSize,
-      background: config.styles.nodeToggleBgColor,
-      radius: config.styles.nodeToggleBorderRadius,
+      width: styles.nodeToggleSize,
+      height: styles.nodeToggleSize,
+      background: styles.nodeToggleBgColor,
+      radius: styles.nodeToggleBorderRadius,
     }
 
     const bar = await renderBar(buttonStyles)
@@ -59,7 +59,7 @@ export async function nodeArrowButtonFactory() {
       height: buttonStyles.height,
       radius: buttonStyles.radius,
       stroke: 1,
-      color: config.styles.nodeToggleBorderColor,
+      color: styles.nodeToggleBorderColor,
     })
 
     border.alpha = inside ? 0 : 1

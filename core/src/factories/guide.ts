@@ -3,11 +3,11 @@ import { rectangleFactory } from '@/factories/rectangle'
 import { FormatDate } from '@/models/guides'
 import { waitForViewport } from '@/objects'
 import { waitForApplication } from '@/objects/application'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForFonts } from '@/objects/fonts'
 import { waitForScale } from '@/objects/scale'
 import { waitForSettings } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 
 export type GuideFactory = Awaited<ReturnType<typeof guideFactory>>
 
@@ -16,7 +16,7 @@ export async function guideFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const settings = await waitForSettings()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const { inter } = await waitForFonts()
   const element = new Container()
 
@@ -55,16 +55,16 @@ export async function guideFactory() {
   }
 
   function renderLine(): void {
-    rectangle.width = config.styles.guideLineWidth
+    rectangle.width = styles.guideLineWidth
     rectangle.height = application.screen.height
-    rectangle.tint = config.styles.guideLineColor
+    rectangle.tint = styles.guideLineColor
   }
 
   function renderLabel(date: Date): void {
     label.text = currentLabelFormatter(date)
-    label.fontSize = config.styles.guideTextSize
-    label.tint = config.styles.guideTextColor
-    label.position.set(config.styles.guideTextLeftPadding, config.styles.guideTextTopPadding)
+    label.fontSize = styles.guideTextSize
+    label.tint = styles.guideTextColor
+    label.position.set(styles.guideTextLeftPadding, styles.guideTextTopPadding)
   }
 
   function updatePosition(): void {

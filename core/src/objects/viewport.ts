@@ -10,6 +10,7 @@ import { waitForRunData } from '@/objects/nodes'
 import { waitForScale } from '@/objects/scale'
 import { waitForSettings } from '@/objects/settings'
 import { waitForStage } from '@/objects/stage'
+import { waitForStyles } from '@/objects/styles'
 
 let viewport: Viewport | null = null
 let viewportDateRange: ViewportDateRange | null = null
@@ -101,6 +102,7 @@ type CenterViewportOnNodesParameters = {
 
 async function centerViewportOnNodes({ x, y, width, height, animate }: CenterViewportOnNodesParameters): Promise<void> {
   const config = await waitForConfig()
+  const styles = await waitForStyles()
   const viewport = await waitForViewport()
 
   const {
@@ -109,7 +111,7 @@ async function centerViewportOnNodes({ x, y, width, height, animate }: CenterVie
     columnGap,
     rowGap,
     eventTargetSize,
-  } = config.styles
+  } = styles
 
   const guidesOffset = guideTextSize + guideTextTopPadding
   const widthWithGap = width + columnGap * 2
@@ -135,11 +137,14 @@ async function centerViewportOnNodes({ x, y, width, height, animate }: CenterVie
 async function centerViewportOnStartAndEnd({ animate }: CenterViewportParameters): Promise<void> {
   const data = await waitForRunData()
   const config = await waitForConfig()
+  const styles = await waitForStyles()
   const viewport = await waitForViewport()
   const graphScale = await waitForScale()
+  const startTime = new Date(data.start_time)
+  const endTime = data.end_time ? new Date(data.end_time) : new Date()
 
-  let startX = graphScale(data.start_time) - config.styles.columnGap
-  let endX = graphScale(data.end_time ?? new Date()) + config.styles.columnGap
+  let startX = graphScale(startTime) - styles.columnGap
+  let endX = graphScale(endTime) + styles.columnGap
 
   if (startX > endX) {
     const temp = startX

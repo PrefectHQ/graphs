@@ -24,6 +24,7 @@ import { RunGraphNode } from '@/models/RunGraph'
 import { waitForConfig } from '@/objects/config'
 import { cull } from '@/objects/culling'
 import { layout, waitForSettings } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 
 export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory>>
 
@@ -31,6 +32,7 @@ export type FlowRunContainer = Awaited<ReturnType<typeof flowRunContainerFactory
 export async function flowRunContainerFactory(node: RunGraphNode) {
   const container = new BoundsContainer()
   const config = await waitForConfig()
+  const styles = await waitForStyles()
   const settings = await waitForSettings()
 
   const { element: bar, render: renderBar } = await nodeBarFactory()
@@ -40,8 +42,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   const { element: nodesContainer, render: renderNodes, getSize: getNodesSize, stopWorker: stopNodesWorker } = await nodesContainerFactory()
   const { element: nodesState, render: renderNodesState } = await runStatesFactory()
-  const { element: nodesEvents, render: renderNodesEvents, update: updateNodesEvents } = await runEventsFactory({ parentStartDate: node.start_time })
-  const { element: nodesArtifacts, render: renderNodesArtifacts, update: updateNodesArtifacts } = await runArtifactsFactory({ parentStartDate: node.start_time })
+  const { element: nodesEvents, render: renderNodesEvents, update: updateNodesEvents } = await runEventsFactory({ parentStartDate: new Date(node.start_time) })
+  const { element: nodesArtifacts, render: renderNodesArtifacts, update: updateNodesArtifacts } = await runArtifactsFactory({ parentStartDate: new Date(node.start_time) })
 
   let hasEvents = false
   let hasArtifacts = false
@@ -75,8 +77,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   const { start: startEventsData, stop: stopEventsData } = await eventDataFactory(() => ({
     nodeId: internalNode.id,
-    since: internalNode.start_time,
-    until: internalNode.end_time ?? new Date(),
+    since: new Date(internalNode.start_time),
+    until: internalNode.end_time ? new Date(internalNode.end_time) : new Date(),
   }), data => {
     hasEvents = data.length > 0
 
@@ -92,7 +94,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     toggle()
   })
 
-  nodesContainer.position = { x: 0, y: config.styles.nodeHeight + config.styles.nodesPadding }
+  nodesContainer.position = { x: 0, y: styles.nodeHeight + styles.nodesPadding }
 
   nodesContainer.on('rendered', () => {
     cull()
@@ -125,10 +127,10 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderBorder(): Promise<void> {
-    const { background = '#fff' } = config.styles.node(internalNode)
+    const { background = '#fff' } = styles.node(internalNode)
     const { width, height: nodeHeights } = getNodesSize()
     const { height: nodeLayersHeight } = getSize()
-    const { nodeBorderRadius } = config.styles
+    const { nodeBorderRadius } = styles
 
     const strokeWidth = 2
     border.position = { x: -strokeWidth, y: -strokeWidth }
@@ -151,7 +153,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     const { width } = bar
 
     await renderNodesState(data ?? undefined, {
-      parentStartDate: internalNode.start_time,
+      parentStartDate: new Date(internalNode.start_time),
       width,
       height,
     })
@@ -167,7 +169,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
     const { height } = getSize()
 
-    nodesEvents.position = { x: 0, y: height - config.styles.eventBottomMargin }
+    nodesEvents.position = { x: 0, y: height - styles.eventBottomMargin }
 
     if (data) {
       await renderNodesEvents(data)
@@ -185,7 +187,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
     container.addChild(nodesArtifacts)
 
-    const { eventTargetSize, flowStateSelectedBarHeight } = config.styles
+    const { eventTargetSize, flowStateSelectedBarHeight } = styles
     const { height } = getSize()
 
     const y = height - (hasEvents && !settings.disableEvents ? eventTargetSize : flowStateSelectedBarHeight)
@@ -234,8 +236,8 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
   }
 
   async function renderArrowButton(): Promise<BoundsContainer> {
-    const buttonSize = config.styles.nodeToggleSize
-    const offset = config.styles.nodeHeight - buttonSize
+    const buttonSize = styles.nodeToggleSize
+    const offset = styles.nodeHeight - buttonSize
     const inside = bar.width > buttonSize
 
     const container = await renderArrowButtonContainer({
@@ -243,7 +245,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       isOpen,
     })
 
-    container.x = inside ? offset / 2 : bar.width + config.styles.nodePadding
+    container.x = inside ? offset / 2 : bar.width + styles.nodePadding
     container.y = offset / 2
 
     return container
@@ -251,20 +253,20 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
 
   async function renderLabel(): Promise<BoundsContainer> {
     const label = await renderLabelText(internalNode.label)
-    const colorOnNode = config.styles.colorMode === 'dark'
-      ? config.styles.textDefault
-      : config.styles.textInverse
+    const colorOnNode = config.theme === 'dark'
+      ? styles.textDefault
+      : styles.textInverse
 
-    const padding = config.styles.nodePadding
+    const padding = styles.nodePadding
     const rightOfButton = arrowButton.x + arrowButton.width + padding
     const rightOfBar = bar.width + padding
     const inside = bar.width > rightOfButton + label.width + padding
 
-    const y = config.styles.nodeHeight / 2 - label.height / 2
+    const y = styles.nodeHeight / 2 - label.height / 2
     const x = inside ? rightOfButton : Math.max(rightOfBar, rightOfButton)
 
     label.position = { x, y }
-    label.tint = inside ? colorOnNode : config.styles.textDefault
+    label.tint = inside ? colorOnNode : styles.textDefault
 
     return label
   }
@@ -291,7 +293,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
       eventBottomMargin,
       artifactPaddingY,
       artifactIconSize,
-    } = config.styles
+    } = styles
 
     const showArtifacts = hasArtifacts && layout.isTemporal() && !settings.disableArtifacts
     const artifactsHeight = showArtifacts ? artifactIconSize + artifactPaddingY * 2 : 0

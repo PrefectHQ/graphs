@@ -1,11 +1,11 @@
 import { differenceInSeconds } from 'date-fns'
 import { DEFAULT_TIME_COLUMN_SIZE_PIXELS } from '@/consts'
-import { RequiredGraphConfig, RunGraphData } from '@/models/RunGraph'
+import { RunGraphData, RunGraphStyles } from '@/models/RunGraph'
 
-export function getInitialHorizontalScaleMultiplier({ start_time, end_time, nodes }: RunGraphData, config: RequiredGraphConfig, aspectRatio: number): number {
+export function getInitialHorizontalScaleMultiplier({ start_time, end_time, nodes }: RunGraphData, styles: Required<RunGraphStyles>, aspectRatio: number): number {
   const seconds = Math.max(differenceInSeconds(end_time ?? new Date(), start_time), 1)
 
-  const nodeHeight = config.styles.nodeHeight + config.styles.rowGap
+  const nodeHeight = styles.nodeHeight + styles.rowGap
   const apxConcurrencyFactor = 0.5
   const emptyNodesHeightMultiplier = 4
 

@@ -1,9 +1,9 @@
 import { rectangleFactory } from '@/factories/rectangle'
 import { waitForApplication, waitForViewport } from '@/objects'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForScale } from '@/objects/scale'
 import { waitForSettings } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 
 const autoViewportUpdatePadding = 80
 
@@ -12,7 +12,7 @@ export async function playheadFactory() {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
   const settings = await waitForSettings()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const playhead = await rectangleFactory()
 
   let scale = await waitForScale()
@@ -25,9 +25,9 @@ export async function playheadFactory() {
       return
     }
 
-    playhead.width = config.styles.playheadWidth
+    playhead.width = styles.playheadWidth
     playhead.height = application.stage.height
-    playhead.tint = config.styles.playheadColor
+    playhead.tint = styles.playheadColor
     playhead.position.x = scale(new Date()) * viewport.scale.x + viewport.worldTransform.tx
 
     checkViewport()

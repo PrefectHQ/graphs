@@ -34,8 +34,8 @@ export async function startFlowRunEvents(): Promise<void> {
 
   const response = await eventDataFactory(() => ({
     nodeId: config.runId,
-    since: data.start_time,
-    until: data.end_time ?? new Date(),
+    since: new Date(data.start_time),
+    until: data.end_time ? new Date(data.end_time) : new Date(),
   }), data => {
     const event: EventKey = rootGraphEvents ? 'eventDataUpdated' : 'eventDataCreated'
 

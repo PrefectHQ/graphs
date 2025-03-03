@@ -2,12 +2,12 @@ import { ArtifactFactory, artifactFactory, isArtifactFactory } from '@/factories
 import { ArtifactClusterFactory, ArtifactClusterFactoryRenderProps, artifactClusterFactory } from '@/factories/artifactCluster'
 import { ArtifactSelection, ArtifactsSelection, RunGraphArtifact } from '@/models'
 import { waitForApplication, waitForViewport } from '@/objects'
-import { waitForConfig } from '@/objects/config'
 import { emitter } from '@/objects/events'
 import { waitForRunEvents } from '@/objects/flowRunEvents'
 import { waitForScale } from '@/objects/scale'
 import { selectItem } from '@/objects/selection'
 import { layout, waitForSettings } from '@/objects/settings'
+import { waitForStyles } from '@/objects/styles'
 import { itemIsClusterFactory } from '@/utilities/detectHorizontalCollisions'
 
 export type FlowRunArtifactFactory = Awaited<ReturnType<typeof flowRunArtifactFactory>>
@@ -27,7 +27,7 @@ type RenderPropsType<T> = T extends { type: 'cluster' }
 export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(options: T): Promise<FactoryType<T>> {
   const application = await waitForApplication()
   const viewport = await waitForViewport()
-  const config = await waitForConfig()
+  const styles = await waitForStyles()
   const settings = await waitForSettings()
   const events = await waitForRunEvents()
 
@@ -103,12 +103,12 @@ export async function flowRunArtifactFactory<T extends ArtifactFactoryOptions>(o
 
     const selected = factory.getSelected()
     const { element } = factory
-    const { eventTargetSize, flowStateSelectedBarHeight } = config.styles
+    const { eventTargetSize, flowStateSelectedBarHeight } = styles
 
     let selectedOffset = 0
 
     if (selected) {
-      const { selectedBorderOffset, selectedBorderWidth } = config.styles
+      const { selectedBorderOffset, selectedBorderWidth } = styles
       selectedOffset = selectedBorderOffset + selectedBorderWidth * 2
     }
 
