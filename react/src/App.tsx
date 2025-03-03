@@ -75,25 +75,12 @@ function App() {
     setRemountKey(prev => prev ^ 1)
   }, [])
 
-  const getColorToken = (cssVariable: string): string => {
-    return getComputedStyle(document.documentElement)
-      .getPropertyValue(cssVariable)
-      .trim()
-  }
-
   const config = useMemo<RunGraphConfig>(() => ({
     runId: 'foo',
     fetch: () => data,
     fetchEvents: () => eventsData,
     theme: 'dark',
     styles: () => ({
-      textDefault: getColorToken('--p-color-text-default'),
-      textInverse: getColorToken('--p-color-text-inverse'),
-      nodeToggleBorderColor: getColorToken('--p-color-button-default-border'),
-      selectedBorderColor: getColorToken('--p-color-text-selected'),
-      edgeColor: getColorToken('--p-color-text-subdued'),
-      guideLineColor: getColorToken('--p-color-divider'),
-      guideTextColor: getColorToken('--p-color-text-subdued'),
       node: (node) => ({
         background: stateTypeColors[node.state_type],
       }),
