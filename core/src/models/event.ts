@@ -13,11 +13,9 @@ export type EventRelatedResource = RunGraphEventResource & {
 export type RunGraphEvent = {
   id: string,
   occurred: Date,
-  account: string,
   event: string,
   payload: unknown,
   received: Date,
   related: EventRelatedResource[],
   resource: RunGraphEventResource,
-  workspace: string | null,
 }
