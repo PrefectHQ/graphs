@@ -71,6 +71,7 @@ export type RunGraphStateStyles = {
 }
 
 export type RunGraphStyles = {
+  font?: { fontFamily: string, type: 'BitmapFont' | 'WebFont' },
   rowGap?: number,
   columnGap?: number,
   textDefault?: ColorSource,
