@@ -64,7 +64,7 @@
     "gsap": "^3.12.2",
     "lodash.isequal": "4.5.0",
     "lodash.throttle": "^4.1.1",
-    "pixi-viewport": "5.0.3",
+    "pixi-viewport": "6.0.3",
     "pixi.js": "7.3.2"
   }
 }
