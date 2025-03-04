@@ -3,6 +3,7 @@ import { waitForConfig } from '@/objects/config'
 import { emitter, waitForEvent } from '@/objects/events'
 
 const defaults: (theme: RunGraphTheme) => Required<RunGraphStyles> = (theme) => ({
+  font: { fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'", type: 'BitmapFont' },
   rowGap: 24,
   columnGap: 32,
   textDefault: theme === 'dark' ? '#ffffff' : '#161618',

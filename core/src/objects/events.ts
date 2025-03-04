@@ -8,7 +8,7 @@ import { LayoutSettings } from '@/models/layout'
 import { RequiredGraphConfig, RunGraphData, RunGraphStyles } from '@/models/RunGraph'
 import { GraphItemSelection } from '@/models/selection'
 import { ViewportDateRange } from '@/models/viewport'
-import { Fonts } from '@/objects/fonts'
+import { FontFactory } from '@/objects/fonts'
 import { VisibilityCull } from '@/services/visibilityCull'
 
 type Events = {
@@ -23,7 +23,7 @@ type Events = {
   viewportMoved: null,
   configCreated: RequiredGraphConfig,
   configUpdated: RequiredGraphConfig,
-  fontsLoaded: Fonts,
+  fontLoaded: FontFactory,
   containerCreated: Container,
   layoutSettingsUpdated: LayoutSettings,
   layoutSettingsCreated: LayoutSettings,

@@ -17,13 +17,13 @@ export async function guideFactory() {
   const viewport = await waitForViewport()
   const settings = await waitForSettings()
   const styles = await waitForStyles()
-  const { inter } = await waitForFonts()
+  const font = await waitForFonts()
   const element = new Container()
 
   const rectangle = await rectangleFactory()
   element.addChild(rectangle)
 
-  const label = inter('')
+  const label = font('')
   element.addChild(label)
 
   let scale = await waitForScale()
