@@ -43,7 +43,7 @@
     "@types/lodash.isequal": "4.5.8",
     "@types/lodash.merge": "4.6.9",
     "@types/lodash.throttle": "^4.1.9",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.4.0",
     "@vitejs/plugin-vue": "5.2.1",
     "autoprefixer": "10.4.21",
     "eslint": "9.25.1",
