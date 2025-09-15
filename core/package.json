@@ -45,7 +45,7 @@
     "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^22.0.0",
     "@vitejs/plugin-vue": "5.2.1",
-    "autoprefixer": "10.4.20",
+    "autoprefixer": "10.4.21",
     "eslint": "9.25.1",
     "postcss": "8.5.2",
     "tailwindcss": "4.1.4",
