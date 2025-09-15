@@ -1,4 +1,4 @@
-import { Container, Point, SimpleRope } from 'pixi.js'
+import { Container, Point, Graphics } from 'pixi.js'
 import { DEFAULT_EDGE_CONTAINER_NAME, DEFAULT_EDGE_MINIMUM_BEZIER, DEFAULT_EDGE_POINTS } from '@/consts'
 import { animationFactory } from '@/factories/animation'
 import { ArrowDirection, arrowFactory } from '@/factories/arrow'
@@ -23,18 +23,17 @@ export async function edgeFactory() {
 
   const container = new Container()
   const { element: arrow, render: renderArrow } = await arrowFactory()
-  const pixel = await getPixelTexture()
   const points = repeat(DEFAULT_EDGE_POINTS, () => new Point())
-  const rope = new SimpleRope(pixel, points)
+  const line = new Graphics()
 
   let initialized = false
 
   container.name = DEFAULT_EDGE_CONTAINER_NAME
 
   container.addChild(arrow)
-  container.addChild(rope)
+  container.addChild(line)
 
-  cull.addAll([arrow, rope])
+  cull.addAll([arrow, line])
 
   edgeCull.add(container)
 
@@ -45,9 +44,21 @@ export async function edgeFactory() {
     })
 
     arrow.tint = styles.edgeColor
-    rope.tint = styles.edgeColor
+    drawLine()
 
     return container
+  }
+
+  function drawLine(): void {
+    line.clear()
+
+    if (points.length > 0) {
+      line.lineStyle(2, styles.edgeColor)
+      line.moveTo(points[0].x, points[0].y)
+      for (let i = 1; i < points.length; i++) {
+        line.lineTo(points[i].x, points[i].y)
+      }
+    }
   }
 
   async function setPosition(source: Pixels, target: Pixels): Promise<void> {
@@ -76,6 +87,8 @@ export async function edgeFactory() {
       y: target.y,
     }, !initialized)
 
+    // Redraw the line after point positions are updated
+    setTimeout(() => drawLine(), 0)
 
     initialized = true
   }

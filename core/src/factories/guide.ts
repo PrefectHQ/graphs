@@ -23,7 +23,7 @@ export async function guideFactory() {
   const rectangle = await rectangleFactory()
   element.addChild(rectangle)
 
-  const label = font('')
+  let label = font('')
   element.addChild(label)
 
   let scale = await waitForScale()
@@ -61,10 +61,12 @@ export async function guideFactory() {
   }
 
   function renderLabel(date: Date): void {
-    label.text = currentLabelFormatter(date)
-    label.fontSize = styles.guideTextSize
+    // Remove the old label and create a new one with updated text and styling
+    element.removeChild(label)
+    label = font(currentLabelFormatter(date))
     label.tint = styles.guideTextColor
     label.position.set(styles.guideTextLeftPadding, styles.guideTextTopPadding)
+    element.addChild(label)
   }
 
   function updatePosition(): void {

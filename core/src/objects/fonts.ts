@@ -1,5 +1,5 @@
 import FontFaceObserver from 'fontfaceobserver'
-import { BitmapFont, BitmapText, IBitmapTextStyle } from 'pixi.js'
+import { BitmapFont, BitmapText } from 'pixi.js'
 import { DEFAULT_TEXT_RESOLUTION } from '@/consts'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForStyles } from '@/objects/styles'
@@ -24,7 +24,7 @@ const fontStyles = {
 
 const fontOptions = {
   resolution: DEFAULT_TEXT_RESOLUTION,
-  chars: BitmapFont.ASCII,
+  chars: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?-+/():;%&`\'*#=[]"',
 }
 
 const fallbackFontFamily = 'sans-serif'
@@ -85,14 +85,13 @@ export async function waitForFonts(): Promise<FontFactory> {
 }
 
 function fontFactory(style: BitmapFontStyle): FontFactory {
-  const { fontFamily: fontName, ...fontStyle } = style
-
-  const bitmapStyle: Partial<IBitmapTextStyle> = {
-    fontName,
-    ...fontStyle,
-  }
+  const { fontFamily: fontName } = style
 
   return (text: string) => {
-    return new BitmapText(text, bitmapStyle)
+    return new BitmapText(text, {
+      fontName,
+      fontSize: style.fontSize,
+      tint: style.fill,
+    })
   }
 }

@@ -199,14 +199,14 @@ export function moveViewportCenter({ xOffset, yOffset }: MoveViewportCenterOptio
     return
   }
 
-  const { x: xPos, y: yPos } = viewport.transform.position
+  const xPos = viewport.x
+  const yPos = viewport.y
 
-  viewport.setTransform(
+  viewport.position.set(
     xPos + xOffset,
-    yPos + yOffset,
-    viewport.transform.scale.x,
-    viewport.transform.scale.y,
+    yPos + yOffset
   )
+  // Note: pixi-viewport v6 handles scaling internally, no need to manually set scale
 }
 
 async function startViewportDateRange(): Promise<void> {

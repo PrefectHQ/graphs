@@ -1,4 +1,4 @@
-import { Graphics, RenderTexture } from 'pixi.js'
+import { Graphics, Texture } from 'pixi.js'
 import { DEFAULT_TEXTURE_RESOLUTION } from '@/consts'
 import { waitForApplication } from '@/objects/application'
 import { cache } from '@/objects/cache'
@@ -7,7 +7,7 @@ export type CircleStyle = {
   radius: number,
 }
 
-async function texture({ radius }: CircleStyle): Promise<RenderTexture> {
+async function texture({ radius }: CircleStyle): Promise<Texture> {
   const application = await waitForApplication()
 
   const circle = new Graphics()
@@ -22,6 +22,6 @@ async function texture({ radius }: CircleStyle): Promise<RenderTexture> {
   return texture
 }
 
-export async function getCircleTexture(style: CircleStyle): Promise<RenderTexture> {
+export async function getCircleTexture(style: CircleStyle): Promise<Texture> {
   return await cache(texture, [style])
 }
