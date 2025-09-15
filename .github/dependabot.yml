@@ -10,3 +10,7 @@ updates:
     directory: "/core/"
     schedule:
       interval: "weekly"
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
