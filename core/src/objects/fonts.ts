@@ -52,24 +52,24 @@ async function loadFont(fontStyle: BitmapFontStyle, type: 'BitmapFont' | 'WebFon
       const observer = new FontFaceObserver(name)
       await observer.load()
     } else {
-      BitmapFont.from(name, {
-        fontFamily: fallbackFontFamily,
-        ...style,
-      }, fontOptions)
+      // BitmapFont.from(name, {
+      //   fontFamily: fallbackFontFamily,
+      //   ...style,
+      // }, fontOptions)
     }
   } catch (error) {
     console.error(error)
     console.warn(`fonts: font ${name} failed to load, falling back to ${fallbackFontFamily}`)
 
-    BitmapFont.from(name, {
-      fontFamily: fallbackFontFamily,
-      ...style,
-    }, fontOptions)
+    // BitmapFont.from(name, {
+    //   fontFamily: fallbackFontFamily,
+    //   ...style,
+    // }, fontOptions)
 
     return
   }
 
-  BitmapFont.from(name, fontStyle, fontOptions)
+  // BitmapFont.from(name, fontStyle, fontOptions)
 }
 
 export function stopFonts(): void {
@@ -89,9 +89,9 @@ function fontFactory(style: BitmapFontStyle): FontFactory {
 
   return (text: string) => {
     return new BitmapText(text, {
-      fontName,
+      fontFamily: fontName,
       fontSize: style.fontSize,
-      tint: style.fill,
+      // tint: style.fill, // tint property not available in TextStyle
     })
   }
 }

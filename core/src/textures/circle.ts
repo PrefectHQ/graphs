@@ -15,9 +15,7 @@ async function texture({ radius }: CircleStyle): Promise<Texture> {
   circle.drawCircle(0, 0, radius)
   circle.endFill()
 
-  const texture = application.renderer.generateTexture(circle, {
-    resolution: DEFAULT_TEXTURE_RESOLUTION,
-  })
+  const texture = application.renderer.generateTexture(circle)
 
   return texture
 }

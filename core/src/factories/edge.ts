@@ -33,7 +33,7 @@ export async function edgeFactory() {
   container.addChild(arrow)
   container.addChild(line)
 
-  cull.addAll([arrow, line])
+  cull.addAll([arrow as any, line as any])
 
   edgeCull.add(container)
 

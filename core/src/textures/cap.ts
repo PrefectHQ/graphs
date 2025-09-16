@@ -16,10 +16,7 @@ async function texture({ height, radius }: CapStyle): Promise<Texture> {
   graphic.drawRoundedRect(0, 0, radius * 2, height, radius)
   graphic.endFill()
 
-  const cap = application.renderer.generateTexture(graphic, {
-    region: new Rectangle(0, 0, radius, height),
-    resolution: DEFAULT_TEXTURE_RESOLUTION,
-  })
+  const cap = application.renderer.generateTexture(graphic)
 
   return cap
 }

@@ -37,10 +37,10 @@ export class BoundsContainer extends Container {
     }
   }
 
-  public getBounds(skipUpdate?: boolean, rect?: Rectangle): Rectangle {
+  public getBounds(skipUpdate?: boolean, bounds?: any): any {
     this.calculateBounds()
 
-    const result = rect || new Rectangle()
+    const result = bounds || new Rectangle()
     result.x = this._customBounds.minX
     result.y = this._customBounds.minY
     result.width = this._customBounds.maxX - this._customBounds.minX

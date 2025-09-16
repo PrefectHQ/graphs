@@ -10,7 +10,7 @@ function texture(icon: IconName): Texture {
   }
 
   // eslint-disable-next-line import/namespace
-  const iconTexture = Texture.from(prefectIcons[icon], options)
+  const iconTexture = Texture.from(prefectIcons[icon])
 
   return iconTexture
 }
