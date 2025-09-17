@@ -57,14 +57,14 @@
   "dependencies": {
     "@fontsource-variable/inter": "^5.1.1",
     "@pixi-essentials/cull": "2.0.0",
-    "@pixi/ui": "^2.2.7",
+    "@pixi/ui": "^1.0.1",
     "d3": "7.9.0",
     "date-fns": "4.1.0",
     "fontfaceobserver": "^2.3.0",
     "gsap": "^3.12.2",
     "lodash.isequal": "4.5.0",
     "lodash.throttle": "^4.1.1",
-    "pixi-viewport": "6.0.3",
-    "pixi.js": "8.13.2"
+    "pixi-viewport": "^5.0.3",
+    "pixi.js": "^7.3.2"
   }
 }

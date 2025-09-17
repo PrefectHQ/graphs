@@ -89,7 +89,7 @@ function fontFactory(style: BitmapFontStyle): FontFactory {
 
   return (text: string) => {
     return new BitmapText(text, {
-      fontFamily: fontName,
+      fontName,
       fontSize: style.fontSize,
       // tint: style.fill, // tint property not available in TextStyle
     })
