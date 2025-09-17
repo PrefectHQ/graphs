@@ -4,7 +4,6 @@ import { nodeLabelFactory } from '@/factories/label'
 import { nodeArrowButtonFactory } from '@/factories/nodeArrowButton'
 import { nodeBarFactory } from '@/factories/nodeBar'
 import { nodesContainerFactory } from '@/factories/nodes'
-import { Container, BitmapText } from 'pixi.js'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodeSize } from '@/models/layout'
 import { RunGraphData, RunGraphNode } from '@/models/RunGraph'
@@ -84,7 +83,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphDat
     return container
   }
 
-  async function renderArrowButton(): Promise<Container> {
+  async function renderArrowButton(): Promise<BoundsContainer> {
     const buttonSize = styles.nodeToggleSize
     const offset = styles.nodeHeight - buttonSize
     const inside = bar.width > buttonSize
@@ -100,7 +99,7 @@ export async function taskRunContainerFactory(node: RunGraphNode, nestedGraphDat
     return container
   }
 
-  async function renderLabel(): Promise<BitmapText> {
+  async function renderLabel(): Promise<BoundsContainer> {
     const label = await renderLabelText(internalNode.label)
     const colorOnNode = config.theme === 'dark'
       ? styles.textDefault

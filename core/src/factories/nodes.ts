@@ -97,7 +97,7 @@ export async function nodesContainerFactory() {
   }
 
   async function createNodes(data: RunGraphData): Promise<void> {
-    const promises: Promise<BoundsContainer>[] = []
+    const promises: Promise<Container>[] = []
 
     for (const node of data.nodes.values()) {
       promises.push(createNode(node))
@@ -255,7 +255,7 @@ export async function nodesContainerFactory() {
 
     response.element.on('resized', size => resizeNode(node.id, size))
 
-    container.addChild(response.element as any)
+    container.addChild(response.element)
 
     nodes.set(node.id, response)
 

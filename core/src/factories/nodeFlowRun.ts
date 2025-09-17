@@ -18,7 +18,6 @@ import { runArtifactsFactory } from '@/factories/runArtifacts'
 import { runEventsFactory } from '@/factories/runEvents'
 import { runStatesFactory } from '@/factories/runStates'
 import { RunGraphArtifact, RunGraphEvent, RunGraphStateEvent } from '@/models'
-import { Container, BitmapText } from 'pixi.js'
 import { BoundsContainer } from '@/models/boundsContainer'
 import { NodeSize } from '@/models/layout'
 import { RunGraphNode } from '@/models/RunGraph'
@@ -236,7 +235,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     resized()
   }
 
-  async function renderArrowButton(): Promise<Container> {
+  async function renderArrowButton(): Promise<BoundsContainer> {
     const buttonSize = styles.nodeToggleSize
     const offset = styles.nodeHeight - buttonSize
     const inside = bar.width > buttonSize
@@ -252,7 +251,7 @@ export async function flowRunContainerFactory(node: RunGraphNode) {
     return container
   }
 
-  async function renderLabel(): Promise<BitmapText> {
+  async function renderLabel(): Promise<BoundsContainer> {
     const label = await renderLabelText(internalNode.label)
     const colorOnNode = config.theme === 'dark'
       ? styles.textDefault

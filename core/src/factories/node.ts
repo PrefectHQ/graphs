@@ -36,7 +36,7 @@ export async function nodeContainerFactory(node: RunGraphNode, nestedGraphData: 
   let nodeIsSelected = false
   let initialized = false
 
-  cull.add(container as any)
+  cull.add(container)
 
   container.eventMode = 'static'
   container.cursor = 'pointer'

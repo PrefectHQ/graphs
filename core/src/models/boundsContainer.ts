@@ -1,7 +1,7 @@
 // Not fixing linting errors from pixi source code
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
-import { Container, Bounds, Rectangle } from 'pixi.js'
+import { Container, MaskData } from 'pixi.js'
 
 /**
  * This container extends the container from pixi but overrides
@@ -14,48 +14,68 @@ import { Container, Bounds, Rectangle } from 'pixi.js'
  * size of the container even if its children have been culled.
  */
 export class BoundsContainer extends Container {
-  private _customBounds = new Bounds()
+  public updateTransform(): void {
+    if (this.sortableChildren && this.sortDirty) {
+      this.sortChildren()
+    }
 
-  public calculateBounds(): void {
-    this._customBounds.clear()
+    this._boundsID++
 
-    for (const child of this.children) {
+    this.transform.updateTransform(this.parent.transform)
+
+    // TODO: check render flags, how to process stuff here
+    this.worldAlpha = this.alpha * this.parent.worldAlpha
+
+    for (let i = 0, j = this.children.length; i < j; ++i) {
+      const child = this.children[i]
+
       /**
-       * We always want all children of this type of container to be included
-       * in the bounds of this container, regardless of visibility
+       * This if statement has been commented out so children always
+       * have their transform updated for bounds calculation
        */
-      const childBounds = child.getBounds()
-
-      // Convert Rectangle to Bounds
-      const bounds = new Bounds()
-      bounds.minX = childBounds.x
-      bounds.minY = childBounds.y
-      bounds.maxX = childBounds.x + childBounds.width
-      bounds.maxY = childBounds.y + childBounds.height
-
-      this._customBounds.addBounds(bounds)
+      // if (child.visible) {
+      child.updateTransform()
+      // }
     }
   }
 
-  public getBounds(skipUpdate?: boolean, bounds?: any): any {
-    this.calculateBounds()
 
-    const result = bounds || new Rectangle()
-    result.x = this._customBounds.minX
-    result.y = this._customBounds.minY
-    result.width = this._customBounds.maxX - this._customBounds.minX
-    result.height = this._customBounds.maxY - this._customBounds.minY
+  public calculateBounds(): void {
+    this._bounds.clear()
 
-    return result
+    this._calculateBounds()
+
+    for (const child of this.children) {
+
+      /**
+       * This if statement from the original version has been commented out
+       * we always want all children of this type of container to be included
+       * in the bounds of this container
+       */
+      // if (!child.visible || !child.renderable) {
+      //   continue
+      // }
+
+      child.calculateBounds()
+
+      if (child._mask) {
+        const maskObject = ((child._mask as MaskData).isMaskData
+          ? (child._mask as MaskData).maskObject : child._mask) as Container
+
+        if (maskObject) {
+          maskObject.calculateBounds()
+          this._bounds.addBoundsMask(child._bounds, maskObject._bounds)
+        } else {
+          this._bounds.addBounds(child._bounds)
+        }
+      } else if (child.filterArea) {
+        this._bounds.addBoundsArea(child._bounds, child.filterArea)
+      } else {
+        this._bounds.addBounds(child._bounds)
+      }
+    }
+
+    this._bounds.updateID = this._boundsID
   }
 
-  public get width(): number {
-    this.calculateBounds()
-    return this._customBounds.maxX - this._customBounds.minX
-  }
-
-  public get height(): number {
-    this.calculateBounds()
-    return this._customBounds.maxY - this._customBounds.minY
-  }
 }

@@ -42,7 +42,7 @@ export async function startCulling(): Promise<void> {
       labelCuller?.toggle(labelsVisible)
       iconCuller?.toggle(iconsVisible)
       toggleCuller?.toggle(togglesVisible)
-      viewportCuller?.cull(application.renderer.screen as any)
+      viewportCuller?.cull(application.renderer.screen)
 
       viewport.dirty = false
     }

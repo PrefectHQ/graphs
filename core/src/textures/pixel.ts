@@ -1,8 +1,8 @@
-import { Graphics, Texture } from 'pixi.js'
+import { Graphics, RenderTexture, WRAP_MODES } from 'pixi.js'
 import { waitForApplication } from '@/objects/application'
 import { cache } from '@/objects/cache'
 
-async function texture(): Promise<Texture> {
+async function texture(): Promise<RenderTexture> {
   const application = await waitForApplication()
 
   const rectangle = new Graphics()
@@ -10,11 +10,13 @@ async function texture(): Promise<Texture> {
   rectangle.drawRect(0, 0, 1, 1)
   rectangle.endFill()
 
-  const texture = application.renderer.generateTexture(rectangle)
+  const texture = application.renderer.generateTexture(rectangle, {
+    wrapMode: WRAP_MODES.REPEAT,
+  })
 
   return texture
 }
 
-export async function getPixelTexture(): Promise<Texture> {
+export async function getPixelTexture(): Promise<RenderTexture> {
   return await cache(texture, [])
 }

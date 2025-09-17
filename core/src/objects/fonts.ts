@@ -1,5 +1,5 @@
 import FontFaceObserver from 'fontfaceobserver'
-import { BitmapFont, BitmapText } from 'pixi.js'
+import { BitmapFont, BitmapText, IBitmapTextStyle } from 'pixi.js'
 import { DEFAULT_TEXT_RESOLUTION } from '@/consts'
 import { emitter, waitForEvent } from '@/objects/events'
 import { waitForStyles } from '@/objects/styles'
@@ -24,7 +24,7 @@ const fontStyles = {
 
 const fontOptions = {
   resolution: DEFAULT_TEXT_RESOLUTION,
-  chars: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?-+/():;%&`\'*#=[]"',
+  chars: BitmapFont.ASCII,
 }
 
 const fallbackFontFamily = 'sans-serif'
@@ -52,24 +52,24 @@ async function loadFont(fontStyle: BitmapFontStyle, type: 'BitmapFont' | 'WebFon
       const observer = new FontFaceObserver(name)
       await observer.load()
     } else {
-      // BitmapFont.from(name, {
-      //   fontFamily: fallbackFontFamily,
-      //   ...style,
-      // }, fontOptions)
+      BitmapFont.from(name, {
+        fontFamily: fallbackFontFamily,
+        ...style,
+      }, fontOptions)
     }
   } catch (error) {
     console.error(error)
     console.warn(`fonts: font ${name} failed to load, falling back to ${fallbackFontFamily}`)
 
-    // BitmapFont.from(name, {
-    //   fontFamily: fallbackFontFamily,
-    //   ...style,
-    // }, fontOptions)
+    BitmapFont.from(name, {
+      fontFamily: fallbackFontFamily,
+      ...style,
+    }, fontOptions)
 
     return
   }
 
-  // BitmapFont.from(name, fontStyle, fontOptions)
+  BitmapFont.from(name, fontStyle, fontOptions)
 }
 
 export function stopFonts(): void {
@@ -85,13 +85,14 @@ export async function waitForFonts(): Promise<FontFactory> {
 }
 
 function fontFactory(style: BitmapFontStyle): FontFactory {
-  const { fontFamily: fontName } = style
+  const { fontFamily: fontName, ...fontStyle } = style
+
+  const bitmapStyle: Partial<IBitmapTextStyle> = {
+    fontName,
+    ...fontStyle,
+  }
 
   return (text: string) => {
-    return new BitmapText(text, {
-      fontName,
-      fontSize: style.fontSize,
-      // tint: style.fill, // tint property not available in TextStyle
-    })
+    return new BitmapText(text, bitmapStyle)
   }
 }
