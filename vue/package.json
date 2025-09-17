@@ -11,16 +11,16 @@
   "description": "",
   "dependencies": {
     "@prefecthq/graphs": "file:../core",
-    "@prefecthq/prefect-design": "^2.14.16",
+    "@prefecthq/prefect-design": "^2.16.1",
     "@prefecthq/vue-compositions": "^1.11.5",
     "date-fns": "^4.1.0",
-    "vue": "^3.5.13"
+    "vue": "^3.5.21"
   },
   "devDependencies": {
     "@types/node": "^22.10.6",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue": "^6.0.1",
     "typescript": "^5.7.3",
-    "vite": "^6.0.7"
+    "vite": "^7.1.5"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.30.1"
