@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "core",
-    "vue"
+    "vue",
+    "react"
   ],
   "scripts": {
     "build": "npm run build --workspace=core",
