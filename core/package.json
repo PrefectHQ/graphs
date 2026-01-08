@@ -1,7 +1,7 @@
 {
   "name": "@prefecthq/graphs",
   "private": false,
-  "version": "3.0.8",
+  "version": "3.0.9",
   "description": "Large scale graphs designed for Prefect",
   "scripts": {
     "dev": "tsc -w & tsc-alias -w & vite build -w",
